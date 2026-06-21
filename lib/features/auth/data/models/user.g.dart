@@ -13,7 +13,7 @@ _User _$UserFromJson(Map<String, dynamic> json) => _User(
   role: json['role'] as String,
   username: json['username'] as String?,
   tier: json['tier'] as String?,
-  hasCompletedOnboarding: json['hasCompletedOnboarding'] as bool,
+  hasCompletedOnboarding: json['hasCompletedOnboarding'] as bool? ?? true,
   clientId: json['clientId'] as String?,
   subscriptionStatus: json['subscriptionStatus'] as String?,
   profilePhotoPath: json['profilePhotoPath'] as String?,

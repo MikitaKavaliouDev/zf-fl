@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
@@ -13,7 +15,10 @@ abstract class NetworkModule {
   ) {
     final dio = Dio(
       BaseOptions(
-        baseUrl: 'http://localhost:3321',
+        // Android emulator uses 10.0.2.2 to reach host localhost;
+        // iOS simulator can use localhost directly.
+        // Override via API_BASE_URL env var for physical devices.
+        baseUrl: _baseUrl,
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 15),
         headers: {
@@ -28,5 +33,13 @@ abstract class NetworkModule {
     dio.interceptors.addAll([apiLogger, authInterceptor]);
 
     return dio;
+  }
+
+  /// Resolves the correct backend URL based on platform and environment.
+  static String get _baseUrl {
+    const envUrl = String.fromEnvironment('API_BASE_URL');
+    if (envUrl.isNotEmpty) return envUrl;
+    if (Platform.isAndroid) return 'http://10.0.2.2:3321';
+    return 'http://localhost:3321';
   }
 }

@@ -12,7 +12,10 @@ abstract class User with _$User {
     required String role,
     String? username,
     String? tier,
-    required bool hasCompletedOnboarding,
+    /// Whether onboarding is complete.
+    /// Login API user object omits this, /api/auth/me includes it.
+    /// Defaults to true so login flow routes to authenticated directly.
+    @Default(true) bool hasCompletedOnboarding,
     String? clientId,
     String? subscriptionStatus,
     String? profilePhotoPath,

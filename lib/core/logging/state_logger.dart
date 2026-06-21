@@ -1,5 +1,4 @@
-import 'dart:developer' as developer;
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'logger_config.dart';
@@ -7,17 +6,14 @@ import 'logger_config.dart';
 /// Custom [BlocObserver] that logs every state transition.
 ///
 /// Outputs structured logs like:
-///   [CUBIT] AuthCubit → LoginSubmitted
+///   [CUBIT] AuthCubit › LoginSubmitted
 ///   [CUBIT] AuthCubit   AuthState.loading → AuthState.authenticated(…)
 class StateLogger extends BlocObserver {
   @override
   void onEvent(Bloc bloc, Object? event) {
     super.onEvent(bloc, event);
     if (!LoggerConfig.logStateChanges) return;
-    developer.log(
-      '${bloc.runtimeType} › $event',
-      name: 'cubit.event',
-    );
+    debugPrint('[CUBIT] ${bloc.runtimeType} › $event');
   }
 
   @override
@@ -26,21 +22,14 @@ class StateLogger extends BlocObserver {
     if (!LoggerConfig.logStateChanges) return;
     final current = _summarize(change.currentState);
     final next = _summarize(change.nextState);
-    developer.log(
-      '${bloc.runtimeType}   $current → $next',
-      name: 'cubit.state',
-    );
+    debugPrint('[CUBIT] ${bloc.runtimeType}   $current → $next');
   }
 
   @override
   void onError(BlocBase bloc, Object error, StackTrace stackTrace) {
     super.onError(bloc, error, stackTrace);
     if (!LoggerConfig.logStateChanges) return;
-    developer.log(
-      '${bloc.runtimeType}   ERROR: $error',
-      name: 'cubit.error',
-      stackTrace: stackTrace,
-    );
+    debugPrint('[CUBIT] ${bloc.runtimeType}   ERROR: $error');
   }
 
   /// Short summary string from a state object (uses freezed toString by default).

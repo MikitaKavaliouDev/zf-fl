@@ -1,6 +1,7 @@
 import 'dart:developer' as developer;
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
@@ -153,14 +154,33 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   String _extractErrorMessage(DioException e) {
-    final data = e.response?.data;
-    if (data is Map<String, dynamic>) {
-      final error = data['error'];
-      if (error is Map<String, dynamic>) {
-        return (error['message'] as String?) ?? 'An unexpected error occurred.';
-      }
+    // Network-level errors (no response received)
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+        return 'Connection timed out. Please check your network.';
+      case DioExceptionType.sendTimeout:
+        return 'Request timed out. Please try again.';
+      case DioExceptionType.receiveTimeout:
+        return 'Server is not responding. Please try again.';
+      case DioExceptionType.connectionError:
+        return 'Network error. Please check your connection.';
+      case DioExceptionType.badResponse:
+        // Try to extract a meaningful error from the response body
+        final data = e.response?.data;
+        if (data is Map<String, dynamic>) {
+          final error = data['error'];
+          if (error is Map<String, dynamic>) {
+            return (error['message'] as String?) ?? 'An unexpected error occurred.';
+          }
+        }
+        return 'An unexpected error occurred. Please try again.';
+      case DioExceptionType.cancel:
+        return 'Request was cancelled.';
+      case DioExceptionType.badCertificate:
+        return 'Connection is not secure. Please try again later.';
+      case DioExceptionType.unknown:
+        return 'Network error. Please check your connection.';
     }
-    return 'Network error. Please check your connection.';
   }
 
   String _fallbackError(Object e) {

@@ -15,7 +15,10 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$User {
 
- String get id; String get email; String? get name; String get role; String? get username; String? get tier; bool get hasCompletedOnboarding; String? get clientId; String? get subscriptionStatus; String? get profilePhotoPath; bool? get isFreeAccessModeEnabled; Map<String, dynamic> get metadata;
+ String get id; String get email; String? get name; String get role; String? get username; String? get tier;/// Whether onboarding is complete.
+/// Login API user object omits this, /api/auth/me includes it.
+/// Defaults to true so login flow routes to authenticated directly.
+ bool get hasCompletedOnboarding; String? get clientId; String? get subscriptionStatus; String? get profilePhotoPath; bool? get isFreeAccessModeEnabled; Map<String, dynamic> get metadata;
 /// Create a copy of User
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -220,7 +223,7 @@ return $default(_that.id,_that.email,_that.name,_that.role,_that.username,_that.
 @JsonSerializable()
 
 class _User implements User {
-  const _User({required this.id, required this.email, this.name, required this.role, this.username, this.tier, required this.hasCompletedOnboarding, this.clientId, this.subscriptionStatus, this.profilePhotoPath, this.isFreeAccessModeEnabled, final  Map<String, dynamic> metadata = const <String, dynamic>{}}): _metadata = metadata;
+  const _User({required this.id, required this.email, this.name, required this.role, this.username, this.tier, this.hasCompletedOnboarding = true, this.clientId, this.subscriptionStatus, this.profilePhotoPath, this.isFreeAccessModeEnabled, final  Map<String, dynamic> metadata = const <String, dynamic>{}}): _metadata = metadata;
   factory _User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
 
 @override final  String id;
@@ -229,7 +232,10 @@ class _User implements User {
 @override final  String role;
 @override final  String? username;
 @override final  String? tier;
-@override final  bool hasCompletedOnboarding;
+/// Whether onboarding is complete.
+/// Login API user object omits this, /api/auth/me includes it.
+/// Defaults to true so login flow routes to authenticated directly.
+@override@JsonKey() final  bool hasCompletedOnboarding;
 @override final  String? clientId;
 @override final  String? subscriptionStatus;
 @override final  String? profilePhotoPath;

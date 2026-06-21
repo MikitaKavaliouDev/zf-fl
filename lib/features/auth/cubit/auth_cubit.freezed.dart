@@ -12,11 +12,17 @@ part of 'auth_cubit.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
-mixin _$AuthEvent {
+mixin _$AuthEvent implements DiagnosticableTreeMixin {
 
 
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'AuthEvent'))
+    ;
+}
 
 @override
 bool operator ==(Object other) {
@@ -28,7 +34,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'AuthEvent()';
 }
 
@@ -198,7 +204,7 @@ return clearError();case _:
 /// @nodoc
 
 
-class CheckAuthStatus implements AuthEvent {
+class CheckAuthStatus with DiagnosticableTreeMixin implements AuthEvent {
   const CheckAuthStatus();
   
 
@@ -206,6 +212,12 @@ class CheckAuthStatus implements AuthEvent {
 
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'AuthEvent.checkAuthStatus'))
+    ;
+}
 
 @override
 bool operator ==(Object other) {
@@ -217,7 +229,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'AuthEvent.checkAuthStatus()';
 }
 
@@ -230,7 +242,7 @@ String toString() {
 /// @nodoc
 
 
-class LoginSubmitted implements AuthEvent {
+class LoginSubmitted with DiagnosticableTreeMixin implements AuthEvent {
   const LoginSubmitted({required this.email, required this.password});
   
 
@@ -244,6 +256,12 @@ class LoginSubmitted implements AuthEvent {
 $LoginSubmittedCopyWith<LoginSubmitted> get copyWith => _$LoginSubmittedCopyWithImpl<LoginSubmitted>(this, _$identity);
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'AuthEvent.login'))
+    ..add(DiagnosticsProperty('email', email))..add(DiagnosticsProperty('password', password));
+}
 
 @override
 bool operator ==(Object other) {
@@ -255,7 +273,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,email,password);
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'AuthEvent.login(email: $email, password: $password)';
 }
 
@@ -298,7 +316,7 @@ as String,
 /// @nodoc
 
 
-class RegisterSubmitted implements AuthEvent {
+class RegisterSubmitted with DiagnosticableTreeMixin implements AuthEvent {
   const RegisterSubmitted({required this.email, required this.password, this.name, this.trainerId});
   
 
@@ -314,6 +332,12 @@ class RegisterSubmitted implements AuthEvent {
 $RegisterSubmittedCopyWith<RegisterSubmitted> get copyWith => _$RegisterSubmittedCopyWithImpl<RegisterSubmitted>(this, _$identity);
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'AuthEvent.register'))
+    ..add(DiagnosticsProperty('email', email))..add(DiagnosticsProperty('password', password))..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('trainerId', trainerId));
+}
 
 @override
 bool operator ==(Object other) {
@@ -325,7 +349,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,email,password,name,trainerId);
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'AuthEvent.register(email: $email, password: $password, name: $name, trainerId: $trainerId)';
 }
 
@@ -370,7 +394,7 @@ as String?,
 /// @nodoc
 
 
-class CompleteOnboarding implements AuthEvent {
+class CompleteOnboarding with DiagnosticableTreeMixin implements AuthEvent {
   const CompleteOnboarding({required this.role, required this.name, this.bio, this.location});
   
 
@@ -386,6 +410,12 @@ class CompleteOnboarding implements AuthEvent {
 $CompleteOnboardingCopyWith<CompleteOnboarding> get copyWith => _$CompleteOnboardingCopyWithImpl<CompleteOnboarding>(this, _$identity);
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'AuthEvent.completeOnboarding'))
+    ..add(DiagnosticsProperty('role', role))..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('bio', bio))..add(DiagnosticsProperty('location', location));
+}
 
 @override
 bool operator ==(Object other) {
@@ -397,7 +427,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,role,name,bio,location);
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'AuthEvent.completeOnboarding(role: $role, name: $name, bio: $bio, location: $location)';
 }
 
@@ -442,7 +472,7 @@ as String?,
 /// @nodoc
 
 
-class LogoutRequested implements AuthEvent {
+class LogoutRequested with DiagnosticableTreeMixin implements AuthEvent {
   const LogoutRequested();
   
 
@@ -450,6 +480,12 @@ class LogoutRequested implements AuthEvent {
 
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'AuthEvent.logout'))
+    ;
+}
 
 @override
 bool operator ==(Object other) {
@@ -461,7 +497,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'AuthEvent.logout()';
 }
 
@@ -474,7 +510,7 @@ String toString() {
 /// @nodoc
 
 
-class ClearError implements AuthEvent {
+class ClearError with DiagnosticableTreeMixin implements AuthEvent {
   const ClearError();
   
 
@@ -482,6 +518,12 @@ class ClearError implements AuthEvent {
 
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'AuthEvent.clearError'))
+    ;
+}
 
 @override
 bool operator ==(Object other) {
@@ -493,7 +535,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'AuthEvent.clearError()';
 }
 

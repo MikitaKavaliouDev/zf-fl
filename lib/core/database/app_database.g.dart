@@ -4894,7 +4894,7 @@ class $WorkoutTemplatesTable extends WorkoutTemplates
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    clientDefault: () => Uuid().v4(),
+    clientDefault: () => const Uuid().v4(),
   );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
@@ -5454,7 +5454,7 @@ class $ClientMeasurementsTable extends ClientMeasurements
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    clientDefault: () => Uuid().v4(),
+    clientDefault: () => const Uuid().v4(),
   );
   static const VerificationMeta _clientIdMeta = const VerificationMeta(
     'clientId',
@@ -6138,7 +6138,7 @@ class $ClientPhotosTable extends ClientPhotos
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    clientDefault: () => Uuid().v4(),
+    clientDefault: () => const Uuid().v4(),
   );
   static const VerificationMeta _clientIdMeta = const VerificationMeta(
     'clientId',
@@ -6748,7 +6748,7 @@ class $NotificationsTable extends Notifications
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    clientDefault: () => Uuid().v4(),
+    clientDefault: () => const Uuid().v4(),
   );
   static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
   @override
@@ -9577,7 +9577,7 @@ class $ClientExerciseLogsTable extends ClientExerciseLogs
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    clientDefault: () => Uuid().v4(),
+    clientDefault: () => const Uuid().v4(),
   );
   static const VerificationMeta _clientIdMeta = const VerificationMeta(
     'clientId',
@@ -10593,7 +10593,7 @@ class $ServicesTable extends Services
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    clientDefault: () => Uuid().v4(),
+    clientDefault: () => const Uuid().v4(),
   );
   static const VerificationMeta _profileIdMeta = const VerificationMeta(
     'profileId',
@@ -11252,7 +11252,7 @@ class $ProgramsTable extends Programs
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    clientDefault: () => Uuid().v4(),
+    clientDefault: () => const Uuid().v4(),
   );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
@@ -11817,7 +11817,7 @@ class $CalendarEventsTable extends CalendarEvents
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    clientDefault: () => Uuid().v4(),
+    clientDefault: () => const Uuid().v4(),
   );
   static const VerificationMeta _trainerIdMeta = const VerificationMeta(
     'trainerId',
@@ -13064,7 +13064,7 @@ class $ClientAssessmentsTable extends ClientAssessments
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    clientDefault: () => Uuid().v4(),
+    clientDefault: () => const Uuid().v4(),
   );
   static const VerificationMeta _assessmentIdMeta = const VerificationMeta(
     'assessmentId',

@@ -1,17 +1,19 @@
-import 'dart:developer' as developer;
-
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 
 import '../logging/logger_config.dart';
 
 /// Dio interceptor that logs every HTTP call for manual debugging.
 ///
+/// Uses [debugPrint] which outputs to `adb logcat` on Android and
+/// to Xcode console on iOS. Zero overhead in release builds.
+///
 /// Example output:
-///   [API] req:abc123 POST /api/auth/login
-///   [API] req:abc123   Request: {"email":"...", "password":"***"}
-///   [API] req:abc123 ← 200 (342ms)
-///   [API] req:abc123   Response: {"data":{"accessToken":"eyJ...", ...}}
+///   [API] req:1 POST /api/auth/login
+///   [API] req:1   Request: {"email":"...", "password":"***"}
+///   [API] req:1 ← 200 (342ms)
+///   [API] req:1   Response: {"data":{"accessToken":"eyJ...", ...}}
 @singleton
 class ApiLoggerInterceptor extends Interceptor {
   int _requestId = 0;
@@ -28,11 +30,11 @@ class ApiLoggerInterceptor extends Interceptor {
     final method = options.method;
     final uri = options.uri.toString();
 
-    developer.log('[$id] $method $uri', name: 'api');
+    debugPrint('[API] [$id] $method $uri');
 
     if (options.data != null) {
       final body = _maskSensitiveFields(options.data);
-      developer.log('[$id]   Request: $body', name: 'api');
+      debugPrint('[API] [$id]   Request: $body');
     }
 
     handler.next(options);
@@ -49,11 +51,11 @@ class ApiLoggerInterceptor extends Interceptor {
     final statusCode = response.statusCode;
     final elapsed = _computeElapsed(response);
 
-    developer.log('[$id] ← $statusCode (${elapsed}ms)', name: 'api');
+    debugPrint('[API] [$id] ← $statusCode (${elapsed}ms)');
 
     if (response.data != null) {
       final body = _truncate(response.data.toString());
-      developer.log('[$id]   Response: $body', name: 'api');
+      debugPrint('[API] [$id]   Response: $body');
     }
 
     handler.next(response);
@@ -68,7 +70,7 @@ class ApiLoggerInterceptor extends Interceptor {
 
     final id = err.requestOptions.extra['requestId'] ?? '?';
     final statusCode = err.response?.statusCode ?? 0;
-    developer.log('[$id] ✗ $statusCode ${err.message}', name: 'api', error: err);
+    debugPrint('[API] [$id] ✗ $statusCode ${err.message}');
 
     handler.next(err);
   }
