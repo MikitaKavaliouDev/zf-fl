@@ -1,0 +1,71 @@
+// ignore_for_file: use_null_aware_elements
+
+import 'package:dio/dio.dart';
+import 'package:injectable/injectable.dart';
+
+import 'models/auth_response.dart';
+import 'models/login_request.dart';
+import 'models/refresh_response.dart';
+import 'models/register_request.dart';
+import 'models/register_response.dart';
+import 'models/user.dart';
+
+@injectable
+class AuthApiService {
+  final Dio _dio;
+
+  AuthApiService(this._dio);
+
+  Future<AuthResponse> login(LoginRequest request) async {
+    final response = await _dio.post('/api/auth/login', data: request.toJson());
+    final data = response.data['data'] as Map<String, dynamic>;
+    return AuthResponse.fromJson(data);
+  }
+
+  Future<RegisterResponse> register(RegisterRequest request) async {
+    final response = await _dio.post('/api/auth/register', data: request.toJson());
+    final data = response.data['data'] as Map<String, dynamic>;
+    return RegisterResponse.fromJson(data);
+  }
+
+  Future<RefreshResponse> refresh(String refreshToken) async {
+    final response = await _dio.post(
+      '/api/auth/refresh',
+      data: {'refreshToken': refreshToken},
+    );
+    final data = response.data['data'] as Map<String, dynamic>;
+    return RefreshResponse.fromJson(data);
+  }
+
+  Future<User> getMe() async {
+    final response = await _dio.get('/api/auth/me');
+    final data = response.data['data'] as Map<String, dynamic>;
+    return User.fromJson(data);
+  }
+
+  Future<void> signOut() async {
+    await _dio.post('/api/auth/signout');
+  }
+
+  Future<void> completeOnboarding() async {
+    await _dio.post('/api/auth/complete-onboarding');
+  }
+
+  Future<void> forgotPassword(String email, {String? redirectTo}) async {
+    await _dio.post('/api/auth/forgot-password', data: {
+      'email': email,
+      if (redirectTo != null) 'redirectTo': redirectTo,
+    });
+  }
+
+  Future<void> updatePassword(String password) async {
+    await _dio.post('/api/auth/update-password', data: {'password': password});
+  }
+
+  Future<void> resendVerification(String email, {String? redirect}) async {
+    await _dio.post('/api/auth/resend-verification-email', data: {
+      'email': email,
+      if (redirect != null) 'redirect': redirect,
+    });
+  }
+}
