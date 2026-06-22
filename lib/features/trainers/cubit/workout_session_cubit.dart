@@ -57,9 +57,13 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
   Future<void> loadCurrent() async {
     emit(const WorkoutSessionState.loading());
     try {
-      final session = await _repository.getLiveSession();
-      if (session != null) {
-        emit(WorkoutSessionState.active(session: session, elapsed: Duration.zero));
+      final result = await _repository.getLiveSession();
+      if (result.session != null) {
+        emit(WorkoutSessionState.active(
+          session: result.session!,
+          logs: result.logs,
+          elapsed: Duration.zero,
+        ));
         _startTimer();
       } else {
         emit(const WorkoutSessionState.initial());
@@ -82,16 +86,20 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
         sessionId: current.session.id,
         exerciseIds: exerciseIds,
       );
-      // Reload to get the updated exercise log list.
-      // Capture active state *before* loadCurrent() replaces it.
-      final activeState = current;
+      // Reload to get the updated exercise log list and preserve elapsed.
+      final elapsed = current.elapsed;
       try {
         await loadCurrent();
+        // Restore elapsed from before the reload so the timer doesn't reset.
+        final s = state;
+        if (s is WorkoutSessionActive) {
+          emit(s.copyWith(elapsed: elapsed));
+        }
       } catch (_) {
         // Reload failed — exercises were still added to backend.
         // Re-emit the previous active state so the UI doesn't drop to error.
         if (state is WorkoutSessionError) {
-          emit(activeState);
+          emit(current);
         }
       }
     } catch (e) {

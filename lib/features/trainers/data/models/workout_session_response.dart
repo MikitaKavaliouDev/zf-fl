@@ -20,6 +20,7 @@ abstract class StartSessionResponse with _$StartSessionResponse {
 abstract class LiveSessionResponse with _$LiveSessionResponse {
   const factory LiveSessionResponse({
     WorkoutSessionDto? session,
+    @Default([]) List<ExerciseLogDto> exerciseLogs,
   }) = _LiveSessionResponse;
 
   factory LiveSessionResponse.fromJson(Map<String, dynamic> json) =>

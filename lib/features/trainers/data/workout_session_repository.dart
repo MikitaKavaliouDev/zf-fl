@@ -1,6 +1,7 @@
 import 'package:injectable/injectable.dart';
 
 import 'models/exercise_dto.dart';
+import 'models/exercise_log_dto.dart';
 import 'models/workout_session_dto.dart';
 import 'models/workout_session_response.dart';
 import 'workout_session_api_service.dart';
@@ -26,9 +27,11 @@ class WorkoutSessionRepository {
     return response.session;
   }
 
-  Future<WorkoutSessionDto?> getLiveSession() async {
+  /// Returns the active session DTO along with its parsed exercise logs.
+  Future<({WorkoutSessionDto? session, List<ExerciseLogDto> logs})>
+      getLiveSession() async {
     final response = await _api.getLiveSession();
-    return response.session;
+    return (session: response.session, logs: response.exerciseLogs);
   }
 
   Future<LogExerciseResponse> logExercise({

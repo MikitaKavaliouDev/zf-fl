@@ -39,15 +39,53 @@ class WorkoutSessionApiService {
         'clientPackageId': ?clientPackageId,
       },
     );
-    final data = response.data['data'] as Map<String, dynamic>;
+    final data = _normalizeSessionData(
+      response.data['data'] as Map<String, dynamic>,
+    );
     return StartSessionResponse.fromJson(data);
   }
 
   /// Get the currently active workout session.
   Future<LiveSessionResponse> getLiveSession() async {
     final response = await _dio.get('/api/workout-sessions/live');
-    final data = response.data['data'] as Map<String, dynamic>;
+    final data = _normalizeSessionData(
+      response.data['data'] as Map<String, dynamic>,
+    );
     return LiveSessionResponse.fromJson(data);
+  }
+
+  /// Backend returns `client` as nested `{id, name, ...}` but the DTO
+  /// expects a flat `clientId`. Also, `exerciseLogs` entries lack
+  /// `clientId`/`workoutSessionId` at the individual log level.
+  /// This normalizer injects those fields before parsing.
+  Map<String, dynamic> _normalizeSessionData(Map<String, dynamic> data) {
+    if (data['session'] == null) return data;
+
+    final session = Map<String, dynamic>.from(
+      data['session'] as Map<String, dynamic>,
+    );
+
+    // Inject flat clientId from nested client object
+    final clientId =
+        (session['client'] as Map<String, dynamic>?)?['id'] as String?;
+    if (clientId != null) {
+      session['clientId'] = clientId;
+    }
+
+    // Extract exerciseLogs, inject missing clientId/workoutSessionId
+    final rawLogs = session.remove('exerciseLogs') as List<dynamic>?;
+    if (rawLogs != null && rawLogs.isNotEmpty && clientId != null) {
+      final sessionId = session['id'] as String?;
+      data['exerciseLogs'] = rawLogs.map((e) {
+        final log = Map<String, dynamic>.from(e as Map<String, dynamic>);
+        log['clientId'] = log['clientId'] ?? clientId;
+        log['workoutSessionId'] = log['workoutSessionId'] ?? sessionId;
+        return log;
+      }).toList();
+    }
+
+    data['session'] = session;
+    return data;
   }
 
   /// Log an exercise set for a live session (create or update).
