@@ -1,0 +1,135 @@
+import 'package:dio/dio.dart';
+import 'package:injectable/injectable.dart';
+
+import 'models/exercise_dto.dart';
+import 'models/workout_session_response.dart';
+
+@injectable
+class WorkoutSessionApiService {
+  final Dio _dio;
+
+  WorkoutSessionApiService(this._dio);
+
+  /// Fetch the exercise library (system + custom).
+  Future<List<ExerciseDto>> getExerciseLibrary() async {
+    final response = await _dio.get(
+      '/api/exercises/sync',
+      queryParameters: {'lastPulledAt': 0},
+    );
+    final data = response.data['data'] as Map<String, dynamic>;
+    final changes = data['changes'] as List<dynamic>;
+    return changes
+        .map((e) => ExerciseDto.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Start a new workout session.
+  Future<StartSessionResponse> startSession({
+    String? clientId,
+    String? plannedSessionId,
+    String? templateId,
+    String? clientPackageId,
+  }) async {
+    final response = await _dio.post(
+      '/api/workout-sessions/start',
+      data: {
+        'clientId': ?clientId,
+        'plannedSessionId': ?plannedSessionId,
+        'templateId': ?templateId,
+        'clientPackageId': ?clientPackageId,
+      },
+    );
+    final data = response.data['data'] as Map<String, dynamic>;
+    return StartSessionResponse.fromJson(data);
+  }
+
+  /// Get the currently active workout session.
+  Future<LiveSessionResponse> getLiveSession() async {
+    final response = await _dio.get('/api/workout-sessions/live');
+    final data = response.data['data'] as Map<String, dynamic>;
+    return LiveSessionResponse.fromJson(data);
+  }
+
+  /// Log an exercise set for a live session (create or update).
+  Future<LogExerciseResponse> logExercise({
+    String? logId,
+    required String workoutSessionId,
+    required String exerciseId,
+    required int reps,
+    double? weight,
+    int? order,
+    String? supersetKey,
+    int? orderInSuperset,
+    bool? isCompleted,
+  }) async {
+    final response = await _dio.post(
+      '/api/workout-sessions/live',
+      data: {
+        'logId': ?logId,
+        'workoutSessionId': workoutSessionId,
+        'exerciseId': exerciseId,
+        'reps': reps,
+        'weight': ?weight,
+        'order': ?order,
+        'supersetKey': ?supersetKey,
+        'orderInSuperset': ?orderInSuperset,
+        'isCompleted': ?isCompleted,
+      },
+    );
+    final data = response.data['data'] as Map<String, dynamic>;
+    return LogExerciseResponse.fromJson(data);
+  }
+
+  /// Finish a workout session.
+  Future<void> finishSession({
+    required String workoutSessionId,
+    String? notes,
+  }) async {
+    await _dio.post(
+      '/api/workout-sessions/finish',
+      data: {
+        'workoutSessionId': workoutSessionId,
+        'notes': ?notes,
+      },
+    );
+  }
+
+  /// Get workout session history.
+  Future<SessionHistoryResponse> getHistory({
+    String? clientId,
+    int limit = 20,
+    String? cursor,
+  }) async {
+    final response = await _dio.get(
+      '/api/workout-sessions/history',
+      queryParameters: {
+        'clientId': ?clientId,
+        'limit': limit,
+        'cursor': ?cursor,
+      },
+    );
+    final data = response.data['data'] as Map<String, dynamic>;
+    return SessionHistoryResponse.fromJson(data);
+  }
+
+  /// Add exercises to an in-progress session.
+  Future<void> addExercises({
+    required String sessionId,
+    required List<String> exerciseIds,
+  }) async {
+    await _dio.post(
+      '/api/workout-sessions/$sessionId/exercises',
+      data: {'exerciseIds': exerciseIds},
+    );
+  }
+
+  /// Start rest timer on backend.
+  Future<void> startRest(String sessionId) async {
+    await _dio.post('/api/workout-sessions/$sessionId/rest/start');
+  }
+
+  /// End rest timer on backend.
+  Future<void> endRest(String sessionId) async {
+    await _dio.post('/api/workout-sessions/$sessionId/rest/end');
+  }
+}

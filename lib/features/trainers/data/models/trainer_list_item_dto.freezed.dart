@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TrainerProfileSummary {
 
- String? get profilePhotoPath; List<String> get certifications; List<dynamic> get locations; List<dynamic> get services; double? get averageRating; String? get businessCurrency; String? get name; String? get bio;
+ String? get profilePhotoPath;@JsonKey(fromJson: _parseStringList) List<String> get certifications; List<dynamic> get locations; List<dynamic> get services; double? get averageRating; String? get businessCurrency; String? get name; String? get bio;
 /// Create a copy of TrainerProfileSummary
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $TrainerProfileSummaryCopyWith<$Res>  {
   factory $TrainerProfileSummaryCopyWith(TrainerProfileSummary value, $Res Function(TrainerProfileSummary) _then) = _$TrainerProfileSummaryCopyWithImpl;
 @useResult
 $Res call({
- String? profilePhotoPath, List<String> certifications, List<dynamic> locations, List<dynamic> services, double? averageRating, String? businessCurrency, String? name, String? bio
+ String? profilePhotoPath,@JsonKey(fromJson: _parseStringList) List<String> certifications, List<dynamic> locations, List<dynamic> services, double? averageRating, String? businessCurrency, String? name, String? bio
 });
 
 
@@ -160,7 +160,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? profilePhotoPath,  List<String> certifications,  List<dynamic> locations,  List<dynamic> services,  double? averageRating,  String? businessCurrency,  String? name,  String? bio)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? profilePhotoPath, @JsonKey(fromJson: _parseStringList)  List<String> certifications,  List<dynamic> locations,  List<dynamic> services,  double? averageRating,  String? businessCurrency,  String? name,  String? bio)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TrainerProfileSummary() when $default != null:
 return $default(_that.profilePhotoPath,_that.certifications,_that.locations,_that.services,_that.averageRating,_that.businessCurrency,_that.name,_that.bio);case _:
@@ -181,7 +181,7 @@ return $default(_that.profilePhotoPath,_that.certifications,_that.locations,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? profilePhotoPath,  List<String> certifications,  List<dynamic> locations,  List<dynamic> services,  double? averageRating,  String? businessCurrency,  String? name,  String? bio)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? profilePhotoPath, @JsonKey(fromJson: _parseStringList)  List<String> certifications,  List<dynamic> locations,  List<dynamic> services,  double? averageRating,  String? businessCurrency,  String? name,  String? bio)  $default,) {final _that = this;
 switch (_that) {
 case _TrainerProfileSummary():
 return $default(_that.profilePhotoPath,_that.certifications,_that.locations,_that.services,_that.averageRating,_that.businessCurrency,_that.name,_that.bio);case _:
@@ -201,7 +201,7 @@ return $default(_that.profilePhotoPath,_that.certifications,_that.locations,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? profilePhotoPath,  List<String> certifications,  List<dynamic> locations,  List<dynamic> services,  double? averageRating,  String? businessCurrency,  String? name,  String? bio)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? profilePhotoPath, @JsonKey(fromJson: _parseStringList)  List<String> certifications,  List<dynamic> locations,  List<dynamic> services,  double? averageRating,  String? businessCurrency,  String? name,  String? bio)?  $default,) {final _that = this;
 switch (_that) {
 case _TrainerProfileSummary() when $default != null:
 return $default(_that.profilePhotoPath,_that.certifications,_that.locations,_that.services,_that.averageRating,_that.businessCurrency,_that.name,_that.bio);case _:
@@ -216,12 +216,12 @@ return $default(_that.profilePhotoPath,_that.certifications,_that.locations,_tha
 @JsonSerializable()
 
 class _TrainerProfileSummary implements TrainerProfileSummary {
-  const _TrainerProfileSummary({this.profilePhotoPath, final  List<String> certifications = const <String>[], final  List<dynamic> locations = const <dynamic>[], final  List<dynamic> services = const <dynamic>[], this.averageRating, this.businessCurrency, this.name, this.bio}): _certifications = certifications,_locations = locations,_services = services;
+  const _TrainerProfileSummary({this.profilePhotoPath, @JsonKey(fromJson: _parseStringList) final  List<String> certifications = const <String>[], final  List<dynamic> locations = const <dynamic>[], final  List<dynamic> services = const <dynamic>[], this.averageRating, this.businessCurrency, this.name, this.bio}): _certifications = certifications,_locations = locations,_services = services;
   factory _TrainerProfileSummary.fromJson(Map<String, dynamic> json) => _$TrainerProfileSummaryFromJson(json);
 
 @override final  String? profilePhotoPath;
  final  List<String> _certifications;
-@override@JsonKey() List<String> get certifications {
+@override@JsonKey(fromJson: _parseStringList) List<String> get certifications {
   if (_certifications is EqualUnmodifiableListView) return _certifications;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_certifications);
@@ -279,7 +279,7 @@ abstract mixin class _$TrainerProfileSummaryCopyWith<$Res> implements $TrainerPr
   factory _$TrainerProfileSummaryCopyWith(_TrainerProfileSummary value, $Res Function(_TrainerProfileSummary) _then) = __$TrainerProfileSummaryCopyWithImpl;
 @override @useResult
 $Res call({
- String? profilePhotoPath, List<String> certifications, List<dynamic> locations, List<dynamic> services, double? averageRating, String? businessCurrency, String? name, String? bio
+ String? profilePhotoPath,@JsonKey(fromJson: _parseStringList) List<String> certifications, List<dynamic> locations, List<dynamic> services, double? averageRating, String? businessCurrency, String? name, String? bio
 });
 
 
@@ -583,7 +583,7 @@ as int,
 /// @nodoc
 mixin _$TrainerListItemDto {
 
- String get id; String get username; TrainerProfileSummary? get profile; TrainerStats? get stats; double? get distance; bool get isLinked;
+ String get id; String? get username; String? get name; TrainerProfileSummary? get profile; TrainerStats? get stats; double? get distance; bool get isLinked;
 /// Create a copy of TrainerListItemDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -596,16 +596,16 @@ $TrainerListItemDtoCopyWith<TrainerListItemDto> get copyWith => _$TrainerListIte
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TrainerListItemDto&&(identical(other.id, id) || other.id == id)&&(identical(other.username, username) || other.username == username)&&(identical(other.profile, profile) || other.profile == profile)&&(identical(other.stats, stats) || other.stats == stats)&&(identical(other.distance, distance) || other.distance == distance)&&(identical(other.isLinked, isLinked) || other.isLinked == isLinked));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TrainerListItemDto&&(identical(other.id, id) || other.id == id)&&(identical(other.username, username) || other.username == username)&&(identical(other.name, name) || other.name == name)&&(identical(other.profile, profile) || other.profile == profile)&&(identical(other.stats, stats) || other.stats == stats)&&(identical(other.distance, distance) || other.distance == distance)&&(identical(other.isLinked, isLinked) || other.isLinked == isLinked));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,username,profile,stats,distance,isLinked);
+int get hashCode => Object.hash(runtimeType,id,username,name,profile,stats,distance,isLinked);
 
 @override
 String toString() {
-  return 'TrainerListItemDto(id: $id, username: $username, profile: $profile, stats: $stats, distance: $distance, isLinked: $isLinked)';
+  return 'TrainerListItemDto(id: $id, username: $username, name: $name, profile: $profile, stats: $stats, distance: $distance, isLinked: $isLinked)';
 }
 
 
@@ -616,7 +616,7 @@ abstract mixin class $TrainerListItemDtoCopyWith<$Res>  {
   factory $TrainerListItemDtoCopyWith(TrainerListItemDto value, $Res Function(TrainerListItemDto) _then) = _$TrainerListItemDtoCopyWithImpl;
 @useResult
 $Res call({
- String id, String username, TrainerProfileSummary? profile, TrainerStats? stats, double? distance, bool isLinked
+ String id, String? username, String? name, TrainerProfileSummary? profile, TrainerStats? stats, double? distance, bool isLinked
 });
 
 
@@ -633,11 +633,12 @@ class _$TrainerListItemDtoCopyWithImpl<$Res>
 
 /// Create a copy of TrainerListItemDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? username = null,Object? profile = freezed,Object? stats = freezed,Object? distance = freezed,Object? isLinked = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? username = freezed,Object? name = freezed,Object? profile = freezed,Object? stats = freezed,Object? distance = freezed,Object? isLinked = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,username: null == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
-as String,profile: freezed == profile ? _self.profile : profile // ignore: cast_nullable_to_non_nullable
+as String,username: freezed == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
+as String?,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String?,profile: freezed == profile ? _self.profile : profile // ignore: cast_nullable_to_non_nullable
 as TrainerProfileSummary?,stats: freezed == stats ? _self.stats : stats // ignore: cast_nullable_to_non_nullable
 as TrainerStats?,distance: freezed == distance ? _self.distance : distance // ignore: cast_nullable_to_non_nullable
 as double?,isLinked: null == isLinked ? _self.isLinked : isLinked // ignore: cast_nullable_to_non_nullable
@@ -750,10 +751,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String username,  TrainerProfileSummary? profile,  TrainerStats? stats,  double? distance,  bool isLinked)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String? username,  String? name,  TrainerProfileSummary? profile,  TrainerStats? stats,  double? distance,  bool isLinked)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TrainerListItemDto() when $default != null:
-return $default(_that.id,_that.username,_that.profile,_that.stats,_that.distance,_that.isLinked);case _:
+return $default(_that.id,_that.username,_that.name,_that.profile,_that.stats,_that.distance,_that.isLinked);case _:
   return orElse();
 
 }
@@ -771,10 +772,10 @@ return $default(_that.id,_that.username,_that.profile,_that.stats,_that.distance
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String username,  TrainerProfileSummary? profile,  TrainerStats? stats,  double? distance,  bool isLinked)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String? username,  String? name,  TrainerProfileSummary? profile,  TrainerStats? stats,  double? distance,  bool isLinked)  $default,) {final _that = this;
 switch (_that) {
 case _TrainerListItemDto():
-return $default(_that.id,_that.username,_that.profile,_that.stats,_that.distance,_that.isLinked);case _:
+return $default(_that.id,_that.username,_that.name,_that.profile,_that.stats,_that.distance,_that.isLinked);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -791,10 +792,10 @@ return $default(_that.id,_that.username,_that.profile,_that.stats,_that.distance
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String username,  TrainerProfileSummary? profile,  TrainerStats? stats,  double? distance,  bool isLinked)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String? username,  String? name,  TrainerProfileSummary? profile,  TrainerStats? stats,  double? distance,  bool isLinked)?  $default,) {final _that = this;
 switch (_that) {
 case _TrainerListItemDto() when $default != null:
-return $default(_that.id,_that.username,_that.profile,_that.stats,_that.distance,_that.isLinked);case _:
+return $default(_that.id,_that.username,_that.name,_that.profile,_that.stats,_that.distance,_that.isLinked);case _:
   return null;
 
 }
@@ -806,11 +807,12 @@ return $default(_that.id,_that.username,_that.profile,_that.stats,_that.distance
 @JsonSerializable()
 
 class _TrainerListItemDto implements TrainerListItemDto {
-  const _TrainerListItemDto({required this.id, required this.username, this.profile, this.stats, this.distance, this.isLinked = false});
+  const _TrainerListItemDto({required this.id, this.username, this.name, this.profile, this.stats, this.distance, this.isLinked = false});
   factory _TrainerListItemDto.fromJson(Map<String, dynamic> json) => _$TrainerListItemDtoFromJson(json);
 
 @override final  String id;
-@override final  String username;
+@override final  String? username;
+@override final  String? name;
 @override final  TrainerProfileSummary? profile;
 @override final  TrainerStats? stats;
 @override final  double? distance;
@@ -829,16 +831,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TrainerListItemDto&&(identical(other.id, id) || other.id == id)&&(identical(other.username, username) || other.username == username)&&(identical(other.profile, profile) || other.profile == profile)&&(identical(other.stats, stats) || other.stats == stats)&&(identical(other.distance, distance) || other.distance == distance)&&(identical(other.isLinked, isLinked) || other.isLinked == isLinked));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TrainerListItemDto&&(identical(other.id, id) || other.id == id)&&(identical(other.username, username) || other.username == username)&&(identical(other.name, name) || other.name == name)&&(identical(other.profile, profile) || other.profile == profile)&&(identical(other.stats, stats) || other.stats == stats)&&(identical(other.distance, distance) || other.distance == distance)&&(identical(other.isLinked, isLinked) || other.isLinked == isLinked));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,username,profile,stats,distance,isLinked);
+int get hashCode => Object.hash(runtimeType,id,username,name,profile,stats,distance,isLinked);
 
 @override
 String toString() {
-  return 'TrainerListItemDto(id: $id, username: $username, profile: $profile, stats: $stats, distance: $distance, isLinked: $isLinked)';
+  return 'TrainerListItemDto(id: $id, username: $username, name: $name, profile: $profile, stats: $stats, distance: $distance, isLinked: $isLinked)';
 }
 
 
@@ -849,7 +851,7 @@ abstract mixin class _$TrainerListItemDtoCopyWith<$Res> implements $TrainerListI
   factory _$TrainerListItemDtoCopyWith(_TrainerListItemDto value, $Res Function(_TrainerListItemDto) _then) = __$TrainerListItemDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String username, TrainerProfileSummary? profile, TrainerStats? stats, double? distance, bool isLinked
+ String id, String? username, String? name, TrainerProfileSummary? profile, TrainerStats? stats, double? distance, bool isLinked
 });
 
 
@@ -866,11 +868,12 @@ class __$TrainerListItemDtoCopyWithImpl<$Res>
 
 /// Create a copy of TrainerListItemDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? username = null,Object? profile = freezed,Object? stats = freezed,Object? distance = freezed,Object? isLinked = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? username = freezed,Object? name = freezed,Object? profile = freezed,Object? stats = freezed,Object? distance = freezed,Object? isLinked = null,}) {
   return _then(_TrainerListItemDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,username: null == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
-as String,profile: freezed == profile ? _self.profile : profile // ignore: cast_nullable_to_non_nullable
+as String,username: freezed == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
+as String?,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String?,profile: freezed == profile ? _self.profile : profile // ignore: cast_nullable_to_non_nullable
 as TrainerProfileSummary?,stats: freezed == stats ? _self.stats : stats // ignore: cast_nullable_to_non_nullable
 as TrainerStats?,distance: freezed == distance ? _self.distance : distance // ignore: cast_nullable_to_non_nullable
 as double?,isLinked: null == isLinked ? _self.isLinked : isLinked // ignore: cast_nullable_to_non_nullable

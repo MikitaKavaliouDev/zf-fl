@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TrainerDetailDto {
 
- String get id; String? get name; String? get username; String? get email; String? get profilePhotoPath; String? get bio; double? get averageRating; List<String> get specialties; List<String> get certifications; bool get isVerified; bool get isLinked; String? get businessCurrency; List<dynamic> get locations; List<dynamic> get services; Map<String, dynamic>? get stats;
+ String get id; String? get name; String? get username; String? get email; String? get profilePhotoPath; String? get bio; double? get averageRating;@JsonKey(fromJson: _parseStringList) List<String> get specialties;@JsonKey(fromJson: _parseStringList) List<String> get certifications; bool get isVerified; bool get isLinked; String? get businessCurrency; List<dynamic> get locations; List<dynamic> get services; Map<String, dynamic>? get stats;
 /// Create a copy of TrainerDetailDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $TrainerDetailDtoCopyWith<$Res>  {
   factory $TrainerDetailDtoCopyWith(TrainerDetailDto value, $Res Function(TrainerDetailDto) _then) = _$TrainerDetailDtoCopyWithImpl;
 @useResult
 $Res call({
- String id, String? name, String? username, String? email, String? profilePhotoPath, String? bio, double? averageRating, List<String> specialties, List<String> certifications, bool isVerified, bool isLinked, String? businessCurrency, List<dynamic> locations, List<dynamic> services, Map<String, dynamic>? stats
+ String id, String? name, String? username, String? email, String? profilePhotoPath, String? bio, double? averageRating,@JsonKey(fromJson: _parseStringList) List<String> specialties,@JsonKey(fromJson: _parseStringList) List<String> certifications, bool isVerified, bool isLinked, String? businessCurrency, List<dynamic> locations, List<dynamic> services, Map<String, dynamic>? stats
 });
 
 
@@ -167,7 +167,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String? name,  String? username,  String? email,  String? profilePhotoPath,  String? bio,  double? averageRating,  List<String> specialties,  List<String> certifications,  bool isVerified,  bool isLinked,  String? businessCurrency,  List<dynamic> locations,  List<dynamic> services,  Map<String, dynamic>? stats)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String? name,  String? username,  String? email,  String? profilePhotoPath,  String? bio,  double? averageRating, @JsonKey(fromJson: _parseStringList)  List<String> specialties, @JsonKey(fromJson: _parseStringList)  List<String> certifications,  bool isVerified,  bool isLinked,  String? businessCurrency,  List<dynamic> locations,  List<dynamic> services,  Map<String, dynamic>? stats)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TrainerDetailDto() when $default != null:
 return $default(_that.id,_that.name,_that.username,_that.email,_that.profilePhotoPath,_that.bio,_that.averageRating,_that.specialties,_that.certifications,_that.isVerified,_that.isLinked,_that.businessCurrency,_that.locations,_that.services,_that.stats);case _:
@@ -188,7 +188,7 @@ return $default(_that.id,_that.name,_that.username,_that.email,_that.profilePhot
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String? name,  String? username,  String? email,  String? profilePhotoPath,  String? bio,  double? averageRating,  List<String> specialties,  List<String> certifications,  bool isVerified,  bool isLinked,  String? businessCurrency,  List<dynamic> locations,  List<dynamic> services,  Map<String, dynamic>? stats)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String? name,  String? username,  String? email,  String? profilePhotoPath,  String? bio,  double? averageRating, @JsonKey(fromJson: _parseStringList)  List<String> specialties, @JsonKey(fromJson: _parseStringList)  List<String> certifications,  bool isVerified,  bool isLinked,  String? businessCurrency,  List<dynamic> locations,  List<dynamic> services,  Map<String, dynamic>? stats)  $default,) {final _that = this;
 switch (_that) {
 case _TrainerDetailDto():
 return $default(_that.id,_that.name,_that.username,_that.email,_that.profilePhotoPath,_that.bio,_that.averageRating,_that.specialties,_that.certifications,_that.isVerified,_that.isLinked,_that.businessCurrency,_that.locations,_that.services,_that.stats);case _:
@@ -208,7 +208,7 @@ return $default(_that.id,_that.name,_that.username,_that.email,_that.profilePhot
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String? name,  String? username,  String? email,  String? profilePhotoPath,  String? bio,  double? averageRating,  List<String> specialties,  List<String> certifications,  bool isVerified,  bool isLinked,  String? businessCurrency,  List<dynamic> locations,  List<dynamic> services,  Map<String, dynamic>? stats)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String? name,  String? username,  String? email,  String? profilePhotoPath,  String? bio,  double? averageRating, @JsonKey(fromJson: _parseStringList)  List<String> specialties, @JsonKey(fromJson: _parseStringList)  List<String> certifications,  bool isVerified,  bool isLinked,  String? businessCurrency,  List<dynamic> locations,  List<dynamic> services,  Map<String, dynamic>? stats)?  $default,) {final _that = this;
 switch (_that) {
 case _TrainerDetailDto() when $default != null:
 return $default(_that.id,_that.name,_that.username,_that.email,_that.profilePhotoPath,_that.bio,_that.averageRating,_that.specialties,_that.certifications,_that.isVerified,_that.isLinked,_that.businessCurrency,_that.locations,_that.services,_that.stats);case _:
@@ -223,7 +223,7 @@ return $default(_that.id,_that.name,_that.username,_that.email,_that.profilePhot
 @JsonSerializable()
 
 class _TrainerDetailDto implements TrainerDetailDto {
-  const _TrainerDetailDto({required this.id, this.name, this.username, this.email, this.profilePhotoPath, this.bio, this.averageRating, final  List<String> specialties = const <String>[], final  List<String> certifications = const <String>[], this.isVerified = false, this.isLinked = false, this.businessCurrency, final  List<dynamic> locations = const <dynamic>[], final  List<dynamic> services = const <dynamic>[], final  Map<String, dynamic>? stats}): _specialties = specialties,_certifications = certifications,_locations = locations,_services = services,_stats = stats;
+  const _TrainerDetailDto({required this.id, this.name, this.username, this.email, this.profilePhotoPath, this.bio, this.averageRating, @JsonKey(fromJson: _parseStringList) final  List<String> specialties = const <String>[], @JsonKey(fromJson: _parseStringList) final  List<String> certifications = const <String>[], this.isVerified = false, this.isLinked = false, this.businessCurrency, final  List<dynamic> locations = const <dynamic>[], final  List<dynamic> services = const <dynamic>[], final  Map<String, dynamic>? stats}): _specialties = specialties,_certifications = certifications,_locations = locations,_services = services,_stats = stats;
   factory _TrainerDetailDto.fromJson(Map<String, dynamic> json) => _$TrainerDetailDtoFromJson(json);
 
 @override final  String id;
@@ -234,14 +234,14 @@ class _TrainerDetailDto implements TrainerDetailDto {
 @override final  String? bio;
 @override final  double? averageRating;
  final  List<String> _specialties;
-@override@JsonKey() List<String> get specialties {
+@override@JsonKey(fromJson: _parseStringList) List<String> get specialties {
   if (_specialties is EqualUnmodifiableListView) return _specialties;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_specialties);
 }
 
  final  List<String> _certifications;
-@override@JsonKey() List<String> get certifications {
+@override@JsonKey(fromJson: _parseStringList) List<String> get certifications {
   if (_certifications is EqualUnmodifiableListView) return _certifications;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_certifications);
@@ -307,7 +307,7 @@ abstract mixin class _$TrainerDetailDtoCopyWith<$Res> implements $TrainerDetailD
   factory _$TrainerDetailDtoCopyWith(_TrainerDetailDto value, $Res Function(_TrainerDetailDto) _then) = __$TrainerDetailDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String? name, String? username, String? email, String? profilePhotoPath, String? bio, double? averageRating, List<String> specialties, List<String> certifications, bool isVerified, bool isLinked, String? businessCurrency, List<dynamic> locations, List<dynamic> services, Map<String, dynamic>? stats
+ String id, String? name, String? username, String? email, String? profilePhotoPath, String? bio, double? averageRating,@JsonKey(fromJson: _parseStringList) List<String> specialties,@JsonKey(fromJson: _parseStringList) List<String> certifications, bool isVerified, bool isLinked, String? businessCurrency, List<dynamic> locations, List<dynamic> services, Map<String, dynamic>? stats
 });
 
 

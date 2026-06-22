@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/di/injection.dart';
 import '../../../core/theme/app_theme.dart';
 import '../cubit/trainer_detail_cubit.dart';
 import '../cubit/trainer_detail_state.dart';
 import '../data/models/trainer_detail_dto.dart';
 import '../data/models/trainer_package_dto.dart';
+import '../data/trainer_repository.dart';
 
 class TrainerDetailScreen extends StatelessWidget {
   final String username;
@@ -18,40 +20,43 @@ class TrainerDetailScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Trainer'),
       ),
-      body: BlocProvider(
-        create: (_) {
-          final cubit = TrainerDetailCubit(
-            context.read(),
-          );
-          cubit.load(username);
-          return cubit;
-        },
-        child: BlocBuilder<TrainerDetailCubit, TrainerDetailState>(
-          builder: (context, state) {
-            return switch (state) {
-              TrainerDetailInitial() || TrainerDetailLoading() =>
-                const Center(child: CircularProgressIndicator()),
-              TrainerDetailLoaded(:final trainer, :final packages) =>
-                _TrainerContent(trainer: trainer, packages: packages, username: username),
-              TrainerDetailError(:final message) => Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.error_outline, size: 48),
-                      const SizedBox(height: 16),
-                      Text(message),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () => context
-                            .read<TrainerDetailCubit>()
-                            .load(username),
-                        child: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                ),
-            };
+      body: RepositoryProvider.value(
+        value: getIt<TrainerRepository>(),
+        child: BlocProvider(
+          create: (context) {
+            final cubit = TrainerDetailCubit(
+              context.read<TrainerRepository>(),
+            );
+            cubit.load(username);
+            return cubit;
           },
+          child: BlocBuilder<TrainerDetailCubit, TrainerDetailState>(
+            builder: (context, state) {
+              return switch (state) {
+                TrainerDetailInitial() || TrainerDetailLoading() =>
+                  const Center(child: CircularProgressIndicator()),
+                TrainerDetailLoaded(:final trainer, :final packages) =>
+                  _TrainerContent(trainer: trainer, packages: packages, username: username),
+                TrainerDetailError(:final message) => Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline, size: 48),
+                        const SizedBox(height: 16),
+                        Text(message),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () => context
+                              .read<TrainerDetailCubit>()
+                              .load(username),
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+              };
+            },
+          ),
         ),
       ),
     );

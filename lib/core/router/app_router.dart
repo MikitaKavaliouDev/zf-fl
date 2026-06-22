@@ -13,6 +13,7 @@ import '../../features/home/presentation/home_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/trainers/presentation/explore_screen.dart';
 import '../../features/trainers/presentation/trainer_detail_screen.dart';
+import '../../features/trainers/presentation/workout_session_screen.dart';
 import '../theme/app_theme.dart';
 
 /// Listenable that forwards bloc state changes to GoRouter for refresh.
@@ -115,6 +116,10 @@ GoRouter createAppRouter(AuthCubit authCubit) {
             builder: (_, _) => const HomeScreen(),
           ),
           GoRoute(
+            path: '/workout',
+            builder: (_, _) => const WorkoutSessionScreen(),
+          ),
+          GoRoute(
             path: '/explore',
             builder: (_, _) => const ExploreScreen(),
           ),
@@ -142,8 +147,9 @@ class _MainShell extends StatelessWidget {
   const _MainShell({required this.child});
 
   int _currentIndex(String location) {
-    if (location.startsWith('/explore')) return 1;
-    if (location.startsWith('/profile')) return 2;
+    if (location.startsWith('/workout')) return 1;
+    if (location.startsWith('/explore')) return 2;
+    if (location.startsWith('/profile')) return 3;
     return 0;
   }
 
@@ -157,8 +163,9 @@ class _MainShell extends StatelessWidget {
         onTap: (i) {
           switch (i) {
             case 0: context.go('/');
-            case 1: context.go('/explore');
-            case 2: context.go('/profile');
+            case 1: context.go('/workout');
+            case 2: context.go('/explore');
+            case 3: context.go('/profile');
           }
         },
         selectedItemColor: AppColors.primary,
@@ -168,6 +175,11 @@ class _MainShell extends StatelessWidget {
             icon: Icon(Icons.home_outlined),
             activeIcon: Icon(Icons.home_rounded),
             label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.fitness_center_outlined),
+            activeIcon: Icon(Icons.fitness_center_rounded),
+            label: 'Workout',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.explore_outlined),

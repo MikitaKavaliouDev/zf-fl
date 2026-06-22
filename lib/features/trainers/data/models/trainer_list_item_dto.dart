@@ -3,11 +3,21 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'trainer_list_item_dto.freezed.dart';
 part 'trainer_list_item_dto.g.dart';
 
+List<String> _parseStringList(dynamic value) {
+  if (value == null) return [];
+  if (value is List) return value.cast<String>();
+  if (value is String) {
+    if (value.isEmpty) return [];
+    return value.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+  }
+  return [];
+}
+
 @freezed
 abstract class TrainerProfileSummary with _$TrainerProfileSummary {
   const factory TrainerProfileSummary({
     String? profilePhotoPath,
-    @Default(<String>[]) List<String> certifications,
+    @JsonKey(fromJson: _parseStringList) @Default(<String>[]) List<String> certifications,
     @Default(<dynamic>[]) List<dynamic> locations,
     @Default(<dynamic>[]) List<dynamic> services,
     double? averageRating,
@@ -35,7 +45,8 @@ abstract class TrainerStats with _$TrainerStats {
 abstract class TrainerListItemDto with _$TrainerListItemDto {
   const factory TrainerListItemDto({
     required String id,
-    required String username,
+    String? username, // nullable — backend Trainer type has `string | null`
+    String? name,
     TrainerProfileSummary? profile,
     TrainerStats? stats,
     double? distance,

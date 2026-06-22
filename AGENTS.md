@@ -7,11 +7,32 @@ Backend is a Next.js REST API at `~/pr/zirofit-next` (separate repo).
 
 ## State
 
-**Brand new repo — zero commits, no code written yet.**
-Only `docs/` (specs/blueprint) and `.omo/` (session data) exist.
-No `pubspec.yaml`, no CI, no `.gitignore`, no lint config. All are to be created.
+**Repo is actively under development.** Code exists across all layers (core, features, tests).
+`pubspec.yaml`, `analysis_options.yaml`, `.gitignore`, CI config are all present.
 
 This instruction file (`AGENTS.md`) is auto-loaded via `opencode.json` — agents do **not** need to be told to read it.
+
+## iOS Reference App
+
+The iOS version of ZIRO.FIT is at **`~/pr/Ziro-Fit`** (Swift/SwiftUI).
+Before building any UI feature, check the iOS implementation first for layout patterns, component hierarchy, spacing, typography, and color usage.
+Key reference files:
+- Explore tab (trainer cards): `Ziro Fit/Views/ZiroMe/TrainerDiscoveryView.swift` — `TrainerDiscoveryCard`, `ExploreTrainerCard`
+- Workout session: `Ziro Fit/Views/Common/WorkoutSessionView.swift` — timer, exercise list, set logging, rest timer, controls
+- Home tab: `Ziro Fit/Views/ZiroMe/PersonalHomeView.swift`
+
+## NO PLACEHOLDERS — Full API Integration (STRICT RULE)
+
+**Every screen, widget, and feature MUST be fully connected to the backend API. Placeholder UIs, mock data, hardcoded IDs, "coming soon" stubs, and no-op handlers are strictly forbidden.**
+
+Rules:
+1. **Every API endpoint called from a cubit MUST have a real Dio request** in the corresponding `ApiService` class — no stubs, no `// TODO`, no empty method bodies.
+2. **Every UI action** (add exercise, finish session, log set, etc.) **MUST call a real API endpoint** — no local-only mutations that skip the backend.
+3. **Every model field** must match the backend Zod schema exactly (nullable vs required). If the backend returns `string | null`, the Flutter field must be `String?`, never `String`.
+4. **Exercise IDs and all resource IDs** must be valid UUIDs from the backend — never use user-typed text as an ID.
+5. **Switching environments**: The backend URL is configured in `lib/core/network/dio_client.dart` via the `API_BASE_URL` env var, with per-platform defaults (`http://10.0.2.2:3321` for Android emulator, `http://localhost:3321` for iOS simulator/desktop). Set `API_BASE_URL` to a production URL for release builds. No hardcoded environment toggles.
+6. **Rest timer** is a required feature of the workout session — the iOS app has `RestTimerManager` + `RestTimerSheet` + `RestTimerProgressBar`. The Flutter API service has `startRest`/`endRest` endpoints already. The cubit and UI MUST wire these up properly, not leave them as dead code.
+7. **Hardcoded IDs/text as IDs** is forbidden. Any exerciseId, sessionId, or similar resource identifier MUST come from the backend API response, never from user text input.
 
 ## How to Verify Backend Contracts
 

@@ -41,10 +41,19 @@ class HomeScreen extends StatelessWidget {
                 'Your fitness journey starts here.',
                 style: TextStyle(fontSize: 14, color: AppColors.mutedText),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
+                  onPressed: () => context.go('/workout'),
+                  icon: const Icon(Icons.play_arrow_rounded),
+                  label: const Text('Start Workout'),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
                   onPressed: () => context.go('/explore'),
                   icon: const Icon(Icons.explore_rounded),
                   label: const Text('Explore Trainers'),

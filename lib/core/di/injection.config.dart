@@ -28,10 +28,16 @@ import 'package:ziro_fit/features/sync/data/sync_api_service.dart' as _i93;
 import 'package:ziro_fit/features/sync/data/sync_repository.dart' as _i813;
 import 'package:ziro_fit/features/trainers/cubit/trainer_list_cubit.dart'
     as _i329;
+import 'package:ziro_fit/features/trainers/cubit/workout_session_cubit.dart'
+    as _i871;
 import 'package:ziro_fit/features/trainers/data/trainer_api_service.dart'
     as _i680;
 import 'package:ziro_fit/features/trainers/data/trainer_repository.dart'
     as _i1063;
+import 'package:ziro_fit/features/trainers/data/workout_session_api_service.dart'
+    as _i662;
+import 'package:ziro_fit/features/trainers/data/workout_session_repository.dart'
+    as _i459;
 
 extension GetItInjectableX on _i174.GetIt {
   // initializes the registration of main-scope dependencies inside of GetIt
@@ -68,6 +74,13 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i680.TrainerApiService>(
       () => _i680.TrainerApiService(gh<_i361.Dio>()),
     );
+    gh.factory<_i662.WorkoutSessionApiService>(
+      () => _i662.WorkoutSessionApiService(gh<_i361.Dio>()),
+    );
+    gh.singleton<_i459.WorkoutSessionRepository>(
+      () =>
+          _i459.WorkoutSessionRepository(gh<_i662.WorkoutSessionApiService>()),
+    );
     gh.singleton<_i813.SyncRepository>(
       () => _i813.SyncRepository(
         gh<_i93.SyncApiService>(),
@@ -91,6 +104,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i813.SyncRepository>(),
         gh<_i124.ConnectivityService>(),
       ),
+    );
+    gh.factory<_i871.WorkoutSessionCubit>(
+      () => _i871.WorkoutSessionCubit(gh<_i459.WorkoutSessionRepository>()),
     );
     gh.factory<_i329.TrainerListCubit>(
       () => _i329.TrainerListCubit(gh<_i1063.TrainerRepository>()),

@@ -10,11 +10,9 @@ _TrainerProfileSummary _$TrainerProfileSummaryFromJson(
   Map<String, dynamic> json,
 ) => _TrainerProfileSummary(
   profilePhotoPath: json['profilePhotoPath'] as String?,
-  certifications:
-      (json['certifications'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList() ??
-      const <String>[],
+  certifications: json['certifications'] == null
+      ? const <String>[]
+      : _parseStringList(json['certifications']),
   locations: json['locations'] as List<dynamic>? ?? const <dynamic>[],
   services: json['services'] as List<dynamic>? ?? const <dynamic>[],
   averageRating: (json['averageRating'] as num?)?.toDouble(),
@@ -51,7 +49,8 @@ Map<String, dynamic> _$TrainerStatsToJson(_TrainerStats instance) =>
 _TrainerListItemDto _$TrainerListItemDtoFromJson(Map<String, dynamic> json) =>
     _TrainerListItemDto(
       id: json['id'] as String,
-      username: json['username'] as String,
+      username: json['username'] as String?,
+      name: json['name'] as String?,
       profile: json['profile'] == null
           ? null
           : TrainerProfileSummary.fromJson(
@@ -68,6 +67,7 @@ Map<String, dynamic> _$TrainerListItemDtoToJson(_TrainerListItemDto instance) =>
     <String, dynamic>{
       'id': instance.id,
       'username': instance.username,
+      'name': instance.name,
       'profile': instance.profile,
       'stats': instance.stats,
       'distance': instance.distance,

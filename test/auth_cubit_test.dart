@@ -59,7 +59,6 @@ void main() {
                 name: 'Test',
                 role: 'client',
                 username: 'testuser',
-                hasCompletedOnboarding: true,
               ),
             ));
         return cubit;
@@ -105,7 +104,6 @@ void main() {
           email: 'a@b.com',
           role: 'client',
           username: 'testuser',
-          hasCompletedOnboarding: true,
         ),
       ),
       act: (cubit) => cubit.logout(),

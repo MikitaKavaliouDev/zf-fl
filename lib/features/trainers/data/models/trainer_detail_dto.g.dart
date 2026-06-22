@@ -15,16 +15,12 @@ _TrainerDetailDto _$TrainerDetailDtoFromJson(Map<String, dynamic> json) =>
       profilePhotoPath: json['profilePhotoPath'] as String?,
       bio: json['bio'] as String?,
       averageRating: (json['averageRating'] as num?)?.toDouble(),
-      specialties:
-          (json['specialties'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          const <String>[],
-      certifications:
-          (json['certifications'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          const <String>[],
+      specialties: json['specialties'] == null
+          ? const <String>[]
+          : _parseStringList(json['specialties']),
+      certifications: json['certifications'] == null
+          ? const <String>[]
+          : _parseStringList(json['certifications']),
       isVerified: json['isVerified'] as bool? ?? false,
       isLinked: json['isLinked'] as bool? ?? false,
       businessCurrency: json['businessCurrency'] as String?,

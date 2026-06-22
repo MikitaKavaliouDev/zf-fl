@@ -19,6 +19,16 @@ class ExploreScreen extends StatefulWidget {
 class _ExploreScreenState extends State<ExploreScreen> {
   final _searchController = TextEditingController();
   bool _showMap = false;
+  String _selectedFilter = 'All';
+
+  static const _categories = [
+    'All',
+    'Strength',
+    'Yoga',
+    'Cardio',
+    'HIIT',
+    'Pilates',
+  ];
 
   @override
   void initState() {
@@ -57,6 +67,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
               context.read<TrainerListCubit>().load();
             },
           ),
+          _buildCategoryFilters(),
           Expanded(
             child: _showMap
                 ? const TrainerMapScreen()
@@ -74,9 +85,32 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }) {
     if (trainers.isEmpty && !isLoadingMore) {
       return const Center(
-        child: Text(
-          'No trainers found',
-          style: TextStyle(color: AppColors.mutedText),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search_rounded,
+              size: 64,
+              color: AppColors.mutedText,
+            ),
+            SizedBox(height: 16),
+            Text(
+              'No trainers found',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: AppColors.foreground,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Try adjusting your search or filters',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.mutedText,
+              ),
+            ),
+          ],
         ),
       );
     }
@@ -109,12 +143,52 @@ class _ExploreScreenState extends State<ExploreScreen> {
     );
   }
 
+  Widget _buildCategoryFilters() {
+    return SizedBox(
+      height: 40,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: _categories.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final category = _categories[index];
+          final isSelected = category == _selectedFilter;
+          return GestureDetector(
+            onTap: () => setState(() => _selectedFilter = category),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppColors.primary
+                    : AppColors.mutedSurface,
+                borderRadius: BorderRadius.circular(99),
+              ),
+              child: Text(
+                category,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight:
+                      isSelected ? FontWeight.w600 : FontWeight.normal,
+                  color: isSelected
+                      ? Colors.white
+                      : AppColors.foreground,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildTrainerList() {
     return BlocBuilder<TrainerListCubit, TrainerListState>(
       builder: (context, state) {
         return switch (state) {
           TrainerListInitial() || TrainerListLoading() => const Center(
-              child: CircularProgressIndicator(),
+              child: CircularProgressIndicator(color: AppColors.primary),
             ),
           TrainerListLoaded(:final trainers, :final hasMore) =>
             _buildLoadedList(trainers: trainers, hasMore: hasMore),
@@ -124,19 +198,33 @@ class _ExploreScreenState extends State<ExploreScreen> {
               isLoadingMore: true,
             ),
           TrainerListError(:final message) => Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 48),
-                  const SizedBox(height: 16),
-                  Text(message),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () =>
-                        context.read<TrainerListCubit>().load(),
-                    child: const Text('Retry'),
-                  ),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.error_outline_rounded,
+                      size: 48,
+                      color: AppColors.mutedText,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      message,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppColors.mutedText,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () =>
+                          context.read<TrainerListCubit>().load(),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
               ),
             ),
         };
