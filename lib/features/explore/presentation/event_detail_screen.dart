@@ -86,10 +86,9 @@ class _EventDetailContent extends StatelessWidget {
         CustomScrollView(
           slivers: [
             // Hero Image
-            SliverAppBar(
-              expandedHeight: 250,
-              pinned: false,
-              backgroundColor: AppColors.background,
+SliverAppBar(
+               expandedHeight: 250,
+               backgroundColor: AppColors.background,
               flexibleSpace: FlexibleSpaceBar(
                 background: Stack(
                   fit: StackFit.expand,

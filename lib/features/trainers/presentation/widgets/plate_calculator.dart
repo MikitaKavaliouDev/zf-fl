@@ -21,7 +21,7 @@ class PlateCalculator extends StatelessWidget {
     final perSide = (targetWeight - barbellWeight) / 2;
     if (perSide <= 0) return [];
 
-    List<double> result = [];
+    final List<double> result = [];
     double remaining = perSide;
 
     for (final plate in _availablePlates) {

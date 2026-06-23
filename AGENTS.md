@@ -9,8 +9,125 @@ Backend is a Next.js REST API at `~/pr/zirofit-next` (separate repo).
 
 **Repo is actively under development.** Code exists across all layers (core, features, tests).
 `pubspec.yaml`, `analysis_options.yaml`, `.gitignore`, CI config are all present.
+See the **Current Codebase State** section below for detailed per-feature inventory.
 
 This instruction file (`AGENTS.md`) is auto-loaded via `opencode.json` — agents do **not** need to be told to read it.
+
+## Current Codebase State (2026-06-23)
+
+### Feature Inventory
+
+#### Auth (`lib/features/auth/`) — ✅ Fully Implemented
+| Layer | Files |
+|---|---|
+| Cubit | `AuthCubit` with sealed `AuthState` (initial, loading, authenticated, needsOnboarding, registerSuccess, pendingRole, error) |
+| API Service | `AuthApiService` — register, login, refresh, signout, me, sync-user, complete-onboarding, forgot-password, update-password, resend-verification-email |
+| Repository | `AuthRepository` — wraps API service, handles token storage |
+| Screens | `LoginScreen`, `RegisterScreen`, `EmailVerificationScreen`, `OnboardingScreen` |
+| Models | `User`, `AuthResponse`, `RegisterRequest`, `RegisterResponse`, `LoginRequest`, `RefreshResponse` |
+| Tests | `auth_cubit_test.dart` |
+
+#### Explore (`lib/features/explore/`) — ✅ Fully Implemented
+| Layer | Files |
+|---|---|
+| Cubits | `ExploreCubit`, `ExploreMapCubit`, `TrainerDiscoveryCubit`, `EventDetailCubit` |
+| API Service | `ExploreApiService` — metadata, featured content, promoted trainers, trainers search, events, event detail |
+| Repository | `ExploreRepository` |
+| Screens | `ExploreScreen` (main tab), `TrainerDiscoveryScreen`, `TrainerMapScreen`, `EventDetailScreen` |
+| Widgets (19) | `ExploreTrainerCard`, `TrainerSpotlightHeroCard`, `ExploreFeatureCarousel`, `ExploreEventCard`, `ExploreEventRow`, `CityPickerSheet`, `ExploreCategoryFilter`, `ExploreCityHeader`, `ExploreSlidingSegment`, `TrendingTagsView`, `MapClusterListView`, `MapTrainerCard`, `MapEventCard`, `MapFilterMenu`, `MapSearchBar`, `MapSingleItemAnnotation`, `MapClusterAnnotation`, `MapSpotlightPreviewCard`, `ExploreEmptyEventsView` |
+| Models (8) | `ExploreCity`, `ExploreCategory`, `ExploreMetadata`, `FeaturedContent`, `ExploreEventDto`, `EventDetailDto`, `PaginatedEvents` |
+
+#### Trainers (`lib/features/trainers/`) — ✅ Fully Implemented
+| Layer | Files |
+|---|---|
+| Cubits | `TrainerDetailCubit`, `TrainerListCubit`, `WorkoutSessionCubit`, `WorkoutHistoryCubit` |
+| API Services | `TrainerApiService` (trainer detail, packages, testimonials, link/unlink), `WorkoutSessionApiService` (sessions CRUD, exercises, logs, templates) |
+| Repositories | `TrainerRepository`, `WorkoutSessionRepository` |
+| Screens | `TrainerDetailScreen`, `WorkoutSessionScreen` (1716 lines), `WorkoutHistoryScreen`, `CompletedSessionDetailScreen`, `TrainerMapScreen`, `TrainerListScreen` (as `explore_screen.dart`) |
+| Widgets (10) | `TrainerCard`, `RestTimerSheet`, `PlateCalculator`, `RpePicker`, `WorkoutNumericKeyboard`, `FinishWorkoutDialog`, `CancelWorkoutDialog`, `SaveAsTemplateDialog`, `TemplatePickerDialog`, `SearchBar` |
+| Models (10) | `TrainerListItemDto`, `TrainerDetailDto`, `TrainerPackageDto`, `TrainerLocation`, `PromotedTrainerDto`, `WorkoutSessionDto`, `WorkoutSessionResponse`, `ExerciseDto`, `ExerciseLogDto`, `TemplateDto` |
+| Tests | `trainer_detail_cubit_test.dart`, `trainer_list_cubit_test.dart` |
+
+#### Home (`lib/features/home/`) — ✅ Fully Implemented
+| Layer | Files |
+|---|---|
+| Cubit | `HomeCubit` with sealed `HomeState` (initial, loading, loaded, error) — fetches dashboard + active program in parallel |
+| API Service | `HomeApiService` — `GET /api/client/dashboard`, `GET /api/client/program/active` (returns null on 404) |
+| Repository | `HomeRepository` — wraps API service |
+| Screen | `HomeScreen` — main dashboard with floating header + scrollable content sections |
+| Widgets (11) | `ZiroHeader`, `CoachCard`, `CreditStatusWidget`, `NeedCoachBanner`, `CheckInBanner`, `NoRoutinePlaceholder`, `ActiveProgramWidget`, `InvitationHeroCard`, `StreakMotivationCard`, `UpcomingSessionsCarousel`, `QuickActionsRow`, `RecentHistorySection`, `DailyTargetsSection` |
+| Models (7) | `ClientDashboardResponse`, `ClientProfileData`, `ClientDashboardTrainer`, `ClientRecentSession`, `ClientDashboardSession`, `ActiveProgramResponse` (+ `ProgramBasicInfo`, `ProgramProgress`, `ProgramTemplateStatus`), `DashboardMeasurement` |
+
+#### Profile (`lib/features/profile/`) — 🟡 Minimal Implementation
+| Layer | Files |
+|---|---|
+| Screens | `ProfileScreen` (basic scaffold, no content loaded) |
+
+#### Sync (`lib/features/sync/`) — ✅ Fully Implemented
+| Layer | Files |
+|---|---|
+| Cubit | `SyncCubit` — pull-first then push sync, auto-sync on connectivity restore |
+| API Service | `SyncApiService` — `GET /api/sync/pull`, `POST /api/sync/push` |
+| Repository | `SyncRepository` — orchestrates pull/push against local Drift DB |
+| Tests | `sync_cubit_test.dart` |
+
+### Core Infrastructure
+
+| Module | Files | Status |
+|---|---|---|
+| **Router** | `app_router.dart` — GoRouter v17.3.0 with `ShellRoute` (4 tabs), full-screen sub-routes for detail/discovery/map, auth redirect guard, Stripe deep link handling | ✅ |
+| **Routing tables** | Auth: `/login`, `/register`, `/verify-email`, `/onboarding` | ✅ |
+| | Shell (bottom nav): `/` (Home), `/workout` (Session), `/explore`, `/profile` | ✅ |
+| | Full-screen: `/trainer/:username`, `/explore/discovery`, `/explore/map`, `/explore/event/:id`, `/workout/history`, `/workout/history/:id` | ✅ |
+| | Deep links: `/stripe-return`, `/packages/:id/success`, `/packages/:id/cancel` | ✅ |
+| **DI** | `get_it` + `injectable` — `initDependencies()` in main, auto-generated `injection.config.dart` | ✅ |
+| **Networking** | `Dio` with `ApiLoggerInterceptor` (structured logging) + `AuthInterceptor` (JWT auto-refresh on 401) | ✅ |
+| | Base URL: `http://10.0.2.2:3321` (Android), `http://localhost:3321` (iOS), override via `API_BASE_URL` env var | ✅ |
+| **Auth Security** | `flutter_secure_storage` for JWT tokens, `QueuedInterceptor` for silent refresh | ✅ |
+| **Local DB** | Drift/SQLite with 17 tables: `SyncMetadata`, `ClientsTable`, `ProfilesTable`, `WorkoutSessionsTable`, `ExercisesTable`, `WorkoutTemplates`, `ClientMeasurements`, `ClientPhotos`, `Notifications`, `BookingTable`, `PackageTable`, `TestimonialTable`, `ClientExerciseLogs`, `Services`, `Programs`, `CalendarEvents`, `ClientAssessments`, `TrainerProfilesTable` | ✅ |
+| **Theme** | `AppColors` (8 tokens: primary `#007aff`, background, card, mutedSurface, borderMuted, borderActive, foreground, mutedText), forced light mode only, `shadcn/ui` Zinc/Neutral palette | ✅ |
+| **Logging** | `ApiLogger` (Dio interceptor — method, URL, status, timing, masked request/response body), `StateLogger` (BlocObserver — state transitions), `LoggerConfig` (debug-only flags) | ✅ |
+| **Connectivity** | `connectivity_plus` wrapper, auto-triggers sync on reconnect | ✅ |
+| **Location** | `geolocator` service, used by Explore map screen | ✅ |
+
+### Dependencies (from pubspec.yaml)
+
+| Package | Version | Purpose |
+|---|---|---|
+| `flutter_bloc` | ^9.1.1 | State management |
+| `get_it` + `injectable` | ^9.2.1 / ^3.0.0 | Dependency injection |
+| `dio` | ^5.7.0 | HTTP client |
+| `drift` + `sqlite3` | ^2.25.0 | Local database |
+| `go_router` | ^17.3.0 | Declarative routing |
+| `flutter_map` + `latlong2` | ^8.3.0 / ^0.9.0 | OpenStreetMap maps |
+| `geolocator` | ^13.0.0 | Device location |
+| `flutter_stripe` | ^13.0.0 | Stripe payments |
+| `flutter_secure_storage` | ^10.3.1 | JWT token storage |
+| `freezed_annotation` + `freezed` | ^3.1.0 / ^3.2.6-dev.1 | Immutable data classes / sealed unions |
+| `json_annotation` + `json_serializable` | ^4.12.0 / ^6.8.0 | JSON serialization |
+| `bloc_test` + `mocktail` | ^10.0.0 / ^1.0.4 | Cubit testing / mocking |
+| `connectivity_plus` | ^7.1.1 | Network status |
+| `intl` | ^0.20.2 | Date formatting |
+| `uuid` | ^4.5.1 | UUID generation |
+| `url_launcher` | ^6.3.1 | URL launching |
+
+### Test Coverage
+
+| Test File | Tests |
+|---|---|
+| `test/auth_cubit_test.dart` | Auth cubit: register, login, token refresh, auto-redirect |
+| `test/trainer_list_cubit_test.dart` | Trainer list cubit: load, pagination, error |
+| `test/trainer_detail_cubit_test.dart` | Trainer detail cubit: load, link/unlink |
+| `test/sync_cubit_test.dart` | Sync cubit: idle/in-progress/error transitions, auto-sync on reconnect |
+| `test/widget_test.dart` | Smoke test |
+
+### Known Gaps / TODO
+- **Profile screen** — basic scaffold only, no content implemented
+- **Workout templates** — save/load dialogs exist, full create/edit template flow not wired
+- **Push notifications** — not implemented
+- **Offline sync** — architecture is in place (Drift tables, sync cubit, pull/push endpoints) but hasn't been end-to-end tested
+- **Stripe checkout** — deep link routes exist, the actual Stripe payment sheet integration in Flutter is not wired
+- **Plate calculator** — widget exists (`plate_calculator.dart`) but isn't integrated into workout flow
 
 ## iOS Reference App
 
@@ -100,6 +217,13 @@ Backend has **no CI/CD pipeline** and `.env` is committed to git (not gitignored
 | `DELETE` | `/api/client/trainer/link` | — | `{ message: string }` |
 | `POST` | `/api/clients/request-link` | `{ email: string }` | `{ message: string }` (trainer invites client) |
 
+### Client Dashboard Endpoints (Auth required)
+
+| Method | Path | Request / Query | Response (`{ data: ... }`) |
+|---|---|---|---|
+| `GET` | `/api/client/dashboard` | — | `{ clientData: { id, userId, name, email, trainer: { id, name, username, email } \| null, workoutSessions: [...], measurements: [...] }, weightUnit: "KG", upcomingClientSessions: [...], lastCheckIn: string (ISO) \| null }` |
+| `GET` | `/api/client/program/active` | — | `{ program: { id, name, description? }, progress: { completedCount, totalCount, progressPercentage, nextTemplateId? }, templates: [{ id, name, description?, order, status: "COMPLETED"|"NEXT"|"PENDING", exerciseCount }] }` \| **null (404)** |
+
 ### Promoted Trainers (Public)
 
 | Method | Path | Query Params | Response |
@@ -160,12 +284,11 @@ notifications, bookings, trainer_profiles, calendar_events
 
 ## Development Workflow
 
-- No build/run commands defined yet (no `pubspec.yaml`). Will use standard Flutter:
-  ```sh
-  flutter run
-  flutter test
-  flutter pub run build_runner build --delete-conflicting-outputs
-  ```
+```sh
+flutter run
+flutter test
+flutter pub run build_runner build --delete-conflicting-outputs
+```
 - Code generation: `injectable` + `drift` require `build_runner` after adding/changing annotations or table definitions.
 - Freezed codegen: `flutter pub run build_runner build` also generates `*.freezed.dart`.
 
@@ -286,7 +409,7 @@ Build a **structured logging system** so the full app behavior is traceable from
 
 ## Gotchas
 
-- **No `.gitignore` exists yet** — add one immediately when creating project files.
+- **`.gitignore`** — excludes `.dart_tool/`, `build/`, `.pub-cache/`, `*.g.dart` and `*.freezed.dart` are tracked in git.
 - **Spec docs live in `docs/`** — `implementation.md` is the high-level blueprint, but **backend Zod schemas are the source of truth** for API contracts.
 - Backend `src/app/api/*/route.schema.ts` files define exact request/response shapes. Always consult them before writing Flutter models.
 - Backend has **TypeScript non-strict mode** (`strict: false` in tsconfig) — some fields may be nullable that the types say are required.

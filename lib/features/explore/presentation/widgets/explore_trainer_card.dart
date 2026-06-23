@@ -43,7 +43,9 @@ class ExploreTrainerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.go('/trainer/${trainer.username ?? ''}'),
+      onTap: trainer.username != null
+          ? () => context.go('/trainer/${trainer.username}')
+          : null,
       child: Container(
         width: 144,
         decoration: BoxDecoration(

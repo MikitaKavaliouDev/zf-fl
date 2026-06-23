@@ -17,11 +17,11 @@ class EventMapCard extends StatelessWidget {
     final dateFormat = DateFormat.MMMd().add_jm();
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.85),
+        color: Colors.white.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -108,7 +108,7 @@ class EventMapCard extends StatelessWidget {
       return Image.network(
         event.imageUrl!,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _placeholder(),
+        errorBuilder: (_, _, _) => _placeholder(),
       );
     }
     return _placeholder();
@@ -116,7 +116,7 @@ class EventMapCard extends StatelessWidget {
 
   Widget _placeholder() {
     return Container(
-      color: const Color(0xFF007aff).withOpacity(0.1),
+      color: const Color(0xFF007aff).withValues(alpha: 0.1),
       child: const Icon(Icons.calendar_today, color: Color(0xFF007aff), size: 24),
     );
   }

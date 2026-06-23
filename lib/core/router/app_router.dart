@@ -132,13 +132,6 @@ GoRouter createAppRouter(AuthCubit authCubit) {
             path: '/profile',
             builder: (_, _) => const ProfileScreen(),
           ),
-          GoRoute(
-            path: '/trainer/:username',
-            builder: (_, state) {
-              final username = state.pathParameters['username'] ?? '';
-              return TrainerDetailScreen(username: username);
-            },
-          ),
         ],
       ),
       // Explore sub-routes (full-screen, no bottom nav — matching iOS sheet behavior)
@@ -207,6 +200,14 @@ GoRouter createAppRouter(AuthCubit authCubit) {
             );
           },
         ),
+      ),
+      // Trainer detail (full-screen, no bottom nav)
+      GoRoute(
+        path: '/trainer/:username',
+        builder: (_, state) {
+          final username = state.pathParameters['username'] ?? '';
+          return TrainerDetailScreen(username: username);
+        },
       ),
       // Workout history routes (full-screen, no bottom nav)
       GoRoute(

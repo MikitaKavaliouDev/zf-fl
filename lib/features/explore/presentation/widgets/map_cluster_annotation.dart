@@ -88,7 +88,7 @@ class ClusterAnnotation extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
+            color: Colors.black.withValues(alpha: 0.15),
             blurRadius: 3,
             offset: const Offset(0, 1),
           ),
@@ -105,7 +105,7 @@ class ClusterAnnotation extends StatelessWidget {
                 width: innerSize,
                 height: innerSize,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _placeholderIcon(innerSize),
+                errorBuilder: (_, _, _) => _placeholderIcon(innerSize),
               );
             }
             return _placeholderIcon(innerSize);
@@ -117,7 +117,7 @@ class ClusterAnnotation extends StatelessWidget {
                 width: innerSize,
                 height: innerSize,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _eventPlaceholder(innerSize),
+                errorBuilder: (_, _, _) => _eventPlaceholder(innerSize),
               );
             }
             return _eventPlaceholder(innerSize);
@@ -140,8 +140,8 @@ class ClusterAnnotation extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      color: const Color(0xFF007aff).withOpacity(0.1),
-      child: Icon(Icons.calendar_today, color: const Color(0xFF007aff), size: size * 0.4),
+color: const Color(0xFF007aff).withValues(alpha: 0.1),
+       child: Icon(Icons.calendar_today, color: const Color(0xFF007aff), size: size * 0.4),
     );
   }
 }

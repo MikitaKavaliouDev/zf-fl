@@ -30,7 +30,7 @@ class SingleItemAnnotation extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -47,7 +47,7 @@ class SingleItemAnnotation extends StatelessWidget {
                   width: innerSize,
                   height: innerSize,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => _placeholderIcon(),
+                  errorBuilder: (_, _, _) => _placeholderIcon(),
                 );
               }
               return _placeholderIcon();
@@ -59,7 +59,7 @@ class SingleItemAnnotation extends StatelessWidget {
                   width: innerSize,
                   height: innerSize,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => _eventPlaceholder(),
+                  errorBuilder: (_, _, _) => _eventPlaceholder(),
                 );
               }
               return _eventPlaceholder();
@@ -83,7 +83,7 @@ class SingleItemAnnotation extends StatelessWidget {
     return Container(
       width: 54,
       height: 54,
-      color: const Color(0xFF007aff).withOpacity(0.1),
+      color: const Color(0xFF007aff).withValues(alpha: 0.1),
       child: const Icon(Icons.calendar_today, color: Color(0xFF007aff), size: 20),
     );
   }

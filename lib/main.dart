@@ -9,6 +9,7 @@ import 'core/theme/app_theme.dart';
 import 'features/auth/cubit/auth_cubit.dart';
 import 'features/explore/cubit/explore_cubit.dart';
 import 'features/explore/cubit/trainer_discovery_cubit.dart';
+import 'features/home/cubit/home_cubit.dart';
 import 'features/trainers/cubit/trainer_list_cubit.dart';
 import 'features/trainers/cubit/workout_session_cubit.dart';
 
@@ -33,6 +34,7 @@ class ZiroFitApp extends StatefulWidget {
 
 class _ZiroFitAppState extends State<ZiroFitApp> {
   late final AuthCubit _authCubit;
+  late final HomeCubit _homeCubit;
   late final TrainerListCubit _trainerListCubit;
   late final WorkoutSessionCubit _workoutSessionCubit;
   late final ExploreCubit _exploreCubit;
@@ -43,6 +45,7 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
   void initState() {
     super.initState();
     _authCubit = di.getIt<AuthCubit>();
+    _homeCubit = di.getIt<HomeCubit>();
     _trainerListCubit = di.getIt<TrainerListCubit>();
     _workoutSessionCubit = di.getIt<WorkoutSessionCubit>();
     _exploreCubit = di.getIt<ExploreCubit>();
@@ -57,6 +60,7 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
   @override
   void dispose() {
     _authCubit.close();
+    _homeCubit.close();
     _trainerListCubit.close();
     _workoutSessionCubit.close();
     _exploreCubit.close();
@@ -69,6 +73,7 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
     return MultiBlocProvider(
       providers: [
         BlocProvider.value(value: _authCubit),
+        BlocProvider.value(value: _homeCubit),
         BlocProvider.value(value: _trainerListCubit),
         BlocProvider.value(value: _workoutSessionCubit),
         BlocProvider.value(value: _exploreCubit),

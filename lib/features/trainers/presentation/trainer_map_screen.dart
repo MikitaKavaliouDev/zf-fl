@@ -54,11 +54,10 @@ class _TrainerMapScreenState extends State<TrainerMapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: _cubit,
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        body: BlocConsumer<ExploreMapCubit, ExploreMapState>(
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: BlocConsumer<ExploreMapCubit, ExploreMapState>(
+        bloc: _cubit,
         listener: (context, state) {
           if (state is ExploreMapLoaded) {
             // Auto-zoom to user location on first successful load.
@@ -102,7 +101,6 @@ class _TrainerMapScreenState extends State<TrainerMapScreen> {
           return const SizedBox.shrink();
         },
       ),
-    ),
     );
   }
 
@@ -156,11 +154,11 @@ class _TrainerMapScreenState extends State<TrainerMapScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.7),
+                      color: Colors.white.withValues(alpha: 0.7),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
@@ -212,11 +210,11 @@ class _TrainerMapScreenState extends State<TrainerMapScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
+                              color: Colors.black.withValues(alpha: 0.1),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -359,7 +357,11 @@ class _TrainerMapScreenState extends State<TrainerMapScreen> {
             trainer: state.selectedTrainer!,
             onOpen: () {
               final username = state.selectedTrainer!.username;
-              if (username != null) context.push('/trainer/$username');
+              if (username != null) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  context.go('/trainer/$username');
+                });
+              }
             },
           ),
         );
@@ -372,7 +374,9 @@ class _TrainerMapScreenState extends State<TrainerMapScreen> {
         child: EventMapCard(
           event: state.selectedEvent!,
           onView: () {
-            context.push('/explore/event/${state.selectedEvent!.id}');
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              context.push('/explore/event/${state.selectedEvent!.id}');
+            });
           },
         ),
       );
@@ -395,7 +399,11 @@ class _TrainerMapScreenState extends State<TrainerMapScreen> {
                 trainer: trainer,
                 onOpen: () {
                   final username = trainer.username;
-                  if (username != null) context.push('/trainer/$username');
+                  if (username != null) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      context.go('/trainer/$username');
+                    });
+                  }
                 },
               ),
             );
@@ -406,7 +414,9 @@ class _TrainerMapScreenState extends State<TrainerMapScreen> {
               child: EventMapCard(
                 event: event,
                 onView: () {
-                  context.push('/explore/event/${event.id}');
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    context.push('/explore/event/${event.id}');
+                  });
                 },
               ),
             );

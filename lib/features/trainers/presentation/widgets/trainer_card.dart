@@ -41,7 +41,9 @@ class TrainerCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: GestureDetector(
-        onTap: () => context.go('/trainer/${trainer.username ?? ''}'),
+        onTap: trainer.username != null
+            ? () => context.go('/trainer/${trainer.username}')
+            : null,
         child: Container(
           decoration: BoxDecoration(
             color: AppColors.card,

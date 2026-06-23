@@ -211,7 +211,9 @@ class _TrainerDiscoveryScreenState extends State<TrainerDiscoveryScreen> {
           final trainer = state.trainers[index];
           return _TrainerDiscoveryCard(
             trainer: trainer,
-            onTap: () => context.go('/trainer/${trainer.username ?? ''}'),
+            onTap: trainer.username != null
+                ? () => context.go('/trainer/${trainer.username}')
+                : null,
           );
         },
         childCount: state.trainers.length + (state.loadingTrainers ? 1 : 0),
@@ -659,9 +661,9 @@ class _FilterSheetContentState extends State<_FilterSheetContent> {
 
 class _TrainerDiscoveryCard extends StatelessWidget {
   final dynamic trainer;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
-  const _TrainerDiscoveryCard({required this.trainer, required this.onTap});
+  const _TrainerDiscoveryCard({required this.trainer, this.onTap});
 
   @override
   Widget build(BuildContext context) {

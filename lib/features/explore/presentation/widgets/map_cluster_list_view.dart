@@ -21,11 +21,11 @@ class ClusterListView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -75,7 +75,7 @@ class ClusterListView extends StatelessWidget {
             child: ListView.separated(
               shrinkWrap: true,
               itemCount: items.length,
-              separatorBuilder: (_, __) => const Divider(indent: 84),
+              separatorBuilder: (_, _) => const Divider(indent: 84),
               itemBuilder: (context, index) {
                 return items[index].when(
                   trainer: (trainer) => _buildTrainerRow(trainer),
@@ -183,7 +183,7 @@ class ClusterListView extends StatelessWidget {
       return Image.network(
         photoPath,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _avatarPlaceholder(),
+        errorBuilder: (_, _, _) => _avatarPlaceholder(),
       );
     }
     return _avatarPlaceholder();
@@ -201,7 +201,7 @@ class ClusterListView extends StatelessWidget {
       return Image.network(
         event.imageUrl!,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _eventPlaceholder(),
+        errorBuilder: (_, _, _) => _eventPlaceholder(),
       );
     }
     return _eventPlaceholder();
@@ -209,7 +209,7 @@ class ClusterListView extends StatelessWidget {
 
   Widget _eventPlaceholder() {
     return Container(
-      color: const Color(0xFF007aff).withOpacity(0.1),
+      color: const Color(0xFF007aff).withValues(alpha: 0.1),
       child: const Icon(Icons.calendar_today, color: Color(0xFF007aff)),
     );
   }

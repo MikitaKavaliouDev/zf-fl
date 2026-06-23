@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -74,8 +73,8 @@ class _RestTimerSheetState extends State<RestTimerSheet> {
   @override
   void initState() {
     super.initState();
-    _minuteController = FixedExtentScrollController(initialItem: 2);
-    _secondController = FixedExtentScrollController(initialItem: 0);
+_minuteController = FixedExtentScrollController(initialItem: 2);
+     _secondController = FixedExtentScrollController();
   }
 
   @override
@@ -306,7 +305,6 @@ class _RestTimerSheetState extends State<RestTimerSheet> {
                           controller: _minuteController,
                           itemExtent: 32,
                           diameterRatio: 1.2,
-                          squeeze: 1.0,
                           onSelectedItemChanged: (i) {
                             setState(() => _selectedMinutes = i);
                           },
@@ -329,7 +327,6 @@ class _RestTimerSheetState extends State<RestTimerSheet> {
                           controller: _secondController,
                           itemExtent: 32,
                           diameterRatio: 1.2,
-                          squeeze: 1.0,
                           onSelectedItemChanged: (i) {
                             setState(() => _selectedSeconds = i * 5);
                           },

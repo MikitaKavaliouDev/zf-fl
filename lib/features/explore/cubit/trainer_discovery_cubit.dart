@@ -73,7 +73,6 @@ class TrainerDiscoveryCubit extends Cubit<TrainerDiscoveryState> {
         _searchTrainers(query: query, sortBy: sortBy, specialty: specialty,
             minRating: minRating, lat: lat, lng: lng),
         _repository.getEvents(
-          page: 1,
           limit: 20,
           search: query,
           lat: lat,
@@ -122,8 +121,6 @@ class TrainerDiscoveryCubit extends Cubit<TrainerDiscoveryState> {
     int page = 1,
   }) {
     return _repository.searchTrainers(
-      page: page,
-      pageSize: 15,
       query: query,
       location: location,
       lat: lat,

@@ -208,11 +208,13 @@ class WorkoutSessionApiService {
     return LiveSessionResponse.fromJson(data);
   }
 
-  /// Get all templates for the current user.
+  /// Get all templates for the current user's active program.
   Future<List<TemplateDto>> getTemplates() async {
-    final response = await _dio.get('/api/workout-templates/save');
-    final data = response.data['data'] as List<dynamic>;
-    return data
+    final response = await _dio.get('/api/client/program/active');
+    final data = response.data['data'];
+    if (data == null) return [];
+    final templates = data['templates'] as List<dynamic>;
+    return templates
         .map((e) => TemplateDto.fromJson(e as Map<String, dynamic>))
         .toList();
   }

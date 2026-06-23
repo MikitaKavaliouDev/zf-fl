@@ -53,10 +53,9 @@ class TrendingTagsView extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(99),
-                    border: Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.2),
-                      width: 1,
-                    ),
+border: Border.all(
+                       color: AppColors.primary.withValues(alpha: 0.2),
+                     ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
