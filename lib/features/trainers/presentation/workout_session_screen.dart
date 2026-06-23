@@ -6,6 +6,34 @@ import '../cubit/workout_session_cubit.dart';
 import '../cubit/workout_session_state.dart';
 import '../data/models/exercise_dto.dart';
 import '../data/models/exercise_log_dto.dart';
+import 'widgets/workout_numeric_keyboard.dart';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Focus / input system types (local to this screen)
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum _FieldType { weight, reps }
+
+class _FocusTarget {
+  final String exerciseId;
+  final int setIndex;
+  final _FieldType fieldType;
+
+  const _FocusTarget({
+    required this.exerciseId,
+    required this.setIndex,
+    required this.fieldType,
+  });
+
+  bool get isWeight => fieldType == _FieldType.weight;
+  bool get isReps => fieldType == _FieldType.reps;
+
+  String logKey(String exerciseId, int setIndex) => '${exerciseId}_$setIndex';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Screen
+// ─────────────────────────────────────────────────────────────────────────────
 
 class WorkoutSessionScreen extends StatefulWidget {
   const WorkoutSessionScreen({super.key});
@@ -15,11 +43,22 @@ class WorkoutSessionScreen extends StatefulWidget {
 }
 
 class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
+  // ── Input system state ───────────────────────────────────────────────
+  _FocusTarget? _focusTarget;
+  String _activeInputText = '';
+
   @override
   void initState() {
     super.initState();
     context.read<WorkoutSessionCubit>().loadCurrent();
   }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  // ── Build ─────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -57,16 +96,22 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
               :final elapsed,
               :final isPaused,
               :final logs,
+              :final restStartedAt,
+              :final restElapsed,
             ) =>
-              _buildActive(context, elapsed, isPaused, logs),
-            WorkoutSessionCompleted(:final totalDuration) =>
-              _buildCompleted(context, totalDuration),
+              _buildActive(
+                context, elapsed, isPaused, logs, restStartedAt, restElapsed,
+              ),
+            WorkoutSessionCompleted(:final totalDuration, :final logs) =>
+              _buildCompleted(context, totalDuration, logs),
             WorkoutSessionError(:final message) => _buildError(context, message),
           };
         },
       ),
     );
   }
+
+  // ── State builders ────────────────────────────────────────────────────
 
   Widget _buildIdle(BuildContext context) {
     return Center(
@@ -112,6 +157,8 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
     Duration elapsed,
     bool isPaused,
     List<ExerciseLogDto> logs,
+    DateTime? restStartedAt,
+    Duration restElapsed,
   ) {
     // Group logs by exerciseId.
     final grouped = <String, List<ExerciseLogDto>>{};
@@ -124,138 +171,241 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
       }
     }
 
-    return Column(
-      children: [
-        // Timer Bar
-        Container(
-          margin: const EdgeInsets.all(16),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.borderMuted),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.timer_outlined, color: AppColors.primary),
-              const SizedBox(width: 12),
-              Text(
-                _formatDuration(elapsed),
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  fontFeatures: [FontFeature.tabularFigures()],
-                ),
-              ),
-              const Spacer(),
-              if (isPaused)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                  child: const Text(
-                    'PAUSED',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.orange,
-                    ),
-                  ),
-                )
-              else
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: Colors.green,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-            ],
-          ),
-        ),
+    final showKeyboard = _focusTarget != null;
+    final isResting = restStartedAt != null;
 
-        // Exercise list
-        Expanded(
-          child: grouped.isEmpty
-              ? _buildEmptyExercises(context)
-              : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: grouped.entries.length + 1, // +1 for add button
-                  itemBuilder: (context, index) {
-                    if (index == grouped.entries.length) {
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 12, bottom: 16),
-                        child: OutlinedButton.icon(
-                          onPressed: () => _showAddExerciseDialog(context),
-                          icon: const Icon(Icons.add_rounded, size: 18),
-                          label: const Text('Add Exercise'),
+    return Stack(
+      children: [
+        // Main content
+        Column(
+          children: [
+            // Timer Bar (session timer + optional rest timer)
+            Container(
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              decoration: BoxDecoration(
+                color: AppColors.card,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.borderMuted),
+              ),
+              child: Column(
+                children: [
+                  // Session timer row
+                  Row(
+                    children: [
+                      const Icon(Icons.timer_outlined, color: AppColors.primary),
+                      const SizedBox(width: 12),
+                      Text(
+                        _formatDuration(elapsed),
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          fontFeatures: [FontFeature.tabularFigures()],
                         ),
-                      );
-                    }
-                    final entry = grouped.entries.elementAt(index);
-                    final exLogs = entry.value;
-                    final name = exerciseNames[entry.key] ?? 'Exercise';
-                    final muscleGroup = exLogs
-                        .firstWhere((l) => l.exercise?.muscleGroup != null,
-                        orElse: () => exLogs.first)
-                        .exercise?.muscleGroup;
-                    return _ExerciseCard(
-                      exerciseName: name,
-                      muscleGroup: muscleGroup,
-                      logs: exLogs,
-                      onLogSet: (reps, weight) {
-                        context.read<WorkoutSessionCubit>().logSet(
+                      ),
+                      const Spacer(),
+                      if (isPaused)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(99),
+                          ),
+                          child: const Text(
+                            'PAUSED',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange,
+                            ),
+                          ),
+                        )
+                      else if (isResting)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(99),
+                          ),
+                          child: Text(
+                            _formatRestDuration(restElapsed),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange,
+                            ),
+                          ),
+                        )
+                      else
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: Colors.green,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                    ],
+                  ),
+                  // Rest timer progress bar
+                  if (isResting) ...[
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        const Icon(Icons.hotel_class_rounded,
+                            size: 14, color: Colors.orange),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(99),
+                            child: LinearProgressIndicator(
+                              value: (restElapsed.inSeconds % 120) / 120.0,
+                              backgroundColor:
+                                  Colors.orange.withValues(alpha: 0.1),
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                  Colors.orange),
+                              minHeight: 4,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () =>
+                              context.read<WorkoutSessionCubit>().endRest(),
+                          child: const Icon(Icons.skip_next_rounded,
+                              size: 20, color: Colors.orange),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            // Exercise list
+            Expanded(
+              child: grouped.isEmpty
+                  ? _buildEmptyExercises(context)
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: grouped.entries.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index == grouped.entries.length) {
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 12, bottom: 16),
+                            child: OutlinedButton.icon(
+                              onPressed: () => _showAddExerciseDialog(context),
+                              icon: const Icon(Icons.add_rounded, size: 18),
+                              label: const Text('Add Exercise'),
+                            ),
+                          );
+                        }
+                        final entry = grouped.entries.elementAt(index);
+                        final exLogs = entry.value;
+                        final name = exerciseNames[entry.key] ?? 'Exercise';
+                        final muscleGroup = exLogs
+                            .firstWhere((l) => l.exercise?.muscleGroup != null,
+                                orElse: () => exLogs.first)
+                            .exercise?.muscleGroup;
+                        return _ExerciseCard(
+                          exerciseName: name,
+                          muscleGroup: muscleGroup,
                           exerciseId: entry.key,
-                          reps: reps,
-                          weight: weight,
+                          logs: exLogs,
+                          focusTarget: _focusTarget,
+                          activeInputText: _activeInputText,
+                          onTapWeight: (logIndex) => _triggerInput(
+                            exerciseId: entry.key,
+                            setIndex: logIndex,
+                            fieldType: _FieldType.weight,
+                            currentValue: exLogs[logIndex].weight,
+                          ),
+                          onTapReps: (logIndex) => _triggerInput(
+                            exerciseId: entry.key,
+                            setIndex: logIndex,
+                            fieldType: _FieldType.reps,
+                            currentValue: exLogs[logIndex].reps?.toDouble(),
+                          ),
+                          onComplete: (logIndex) => _completeSet(
+                            exerciseId: entry.key,
+                            setIndex: logIndex,
+                            log: exLogs[logIndex],
+                          ),
+                          onAddSet: () => _addSet(entry.key),
                         );
                       },
-                    );
-                  },
-                ),
+                    ),
+            ),
+
+            // Bottom controls (hidden when keyboard is active)
+            AnimatedOpacity(
+              opacity: showKeyboard ? 0 : 1,
+              duration: const Duration(milliseconds: 200),
+              child: showKeyboard
+                  ? const SizedBox.shrink()
+                  : Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: const BoxDecoration(
+                        color: AppColors.card,
+                        border: Border(top: BorderSide(color: AppColors.borderMuted)),
+                      ),
+                      child: SafeArea(
+                        top: false,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: () {
+                                  if (isPaused) {
+                                    context.read<WorkoutSessionCubit>().resume();
+                                  } else {
+                                    context.read<WorkoutSessionCubit>().pause();
+                                  }
+                                },
+                                icon: Icon(isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded),
+                                label: Text(isPaused ? 'Resume' : 'Pause'),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () => _confirmFinish(context),
+                                icon: const Icon(Icons.stop_rounded),
+                                label: const Text('Finish'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+            ),
+          ],
         ),
 
-        // Bottom controls
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: const BoxDecoration(
-            color: AppColors.card,
-            border: Border(top: BorderSide(color: AppColors.borderMuted)),
-          ),
-          child: SafeArea(
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      if (isPaused) {
-                        context.read<WorkoutSessionCubit>().resume();
-                      } else {
-                        context.read<WorkoutSessionCubit>().pause();
-                      }
-                    },
-                    icon: Icon(isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded),
-                    label: Text(isPaused ? 'Resume' : 'Pause'),
-                  ),
+        // Keyboard overlay
+        if (showKeyboard)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Material(
+              elevation: 8,
+              child: SafeArea(
+                top: false,
+                child: WorkoutNumericKeyboard(
+                  isWeight: _focusTarget!.isWeight,
+                  text: _activeInputText,
+                  onTextChanged: (v) => setState(() => _activeInputText = v),
+                  onNext: _handleInputNext,
+                  onDismiss: _handleInputDismiss,
+                  // Plate calc / RPE not implemented yet
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _confirmFinish(context),
-                    icon: const Icon(Icons.stop_rounded),
-                    label: const Text('Finish'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
-        ),
       ],
     );
   }
@@ -295,40 +445,98 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
     );
   }
 
-  Widget _buildCompleted(BuildContext context, Duration totalDuration) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.check_circle_rounded,
-              size: 80,
-              color: Colors.green,
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Workout Complete!',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
+  Widget _buildCompleted(
+    BuildContext context,
+    Duration totalDuration,
+    List<ExerciseLogDto> logs,
+  ) {
+    // Group logs by exercise to show per-exercise summary.
+    final summary = <String, _ExerciseSummary>{};
+    for (final log in logs) {
+      final name = log.exercise?.name ?? log.exerciseId;
+      final entry = summary.putIfAbsent(name, () => _ExerciseSummary(name: name));
+      entry.totalSets++;
+      if (log.reps != null && log.reps! > 0) {
+        entry.totalReps += log.reps!;
+      }
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: Column(
+        children: [
+          const Icon(Icons.check_circle_rounded, size: 72, color: Colors.green),
+          const SizedBox(height: 16),
+          const Text(
+            'Workout Complete!',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Duration: ${_formatDuration(totalDuration)}',
+            style: const TextStyle(fontSize: 15, color: AppColors.mutedText),
+          ),
+          const SizedBox(height: 24),
+
+          if (summary.isNotEmpty) ...[
             Text(
-              'Duration: ${_formatDuration(totalDuration)}',
-              style: const TextStyle(fontSize: 16, color: AppColors.mutedText),
-            ),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () =>
-                    context.read<WorkoutSessionCubit>().start(),
-                icon: const Icon(Icons.refresh_rounded),
-                label: const Text('New Workout'),
+              '${summary.length} exercises · ${summary.values.fold<int>(0, (s, e) => s + e.totalSets)} sets',
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.mutedText,
+                fontWeight: FontWeight.w500,
               ),
             ),
+            const SizedBox(height: 12),
+            ...summary.values.map((s) => Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: AppColors.card,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.borderMuted),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      s.name,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                    child: Text(
+                      '${s.totalSets} sets${s.totalReps > 0 ? ' · ${s.totalReps} reps' : ''}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )),
+            const SizedBox(height: 24),
           ],
-        ),
+
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => context.read<WorkoutSessionCubit>().start(),
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('New Workout'),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -363,7 +571,220 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
     );
   }
 
+  // ── Input system ──────────────────────────────────────────────────────
+
+  /// Set focus on a weight/reps field and show the keyboard.
+  void _triggerInput({
+    required String exerciseId,
+    required int setIndex,
+    required _FieldType fieldType,
+    double? currentValue,
+  }) {
+    _syncActiveInput();
+
+    final target = _FocusTarget(
+      exerciseId: exerciseId,
+      setIndex: setIndex,
+      fieldType: fieldType,
+    );
+
+    setState(() {
+      _focusTarget = target;
+      // Pre-populate from existing value or reset to empty.
+      _activeInputText = _formatValue(currentValue);
+    });
+  }
+
+  /// Sync the active input text to the cubit via a logSet call.
+  void _syncActiveInput() {
+    if (_focusTarget == null || _activeInputText.isEmpty) return;
+
+    final value = double.tryParse(_activeInputText.replaceAll(',', '.'));
+    if (value == null) return;
+
+    final cubit = context.read<WorkoutSessionCubit>();
+    final state = cubit.state;
+    if (state is! WorkoutSessionActive) return;
+
+    // Find the exercise logs for this exercise
+    final exLogs = state.logs
+        .where((l) => l.exerciseId == _focusTarget!.exerciseId)
+        .toList();
+
+    if (_focusTarget!.setIndex >= exLogs.length) return;
+    final log = exLogs[_focusTarget!.setIndex];
+
+    // Sync the edited value via logSet (optimistic update).
+    if (_focusTarget!.isWeight) {
+      cubit.logSet(
+        logId: log.id,
+        exerciseId: _focusTarget!.exerciseId,
+        reps: log.reps ?? 0,
+        weight: value,
+        isCompleted: log.isCompleted,
+      );
+    } else {
+      cubit.logSet(
+        logId: log.id,
+        exerciseId: _focusTarget!.exerciseId,
+        reps: value.toInt(),
+        weight: log.weight,
+        isCompleted: log.isCompleted,
+      );
+    }
+  }
+
+  /// Advance to the next field: weight → reps → next set → dismiss.
+  void _handleInputNext() {
+    if (_focusTarget == null) return;
+
+    // Sync current value before moving
+    _syncActiveInput();
+
+    final cubit = context.read<WorkoutSessionCubit>();
+    final state = cubit.state;
+    if (state is! WorkoutSessionActive) {
+      _handleInputDismiss();
+      return;
+    }
+
+    final exerciseId = _focusTarget!.exerciseId;
+    final setIndex = _focusTarget!.setIndex;
+    final exLogs = state.logs
+        .where((l) => l.exerciseId == exerciseId)
+        .toList();
+
+    if (_focusTarget!.isWeight) {
+      // Move to reps for the same set
+      _setFocusDelayed(
+        exerciseId: exerciseId,
+        setIndex: setIndex,
+        fieldType: _FieldType.reps,
+        currentValue: setIndex < exLogs.length
+            ? exLogs[setIndex].reps?.toDouble()
+            : null,
+      );
+    } else {
+      // Move to next set's weight, or dismiss
+      final nextIndex = setIndex + 1;
+      if (nextIndex < exLogs.length) {
+        _setFocusDelayed(
+          exerciseId: exerciseId,
+          setIndex: nextIndex,
+          fieldType: _FieldType.weight,
+          currentValue: exLogs[nextIndex].weight,
+        );
+      } else {
+        // No more sets — dismiss keyboard
+        _handleInputDismiss();
+      }
+    }
+  }
+
+  /// Helper to set focus (used after sync in handleInputNext).
+  void _setFocusDelayed({
+    required String exerciseId,
+    required int setIndex,
+    required _FieldType fieldType,
+    double? currentValue,
+  }) {
+    setState(() {
+      _focusTarget = _FocusTarget(
+        exerciseId: exerciseId,
+        setIndex: setIndex,
+        fieldType: fieldType,
+      );
+      _activeInputText = _formatValue(currentValue);
+    });
+  }
+
+  /// Dismiss the keyboard.
+  void _handleInputDismiss() {
+    _syncActiveInput();
+    setState(() {
+      _focusTarget = null;
+      _activeInputText = '';
+    });
+  }
+
+  /// Complete a set: sync edits and mark as completed.
+  void _completeSet({
+    required String exerciseId,
+    required int setIndex,
+    required ExerciseLogDto log,
+  }) {
+    final cubit = context.read<WorkoutSessionCubit>();
+
+    // If this set's field is focused, sync the active text first.
+    double? weight = log.weight;
+    int reps = log.reps ?? 0;
+
+    if (_focusTarget != null &&
+        _focusTarget!.exerciseId == exerciseId &&
+        _focusTarget!.setIndex == setIndex) {
+      final parsed =
+          double.tryParse(_activeInputText.replaceAll(',', '.'));
+      if (parsed != null) {
+        if (_focusTarget!.isWeight) {
+          weight = parsed;
+        } else {
+          reps = parsed.toInt();
+        }
+      }
+    }
+
+    final becomingCompleted = !log.isCompleted;
+    cubit.logSet(
+      logId: log.id,
+      exerciseId: exerciseId,
+      reps: reps,
+      weight: weight,
+      isCompleted: becomingCompleted,
+    );
+
+    // Auto-start rest timer when completing a set.
+    if (becomingCompleted) {
+      cubit.startRest();
+    }
+
+    // Dismiss keyboard if this set was focused.
+    if (_focusTarget != null &&
+        _focusTarget!.exerciseId == exerciseId &&
+        _focusTarget!.setIndex == setIndex) {
+      setState(() {
+        _focusTarget = null;
+        _activeInputText = '';
+      });
+    }
+  }
+
+  /// Add a new empty set for an exercise.
+  void _addSet(String exerciseId) {
+    context.read<WorkoutSessionCubit>().logSet(
+      exerciseId: exerciseId,
+      reps: 0,
+      weight: 0,
+      isCompleted: false,
+    );
+  }
+
+  /// Format a numeric value for the input field.
+  String _formatValue(double? value) {
+    if (value == null || value == 0) return '';
+    if (value == value.floorToDouble()) {
+      return value.toInt().toString();
+    }
+    return value.toStringAsFixed(1).replaceAll('.', ',');
+  }
+
+  // ── Dialogs ───────────────────────────────────────────────────────────
+
   void _confirmFinish(BuildContext context) {
+    // Dismiss keyboard first if active.
+    if (_focusTarget != null) {
+      _handleInputDismiss();
+    }
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -392,7 +813,6 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
   void _showAddExerciseDialog(BuildContext context) async {
     final cubit = context.read<WorkoutSessionCubit>();
 
-    // Fetch exercise library from the backend.
     List<ExerciseDto> allExercises;
     try {
       allExercises = await cubit.fetchExercises();
@@ -409,7 +829,6 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
 
     if (!context.mounted) return;
 
-    // Show a searchable exercise picker dialog.
     final selected = await showDialog<ExerciseDto>(
       context: context,
       builder: (ctx) => _ExercisePickerDialog(exercises: allExercises),
@@ -438,23 +857,43 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
     }
     return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
+
+  /// Format rest timer duration as "m:ss" (e.g. "1:30").
+  String _formatRestDuration(Duration d) {
+    final totalSec = d.inSeconds;
+    final m = totalSec ~/ 60;
+    final s = totalSec.remainder(60);
+    return '$m:${s.toString().padLeft(2, '0')}';
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Exercise Card — shows an exercise name and its logged sets.
+// Exercise Card — shows an exercise name and its interactive set rows.
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _ExerciseCard extends StatelessWidget {
   final String exerciseName;
   final String? muscleGroup;
+  final String exerciseId;
   final List<ExerciseLogDto> logs;
-  final void Function(int reps, double weight) onLogSet;
+  final _FocusTarget? focusTarget;
+  final String activeInputText;
+  final void Function(int logIndex) onTapWeight;
+  final void Function(int logIndex) onTapReps;
+  final void Function(int logIndex) onComplete;
+  final VoidCallback onAddSet;
 
   const _ExerciseCard({
     required this.exerciseName,
     this.muscleGroup,
+    required this.exerciseId,
     required this.logs,
-    required this.onLogSet,
+    this.focusTarget,
+    required this.activeInputText,
+    required this.onTapWeight,
+    required this.onTapReps,
+    required this.onComplete,
+    required this.onAddSet,
   });
 
   @override
@@ -486,7 +925,8 @@ class _ExerciseCard extends StatelessWidget {
                 ),
                 if (muscleGroup != null)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(99),
@@ -504,22 +944,39 @@ class _ExerciseCard extends StatelessWidget {
             ),
           ),
 
+          // Table header
+          _buildTableHeader(),
+
           // Set rows
           ...logs.asMap().entries.map((entry) {
             final i = entry.key;
             final log = entry.value;
+            final isWeightFocused = focusTarget?.exerciseId == exerciseId &&
+                focusTarget?.setIndex == i &&
+                focusTarget?.isWeight == true;
+            final isRepsFocused = focusTarget?.exerciseId == exerciseId &&
+                focusTarget?.setIndex == i &&
+                focusTarget?.isReps == true;
+
             return _SetRow(
+              key: ValueKey(log.id),
               setNumber: i + 1,
-              reps: log.reps,
               weight: log.weight,
+              reps: log.reps,
               isCompleted: log.isCompleted,
+              isWeightFocused: isWeightFocused,
+              isRepsFocused: isRepsFocused,
+              activeInputText: activeInputText,
+              onTapWeight: () => onTapWeight(i),
+              onTapReps: () => onTapReps(i),
+              onComplete: () => onComplete(i),
             );
           }),
 
-          // Divider + Add Set
+          // Add Set button
           const Divider(height: 1, indent: 16, endIndent: 16),
           InkWell(
-            onTap: () => _showLogSetDialog(context),
+            onTap: onAddSet,
             child: const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
@@ -527,7 +984,7 @@ class _ExerciseCard extends StatelessWidget {
                   Icon(Icons.add_rounded, size: 16, color: AppColors.primary),
                   SizedBox(width: 8),
                   Text(
-                    'Log Set',
+                    'Add Set',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
@@ -543,49 +1000,34 @@ class _ExerciseCard extends StatelessWidget {
     );
   }
 
-  void _showLogSetDialog(BuildContext context) {
-    final repsController = TextEditingController();
-    final weightController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Log Set'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: repsController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Reps',
-                border: OutlineInputBorder(),
+  Widget _buildTableHeader() {
+    return const Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Row(
+        children: [
+          SizedBox(width: 28), // set number column
+          SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'WEIGHT',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: AppColors.mutedText,
               ),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: weightController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Weight (kg)',
-                border: OutlineInputBorder(),
+          ),
+          Expanded(
+            child: Text(
+              'REPS',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: AppColors.mutedText,
               ),
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
           ),
-          ElevatedButton(
-            onPressed: () {
-              final reps = int.tryParse(repsController.text) ?? 0;
-              final weight = double.tryParse(weightController.text) ?? 0;
-              Navigator.of(ctx).pop();
-              onLogSet(reps, weight);
-            },
-            child: const Text('Save'),
-          ),
+          SizedBox(width: 36), // checkbox column
         ],
       ),
     );
@@ -593,71 +1035,207 @@ class _ExerciseCard extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Set Row — shows one logged set (set number, reps, weight, completed badge).
+// Set Row — inline-editable weight/reps with completion checkbox.
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _SetRow extends StatelessWidget {
   final int setNumber;
-  final int? reps;
   final double? weight;
+  final int? reps;
   final bool isCompleted;
+  final bool isWeightFocused;
+  final bool isRepsFocused;
+  final String activeInputText;
+  final VoidCallback onTapWeight;
+  final VoidCallback onTapReps;
+  final VoidCallback onComplete;
 
   const _SetRow({
+    super.key,
     required this.setNumber,
-    this.reps,
     this.weight,
+    this.reps,
+    this.isCompleted = false,
+    this.isWeightFocused = false,
+    this.isRepsFocused = false,
+    required this.activeInputText,
+    required this.onTapWeight,
+    required this.onTapReps,
+    required this.onComplete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final weightText = _displayWeight();
+    final repsText = _displayReps();
+
+    return Container(
+      color: isCompleted ? Colors.green.withValues(alpha: 0.06) : null,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          // Set number
+          _SetNumberBadge(
+            number: setNumber,
+            isCompleted: isCompleted,
+          ),
+          const SizedBox(width: 12),
+
+          // Weight field (tappable)
+          Expanded(
+            child: _InputField(
+              text: weightText,
+              isFocused: isWeightFocused,
+              onTap: onTapWeight,
+            ),
+          ),
+
+          const SizedBox(width: 4),
+
+          // Reps field (tappable)
+          Expanded(
+            child: _InputField(
+              text: repsText,
+              isFocused: isRepsFocused,
+              onTap: onTapReps,
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
+          // Completion checkbox
+          GestureDetector(
+            onTap: onComplete,
+            child: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: isCompleted ? Colors.green : AppColors.mutedSurface,
+                borderRadius: BorderRadius.circular(99),
+                border: Border.all(
+                  color: isCompleted ? Colors.green : AppColors.borderMuted,
+                ),
+              ),
+              child: isCompleted
+                  ? const Icon(Icons.check_rounded,
+                      size: 18, color: Colors.white)
+                  : null,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _displayWeight() {
+    if (isWeightFocused) {
+      return activeInputText.isEmpty ? '0' : activeInputText;
+    }
+    if (weight == null || weight == 0) return '—';
+    if (weight == weight!.floorToDouble()) {
+      return weight!.toInt().toString();
+    }
+    return weight!.toStringAsFixed(1);
+  }
+
+  String _displayReps() {
+    if (isRepsFocused) {
+      return activeInputText.isEmpty ? '0' : activeInputText;
+    }
+    if (reps == null || reps == 0) return '—';
+    return reps.toString();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Set Number Badge
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _SetNumberBadge extends StatelessWidget {
+  final int number;
+  final bool isCompleted;
+
+  const _SetNumberBadge({
+    required this.number,
     this.isCompleted = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Row(
-        children: [
-          // Set number
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: isCompleted ? Colors.green.withValues(alpha: 0.15) : AppColors.mutedSurface,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              '$setNumber',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: isCompleted ? Colors.green : AppColors.mutedText,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-
-          // Reps
-          Expanded(
-            child: Text(
-              reps != null ? '$reps reps' : '—',
-              style: const TextStyle(fontSize: 14, color: AppColors.foreground),
-            ),
-          ),
-
-          // Weight
-          Text(
-            weight != null ? '${weight!.toStringAsFixed(1)} kg' : '—',
-            style: const TextStyle(fontSize: 14, color: AppColors.mutedText),
-          ),
-
-          const SizedBox(width: 8),
-
-          // Completed badge
-          if (isCompleted)
-            const Icon(Icons.check_circle_rounded, size: 18, color: Colors.green),
-        ],
+    return Container(
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        color:
+            isCompleted ? Colors.green.withValues(alpha: 0.15) : AppColors.mutedSurface,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        '$number',
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: isCompleted ? Colors.green : AppColors.mutedText,
+        ),
       ),
     );
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Input Field — tappable text field for weight/reps with focus highlight.
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _InputField extends StatelessWidget {
+  final String text;
+  final bool isFocused;
+  final VoidCallback onTap;
+
+  const _InputField({
+    required this.text,
+    required this.isFocused,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        height: 38,
+        decoration: BoxDecoration(
+          color: isFocused ? AppColors.primary.withValues(alpha: 0.06) : AppColors.mutedSurface,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isFocused ? AppColors.primary : Colors.transparent,
+            width: 1.5,
+          ),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+            color: isFocused ? AppColors.primary : AppColors.foreground,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Exercise Summary — lightweight model for the completed screen
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _ExerciseSummary {
+  final String name;
+  int totalSets = 0;
+  int totalReps = 0;
+  _ExerciseSummary({required this.name});
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -716,7 +1294,7 @@ class _ExercisePickerDialogState extends State<_ExercisePickerDialog> {
               controller: _searchController,
               autofocus: true,
               decoration: const InputDecoration(
-                hintText: 'Search exercises…',
+                hintText: 'Search exercises...',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.search_rounded),
                 isDense: true,

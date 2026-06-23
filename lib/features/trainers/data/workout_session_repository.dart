@@ -12,7 +12,8 @@ class WorkoutSessionRepository {
 
   WorkoutSessionRepository(this._api);
 
-  Future<WorkoutSessionDto> startSession({
+  /// Start a new session and return it along with any pre-populated logs.
+  Future<({WorkoutSessionDto session, List<ExerciseLogDto> logs})> startSession({
     String? clientId,
     String? plannedSessionId,
     String? templateId,
@@ -24,7 +25,7 @@ class WorkoutSessionRepository {
       templateId: templateId,
       clientPackageId: clientPackageId,
     );
-    return response.session;
+    return (session: response.session, logs: response.exerciseLogs);
   }
 
   /// Returns the active session DTO along with its parsed exercise logs.
@@ -58,13 +59,18 @@ class WorkoutSessionRepository {
     );
   }
 
-  Future<void> finishSession({
+  /// Finish a workout session. Returns the updated session and its logs.
+  Future<({WorkoutSessionDto session, List<ExerciseLogDto> logs})> finishSession({
     required String workoutSessionId,
     String? notes,
   }) async {
-    await _api.finishSession(
+    final response = await _api.finishSession(
       workoutSessionId: workoutSessionId,
       notes: notes,
+    );
+    return (
+      session: response.session!,
+      logs: response.exerciseLogs,
     );
   }
 
@@ -80,14 +86,21 @@ class WorkoutSessionRepository {
     );
   }
 
+  /// Start rest timer on backend.
+  Future<void> startRest(String sessionId) => _api.startRest(sessionId);
+
+  /// End rest timer on backend.
+  Future<void> endRest(String sessionId) => _api.endRest(sessionId);
+
   Future<List<ExerciseDto>> getExerciseLibrary() =>
       _api.getExerciseLibrary();
 
-  Future<void> addExercises({
+  /// Add exercises to an in-progress session. Returns the newly created logs.
+  Future<List<ExerciseLogDto>> addExercises({
     required String sessionId,
     required List<String> exerciseIds,
   }) async {
-    await _api.addExercises(
+    return _api.addExercises(
       sessionId: sessionId,
       exerciseIds: exerciseIds,
     );

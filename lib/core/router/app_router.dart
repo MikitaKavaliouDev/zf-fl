@@ -9,10 +9,13 @@ import '../../features/auth/presentation/email_verification_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/onboarding_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
+import '../../features/explore/presentation/explore_screen.dart';
+import '../../features/explore/presentation/trainer_discovery_screen.dart';
+import '../../features/explore/presentation/event_detail_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
-import '../../features/trainers/presentation/explore_screen.dart';
 import '../../features/trainers/presentation/trainer_detail_screen.dart';
+import '../../features/trainers/presentation/trainer_map_screen.dart';
 import '../../features/trainers/presentation/workout_session_screen.dart';
 import '../theme/app_theme.dart';
 
@@ -135,6 +138,73 @@ GoRouter createAppRouter(AuthCubit authCubit) {
             },
           ),
         ],
+      ),
+      // Explore sub-routes (full-screen, no bottom nav — matching iOS sheet behavior)
+      GoRoute(
+        path: '/explore/discovery',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: TrainerDiscoveryScreen(
+            initialQuery: state.extra is Map
+                ? (state.extra as Map)['query'] as String?
+                : null,
+            initialSpecialty: state.extra is Map
+                ? (state.extra as Map)['specialty'] as String?
+                : null,
+          ),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 1),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutCubic,
+              )),
+              child: child,
+            );
+          },
+        ),
+      ),
+      GoRoute(
+        path: '/explore/map',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const TrainerMapScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 1),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutCubic,
+              )),
+              child: child,
+            );
+          },
+        ),
+      ),
+      GoRoute(
+        path: '/explore/event/:id',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: EventDetailScreen(
+            eventId: state.pathParameters['id'] ?? '',
+          ),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 1),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutCubic,
+              )),
+              child: child,
+            );
+          },
+        ),
       ),
     ],
   );

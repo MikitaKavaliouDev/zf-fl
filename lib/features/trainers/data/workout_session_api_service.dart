@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
 import 'models/exercise_dto.dart';
+import 'models/exercise_log_dto.dart';
 import 'models/workout_session_response.dart';
 
 @injectable
@@ -118,18 +119,22 @@ class WorkoutSessionApiService {
     return LogExerciseResponse.fromJson(data);
   }
 
-  /// Finish a workout session.
-  Future<void> finishSession({
+  /// Finish a workout session. Returns the updated session data.
+  Future<LiveSessionResponse> finishSession({
     required String workoutSessionId,
     String? notes,
   }) async {
-    await _dio.post(
+    final response = await _dio.post(
       '/api/workout-sessions/finish',
       data: {
         'workoutSessionId': workoutSessionId,
         'notes': ?notes,
       },
     );
+    final data = _normalizeSessionData(
+      response.data['data'] as Map<String, dynamic>,
+    );
+    return LiveSessionResponse.fromJson(data);
   }
 
   /// Get workout session history.
@@ -150,15 +155,20 @@ class WorkoutSessionApiService {
     return SessionHistoryResponse.fromJson(data);
   }
 
-  /// Add exercises to an in-progress session.
-  Future<void> addExercises({
+  /// Add exercises to an in-progress session. Returns the created log entries.
+  Future<List<ExerciseLogDto>> addExercises({
     required String sessionId,
     required List<String> exerciseIds,
   }) async {
-    await _dio.post(
+    final response = await _dio.post(
       '/api/workout-sessions/$sessionId/exercises',
       data: {'exerciseIds': exerciseIds},
     );
+    final data = response.data['data'] as Map<String, dynamic>;
+    final logs = (data['logs'] as List<dynamic>)
+        .map((e) => ExerciseLogDto.fromJson(e as Map<String, dynamic>))
+        .toList();
+    return logs;
   }
 
   /// Start rest timer on backend.

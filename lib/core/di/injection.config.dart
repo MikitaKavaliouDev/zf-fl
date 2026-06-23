@@ -23,6 +23,13 @@ import 'package:ziro_fit/core/security/token_storage.dart' as _i601;
 import 'package:ziro_fit/features/auth/cubit/auth_cubit.dart' as _i514;
 import 'package:ziro_fit/features/auth/data/auth_api_service.dart' as _i568;
 import 'package:ziro_fit/features/auth/data/auth_repository.dart' as _i736;
+import 'package:ziro_fit/features/explore/cubit/explore_cubit.dart' as _i64;
+import 'package:ziro_fit/features/explore/cubit/trainer_discovery_cubit.dart'
+    as _i975;
+import 'package:ziro_fit/features/explore/data/explore_api_service.dart'
+    as _i549;
+import 'package:ziro_fit/features/explore/data/explore_repository.dart'
+    as _i226;
 import 'package:ziro_fit/features/sync/cubit/sync_cubit.dart' as _i796;
 import 'package:ziro_fit/features/sync/data/sync_api_service.dart' as _i93;
 import 'package:ziro_fit/features/sync/data/sync_repository.dart' as _i813;
@@ -70,6 +77,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i568.AuthApiService>(
       () => _i568.AuthApiService(gh<_i361.Dio>()),
     );
+    gh.factory<_i549.ExploreApiService>(
+      () => _i549.ExploreApiService(gh<_i361.Dio>()),
+    );
     gh.factory<_i93.SyncApiService>(() => _i93.SyncApiService(gh<_i361.Dio>()));
     gh.factory<_i680.TrainerApiService>(
       () => _i680.TrainerApiService(gh<_i361.Dio>()),
@@ -86,6 +96,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i93.SyncApiService>(),
         gh<_i365.AppDatabase>(),
       ),
+    );
+    gh.singleton<_i226.ExploreRepository>(
+      () => _i226.ExploreRepository(gh<_i549.ExploreApiService>()),
     );
     gh.singleton<_i736.AuthRepository>(
       () => _i736.AuthRepository(
@@ -104,6 +117,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i813.SyncRepository>(),
         gh<_i124.ConnectivityService>(),
       ),
+    );
+    gh.factory<_i64.ExploreCubit>(
+      () => _i64.ExploreCubit(gh<_i226.ExploreRepository>()),
+    );
+    gh.factory<_i975.TrainerDiscoveryCubit>(
+      () => _i975.TrainerDiscoveryCubit(gh<_i226.ExploreRepository>()),
     );
     gh.factory<_i871.WorkoutSessionCubit>(
       () => _i871.WorkoutSessionCubit(gh<_i459.WorkoutSessionRepository>()),

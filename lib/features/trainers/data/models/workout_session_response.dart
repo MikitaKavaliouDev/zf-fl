@@ -10,6 +10,7 @@ part 'workout_session_response.g.dart';
 abstract class StartSessionResponse with _$StartSessionResponse {
   const factory StartSessionResponse({
     required WorkoutSessionDto session,
+    @Default(<ExerciseLogDto>[]) List<ExerciseLogDto> exerciseLogs,
   }) = _StartSessionResponse;
 
   factory StartSessionResponse.fromJson(Map<String, dynamic> json) =>

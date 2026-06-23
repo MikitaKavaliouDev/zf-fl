@@ -43,10 +43,13 @@ dependencies:
 
   # Code generation support
   freezed_annotation: ^3.1.0
-  json_annotation: ^4.9.0
+  json_annotation: ^4.12.0
 
   # Routing
   go_router: ^17.3.0
+
+  # URL launching (Stripe checkout, deep links)
+  url_launcher: ^6.3.1
 
   # Utilities
   intl: ^0.20.2

@@ -128,13 +128,13 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( WorkoutSessionDto session,  List<ExerciseLogDto> logs,  Duration elapsed,  bool isPaused,  DateTime? restStartedAt,  Duration restElapsed)?  active,TResult Function( WorkoutSessionDto session,  Duration totalDuration)?  completed,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( WorkoutSessionDto session,  List<ExerciseLogDto> logs,  Duration elapsed,  bool isPaused,  DateTime? restStartedAt,  Duration restElapsed)?  active,TResult Function( WorkoutSessionDto session,  Duration totalDuration,  List<ExerciseLogDto> logs)?  completed,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case WorkoutSessionInitial() when initial != null:
 return initial();case WorkoutSessionLoading() when loading != null:
 return loading();case WorkoutSessionActive() when active != null:
 return active(_that.session,_that.logs,_that.elapsed,_that.isPaused,_that.restStartedAt,_that.restElapsed);case WorkoutSessionCompleted() when completed != null:
-return completed(_that.session,_that.totalDuration);case WorkoutSessionError() when error != null:
+return completed(_that.session,_that.totalDuration,_that.logs);case WorkoutSessionError() when error != null:
 return error(_that.message);case _:
   return orElse();
 
@@ -153,13 +153,13 @@ return error(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( WorkoutSessionDto session,  List<ExerciseLogDto> logs,  Duration elapsed,  bool isPaused,  DateTime? restStartedAt,  Duration restElapsed)  active,required TResult Function( WorkoutSessionDto session,  Duration totalDuration)  completed,required TResult Function( String message)  error,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( WorkoutSessionDto session,  List<ExerciseLogDto> logs,  Duration elapsed,  bool isPaused,  DateTime? restStartedAt,  Duration restElapsed)  active,required TResult Function( WorkoutSessionDto session,  Duration totalDuration,  List<ExerciseLogDto> logs)  completed,required TResult Function( String message)  error,}) {final _that = this;
 switch (_that) {
 case WorkoutSessionInitial():
 return initial();case WorkoutSessionLoading():
 return loading();case WorkoutSessionActive():
 return active(_that.session,_that.logs,_that.elapsed,_that.isPaused,_that.restStartedAt,_that.restElapsed);case WorkoutSessionCompleted():
-return completed(_that.session,_that.totalDuration);case WorkoutSessionError():
+return completed(_that.session,_that.totalDuration,_that.logs);case WorkoutSessionError():
 return error(_that.message);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -174,13 +174,13 @@ return error(_that.message);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( WorkoutSessionDto session,  List<ExerciseLogDto> logs,  Duration elapsed,  bool isPaused,  DateTime? restStartedAt,  Duration restElapsed)?  active,TResult? Function( WorkoutSessionDto session,  Duration totalDuration)?  completed,TResult? Function( String message)?  error,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( WorkoutSessionDto session,  List<ExerciseLogDto> logs,  Duration elapsed,  bool isPaused,  DateTime? restStartedAt,  Duration restElapsed)?  active,TResult? Function( WorkoutSessionDto session,  Duration totalDuration,  List<ExerciseLogDto> logs)?  completed,TResult? Function( String message)?  error,}) {final _that = this;
 switch (_that) {
 case WorkoutSessionInitial() when initial != null:
 return initial();case WorkoutSessionLoading() when loading != null:
 return loading();case WorkoutSessionActive() when active != null:
 return active(_that.session,_that.logs,_that.elapsed,_that.isPaused,_that.restStartedAt,_that.restElapsed);case WorkoutSessionCompleted() when completed != null:
-return completed(_that.session,_that.totalDuration);case WorkoutSessionError() when error != null:
+return completed(_that.session,_that.totalDuration,_that.logs);case WorkoutSessionError() when error != null:
 return error(_that.message);case _:
   return null;
 
@@ -348,11 +348,18 @@ $WorkoutSessionDtoCopyWith<$Res> get session {
 
 
 class WorkoutSessionCompleted implements WorkoutSessionState {
-  const WorkoutSessionCompleted({required this.session, required this.totalDuration});
+  const WorkoutSessionCompleted({required this.session, required this.totalDuration, final  List<ExerciseLogDto> logs = const <ExerciseLogDto>[]}): _logs = logs;
   
 
  final  WorkoutSessionDto session;
  final  Duration totalDuration;
+ final  List<ExerciseLogDto> _logs;
+@JsonKey() List<ExerciseLogDto> get logs {
+  if (_logs is EqualUnmodifiableListView) return _logs;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_logs);
+}
+
 
 /// Create a copy of WorkoutSessionState
 /// with the given fields replaced by the non-null parameter values.
@@ -364,16 +371,16 @@ $WorkoutSessionCompletedCopyWith<WorkoutSessionCompleted> get copyWith => _$Work
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WorkoutSessionCompleted&&(identical(other.session, session) || other.session == session)&&(identical(other.totalDuration, totalDuration) || other.totalDuration == totalDuration));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WorkoutSessionCompleted&&(identical(other.session, session) || other.session == session)&&(identical(other.totalDuration, totalDuration) || other.totalDuration == totalDuration)&&const DeepCollectionEquality().equals(other._logs, _logs));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,session,totalDuration);
+int get hashCode => Object.hash(runtimeType,session,totalDuration,const DeepCollectionEquality().hash(_logs));
 
 @override
 String toString() {
-  return 'WorkoutSessionState.completed(session: $session, totalDuration: $totalDuration)';
+  return 'WorkoutSessionState.completed(session: $session, totalDuration: $totalDuration, logs: $logs)';
 }
 
 
@@ -384,7 +391,7 @@ abstract mixin class $WorkoutSessionCompletedCopyWith<$Res> implements $WorkoutS
   factory $WorkoutSessionCompletedCopyWith(WorkoutSessionCompleted value, $Res Function(WorkoutSessionCompleted) _then) = _$WorkoutSessionCompletedCopyWithImpl;
 @useResult
 $Res call({
- WorkoutSessionDto session, Duration totalDuration
+ WorkoutSessionDto session, Duration totalDuration, List<ExerciseLogDto> logs
 });
 
 
@@ -401,11 +408,12 @@ class _$WorkoutSessionCompletedCopyWithImpl<$Res>
 
 /// Create a copy of WorkoutSessionState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? session = null,Object? totalDuration = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? session = null,Object? totalDuration = null,Object? logs = null,}) {
   return _then(WorkoutSessionCompleted(
 session: null == session ? _self.session : session // ignore: cast_nullable_to_non_nullable
 as WorkoutSessionDto,totalDuration: null == totalDuration ? _self.totalDuration : totalDuration // ignore: cast_nullable_to_non_nullable
-as Duration,
+as Duration,logs: null == logs ? _self._logs : logs // ignore: cast_nullable_to_non_nullable
+as List<ExerciseLogDto>,
   ));
 }
 

@@ -10,11 +10,19 @@ _StartSessionResponse _$StartSessionResponseFromJson(
   Map<String, dynamic> json,
 ) => _StartSessionResponse(
   session: WorkoutSessionDto.fromJson(json['session'] as Map<String, dynamic>),
+  exerciseLogs:
+      (json['exerciseLogs'] as List<dynamic>?)
+          ?.map((e) => ExerciseLogDto.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <ExerciseLogDto>[],
 );
 
 Map<String, dynamic> _$StartSessionResponseToJson(
   _StartSessionResponse instance,
-) => <String, dynamic>{'session': instance.session};
+) => <String, dynamic>{
+  'session': instance.session,
+  'exerciseLogs': instance.exerciseLogs,
+};
 
 _LiveSessionResponse _$LiveSessionResponseFromJson(Map<String, dynamic> json) =>
     _LiveSessionResponse(

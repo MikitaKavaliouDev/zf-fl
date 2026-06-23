@@ -15,11 +15,11 @@ class TrainerApiService {
   Future<List<PromotedTrainerDto>> getPromotedTrainers({
     String? category,
   }) async {
+    final queryParams = <String, dynamic>{};
+    if (category != null) queryParams['category'] = category;
     final response = await _dio.get(
       '/api/explore/promoted-trainers',
-      queryParameters: {
-        'category': ?category,
-      },
+      queryParameters: queryParams,
     );
     final data = response.data['data'] as Map<String, dynamic>;
     final trainers = data['trainers'] as List<dynamic>;
@@ -41,20 +41,22 @@ class TrainerApiService {
     double? minRating,
     String? trainingTypes,
   }) async {
+    final queryParams = <String, dynamic>{
+      'page': page,
+      'pageSize': pageSize,
+    };
+    if (query != null) queryParams['q'] = query;
+    if (location != null) queryParams['location'] = location;
+    if (lat != null) queryParams['lat'] = lat;
+    if (lng != null) queryParams['lng'] = lng;
+    if (sortBy != null) queryParams['sortBy'] = sortBy;
+    if (specialties != null) queryParams['specialties'] = specialties;
+    if (minRating != null) queryParams['minRating'] = minRating;
+    if (trainingTypes != null) queryParams['trainingTypes'] = trainingTypes;
+
     final response = await _dio.get(
       '/api/trainers',
-      queryParameters: {
-        'page': page,
-        'pageSize': pageSize,
-        'q': ?query,
-        'location': ?location,
-        'lat': ?lat,
-        'lng': ?lng,
-        'sortBy': ?sortBy,
-        'specialties': ?specialties,
-        'minRating': ?minRating,
-        'trainingTypes': ?trainingTypes,
-      },
+      queryParameters: queryParams,
     );
     final data = response.data['data'] as Map<String, dynamic>;
     return TrainerListResponse.fromJson(data);

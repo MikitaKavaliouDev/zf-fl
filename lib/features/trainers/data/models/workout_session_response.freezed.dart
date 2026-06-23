@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$StartSessionResponse {
 
- WorkoutSessionDto get session;
+ WorkoutSessionDto get session; List<ExerciseLogDto> get exerciseLogs;
 /// Create a copy of StartSessionResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $StartSessionResponseCopyWith<StartSessionResponse> get copyWith => _$StartSessi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StartSessionResponse&&(identical(other.session, session) || other.session == session));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StartSessionResponse&&(identical(other.session, session) || other.session == session)&&const DeepCollectionEquality().equals(other.exerciseLogs, exerciseLogs));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,session);
+int get hashCode => Object.hash(runtimeType,session,const DeepCollectionEquality().hash(exerciseLogs));
 
 @override
 String toString() {
-  return 'StartSessionResponse(session: $session)';
+  return 'StartSessionResponse(session: $session, exerciseLogs: $exerciseLogs)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $StartSessionResponseCopyWith<$Res>  {
   factory $StartSessionResponseCopyWith(StartSessionResponse value, $Res Function(StartSessionResponse) _then) = _$StartSessionResponseCopyWithImpl;
 @useResult
 $Res call({
- WorkoutSessionDto session
+ WorkoutSessionDto session, List<ExerciseLogDto> exerciseLogs
 });
 
 
@@ -65,10 +65,11 @@ class _$StartSessionResponseCopyWithImpl<$Res>
 
 /// Create a copy of StartSessionResponse
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? session = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? session = null,Object? exerciseLogs = null,}) {
   return _then(_self.copyWith(
 session: null == session ? _self.session : session // ignore: cast_nullable_to_non_nullable
-as WorkoutSessionDto,
+as WorkoutSessionDto,exerciseLogs: null == exerciseLogs ? _self.exerciseLogs : exerciseLogs // ignore: cast_nullable_to_non_nullable
+as List<ExerciseLogDto>,
   ));
 }
 /// Create a copy of StartSessionResponse
@@ -162,10 +163,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( WorkoutSessionDto session)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( WorkoutSessionDto session,  List<ExerciseLogDto> exerciseLogs)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StartSessionResponse() when $default != null:
-return $default(_that.session);case _:
+return $default(_that.session,_that.exerciseLogs);case _:
   return orElse();
 
 }
@@ -183,10 +184,10 @@ return $default(_that.session);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( WorkoutSessionDto session)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( WorkoutSessionDto session,  List<ExerciseLogDto> exerciseLogs)  $default,) {final _that = this;
 switch (_that) {
 case _StartSessionResponse():
-return $default(_that.session);case _:
+return $default(_that.session,_that.exerciseLogs);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -203,10 +204,10 @@ return $default(_that.session);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( WorkoutSessionDto session)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( WorkoutSessionDto session,  List<ExerciseLogDto> exerciseLogs)?  $default,) {final _that = this;
 switch (_that) {
 case _StartSessionResponse() when $default != null:
-return $default(_that.session);case _:
+return $default(_that.session,_that.exerciseLogs);case _:
   return null;
 
 }
@@ -218,10 +219,17 @@ return $default(_that.session);case _:
 @JsonSerializable()
 
 class _StartSessionResponse implements StartSessionResponse {
-  const _StartSessionResponse({required this.session});
+  const _StartSessionResponse({required this.session, final  List<ExerciseLogDto> exerciseLogs = const <ExerciseLogDto>[]}): _exerciseLogs = exerciseLogs;
   factory _StartSessionResponse.fromJson(Map<String, dynamic> json) => _$StartSessionResponseFromJson(json);
 
 @override final  WorkoutSessionDto session;
+ final  List<ExerciseLogDto> _exerciseLogs;
+@override@JsonKey() List<ExerciseLogDto> get exerciseLogs {
+  if (_exerciseLogs is EqualUnmodifiableListView) return _exerciseLogs;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_exerciseLogs);
+}
+
 
 /// Create a copy of StartSessionResponse
 /// with the given fields replaced by the non-null parameter values.
@@ -236,16 +244,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StartSessionResponse&&(identical(other.session, session) || other.session == session));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StartSessionResponse&&(identical(other.session, session) || other.session == session)&&const DeepCollectionEquality().equals(other._exerciseLogs, _exerciseLogs));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,session);
+int get hashCode => Object.hash(runtimeType,session,const DeepCollectionEquality().hash(_exerciseLogs));
 
 @override
 String toString() {
-  return 'StartSessionResponse(session: $session)';
+  return 'StartSessionResponse(session: $session, exerciseLogs: $exerciseLogs)';
 }
 
 
@@ -256,7 +264,7 @@ abstract mixin class _$StartSessionResponseCopyWith<$Res> implements $StartSessi
   factory _$StartSessionResponseCopyWith(_StartSessionResponse value, $Res Function(_StartSessionResponse) _then) = __$StartSessionResponseCopyWithImpl;
 @override @useResult
 $Res call({
- WorkoutSessionDto session
+ WorkoutSessionDto session, List<ExerciseLogDto> exerciseLogs
 });
 
 
@@ -273,10 +281,11 @@ class __$StartSessionResponseCopyWithImpl<$Res>
 
 /// Create a copy of StartSessionResponse
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? session = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? session = null,Object? exerciseLogs = null,}) {
   return _then(_StartSessionResponse(
 session: null == session ? _self.session : session // ignore: cast_nullable_to_non_nullable
-as WorkoutSessionDto,
+as WorkoutSessionDto,exerciseLogs: null == exerciseLogs ? _self._exerciseLogs : exerciseLogs // ignore: cast_nullable_to_non_nullable
+as List<ExerciseLogDto>,
   ));
 }
 

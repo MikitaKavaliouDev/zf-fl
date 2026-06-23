@@ -28,6 +28,7 @@ sealed class WorkoutSessionState with _$WorkoutSessionState {
   const factory WorkoutSessionState.completed({
     required WorkoutSessionDto session,
     required Duration totalDuration,
+    @Default(<ExerciseLogDto>[]) List<ExerciseLogDto> logs,
   }) = WorkoutSessionCompleted;
 
   /// Error state
