@@ -3,6 +3,7 @@ import 'package:injectable/injectable.dart';
 
 import 'models/exercise_dto.dart';
 import 'models/exercise_log_dto.dart';
+import 'models/template_dto.dart';
 import 'models/workout_session_response.dart';
 
 @injectable
@@ -96,6 +97,7 @@ class WorkoutSessionApiService {
     required String exerciseId,
     required int reps,
     double? weight,
+    int? rpe,
     int? order,
     String? supersetKey,
     int? orderInSuperset,
@@ -109,6 +111,7 @@ class WorkoutSessionApiService {
         'exerciseId': exerciseId,
         'reps': reps,
         'weight': ?weight,
+        'rpe': ?rpe,
         'order': ?order,
         'supersetKey': ?supersetKey,
         'orderInSuperset': ?orderInSuperset,
@@ -123,12 +126,14 @@ class WorkoutSessionApiService {
   Future<LiveSessionResponse> finishSession({
     required String workoutSessionId,
     String? notes,
+    bool? completeUnfinished,
   }) async {
     final response = await _dio.post(
       '/api/workout-sessions/finish',
       data: {
         'workoutSessionId': workoutSessionId,
         'notes': ?notes,
+        'completeUnfinished': ?completeUnfinished,
       },
     );
     final data = _normalizeSessionData(
@@ -179,5 +184,54 @@ class WorkoutSessionApiService {
   /// End rest timer on backend.
   Future<void> endRest(String sessionId) async {
     await _dio.post('/api/workout-sessions/$sessionId/rest/end');
+  }
+
+  /// Cancel a workout session.
+  Future<void> cancelSession({required String workoutSessionId}) async {
+    await _dio.post('/api/workout-sessions/$workoutSessionId/cancel');
+  }
+
+  /// Remove an exercise from the active session.
+  Future<void> removeExercise({
+    required String sessionId,
+    required String exerciseId,
+  }) async {
+    await _dio.delete('/api/workout-sessions/$sessionId/exercises/$exerciseId');
+  }
+
+  /// Get full details for a specific session (including exercise logs).
+  Future<LiveSessionResponse> getSessionDetails(String sessionId) async {
+    final response = await _dio.get('/api/workout-sessions/$sessionId');
+    final data = _normalizeSessionData(
+      response.data['data'] as Map<String, dynamic>,
+    );
+    return LiveSessionResponse.fromJson(data);
+  }
+
+  /// Get all templates for the current user.
+  Future<List<TemplateDto>> getTemplates() async {
+    final response = await _dio.get('/api/workout-templates/save');
+    final data = response.data['data'] as List<dynamic>;
+    return data
+        .map((e) => TemplateDto.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Get a specific template with exercises.
+  Future<TemplateDto> getTemplate(String templateId) async {
+    final response = await _dio.get('/api/workout-templates/$templateId');
+    final data = response.data['data'] as Map<String, dynamic>;
+    return TemplateDto.fromJson(data);
+  }
+
+  /// Save a completed session as a new template.
+  Future<void> saveSessionAsTemplate({
+    required String sessionId,
+    required String templateName,
+  }) async {
+    await _dio.post(
+      '/api/workout-sessions/$sessionId/save-as-template',
+      data: {'templateName': templateName},
+    );
   }
 }

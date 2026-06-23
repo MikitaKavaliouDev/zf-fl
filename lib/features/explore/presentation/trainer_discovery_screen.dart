@@ -26,19 +26,28 @@ class TrainerDiscoveryScreen extends StatefulWidget {
 class _TrainerDiscoveryScreenState extends State<TrainerDiscoveryScreen> {
   final _searchController = TextEditingController();
   final _scrollController = ScrollController();
+  bool _initialized = false;
 
   @override
   void initState() {
     super.initState();
     _searchController.text = widget.initialQuery ?? '';
-    final extra = GoRouterState.of(context).extra as Map<String, dynamic>?;
-    context.read<TrainerDiscoveryCubit>().init(
-      initialQuery: widget.initialQuery,
-      initialSpecialty: widget.initialSpecialty ??
-          (extra?['specialty'] as String?),
-      initialLocation: extra?['location'] as String?,
-    );
     _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _initialized = true;
+      final extra = GoRouterState.of(context).extra as Map<String, dynamic>?;
+      context.read<TrainerDiscoveryCubit>().init(
+        initialQuery: widget.initialQuery,
+        initialSpecialty: widget.initialSpecialty ??
+            (extra?['specialty'] as String?),
+        initialLocation: extra?['location'] as String?,
+      );
+    }
   }
 
   @override
@@ -664,9 +673,7 @@ class _TrainerDiscoveryCard extends StatelessWidget {
     final photoUrl = trainer.profile?.profilePhotoPath;
     final locations = trainer.profile?.locations;
     final location = locations != null && locations.isNotEmpty
-        ? (locations.first is Map
-            ? (locations.first['city'] ?? locations.first['address'] ?? '')
-            : locations.first.toString())
+        ? (locations.first.address ?? locations.first.toString())
         : null;
     final reviewCount = trainer.stats?.reviewCount ?? 0;
 

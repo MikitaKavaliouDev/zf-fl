@@ -24,7 +24,9 @@ _TrainerDetailDto _$TrainerDetailDtoFromJson(Map<String, dynamic> json) =>
       isVerified: json['isVerified'] as bool? ?? false,
       isLinked: json['isLinked'] as bool? ?? false,
       businessCurrency: json['businessCurrency'] as String?,
-      locations: json['locations'] as List<dynamic>? ?? const <dynamic>[],
+      locations: (json['locations'] as List<dynamic>?)
+          ?.map((e) => TrainerLocation.fromJson(e as Map<String, dynamic>))
+          .toList(),
       services: json['services'] as List<dynamic>? ?? const <dynamic>[],
       stats: json['stats'] as Map<String, dynamic>?,
     );

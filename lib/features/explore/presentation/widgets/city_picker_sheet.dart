@@ -52,61 +52,67 @@ class CityPickerSheet extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           // Current location
-          ListTile(
-            leading: Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
+          Material(
+            type: MaterialType.transparency,
+            child: ListTile(
+              leading: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.my_location_rounded,
+                  size: 18,
+                  color: AppColors.primary,
+                ),
               ),
-              child: const Icon(
-                Icons.my_location_rounded,
-                size: 18,
-                color: AppColors.primary,
-              ),
-            ),
-            title: const Text(
-              'Current Location',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: AppColors.foreground,
-              ),
-            ),
-            trailing: selectedCity == null
-                ? const Icon(Icons.check_rounded, color: AppColors.primary)
-                : null,
-            onTap: () => onSelected(null),
-          ),
-          const Divider(indent: 24, endIndent: 24),
-          // City list
-          ...cities.map(
-            (city) => ListTile(
-              leading: city.imageUrl != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        city.imageUrl!,
-                        width: 38,
-                        height: 38,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => _CityIcon(city: city),
-                      ),
-                    )
-                  : _CityIcon(city: city),
-              title: Text(
-                city.name,
-                style: const TextStyle(
+              title: const Text(
+                'Current Location',
+                style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                   color: AppColors.foreground,
                 ),
               ),
-              trailing: selectedCity?.id == city.id
+              trailing: selectedCity == null
                   ? const Icon(Icons.check_rounded, color: AppColors.primary)
                   : null,
-              onTap: () => onSelected(city),
+              onTap: () => onSelected(null),
+            ),
+          ),
+          const Divider(indent: 24, endIndent: 24),
+          // City list
+          ...cities.map(
+            (city) => Material(
+              type: MaterialType.transparency,
+              child: ListTile(
+                leading: city.imageUrl != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          city.imageUrl!,
+                          width: 38,
+                          height: 38,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => _CityIcon(city: city),
+                        ),
+                      )
+                    : _CityIcon(city: city),
+                title: Text(
+                  city.name,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.foreground,
+                  ),
+                ),
+                trailing: selectedCity?.id == city.id
+                    ? const Icon(Icons.check_rounded, color: AppColors.primary)
+                    : null,
+                onTap: () => onSelected(city),
+              ),
             ),
           ),
           SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
@@ -129,7 +135,11 @@ class _CityIcon extends StatelessWidget {
         color: AppColors.mutedSurface,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: const Icon(Icons.location_city_rounded, size: 18, color: AppColors.mutedText),
+      child: const Icon(
+        Icons.location_city_rounded,
+        size: 18,
+        color: AppColors.mutedText,
+      ),
     );
   }
 }

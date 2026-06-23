@@ -25,12 +25,8 @@ class TrainerCard extends StatelessWidget {
     final locations = trainer.profile?.locations;
     if (locations != null && locations.isNotEmpty) {
       final loc = locations.first;
-      if (loc is Map) {
-        final address = loc['address'] as String?;
-        if (address != null && address.isNotEmpty) return address;
-        final city = loc['city'] as String?;
-        if (city != null && city.isNotEmpty) return city;
-      }
+      final address = loc.address;
+      if (address != null && address.isNotEmpty) return address;
       return loc.toString();
     }
     return null;

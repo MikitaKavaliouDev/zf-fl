@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ExploreEventDto {
 
- String get id; String get title; String? get description; DateTime get startTime; DateTime? get endTime;@JsonKey(name: 'locationName') String get locationName; String? get address; String? get imageUrl;@JsonKey(name: 'category') String? get categoryId;@JsonKey(name: 'city') String? get cityId; double get price; String get currency; int get capacity; int get enrolledCount; bool get isNearCapacity; bool get isBooked;@JsonKey(name: 'trainerName') String? get hostName;@JsonKey(name: 'trainerId') String? get hostId; double? get distance; String? get organizerType; List<String> get highlights; TrainerInfo? get trainer;
+ String get id; String get title; String? get description; DateTime get startTime; DateTime? get endTime;@JsonKey(name: 'locationName') String get locationName; String? get address;@JsonKey(name: 'latitude') double get latitude;@JsonKey(name: 'longitude') double get longitude; String? get imageUrl;@JsonKey(name: 'category') String? get categoryId;@JsonKey(name: 'city') String? get cityId; double get price; String get currency; int get capacity; int get enrolledCount; bool get isNearCapacity; bool get isBooked;@JsonKey(name: 'trainerName') String? get hostName;@JsonKey(name: 'trainerId') String? get hostId; double? get distance; String? get organizerType; List<String> get highlights; TrainerInfo? get trainer;
 /// Create a copy of ExploreEventDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $ExploreEventDtoCopyWith<ExploreEventDto> get copyWith => _$ExploreEventDtoCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExploreEventDto&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.locationName, locationName) || other.locationName == locationName)&&(identical(other.address, address) || other.address == address)&&(identical(other.imageUrl, imageUrl) || other.imageUrl == imageUrl)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.cityId, cityId) || other.cityId == cityId)&&(identical(other.price, price) || other.price == price)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.capacity, capacity) || other.capacity == capacity)&&(identical(other.enrolledCount, enrolledCount) || other.enrolledCount == enrolledCount)&&(identical(other.isNearCapacity, isNearCapacity) || other.isNearCapacity == isNearCapacity)&&(identical(other.isBooked, isBooked) || other.isBooked == isBooked)&&(identical(other.hostName, hostName) || other.hostName == hostName)&&(identical(other.hostId, hostId) || other.hostId == hostId)&&(identical(other.distance, distance) || other.distance == distance)&&(identical(other.organizerType, organizerType) || other.organizerType == organizerType)&&const DeepCollectionEquality().equals(other.highlights, highlights)&&(identical(other.trainer, trainer) || other.trainer == trainer));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExploreEventDto&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.locationName, locationName) || other.locationName == locationName)&&(identical(other.address, address) || other.address == address)&&(identical(other.latitude, latitude) || other.latitude == latitude)&&(identical(other.longitude, longitude) || other.longitude == longitude)&&(identical(other.imageUrl, imageUrl) || other.imageUrl == imageUrl)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.cityId, cityId) || other.cityId == cityId)&&(identical(other.price, price) || other.price == price)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.capacity, capacity) || other.capacity == capacity)&&(identical(other.enrolledCount, enrolledCount) || other.enrolledCount == enrolledCount)&&(identical(other.isNearCapacity, isNearCapacity) || other.isNearCapacity == isNearCapacity)&&(identical(other.isBooked, isBooked) || other.isBooked == isBooked)&&(identical(other.hostName, hostName) || other.hostName == hostName)&&(identical(other.hostId, hostId) || other.hostId == hostId)&&(identical(other.distance, distance) || other.distance == distance)&&(identical(other.organizerType, organizerType) || other.organizerType == organizerType)&&const DeepCollectionEquality().equals(other.highlights, highlights)&&(identical(other.trainer, trainer) || other.trainer == trainer));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,title,description,startTime,endTime,locationName,address,imageUrl,categoryId,cityId,price,currency,capacity,enrolledCount,isNearCapacity,isBooked,hostName,hostId,distance,organizerType,const DeepCollectionEquality().hash(highlights),trainer]);
+int get hashCode => Object.hashAll([runtimeType,id,title,description,startTime,endTime,locationName,address,latitude,longitude,imageUrl,categoryId,cityId,price,currency,capacity,enrolledCount,isNearCapacity,isBooked,hostName,hostId,distance,organizerType,const DeepCollectionEquality().hash(highlights),trainer]);
 
 @override
 String toString() {
-  return 'ExploreEventDto(id: $id, title: $title, description: $description, startTime: $startTime, endTime: $endTime, locationName: $locationName, address: $address, imageUrl: $imageUrl, categoryId: $categoryId, cityId: $cityId, price: $price, currency: $currency, capacity: $capacity, enrolledCount: $enrolledCount, isNearCapacity: $isNearCapacity, isBooked: $isBooked, hostName: $hostName, hostId: $hostId, distance: $distance, organizerType: $organizerType, highlights: $highlights, trainer: $trainer)';
+  return 'ExploreEventDto(id: $id, title: $title, description: $description, startTime: $startTime, endTime: $endTime, locationName: $locationName, address: $address, latitude: $latitude, longitude: $longitude, imageUrl: $imageUrl, categoryId: $categoryId, cityId: $cityId, price: $price, currency: $currency, capacity: $capacity, enrolledCount: $enrolledCount, isNearCapacity: $isNearCapacity, isBooked: $isBooked, hostName: $hostName, hostId: $hostId, distance: $distance, organizerType: $organizerType, highlights: $highlights, trainer: $trainer)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $ExploreEventDtoCopyWith<$Res>  {
   factory $ExploreEventDtoCopyWith(ExploreEventDto value, $Res Function(ExploreEventDto) _then) = _$ExploreEventDtoCopyWithImpl;
 @useResult
 $Res call({
- String id, String title, String? description, DateTime startTime, DateTime? endTime,@JsonKey(name: 'locationName') String locationName, String? address, String? imageUrl,@JsonKey(name: 'category') String? categoryId,@JsonKey(name: 'city') String? cityId, double price, String currency, int capacity, int enrolledCount, bool isNearCapacity, bool isBooked,@JsonKey(name: 'trainerName') String? hostName,@JsonKey(name: 'trainerId') String? hostId, double? distance, String? organizerType, List<String> highlights, TrainerInfo? trainer
+ String id, String title, String? description, DateTime startTime, DateTime? endTime,@JsonKey(name: 'locationName') String locationName, String? address,@JsonKey(name: 'latitude') double latitude,@JsonKey(name: 'longitude') double longitude, String? imageUrl,@JsonKey(name: 'category') String? categoryId,@JsonKey(name: 'city') String? cityId, double price, String currency, int capacity, int enrolledCount, bool isNearCapacity, bool isBooked,@JsonKey(name: 'trainerName') String? hostName,@JsonKey(name: 'trainerId') String? hostId, double? distance, String? organizerType, List<String> highlights, TrainerInfo? trainer
 });
 
 
@@ -65,7 +65,7 @@ class _$ExploreEventDtoCopyWithImpl<$Res>
 
 /// Create a copy of ExploreEventDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? description = freezed,Object? startTime = null,Object? endTime = freezed,Object? locationName = null,Object? address = freezed,Object? imageUrl = freezed,Object? categoryId = freezed,Object? cityId = freezed,Object? price = null,Object? currency = null,Object? capacity = null,Object? enrolledCount = null,Object? isNearCapacity = null,Object? isBooked = null,Object? hostName = freezed,Object? hostId = freezed,Object? distance = freezed,Object? organizerType = freezed,Object? highlights = null,Object? trainer = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? description = freezed,Object? startTime = null,Object? endTime = freezed,Object? locationName = null,Object? address = freezed,Object? latitude = null,Object? longitude = null,Object? imageUrl = freezed,Object? categoryId = freezed,Object? cityId = freezed,Object? price = null,Object? currency = null,Object? capacity = null,Object? enrolledCount = null,Object? isNearCapacity = null,Object? isBooked = null,Object? hostName = freezed,Object? hostId = freezed,Object? distance = freezed,Object? organizerType = freezed,Object? highlights = null,Object? trainer = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -74,7 +74,9 @@ as String?,startTime: null == startTime ? _self.startTime : startTime // ignore:
 as DateTime,endTime: freezed == endTime ? _self.endTime : endTime // ignore: cast_nullable_to_non_nullable
 as DateTime?,locationName: null == locationName ? _self.locationName : locationName // ignore: cast_nullable_to_non_nullable
 as String,address: freezed == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
-as String?,imageUrl: freezed == imageUrl ? _self.imageUrl : imageUrl // ignore: cast_nullable_to_non_nullable
+as String?,latitude: null == latitude ? _self.latitude : latitude // ignore: cast_nullable_to_non_nullable
+as double,longitude: null == longitude ? _self.longitude : longitude // ignore: cast_nullable_to_non_nullable
+as double,imageUrl: freezed == imageUrl ? _self.imageUrl : imageUrl // ignore: cast_nullable_to_non_nullable
 as String?,categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
 as String?,cityId: freezed == cityId ? _self.cityId : cityId // ignore: cast_nullable_to_non_nullable
 as String?,price: null == price ? _self.price : price // ignore: cast_nullable_to_non_nullable
@@ -186,10 +188,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String title,  String? description,  DateTime startTime,  DateTime? endTime, @JsonKey(name: 'locationName')  String locationName,  String? address,  String? imageUrl, @JsonKey(name: 'category')  String? categoryId, @JsonKey(name: 'city')  String? cityId,  double price,  String currency,  int capacity,  int enrolledCount,  bool isNearCapacity,  bool isBooked, @JsonKey(name: 'trainerName')  String? hostName, @JsonKey(name: 'trainerId')  String? hostId,  double? distance,  String? organizerType,  List<String> highlights,  TrainerInfo? trainer)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String title,  String? description,  DateTime startTime,  DateTime? endTime, @JsonKey(name: 'locationName')  String locationName,  String? address, @JsonKey(name: 'latitude')  double latitude, @JsonKey(name: 'longitude')  double longitude,  String? imageUrl, @JsonKey(name: 'category')  String? categoryId, @JsonKey(name: 'city')  String? cityId,  double price,  String currency,  int capacity,  int enrolledCount,  bool isNearCapacity,  bool isBooked, @JsonKey(name: 'trainerName')  String? hostName, @JsonKey(name: 'trainerId')  String? hostId,  double? distance,  String? organizerType,  List<String> highlights,  TrainerInfo? trainer)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ExploreEventDto() when $default != null:
-return $default(_that.id,_that.title,_that.description,_that.startTime,_that.endTime,_that.locationName,_that.address,_that.imageUrl,_that.categoryId,_that.cityId,_that.price,_that.currency,_that.capacity,_that.enrolledCount,_that.isNearCapacity,_that.isBooked,_that.hostName,_that.hostId,_that.distance,_that.organizerType,_that.highlights,_that.trainer);case _:
+return $default(_that.id,_that.title,_that.description,_that.startTime,_that.endTime,_that.locationName,_that.address,_that.latitude,_that.longitude,_that.imageUrl,_that.categoryId,_that.cityId,_that.price,_that.currency,_that.capacity,_that.enrolledCount,_that.isNearCapacity,_that.isBooked,_that.hostName,_that.hostId,_that.distance,_that.organizerType,_that.highlights,_that.trainer);case _:
   return orElse();
 
 }
@@ -207,10 +209,10 @@ return $default(_that.id,_that.title,_that.description,_that.startTime,_that.end
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String title,  String? description,  DateTime startTime,  DateTime? endTime, @JsonKey(name: 'locationName')  String locationName,  String? address,  String? imageUrl, @JsonKey(name: 'category')  String? categoryId, @JsonKey(name: 'city')  String? cityId,  double price,  String currency,  int capacity,  int enrolledCount,  bool isNearCapacity,  bool isBooked, @JsonKey(name: 'trainerName')  String? hostName, @JsonKey(name: 'trainerId')  String? hostId,  double? distance,  String? organizerType,  List<String> highlights,  TrainerInfo? trainer)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String title,  String? description,  DateTime startTime,  DateTime? endTime, @JsonKey(name: 'locationName')  String locationName,  String? address, @JsonKey(name: 'latitude')  double latitude, @JsonKey(name: 'longitude')  double longitude,  String? imageUrl, @JsonKey(name: 'category')  String? categoryId, @JsonKey(name: 'city')  String? cityId,  double price,  String currency,  int capacity,  int enrolledCount,  bool isNearCapacity,  bool isBooked, @JsonKey(name: 'trainerName')  String? hostName, @JsonKey(name: 'trainerId')  String? hostId,  double? distance,  String? organizerType,  List<String> highlights,  TrainerInfo? trainer)  $default,) {final _that = this;
 switch (_that) {
 case _ExploreEventDto():
-return $default(_that.id,_that.title,_that.description,_that.startTime,_that.endTime,_that.locationName,_that.address,_that.imageUrl,_that.categoryId,_that.cityId,_that.price,_that.currency,_that.capacity,_that.enrolledCount,_that.isNearCapacity,_that.isBooked,_that.hostName,_that.hostId,_that.distance,_that.organizerType,_that.highlights,_that.trainer);case _:
+return $default(_that.id,_that.title,_that.description,_that.startTime,_that.endTime,_that.locationName,_that.address,_that.latitude,_that.longitude,_that.imageUrl,_that.categoryId,_that.cityId,_that.price,_that.currency,_that.capacity,_that.enrolledCount,_that.isNearCapacity,_that.isBooked,_that.hostName,_that.hostId,_that.distance,_that.organizerType,_that.highlights,_that.trainer);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -227,10 +229,10 @@ return $default(_that.id,_that.title,_that.description,_that.startTime,_that.end
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String title,  String? description,  DateTime startTime,  DateTime? endTime, @JsonKey(name: 'locationName')  String locationName,  String? address,  String? imageUrl, @JsonKey(name: 'category')  String? categoryId, @JsonKey(name: 'city')  String? cityId,  double price,  String currency,  int capacity,  int enrolledCount,  bool isNearCapacity,  bool isBooked, @JsonKey(name: 'trainerName')  String? hostName, @JsonKey(name: 'trainerId')  String? hostId,  double? distance,  String? organizerType,  List<String> highlights,  TrainerInfo? trainer)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String title,  String? description,  DateTime startTime,  DateTime? endTime, @JsonKey(name: 'locationName')  String locationName,  String? address, @JsonKey(name: 'latitude')  double latitude, @JsonKey(name: 'longitude')  double longitude,  String? imageUrl, @JsonKey(name: 'category')  String? categoryId, @JsonKey(name: 'city')  String? cityId,  double price,  String currency,  int capacity,  int enrolledCount,  bool isNearCapacity,  bool isBooked, @JsonKey(name: 'trainerName')  String? hostName, @JsonKey(name: 'trainerId')  String? hostId,  double? distance,  String? organizerType,  List<String> highlights,  TrainerInfo? trainer)?  $default,) {final _that = this;
 switch (_that) {
 case _ExploreEventDto() when $default != null:
-return $default(_that.id,_that.title,_that.description,_that.startTime,_that.endTime,_that.locationName,_that.address,_that.imageUrl,_that.categoryId,_that.cityId,_that.price,_that.currency,_that.capacity,_that.enrolledCount,_that.isNearCapacity,_that.isBooked,_that.hostName,_that.hostId,_that.distance,_that.organizerType,_that.highlights,_that.trainer);case _:
+return $default(_that.id,_that.title,_that.description,_that.startTime,_that.endTime,_that.locationName,_that.address,_that.latitude,_that.longitude,_that.imageUrl,_that.categoryId,_that.cityId,_that.price,_that.currency,_that.capacity,_that.enrolledCount,_that.isNearCapacity,_that.isBooked,_that.hostName,_that.hostId,_that.distance,_that.organizerType,_that.highlights,_that.trainer);case _:
   return null;
 
 }
@@ -242,7 +244,7 @@ return $default(_that.id,_that.title,_that.description,_that.startTime,_that.end
 @JsonSerializable()
 
 class _ExploreEventDto extends ExploreEventDto {
-  const _ExploreEventDto({required this.id, required this.title, this.description, required this.startTime, this.endTime, @JsonKey(name: 'locationName') required this.locationName, this.address, this.imageUrl, @JsonKey(name: 'category') this.categoryId, @JsonKey(name: 'city') this.cityId, this.price = 0, this.currency = 'PLN', this.capacity = 0, this.enrolledCount = 0, this.isNearCapacity = false, this.isBooked = false, @JsonKey(name: 'trainerName') this.hostName, @JsonKey(name: 'trainerId') this.hostId, this.distance, this.organizerType, final  List<String> highlights = const <String>[], this.trainer}): _highlights = highlights,super._();
+  const _ExploreEventDto({required this.id, required this.title, this.description, required this.startTime, this.endTime, @JsonKey(name: 'locationName') required this.locationName, this.address, @JsonKey(name: 'latitude') this.latitude = 0, @JsonKey(name: 'longitude') this.longitude = 0, this.imageUrl, @JsonKey(name: 'category') this.categoryId, @JsonKey(name: 'city') this.cityId, this.price = 0, this.currency = 'PLN', this.capacity = 0, this.enrolledCount = 0, this.isNearCapacity = false, this.isBooked = false, @JsonKey(name: 'trainerName') this.hostName, @JsonKey(name: 'trainerId') this.hostId, this.distance, this.organizerType, final  List<String> highlights = const <String>[], this.trainer}): _highlights = highlights,super._();
   factory _ExploreEventDto.fromJson(Map<String, dynamic> json) => _$ExploreEventDtoFromJson(json);
 
 @override final  String id;
@@ -252,6 +254,8 @@ class _ExploreEventDto extends ExploreEventDto {
 @override final  DateTime? endTime;
 @override@JsonKey(name: 'locationName') final  String locationName;
 @override final  String? address;
+@override@JsonKey(name: 'latitude') final  double latitude;
+@override@JsonKey(name: 'longitude') final  double longitude;
 @override final  String? imageUrl;
 @override@JsonKey(name: 'category') final  String? categoryId;
 @override@JsonKey(name: 'city') final  String? cityId;
@@ -287,16 +291,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExploreEventDto&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.locationName, locationName) || other.locationName == locationName)&&(identical(other.address, address) || other.address == address)&&(identical(other.imageUrl, imageUrl) || other.imageUrl == imageUrl)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.cityId, cityId) || other.cityId == cityId)&&(identical(other.price, price) || other.price == price)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.capacity, capacity) || other.capacity == capacity)&&(identical(other.enrolledCount, enrolledCount) || other.enrolledCount == enrolledCount)&&(identical(other.isNearCapacity, isNearCapacity) || other.isNearCapacity == isNearCapacity)&&(identical(other.isBooked, isBooked) || other.isBooked == isBooked)&&(identical(other.hostName, hostName) || other.hostName == hostName)&&(identical(other.hostId, hostId) || other.hostId == hostId)&&(identical(other.distance, distance) || other.distance == distance)&&(identical(other.organizerType, organizerType) || other.organizerType == organizerType)&&const DeepCollectionEquality().equals(other._highlights, _highlights)&&(identical(other.trainer, trainer) || other.trainer == trainer));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExploreEventDto&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.locationName, locationName) || other.locationName == locationName)&&(identical(other.address, address) || other.address == address)&&(identical(other.latitude, latitude) || other.latitude == latitude)&&(identical(other.longitude, longitude) || other.longitude == longitude)&&(identical(other.imageUrl, imageUrl) || other.imageUrl == imageUrl)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.cityId, cityId) || other.cityId == cityId)&&(identical(other.price, price) || other.price == price)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.capacity, capacity) || other.capacity == capacity)&&(identical(other.enrolledCount, enrolledCount) || other.enrolledCount == enrolledCount)&&(identical(other.isNearCapacity, isNearCapacity) || other.isNearCapacity == isNearCapacity)&&(identical(other.isBooked, isBooked) || other.isBooked == isBooked)&&(identical(other.hostName, hostName) || other.hostName == hostName)&&(identical(other.hostId, hostId) || other.hostId == hostId)&&(identical(other.distance, distance) || other.distance == distance)&&(identical(other.organizerType, organizerType) || other.organizerType == organizerType)&&const DeepCollectionEquality().equals(other._highlights, _highlights)&&(identical(other.trainer, trainer) || other.trainer == trainer));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,title,description,startTime,endTime,locationName,address,imageUrl,categoryId,cityId,price,currency,capacity,enrolledCount,isNearCapacity,isBooked,hostName,hostId,distance,organizerType,const DeepCollectionEquality().hash(_highlights),trainer]);
+int get hashCode => Object.hashAll([runtimeType,id,title,description,startTime,endTime,locationName,address,latitude,longitude,imageUrl,categoryId,cityId,price,currency,capacity,enrolledCount,isNearCapacity,isBooked,hostName,hostId,distance,organizerType,const DeepCollectionEquality().hash(_highlights),trainer]);
 
 @override
 String toString() {
-  return 'ExploreEventDto(id: $id, title: $title, description: $description, startTime: $startTime, endTime: $endTime, locationName: $locationName, address: $address, imageUrl: $imageUrl, categoryId: $categoryId, cityId: $cityId, price: $price, currency: $currency, capacity: $capacity, enrolledCount: $enrolledCount, isNearCapacity: $isNearCapacity, isBooked: $isBooked, hostName: $hostName, hostId: $hostId, distance: $distance, organizerType: $organizerType, highlights: $highlights, trainer: $trainer)';
+  return 'ExploreEventDto(id: $id, title: $title, description: $description, startTime: $startTime, endTime: $endTime, locationName: $locationName, address: $address, latitude: $latitude, longitude: $longitude, imageUrl: $imageUrl, categoryId: $categoryId, cityId: $cityId, price: $price, currency: $currency, capacity: $capacity, enrolledCount: $enrolledCount, isNearCapacity: $isNearCapacity, isBooked: $isBooked, hostName: $hostName, hostId: $hostId, distance: $distance, organizerType: $organizerType, highlights: $highlights, trainer: $trainer)';
 }
 
 
@@ -307,7 +311,7 @@ abstract mixin class _$ExploreEventDtoCopyWith<$Res> implements $ExploreEventDto
   factory _$ExploreEventDtoCopyWith(_ExploreEventDto value, $Res Function(_ExploreEventDto) _then) = __$ExploreEventDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String title, String? description, DateTime startTime, DateTime? endTime,@JsonKey(name: 'locationName') String locationName, String? address, String? imageUrl,@JsonKey(name: 'category') String? categoryId,@JsonKey(name: 'city') String? cityId, double price, String currency, int capacity, int enrolledCount, bool isNearCapacity, bool isBooked,@JsonKey(name: 'trainerName') String? hostName,@JsonKey(name: 'trainerId') String? hostId, double? distance, String? organizerType, List<String> highlights, TrainerInfo? trainer
+ String id, String title, String? description, DateTime startTime, DateTime? endTime,@JsonKey(name: 'locationName') String locationName, String? address,@JsonKey(name: 'latitude') double latitude,@JsonKey(name: 'longitude') double longitude, String? imageUrl,@JsonKey(name: 'category') String? categoryId,@JsonKey(name: 'city') String? cityId, double price, String currency, int capacity, int enrolledCount, bool isNearCapacity, bool isBooked,@JsonKey(name: 'trainerName') String? hostName,@JsonKey(name: 'trainerId') String? hostId, double? distance, String? organizerType, List<String> highlights, TrainerInfo? trainer
 });
 
 
@@ -324,7 +328,7 @@ class __$ExploreEventDtoCopyWithImpl<$Res>
 
 /// Create a copy of ExploreEventDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? description = freezed,Object? startTime = null,Object? endTime = freezed,Object? locationName = null,Object? address = freezed,Object? imageUrl = freezed,Object? categoryId = freezed,Object? cityId = freezed,Object? price = null,Object? currency = null,Object? capacity = null,Object? enrolledCount = null,Object? isNearCapacity = null,Object? isBooked = null,Object? hostName = freezed,Object? hostId = freezed,Object? distance = freezed,Object? organizerType = freezed,Object? highlights = null,Object? trainer = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? description = freezed,Object? startTime = null,Object? endTime = freezed,Object? locationName = null,Object? address = freezed,Object? latitude = null,Object? longitude = null,Object? imageUrl = freezed,Object? categoryId = freezed,Object? cityId = freezed,Object? price = null,Object? currency = null,Object? capacity = null,Object? enrolledCount = null,Object? isNearCapacity = null,Object? isBooked = null,Object? hostName = freezed,Object? hostId = freezed,Object? distance = freezed,Object? organizerType = freezed,Object? highlights = null,Object? trainer = freezed,}) {
   return _then(_ExploreEventDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -333,7 +337,9 @@ as String?,startTime: null == startTime ? _self.startTime : startTime // ignore:
 as DateTime,endTime: freezed == endTime ? _self.endTime : endTime // ignore: cast_nullable_to_non_nullable
 as DateTime?,locationName: null == locationName ? _self.locationName : locationName // ignore: cast_nullable_to_non_nullable
 as String,address: freezed == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
-as String?,imageUrl: freezed == imageUrl ? _self.imageUrl : imageUrl // ignore: cast_nullable_to_non_nullable
+as String?,latitude: null == latitude ? _self.latitude : latitude // ignore: cast_nullable_to_non_nullable
+as double,longitude: null == longitude ? _self.longitude : longitude // ignore: cast_nullable_to_non_nullable
+as double,imageUrl: freezed == imageUrl ? _self.imageUrl : imageUrl // ignore: cast_nullable_to_non_nullable
 as String?,categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
 as String?,cityId: freezed == cityId ? _self.cityId : cityId // ignore: cast_nullable_to_non_nullable
 as String?,price: null == price ? _self.price : price // ignore: cast_nullable_to_non_nullable

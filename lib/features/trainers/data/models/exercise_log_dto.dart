@@ -17,6 +17,7 @@ abstract class ExerciseLogDto with _$ExerciseLogDto {
     int? order,
     String? tempo,
     String? notes,
+    int? rpe,
     @Default('BOTH') String side,
     required String workoutSessionId,
     String? supersetKey,

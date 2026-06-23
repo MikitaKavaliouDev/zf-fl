@@ -19,6 +19,9 @@ _WorkoutSessionDto _$WorkoutSessionDtoFromJson(Map<String, dynamic> json) =>
       workoutTemplateId: json['workoutTemplateId'] as String?,
       clientPackageId: json['clientPackageId'] as String?,
       isTrainerLed: json['isTrainerLed'] as bool? ?? false,
+      exerciseLogs: (json['exerciseLogs'] as List<dynamic>?)
+          ?.map((e) => ExerciseLogDto.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$WorkoutSessionDtoToJson(_WorkoutSessionDto instance) =>
@@ -34,4 +37,5 @@ Map<String, dynamic> _$WorkoutSessionDtoToJson(_WorkoutSessionDto instance) =>
       'workoutTemplateId': instance.workoutTemplateId,
       'clientPackageId': instance.clientPackageId,
       'isTrainerLed': instance.isTrainerLed,
+      'exerciseLogs': instance.exerciseLogs,
     };

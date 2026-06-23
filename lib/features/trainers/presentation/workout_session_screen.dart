@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+
 
 import '../../../core/theme/app_theme.dart';
 import '../cubit/workout_session_cubit.dart';
 import '../cubit/workout_session_state.dart';
 import '../data/models/exercise_dto.dart';
 import '../data/models/exercise_log_dto.dart';
+import '../data/models/template_dto.dart';
+import 'widgets/cancel_workout_dialog.dart';
+import 'widgets/finish_workout_dialog.dart';
+import 'widgets/rest_timer_sheet.dart';
+import 'widgets/rpe_picker.dart';
+import 'widgets/save_as_template_dialog.dart';
+import 'widgets/template_picker_dialog.dart';
 import 'widgets/workout_numeric_keyboard.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -46,6 +55,7 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
   // ── Input system state ───────────────────────────────────────────────
   _FocusTarget? _focusTarget;
   String _activeInputText = '';
+  bool _dismissedLongWarning = false;
 
   @override
   void initState() {
@@ -66,6 +76,12 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
       appBar: AppBar(
         title: const Text('Workout'),
         actions: [
+          if (context.read<WorkoutSessionCubit>().state is WorkoutSessionActive)
+            IconButton(
+              icon: const Icon(Icons.close_rounded),
+              onPressed: () => _confirmCancel(context),
+              tooltip: 'Cancel Workout',
+            ),
           IconButton(
             icon: const Icon(Icons.history_rounded),
             onPressed: () => _showHistory(context),
@@ -85,6 +101,26 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
               ),
             );
           }
+          if (state is WorkoutSessionActive && state.newPrRecord) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Row(
+                  children: [
+                    Icon(Icons.emoji_events_rounded, color: Colors.amber, size: 20),
+                    SizedBox(width: 8),
+                    Text('🏆 New Personal Record!'),
+                  ],
+                ),
+                backgroundColor: Colors.green.shade700,
+                behavior: SnackBarBehavior.floating,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+          // Reset long warning dismissal on session end
+          if (state is! WorkoutSessionActive) {
+            setState(() => _dismissedLongWarning = false);
+          }
         },
         builder: (context, state) {
           return switch (state) {
@@ -98,9 +134,11 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
               :final logs,
               :final restStartedAt,
               :final restElapsed,
+              :final restRemaining,
+              :final showLongSessionWarning,
             ) =>
               _buildActive(
-                context, elapsed, isPaused, logs, restStartedAt, restElapsed,
+                context, elapsed, isPaused, logs, restStartedAt, restElapsed, restRemaining,
               ),
             WorkoutSessionCompleted(:final totalDuration, :final logs) =>
               _buildCompleted(context, totalDuration, logs),
@@ -146,6 +184,15 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
                 label: const Text('Start Workout'),
               ),
             ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => _showTemplatePicker(context),
+                icon: const Icon(Icons.library_books_rounded),
+                label: const Text('Start from Template'),
+              ),
+            ),
           ],
         ),
       ),
@@ -159,6 +206,7 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
     List<ExerciseLogDto> logs,
     DateTime? restStartedAt,
     Duration restElapsed,
+    int? restRemaining,
   ) {
     // Group logs by exerciseId.
     final grouped = <String, List<ExerciseLogDto>>{};
@@ -250,34 +298,79 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
                   // Rest timer progress bar
                   if (isResting) ...[
                     const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        const Icon(Icons.hotel_class_rounded,
-                            size: 14, color: Colors.orange),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(99),
-                            child: LinearProgressIndicator(
-                              value: (restElapsed.inSeconds % 120) / 120.0,
-                              backgroundColor:
-                                  Colors.orange.withValues(alpha: 0.1),
-                              valueColor: const AlwaysStoppedAnimation<Color>(
-                                  Colors.orange),
-                              minHeight: 4,
+                    GestureDetector(
+                      onTap: () => _showRestTimerSheet(
+                        context,
+                        restRemaining ?? restElapsed.inSeconds,
+                        (context.read<WorkoutSessionCubit>().state as WorkoutSessionActive).restDuration ?? 120,
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.timer_outlined,
+                              size: 14, color: Colors.orange),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              restRemaining != null
+                                  ? _formatCountdown(restRemaining)
+                                  : _formatDuration(restElapsed),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.orange,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        GestureDetector(
-                          onTap: () =>
-                              context.read<WorkoutSessionCubit>().endRest(),
-                          child: const Icon(Icons.skip_next_rounded,
-                              size: 20, color: Colors.orange),
-                        ),
-                      ],
+                          const SizedBox(width: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(99),
+                            ),
+                            child: const Text(
+                              'OPEN',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.orange,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
+                  // Long session warning
+                  if (elapsed.inSeconds >= 7200 && !_dismissedLongWarning)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.warning_amber_rounded, size: 16, color: Colors.orange),
+                            const SizedBox(width: 8),
+                            const Expanded(
+                              child: Text(
+                                'Session exceeds 2 hours',
+                                style: TextStyle(fontSize: 12, color: Colors.orange, fontWeight: FontWeight.w500),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () => setState(() => _dismissedLongWarning = true),
+                              child: const Icon(Icons.close_rounded, size: 16, color: Colors.orange),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -332,6 +425,9 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
                             log: exLogs[logIndex],
                           ),
                           onAddSet: () => _addSet(entry.key),
+                          onRemove: () => _confirmRemoveExercise(
+                            context, entry.key, name,
+                          ),
                         );
                       },
                     ),
@@ -534,6 +630,15 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
               onPressed: () => context.read<WorkoutSessionCubit>().start(),
               icon: const Icon(Icons.refresh_rounded),
               label: const Text('New Workout'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => _showSaveAsTemplate(context),
+              icon: const Icon(Icons.save_rounded),
+              label: const Text('Save as Template'),
             ),
           ),
         ],
@@ -787,25 +892,34 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Finish Workout?'),
-        content: const Text('Are you sure you want to end this session?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              context.read<WorkoutSessionCubit>().finish();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-            ),
-            child: const Text('Finish'),
-          ),
-        ],
+      builder: (_) => FinishWorkoutDialog(
+        onCompleteUnfinished: () {
+          Navigator.of(context).pop();
+          context.read<WorkoutSessionCubit>().finish(completeUnfinished: true);
+        },
+        onDiscardUnfinished: () {
+          Navigator.of(context).pop();
+          context.read<WorkoutSessionCubit>().finish(completeUnfinished: false);
+        },
+        onCancel: () => Navigator.of(context).pop(),
+      ),
+    );
+  }
+
+  void _confirmCancel(BuildContext context) {
+    // Dismiss keyboard first if active.
+    if (_focusTarget != null) {
+      _handleInputDismiss();
+    }
+
+    showDialog(
+      context: context,
+      builder: (_) => CancelWorkoutDialog(
+        onConfirm: () {
+          Navigator.of(context).pop();
+          context.read<WorkoutSessionCubit>().cancelSession();
+        },
+        onDismiss: () => Navigator.of(context).pop(),
       ),
     );
   }
@@ -839,11 +953,121 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
     }
   }
 
+  void _confirmRemoveExercise(
+      BuildContext context, String exerciseId, String exerciseName) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Remove Exercise?'),
+        content: Text('Remove "$exerciseName" from this session?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              context
+                  .read<WorkoutSessionCubit>()
+                  .removeExercise(exerciseId);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showHistory(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Session history coming soon'),
-        behavior: SnackBarBehavior.floating,
+    context.push('/workout/history');
+  }
+
+  void _showTemplatePicker(BuildContext context) async {
+    final cubit = context.read<WorkoutSessionCubit>();
+    List<TemplateDto> templates;
+    try {
+      templates = await cubit.fetchTemplates();
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not load templates.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    if (!context.mounted) return;
+
+    if (templates.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No templates available.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    final selected = await showDialog<TemplateDto>(
+      context: context,
+      builder: (_) => TemplatePickerDialog(templates: templates),
+    );
+
+    if (selected != null && context.mounted) {
+      final template = await cubit.getTemplate(selected.id);
+      if (template.exercises.isNotEmpty && context.mounted) {
+        cubit.start(templateId: template.id);
+      }
+    }
+  }
+
+  void _showSaveAsTemplate(BuildContext context) async {
+    final name = await showDialog<String>(
+      context: context,
+      builder: (_) => const SaveAsTemplateDialog(),
+    );
+    if (name != null && context.mounted) {
+      context.read<WorkoutSessionCubit>().saveSessionAsTemplate(name);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Template "$name" saved!'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showRestTimerSheet(
+      BuildContext context, int remainingSeconds, int totalSeconds) {
+    final cubit = context.read<WorkoutSessionCubit>();
+    final state = cubit.state;
+    final isResting =
+        state is WorkoutSessionActive && state.restStartedAt != null;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => RestTimerSheet(
+        isRunning: isResting,
+        remainingSeconds: remainingSeconds,
+        totalSeconds: totalSeconds,
+        onStartTimer: (duration) {
+          cubit.startRest(duration: duration);
+        },
+        onAdjust: (delta) {
+          cubit.adjustRest(delta);
+        },
+        onSkip: () {
+          cubit.endRest();
+        },
+        onDismiss: () => Navigator.of(context).pop(),
       ),
     );
   }
@@ -865,6 +1089,12 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
     final s = totalSec.remainder(60);
     return '$m:${s.toString().padLeft(2, '0')}';
   }
+
+  String _formatCountdown(int totalSeconds) {
+    final m = totalSeconds ~/ 60;
+    final s = totalSeconds.remainder(60);
+    return '$m:${s.toString().padLeft(2, '0')}';
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -882,6 +1112,7 @@ class _ExerciseCard extends StatelessWidget {
   final void Function(int logIndex) onTapReps;
   final void Function(int logIndex) onComplete;
   final VoidCallback onAddSet;
+  final VoidCallback onRemove;
 
   const _ExerciseCard({
     required this.exerciseName,
@@ -894,6 +1125,7 @@ class _ExerciseCard extends StatelessWidget {
     required this.onTapReps,
     required this.onComplete,
     required this.onAddSet,
+    required this.onRemove,
   });
 
   @override
@@ -940,6 +1172,29 @@ class _ExerciseCard extends StatelessWidget {
                       ),
                     ),
                   ),
+                const SizedBox(width: 4),
+                PopupMenuButton<String>(
+                  onSelected: (value) {
+                    if (value == 'remove') {
+                      onRemove();
+                    }
+                  },
+                  itemBuilder: (_) => [
+                    const PopupMenuItem(
+                      value: 'remove',
+                      child: Row(
+                        children: [
+                          Icon(Icons.remove_circle_outline,
+                              size: 18, color: Colors.red),
+                          SizedBox(width: 8),
+                          Text('Remove', style: TextStyle(color: Colors.red)),
+                        ],
+                      ),
+                    ),
+                  ],
+                  icon: const Icon(Icons.more_vert_rounded,
+                      size: 18, color: AppColors.mutedText),
+                ),
               ],
             ),
           ),
@@ -963,6 +1218,7 @@ class _ExerciseCard extends StatelessWidget {
               setNumber: i + 1,
               weight: log.weight,
               reps: log.reps,
+              rpe: log.rpe,
               isCompleted: log.isCompleted,
               isWeightFocused: isWeightFocused,
               isRepsFocused: isRepsFocused,
@@ -970,6 +1226,7 @@ class _ExerciseCard extends StatelessWidget {
               onTapWeight: () => onTapWeight(i),
               onTapReps: () => onTapReps(i),
               onComplete: () => onComplete(i),
+              onTapRpe: () => _onTapRpe(context, exerciseId, log),
             );
           }),
 
@@ -1032,6 +1289,28 @@ class _ExerciseCard extends StatelessWidget {
       ),
     );
   }
+
+  void _onTapRpe(BuildContext context, String exerciseId, ExerciseLogDto log) {
+    showDialog(
+      context: context,
+      builder: (_) => RpePicker(
+        currentRpe: log.rpe,
+        onSelected: (rpe) {
+          if (context.mounted) {
+            final cubit = context.read<WorkoutSessionCubit>();
+            cubit.logSet(
+              logId: log.id,
+              exerciseId: exerciseId,
+              reps: log.reps ?? 0,
+              weight: log.weight,
+              isCompleted: log.isCompleted,
+              rpe: rpe,
+            );
+          }
+        },
+      ),
+    );
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1042,6 +1321,7 @@ class _SetRow extends StatelessWidget {
   final int setNumber;
   final double? weight;
   final int? reps;
+  final int? rpe;
   final bool isCompleted;
   final bool isWeightFocused;
   final bool isRepsFocused;
@@ -1049,12 +1329,14 @@ class _SetRow extends StatelessWidget {
   final VoidCallback onTapWeight;
   final VoidCallback onTapReps;
   final VoidCallback onComplete;
+  final VoidCallback onTapRpe;
 
   const _SetRow({
     super.key,
     required this.setNumber,
     this.weight,
     this.reps,
+    this.rpe,
     this.isCompleted = false,
     this.isWeightFocused = false,
     this.isRepsFocused = false,
@@ -1062,6 +1344,7 @@ class _SetRow extends StatelessWidget {
     required this.onTapWeight,
     required this.onTapReps,
     required this.onComplete,
+    required this.onTapRpe,
   });
 
   @override
@@ -1098,6 +1381,32 @@ class _SetRow extends StatelessWidget {
               text: repsText,
               isFocused: isRepsFocused,
               onTap: onTapReps,
+            ),
+          ),
+
+          const SizedBox(width: 4),
+
+          // RPE indicator
+          GestureDetector(
+            onTap: onTapRpe,
+            child: Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: rpe != null
+                    ? AppColors.primary.withValues(alpha: 0.1)
+                    : AppColors.mutedSurface,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                rpe != null ? '$rpe' : 'RPE',
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  color: rpe != null ? AppColors.primary : AppColors.mutedText,
+                ),
+              ),
             ),
           ),
 
@@ -1266,6 +1575,21 @@ class _ExercisePickerDialogState extends State<_ExercisePickerDialog> {
     super.dispose();
   }
 
+  // Simple fuzzy/typo-tolerant search: each character in the query must appear
+  // in order in the target string, but not necessarily consecutively.
+  bool _fuzzyMatch(String text, String query) {
+    if (query.isEmpty) return true;
+    final t = text.toLowerCase();
+    final q = query.toLowerCase();
+    int ti = 0;
+    for (int qi = 0; qi < q.length; qi++) {
+      ti = t.indexOf(q[qi], ti);
+      if (ti == -1) return false;
+      ti++;
+    }
+    return true;
+  }
+
   void _filter(String query) {
     setState(() {
       if (query.isEmpty) {
@@ -1273,9 +1597,9 @@ class _ExercisePickerDialogState extends State<_ExercisePickerDialog> {
       } else {
         final lower = query.toLowerCase();
         _filtered = widget.exercises.where((e) {
-          return e.name.toLowerCase().contains(lower) ||
-              (e.muscleGroup?.toLowerCase().contains(lower) ?? false) ||
-              (e.category?.toLowerCase().contains(lower) ?? false);
+          return _fuzzyMatch(e.name, lower) ||
+              _fuzzyMatch(e.muscleGroup ?? '', lower) ||
+              _fuzzyMatch(e.category ?? '', lower);
         }).toList();
       }
     });

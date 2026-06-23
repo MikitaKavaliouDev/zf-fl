@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ExerciseLogDto {
 
- String get id; String get clientId; String get exerciseId; int? get reps; double? get weight; bool get isCompleted; int? get order; String? get tempo; String? get notes; String get side; String get workoutSessionId; String? get supersetKey; int? get orderInSuperset; ExerciseDto? get exercise;
+ String get id; String get clientId; String get exerciseId; int? get reps; double? get weight; bool get isCompleted; int? get order; String? get tempo; String? get notes; int? get rpe; String get side; String get workoutSessionId; String? get supersetKey; int? get orderInSuperset; ExerciseDto? get exercise;
 /// Create a copy of ExerciseLogDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $ExerciseLogDtoCopyWith<ExerciseLogDto> get copyWith => _$ExerciseLogDtoCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExerciseLogDto&&(identical(other.id, id) || other.id == id)&&(identical(other.clientId, clientId) || other.clientId == clientId)&&(identical(other.exerciseId, exerciseId) || other.exerciseId == exerciseId)&&(identical(other.reps, reps) || other.reps == reps)&&(identical(other.weight, weight) || other.weight == weight)&&(identical(other.isCompleted, isCompleted) || other.isCompleted == isCompleted)&&(identical(other.order, order) || other.order == order)&&(identical(other.tempo, tempo) || other.tempo == tempo)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.side, side) || other.side == side)&&(identical(other.workoutSessionId, workoutSessionId) || other.workoutSessionId == workoutSessionId)&&(identical(other.supersetKey, supersetKey) || other.supersetKey == supersetKey)&&(identical(other.orderInSuperset, orderInSuperset) || other.orderInSuperset == orderInSuperset)&&(identical(other.exercise, exercise) || other.exercise == exercise));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExerciseLogDto&&(identical(other.id, id) || other.id == id)&&(identical(other.clientId, clientId) || other.clientId == clientId)&&(identical(other.exerciseId, exerciseId) || other.exerciseId == exerciseId)&&(identical(other.reps, reps) || other.reps == reps)&&(identical(other.weight, weight) || other.weight == weight)&&(identical(other.isCompleted, isCompleted) || other.isCompleted == isCompleted)&&(identical(other.order, order) || other.order == order)&&(identical(other.tempo, tempo) || other.tempo == tempo)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.rpe, rpe) || other.rpe == rpe)&&(identical(other.side, side) || other.side == side)&&(identical(other.workoutSessionId, workoutSessionId) || other.workoutSessionId == workoutSessionId)&&(identical(other.supersetKey, supersetKey) || other.supersetKey == supersetKey)&&(identical(other.orderInSuperset, orderInSuperset) || other.orderInSuperset == orderInSuperset)&&(identical(other.exercise, exercise) || other.exercise == exercise));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,clientId,exerciseId,reps,weight,isCompleted,order,tempo,notes,side,workoutSessionId,supersetKey,orderInSuperset,exercise);
+int get hashCode => Object.hash(runtimeType,id,clientId,exerciseId,reps,weight,isCompleted,order,tempo,notes,rpe,side,workoutSessionId,supersetKey,orderInSuperset,exercise);
 
 @override
 String toString() {
-  return 'ExerciseLogDto(id: $id, clientId: $clientId, exerciseId: $exerciseId, reps: $reps, weight: $weight, isCompleted: $isCompleted, order: $order, tempo: $tempo, notes: $notes, side: $side, workoutSessionId: $workoutSessionId, supersetKey: $supersetKey, orderInSuperset: $orderInSuperset, exercise: $exercise)';
+  return 'ExerciseLogDto(id: $id, clientId: $clientId, exerciseId: $exerciseId, reps: $reps, weight: $weight, isCompleted: $isCompleted, order: $order, tempo: $tempo, notes: $notes, rpe: $rpe, side: $side, workoutSessionId: $workoutSessionId, supersetKey: $supersetKey, orderInSuperset: $orderInSuperset, exercise: $exercise)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $ExerciseLogDtoCopyWith<$Res>  {
   factory $ExerciseLogDtoCopyWith(ExerciseLogDto value, $Res Function(ExerciseLogDto) _then) = _$ExerciseLogDtoCopyWithImpl;
 @useResult
 $Res call({
- String id, String clientId, String exerciseId, int? reps, double? weight, bool isCompleted, int? order, String? tempo, String? notes, String side, String workoutSessionId, String? supersetKey, int? orderInSuperset, ExerciseDto? exercise
+ String id, String clientId, String exerciseId, int? reps, double? weight, bool isCompleted, int? order, String? tempo, String? notes, int? rpe, String side, String workoutSessionId, String? supersetKey, int? orderInSuperset, ExerciseDto? exercise
 });
 
 
@@ -65,7 +65,7 @@ class _$ExerciseLogDtoCopyWithImpl<$Res>
 
 /// Create a copy of ExerciseLogDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? clientId = null,Object? exerciseId = null,Object? reps = freezed,Object? weight = freezed,Object? isCompleted = null,Object? order = freezed,Object? tempo = freezed,Object? notes = freezed,Object? side = null,Object? workoutSessionId = null,Object? supersetKey = freezed,Object? orderInSuperset = freezed,Object? exercise = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? clientId = null,Object? exerciseId = null,Object? reps = freezed,Object? weight = freezed,Object? isCompleted = null,Object? order = freezed,Object? tempo = freezed,Object? notes = freezed,Object? rpe = freezed,Object? side = null,Object? workoutSessionId = null,Object? supersetKey = freezed,Object? orderInSuperset = freezed,Object? exercise = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,clientId: null == clientId ? _self.clientId : clientId // ignore: cast_nullable_to_non_nullable
@@ -76,7 +76,8 @@ as double?,isCompleted: null == isCompleted ? _self.isCompleted : isCompleted //
 as bool,order: freezed == order ? _self.order : order // ignore: cast_nullable_to_non_nullable
 as int?,tempo: freezed == tempo ? _self.tempo : tempo // ignore: cast_nullable_to_non_nullable
 as String?,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
-as String?,side: null == side ? _self.side : side // ignore: cast_nullable_to_non_nullable
+as String?,rpe: freezed == rpe ? _self.rpe : rpe // ignore: cast_nullable_to_non_nullable
+as int?,side: null == side ? _self.side : side // ignore: cast_nullable_to_non_nullable
 as String,workoutSessionId: null == workoutSessionId ? _self.workoutSessionId : workoutSessionId // ignore: cast_nullable_to_non_nullable
 as String,supersetKey: freezed == supersetKey ? _self.supersetKey : supersetKey // ignore: cast_nullable_to_non_nullable
 as String?,orderInSuperset: freezed == orderInSuperset ? _self.orderInSuperset : orderInSuperset // ignore: cast_nullable_to_non_nullable
@@ -178,10 +179,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String clientId,  String exerciseId,  int? reps,  double? weight,  bool isCompleted,  int? order,  String? tempo,  String? notes,  String side,  String workoutSessionId,  String? supersetKey,  int? orderInSuperset,  ExerciseDto? exercise)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String clientId,  String exerciseId,  int? reps,  double? weight,  bool isCompleted,  int? order,  String? tempo,  String? notes,  int? rpe,  String side,  String workoutSessionId,  String? supersetKey,  int? orderInSuperset,  ExerciseDto? exercise)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ExerciseLogDto() when $default != null:
-return $default(_that.id,_that.clientId,_that.exerciseId,_that.reps,_that.weight,_that.isCompleted,_that.order,_that.tempo,_that.notes,_that.side,_that.workoutSessionId,_that.supersetKey,_that.orderInSuperset,_that.exercise);case _:
+return $default(_that.id,_that.clientId,_that.exerciseId,_that.reps,_that.weight,_that.isCompleted,_that.order,_that.tempo,_that.notes,_that.rpe,_that.side,_that.workoutSessionId,_that.supersetKey,_that.orderInSuperset,_that.exercise);case _:
   return orElse();
 
 }
@@ -199,10 +200,10 @@ return $default(_that.id,_that.clientId,_that.exerciseId,_that.reps,_that.weight
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String clientId,  String exerciseId,  int? reps,  double? weight,  bool isCompleted,  int? order,  String? tempo,  String? notes,  String side,  String workoutSessionId,  String? supersetKey,  int? orderInSuperset,  ExerciseDto? exercise)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String clientId,  String exerciseId,  int? reps,  double? weight,  bool isCompleted,  int? order,  String? tempo,  String? notes,  int? rpe,  String side,  String workoutSessionId,  String? supersetKey,  int? orderInSuperset,  ExerciseDto? exercise)  $default,) {final _that = this;
 switch (_that) {
 case _ExerciseLogDto():
-return $default(_that.id,_that.clientId,_that.exerciseId,_that.reps,_that.weight,_that.isCompleted,_that.order,_that.tempo,_that.notes,_that.side,_that.workoutSessionId,_that.supersetKey,_that.orderInSuperset,_that.exercise);case _:
+return $default(_that.id,_that.clientId,_that.exerciseId,_that.reps,_that.weight,_that.isCompleted,_that.order,_that.tempo,_that.notes,_that.rpe,_that.side,_that.workoutSessionId,_that.supersetKey,_that.orderInSuperset,_that.exercise);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -219,10 +220,10 @@ return $default(_that.id,_that.clientId,_that.exerciseId,_that.reps,_that.weight
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String clientId,  String exerciseId,  int? reps,  double? weight,  bool isCompleted,  int? order,  String? tempo,  String? notes,  String side,  String workoutSessionId,  String? supersetKey,  int? orderInSuperset,  ExerciseDto? exercise)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String clientId,  String exerciseId,  int? reps,  double? weight,  bool isCompleted,  int? order,  String? tempo,  String? notes,  int? rpe,  String side,  String workoutSessionId,  String? supersetKey,  int? orderInSuperset,  ExerciseDto? exercise)?  $default,) {final _that = this;
 switch (_that) {
 case _ExerciseLogDto() when $default != null:
-return $default(_that.id,_that.clientId,_that.exerciseId,_that.reps,_that.weight,_that.isCompleted,_that.order,_that.tempo,_that.notes,_that.side,_that.workoutSessionId,_that.supersetKey,_that.orderInSuperset,_that.exercise);case _:
+return $default(_that.id,_that.clientId,_that.exerciseId,_that.reps,_that.weight,_that.isCompleted,_that.order,_that.tempo,_that.notes,_that.rpe,_that.side,_that.workoutSessionId,_that.supersetKey,_that.orderInSuperset,_that.exercise);case _:
   return null;
 
 }
@@ -234,7 +235,7 @@ return $default(_that.id,_that.clientId,_that.exerciseId,_that.reps,_that.weight
 @JsonSerializable()
 
 class _ExerciseLogDto implements ExerciseLogDto {
-  const _ExerciseLogDto({required this.id, required this.clientId, required this.exerciseId, this.reps, this.weight, this.isCompleted = false, this.order, this.tempo, this.notes, this.side = 'BOTH', required this.workoutSessionId, this.supersetKey, this.orderInSuperset, this.exercise});
+  const _ExerciseLogDto({required this.id, required this.clientId, required this.exerciseId, this.reps, this.weight, this.isCompleted = false, this.order, this.tempo, this.notes, this.rpe, this.side = 'BOTH', required this.workoutSessionId, this.supersetKey, this.orderInSuperset, this.exercise});
   factory _ExerciseLogDto.fromJson(Map<String, dynamic> json) => _$ExerciseLogDtoFromJson(json);
 
 @override final  String id;
@@ -246,6 +247,7 @@ class _ExerciseLogDto implements ExerciseLogDto {
 @override final  int? order;
 @override final  String? tempo;
 @override final  String? notes;
+@override final  int? rpe;
 @override@JsonKey() final  String side;
 @override final  String workoutSessionId;
 @override final  String? supersetKey;
@@ -265,16 +267,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExerciseLogDto&&(identical(other.id, id) || other.id == id)&&(identical(other.clientId, clientId) || other.clientId == clientId)&&(identical(other.exerciseId, exerciseId) || other.exerciseId == exerciseId)&&(identical(other.reps, reps) || other.reps == reps)&&(identical(other.weight, weight) || other.weight == weight)&&(identical(other.isCompleted, isCompleted) || other.isCompleted == isCompleted)&&(identical(other.order, order) || other.order == order)&&(identical(other.tempo, tempo) || other.tempo == tempo)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.side, side) || other.side == side)&&(identical(other.workoutSessionId, workoutSessionId) || other.workoutSessionId == workoutSessionId)&&(identical(other.supersetKey, supersetKey) || other.supersetKey == supersetKey)&&(identical(other.orderInSuperset, orderInSuperset) || other.orderInSuperset == orderInSuperset)&&(identical(other.exercise, exercise) || other.exercise == exercise));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExerciseLogDto&&(identical(other.id, id) || other.id == id)&&(identical(other.clientId, clientId) || other.clientId == clientId)&&(identical(other.exerciseId, exerciseId) || other.exerciseId == exerciseId)&&(identical(other.reps, reps) || other.reps == reps)&&(identical(other.weight, weight) || other.weight == weight)&&(identical(other.isCompleted, isCompleted) || other.isCompleted == isCompleted)&&(identical(other.order, order) || other.order == order)&&(identical(other.tempo, tempo) || other.tempo == tempo)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.rpe, rpe) || other.rpe == rpe)&&(identical(other.side, side) || other.side == side)&&(identical(other.workoutSessionId, workoutSessionId) || other.workoutSessionId == workoutSessionId)&&(identical(other.supersetKey, supersetKey) || other.supersetKey == supersetKey)&&(identical(other.orderInSuperset, orderInSuperset) || other.orderInSuperset == orderInSuperset)&&(identical(other.exercise, exercise) || other.exercise == exercise));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,clientId,exerciseId,reps,weight,isCompleted,order,tempo,notes,side,workoutSessionId,supersetKey,orderInSuperset,exercise);
+int get hashCode => Object.hash(runtimeType,id,clientId,exerciseId,reps,weight,isCompleted,order,tempo,notes,rpe,side,workoutSessionId,supersetKey,orderInSuperset,exercise);
 
 @override
 String toString() {
-  return 'ExerciseLogDto(id: $id, clientId: $clientId, exerciseId: $exerciseId, reps: $reps, weight: $weight, isCompleted: $isCompleted, order: $order, tempo: $tempo, notes: $notes, side: $side, workoutSessionId: $workoutSessionId, supersetKey: $supersetKey, orderInSuperset: $orderInSuperset, exercise: $exercise)';
+  return 'ExerciseLogDto(id: $id, clientId: $clientId, exerciseId: $exerciseId, reps: $reps, weight: $weight, isCompleted: $isCompleted, order: $order, tempo: $tempo, notes: $notes, rpe: $rpe, side: $side, workoutSessionId: $workoutSessionId, supersetKey: $supersetKey, orderInSuperset: $orderInSuperset, exercise: $exercise)';
 }
 
 
@@ -285,7 +287,7 @@ abstract mixin class _$ExerciseLogDtoCopyWith<$Res> implements $ExerciseLogDtoCo
   factory _$ExerciseLogDtoCopyWith(_ExerciseLogDto value, $Res Function(_ExerciseLogDto) _then) = __$ExerciseLogDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String clientId, String exerciseId, int? reps, double? weight, bool isCompleted, int? order, String? tempo, String? notes, String side, String workoutSessionId, String? supersetKey, int? orderInSuperset, ExerciseDto? exercise
+ String id, String clientId, String exerciseId, int? reps, double? weight, bool isCompleted, int? order, String? tempo, String? notes, int? rpe, String side, String workoutSessionId, String? supersetKey, int? orderInSuperset, ExerciseDto? exercise
 });
 
 
@@ -302,7 +304,7 @@ class __$ExerciseLogDtoCopyWithImpl<$Res>
 
 /// Create a copy of ExerciseLogDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? clientId = null,Object? exerciseId = null,Object? reps = freezed,Object? weight = freezed,Object? isCompleted = null,Object? order = freezed,Object? tempo = freezed,Object? notes = freezed,Object? side = null,Object? workoutSessionId = null,Object? supersetKey = freezed,Object? orderInSuperset = freezed,Object? exercise = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? clientId = null,Object? exerciseId = null,Object? reps = freezed,Object? weight = freezed,Object? isCompleted = null,Object? order = freezed,Object? tempo = freezed,Object? notes = freezed,Object? rpe = freezed,Object? side = null,Object? workoutSessionId = null,Object? supersetKey = freezed,Object? orderInSuperset = freezed,Object? exercise = freezed,}) {
   return _then(_ExerciseLogDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,clientId: null == clientId ? _self.clientId : clientId // ignore: cast_nullable_to_non_nullable
@@ -313,7 +315,8 @@ as double?,isCompleted: null == isCompleted ? _self.isCompleted : isCompleted //
 as bool,order: freezed == order ? _self.order : order // ignore: cast_nullable_to_non_nullable
 as int?,tempo: freezed == tempo ? _self.tempo : tempo // ignore: cast_nullable_to_non_nullable
 as String?,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
-as String?,side: null == side ? _self.side : side // ignore: cast_nullable_to_non_nullable
+as String?,rpe: freezed == rpe ? _self.rpe : rpe // ignore: cast_nullable_to_non_nullable
+as int?,side: null == side ? _self.side : side // ignore: cast_nullable_to_non_nullable
 as String,workoutSessionId: null == workoutSessionId ? _self.workoutSessionId : workoutSessionId // ignore: cast_nullable_to_non_nullable
 as String,supersetKey: freezed == supersetKey ? _self.supersetKey : supersetKey // ignore: cast_nullable_to_non_nullable
 as String?,orderInSuperset: freezed == orderInSuperset ? _self.orderInSuperset : orderInSuperset // ignore: cast_nullable_to_non_nullable

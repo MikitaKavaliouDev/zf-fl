@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'trainer_location.dart';
+
 part 'trainer_detail_dto.freezed.dart';
 part 'trainer_detail_dto.g.dart';
 
@@ -28,7 +30,7 @@ abstract class TrainerDetailDto with _$TrainerDetailDto {
     @Default(false) bool isVerified,
     @Default(false) bool isLinked,
     String? businessCurrency,
-    @Default(<dynamic>[]) List<dynamic> locations,
+    List<TrainerLocation>? locations,
     @Default(<dynamic>[]) List<dynamic> services,
     Map<String, dynamic>? stats,
   }) = _TrainerDetailDto;

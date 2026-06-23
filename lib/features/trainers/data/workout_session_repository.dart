@@ -2,6 +2,7 @@ import 'package:injectable/injectable.dart';
 
 import 'models/exercise_dto.dart';
 import 'models/exercise_log_dto.dart';
+import 'models/template_dto.dart';
 import 'models/workout_session_dto.dart';
 import 'models/workout_session_response.dart';
 import 'workout_session_api_service.dart';
@@ -41,6 +42,7 @@ class WorkoutSessionRepository {
     required String exerciseId,
     required int reps,
     double? weight,
+    int? rpe,
     int? order,
     String? supersetKey,
     int? orderInSuperset,
@@ -52,6 +54,7 @@ class WorkoutSessionRepository {
       exerciseId: exerciseId,
       reps: reps,
       weight: weight,
+      rpe: rpe,
       order: order,
       supersetKey: supersetKey,
       orderInSuperset: orderInSuperset,
@@ -63,10 +66,12 @@ class WorkoutSessionRepository {
   Future<({WorkoutSessionDto session, List<ExerciseLogDto> logs})> finishSession({
     required String workoutSessionId,
     String? notes,
+    bool? completeUnfinished,
   }) async {
     final response = await _api.finishSession(
       workoutSessionId: workoutSessionId,
       notes: notes,
+      completeUnfinished: completeUnfinished,
     );
     return (
       session: response.session!,
@@ -105,4 +110,37 @@ class WorkoutSessionRepository {
       exerciseIds: exerciseIds,
     );
   }
+
+  /// Cancel a workout session.
+  Future<void> cancelSession(String sessionId) =>
+      _api.cancelSession(workoutSessionId: sessionId);
+
+  /// Remove an exercise from the active session.
+  Future<void> removeExercise({
+    required String sessionId,
+    required String exerciseId,
+  }) =>
+      _api.removeExercise(sessionId: sessionId, exerciseId: exerciseId);
+
+  /// Get full session details with exercise logs.
+  Future<({WorkoutSessionDto? session, List<ExerciseLogDto> logs})> getSessionDetails(
+    String sessionId,
+  ) async {
+    final response = await _api.getSessionDetails(sessionId);
+    return (session: response.session, logs: response.exerciseLogs);
+  }
+
+  Future<List<TemplateDto>> getTemplates() => _api.getTemplates();
+
+  Future<TemplateDto> getTemplate(String templateId) =>
+      _api.getTemplate(templateId);
+
+  Future<void> saveSessionAsTemplate({
+    required String sessionId,
+    required String templateName,
+  }) =>
+      _api.saveSessionAsTemplate(
+        sessionId: sessionId,
+        templateName: templateName,
+      );
 }

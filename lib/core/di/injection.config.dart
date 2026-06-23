@@ -16,6 +16,7 @@ import 'package:injectable/injectable.dart' as _i526;
 import 'package:ziro_fit/core/connectivity/connectivity_module.dart' as _i779;
 import 'package:ziro_fit/core/connectivity/connectivity_service.dart' as _i124;
 import 'package:ziro_fit/core/database/app_database.dart' as _i365;
+import 'package:ziro_fit/core/location/location_service.dart' as _i467;
 import 'package:ziro_fit/core/network/api_logger_interceptor.dart' as _i831;
 import 'package:ziro_fit/core/network/auth_interceptor.dart' as _i680;
 import 'package:ziro_fit/core/network/dio_client.dart' as _i488;
@@ -24,6 +25,8 @@ import 'package:ziro_fit/features/auth/cubit/auth_cubit.dart' as _i514;
 import 'package:ziro_fit/features/auth/data/auth_api_service.dart' as _i568;
 import 'package:ziro_fit/features/auth/data/auth_repository.dart' as _i736;
 import 'package:ziro_fit/features/explore/cubit/explore_cubit.dart' as _i64;
+import 'package:ziro_fit/features/explore/cubit/explore_map_cubit.dart'
+    as _i377;
 import 'package:ziro_fit/features/explore/cubit/trainer_discovery_cubit.dart'
     as _i975;
 import 'package:ziro_fit/features/explore/data/explore_api_service.dart'
@@ -35,6 +38,8 @@ import 'package:ziro_fit/features/sync/data/sync_api_service.dart' as _i93;
 import 'package:ziro_fit/features/sync/data/sync_repository.dart' as _i813;
 import 'package:ziro_fit/features/trainers/cubit/trainer_list_cubit.dart'
     as _i329;
+import 'package:ziro_fit/features/trainers/cubit/workout_history_cubit.dart'
+    as _i195;
 import 'package:ziro_fit/features/trainers/cubit/workout_session_cubit.dart'
     as _i871;
 import 'package:ziro_fit/features/trainers/data/trainer_api_service.dart'
@@ -57,6 +62,7 @@ extension GetItInjectableX on _i174.GetIt {
     final networkModule = _$NetworkModule();
     gh.singleton<_i895.Connectivity>(() => connectivityModule.connectivity);
     gh.singleton<_i365.AppDatabase>(() => _i365.AppDatabase());
+    gh.singleton<_i467.LocationService>(() => _i467.LocationService());
     gh.singleton<_i831.ApiLoggerInterceptor>(
       () => _i831.ApiLoggerInterceptor(),
     );
@@ -106,6 +112,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i601.TokenStorage>(),
       ),
     );
+    gh.factory<_i377.ExploreMapCubit>(
+      () => _i377.ExploreMapCubit(
+        gh<_i549.ExploreApiService>(),
+        gh<_i467.LocationService>(),
+      ),
+    );
     gh.singleton<_i1063.TrainerRepository>(
       () => _i1063.TrainerRepository(gh<_i680.TrainerApiService>()),
     );
@@ -123,6 +135,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i975.TrainerDiscoveryCubit>(
       () => _i975.TrainerDiscoveryCubit(gh<_i226.ExploreRepository>()),
+    );
+    gh.factory<_i195.WorkoutHistoryCubit>(
+      () => _i195.WorkoutHistoryCubit(gh<_i459.WorkoutSessionRepository>()),
     );
     gh.factory<_i871.WorkoutSessionCubit>(
       () => _i871.WorkoutSessionCubit(gh<_i459.WorkoutSessionRepository>()),

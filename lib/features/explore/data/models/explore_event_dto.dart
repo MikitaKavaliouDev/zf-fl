@@ -13,6 +13,8 @@ abstract class ExploreEventDto with _$ExploreEventDto {
     DateTime? endTime,
     @JsonKey(name: 'locationName') required String locationName,
     String? address,
+    @Default(0) @JsonKey(name: 'latitude') double latitude,
+    @Default(0) @JsonKey(name: 'longitude') double longitude,
     String? imageUrl,
     @JsonKey(name: 'category') String? categoryId,
     @JsonKey(name: 'city') String? cityId,

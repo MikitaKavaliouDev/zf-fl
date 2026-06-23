@@ -22,6 +22,11 @@ sealed class WorkoutSessionState with _$WorkoutSessionState {
     @Default(false) bool isPaused,
     DateTime? restStartedAt,
     @Default(Duration.zero) Duration restElapsed,
+    DateTime? startTime,
+    int? restDuration,
+    int? restRemaining,
+    @Default(false) bool showLongSessionWarning,
+    @Default(false) bool newPrRecord,
   }) = WorkoutSessionActive;
 
   /// Session completed successfully

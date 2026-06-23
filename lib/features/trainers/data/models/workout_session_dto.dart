@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'exercise_log_dto.dart';
+
 part 'workout_session_dto.freezed.dart';
 part 'workout_session_dto.g.dart';
 
@@ -17,6 +19,7 @@ abstract class WorkoutSessionDto with _$WorkoutSessionDto {
     String? workoutTemplateId,
     String? clientPackageId,
     @Default(false) bool isTrainerLed,
+    List<ExerciseLogDto>? exerciseLogs,
   }) = _WorkoutSessionDto;
 
   factory WorkoutSessionDto.fromJson(Map<String, dynamic> json) =>

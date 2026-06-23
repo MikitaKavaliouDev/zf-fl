@@ -9,13 +9,15 @@ import '../../features/auth/presentation/email_verification_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/onboarding_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
+import '../../features/explore/presentation/event_detail_screen.dart';
 import '../../features/explore/presentation/explore_screen.dart';
 import '../../features/explore/presentation/trainer_discovery_screen.dart';
-import '../../features/explore/presentation/event_detail_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
+import '../../features/trainers/presentation/completed_session_detail_screen.dart';
 import '../../features/trainers/presentation/trainer_detail_screen.dart';
 import '../../features/trainers/presentation/trainer_map_screen.dart';
+import '../../features/trainers/presentation/workout_history_screen.dart';
 import '../../features/trainers/presentation/workout_session_screen.dart';
 import '../theme/app_theme.dart';
 
@@ -204,6 +206,17 @@ GoRouter createAppRouter(AuthCubit authCubit) {
               child: child,
             );
           },
+        ),
+      ),
+      // Workout history routes (full-screen, no bottom nav)
+      GoRoute(
+        path: '/workout/history',
+        builder: (_, _) => const WorkoutHistoryScreen(),
+      ),
+      GoRoute(
+        path: '/workout/history/:id',
+        builder: (_, state) => CompletedSessionDetailScreen(
+          sessionId: state.pathParameters['id'] ?? '',
         ),
       ),
     ],

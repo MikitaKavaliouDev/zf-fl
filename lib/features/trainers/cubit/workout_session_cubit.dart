@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
 import '../data/models/exercise_dto.dart';
 import '../data/models/exercise_log_dto.dart';
+import '../data/models/template_dto.dart';
 import '../data/workout_session_repository.dart';
 import 'workout_session_state.dart';
 
@@ -30,14 +32,37 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
     final current = state;
     if (current is! WorkoutSessionActive || current.isPaused) return;
 
+    // Compute elapsed from startTime (absolute timing, not accumulated)
+    final elapsed = current.startTime != null
+        ? DateTime.now().difference(current.startTime!)
+        : current.elapsed + const Duration(seconds: 1);
+
+    // Countdown rest timer (if restDuration is set)
+    int? restRemaining = current.restRemaining;
+    if (current.restDuration != null && current.restRemaining != null) {
+      final remaining = current.restRemaining!;
+      if (remaining > 0) {
+        restRemaining = remaining - 1;
+      }
+      if (restRemaining != null && restRemaining <= 0) {
+        // Rest finished
+        restRemaining = null;
+      }
+    }
+
+    // Compute restElapsed from restStartedAt
     Duration newRestElapsed = current.restElapsed;
     if (current.restStartedAt != null) {
       newRestElapsed = DateTime.now().difference(current.restStartedAt!);
     }
 
+    final showWarning = elapsed.inSeconds >= 7200 && !current.showLongSessionWarning;
+
     emit(current.copyWith(
-      elapsed: current.elapsed + const Duration(seconds: 1),
+      elapsed: elapsed,
       restElapsed: newRestElapsed,
+      restRemaining: restRemaining,
+      showLongSessionWarning: showWarning,
     ));
   }
 
@@ -48,6 +73,11 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
     String? templateId,
     String? clientPackageId,
   }) async {
+    // Don't start if already active
+    if (state is WorkoutSessionActive) {
+      emit(const WorkoutSessionState.error('A workout is already in progress. Finish or cancel it first.'));
+      return;
+    }
     emit(const WorkoutSessionState.loading());
     try {
       final result = await _repository.startSession(
@@ -60,6 +90,7 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
         session: result.session,
         logs: result.logs,
         elapsed: Duration.zero,
+        startTime: DateTime.now(),
       ));
       _startTimer();
     } catch (e) {
@@ -77,6 +108,7 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
           session: result.session!,
           logs: result.logs,
           elapsed: Duration.zero,
+          startTime: DateTime.now(),
         ));
         _startTimer();
       } else {
@@ -90,6 +122,28 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
   /// Fetch exercise library from backend (system + custom exercises).
   Future<List<ExerciseDto>> fetchExercises() =>
       _repository.getExerciseLibrary();
+
+  /// Fetch all available templates.
+  Future<List<TemplateDto>> fetchTemplates() =>
+      _repository.getTemplates();
+
+  /// Get a specific template by ID.
+  Future<TemplateDto> getTemplate(String templateId) =>
+      _repository.getTemplate(templateId);
+
+  /// Save the completed session as a template.
+  Future<void> saveSessionAsTemplate(String templateName) async {
+    final current = state;
+    if (current is! WorkoutSessionCompleted) return;
+    try {
+      await _repository.saveSessionAsTemplate(
+        sessionId: current.session.id,
+        templateName: templateName,
+      );
+    } catch (e) {
+      emit(const WorkoutSessionState.error('Failed to save template.'));
+    }
+  }
 
   /// Add exercises to the active session.
   /// The new logs are appended directly from the POST response —
@@ -110,9 +164,19 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
 
   /// Remove an exercise from the active session.
   Future<void> removeExercise(String exerciseId) async {
-    // Backend removal not supported in MVP.
-    // TODO: Call DELETE /api/workout-sessions/$sessionId/exercises/$exerciseId
-    // when the backend endpoint is available.
+    final current = state;
+    if (current is! WorkoutSessionActive) return;
+    try {
+      await _repository.removeExercise(
+        sessionId: current.session.id,
+        exerciseId: exerciseId,
+      );
+      emit(current.copyWith(
+        logs: current.logs.where((l) => l.exerciseId != exerciseId).toList(),
+      ));
+    } catch (e) {
+      emit(const WorkoutSessionState.error('Failed to remove exercise.'));
+    }
   }
 
   /// Log an exercise set in the active session.
@@ -123,6 +187,7 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
     required String exerciseId,
     required int reps,
     double? weight,
+    int? rpe,
     int? order,
     String? supersetKey,
     int? orderInSuperset,
@@ -132,13 +197,14 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
     if (current is! WorkoutSessionActive) return;
 
     // Optimistic update: apply the new set immediately.
-    final optimisticLog = ExerciseLogDto(
-      id: logId ?? 'opt_${DateTime.now().microsecondsSinceEpoch}',
-      clientId: current.session.clientId,
-      exerciseId: exerciseId,
-      reps: reps,
-      weight: weight,
-      isCompleted: isCompleted ?? true,
+      final optimisticLog = ExerciseLogDto(
+        id: logId ?? 'opt_${DateTime.now().microsecondsSinceEpoch}',
+        clientId: current.session.clientId,
+        exerciseId: exerciseId,
+        reps: reps,
+        weight: weight,
+        rpe: rpe,
+        isCompleted: isCompleted ?? true,
       order: order,
       supersetKey: supersetKey,
       orderInSuperset: orderInSuperset,
@@ -161,6 +227,7 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
         exerciseId: exerciseId,
         reps: reps,
         weight: weight,
+        rpe: rpe,
         order: order,
         supersetKey: supersetKey,
         orderInSuperset: orderInSuperset,
@@ -174,6 +241,19 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
       reconciledLogs.removeWhere((l) => l.id == optimisticLog.id);
       reconciledLogs.add(response.log);
       emit(latest.copyWith(logs: reconciledLogs));
+
+      // Check for PR records
+      if (response.newRecords != null && response.newRecords!.isNotEmpty) {
+        final latest2 = state as WorkoutSessionActive;
+        emit(latest2.copyWith(newPrRecord: true));
+        // Auto-reset after 3 seconds
+        Future.delayed(const Duration(seconds: 3), () {
+          final s = state;
+          if (s is WorkoutSessionActive) {
+            emit(s.copyWith(newPrRecord: false));
+          }
+        });
+      }
     } catch (e) {
       // Server rejected — revert the optimistic log without disrupting the UI.
       final currentState = state;
@@ -187,7 +267,7 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
   }
 
   /// Finish the active session.
-  Future<void> finish({String? notes}) async {
+  Future<void> finish({String? notes, bool? completeUnfinished}) async {
     final current = state;
     if (current is! WorkoutSessionActive) return;
     try {
@@ -195,6 +275,7 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
       final result = await _repository.finishSession(
         workoutSessionId: current.session.id,
         notes: notes,
+        completeUnfinished: completeUnfinished,
       );
       emit(WorkoutSessionState.completed(
         session: result.session,
@@ -207,18 +288,18 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
   }
 
   /// Start the rest timer.
-  Future<void> startRest() async {
+  Future<void> startRest({int? duration}) async {
     final current = state;
     if (current is! WorkoutSessionActive) return;
     emit(current.copyWith(
       restStartedAt: DateTime.now(),
       restElapsed: Duration.zero,
+      restDuration: duration,
+      restRemaining: duration,
     ));
     try {
       await _repository.startRest(current.session.id);
-    } catch (_) {
-      // Rest API call is optional — local timer runs independently.
-    }
+    } catch (_) {}
   }
 
   /// End the rest timer.
@@ -228,10 +309,41 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
     emit(current.copyWith(
       restStartedAt: null,
       restElapsed: Duration.zero,
+      restRemaining: null,
+      restDuration: null,
     ));
     try {
       await _repository.endRest(current.session.id);
     } catch (_) {}
+  }
+
+  /// Adjust the rest countdown by [delta] seconds.
+  void adjustRest(int delta) {
+    final current = state;
+    if (current is! WorkoutSessionActive || current.restRemaining == null) return;
+    final newRemaining = max(0, current.restRemaining! + delta);
+    emit(current.copyWith(
+      restRemaining: newRemaining,
+      restDuration: max(current.restDuration ?? 0, newRemaining),
+    ));
+  }
+
+  /// Skip the rest timer early.
+  Future<void> skipRest() async {
+    await endRest();
+  }
+
+  /// Cancel the active workout session.
+  Future<void> cancelSession() async {
+    final current = state;
+    if (current is! WorkoutSessionActive) return;
+    try {
+      _timer?.cancel();
+      await _repository.cancelSession(current.session.id);
+      emit(const WorkoutSessionState.initial());
+    } catch (e) {
+      emit(const WorkoutSessionState.error('Failed to cancel session.'));
+    }
   }
 
   /// Pause the timer.

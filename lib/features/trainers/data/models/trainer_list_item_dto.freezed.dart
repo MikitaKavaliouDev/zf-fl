@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TrainerProfileSummary {
 
- String? get profilePhotoPath;@JsonKey(fromJson: _parseStringList) List<String> get certifications; List<dynamic> get locations; List<dynamic> get services; double? get averageRating; String? get businessCurrency; String? get name; String? get bio;
+ String? get profilePhotoPath;@JsonKey(fromJson: _parseStringList) List<String> get certifications; List<TrainerLocation>? get locations; List<dynamic> get services; double? get averageRating; String? get businessCurrency; String? get name; String? get bio;
 /// Create a copy of TrainerProfileSummary
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $TrainerProfileSummaryCopyWith<$Res>  {
   factory $TrainerProfileSummaryCopyWith(TrainerProfileSummary value, $Res Function(TrainerProfileSummary) _then) = _$TrainerProfileSummaryCopyWithImpl;
 @useResult
 $Res call({
- String? profilePhotoPath,@JsonKey(fromJson: _parseStringList) List<String> certifications, List<dynamic> locations, List<dynamic> services, double? averageRating, String? businessCurrency, String? name, String? bio
+ String? profilePhotoPath,@JsonKey(fromJson: _parseStringList) List<String> certifications, List<TrainerLocation>? locations, List<dynamic> services, double? averageRating, String? businessCurrency, String? name, String? bio
 });
 
 
@@ -65,12 +65,12 @@ class _$TrainerProfileSummaryCopyWithImpl<$Res>
 
 /// Create a copy of TrainerProfileSummary
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? profilePhotoPath = freezed,Object? certifications = null,Object? locations = null,Object? services = null,Object? averageRating = freezed,Object? businessCurrency = freezed,Object? name = freezed,Object? bio = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? profilePhotoPath = freezed,Object? certifications = null,Object? locations = freezed,Object? services = null,Object? averageRating = freezed,Object? businessCurrency = freezed,Object? name = freezed,Object? bio = freezed,}) {
   return _then(_self.copyWith(
 profilePhotoPath: freezed == profilePhotoPath ? _self.profilePhotoPath : profilePhotoPath // ignore: cast_nullable_to_non_nullable
 as String?,certifications: null == certifications ? _self.certifications : certifications // ignore: cast_nullable_to_non_nullable
-as List<String>,locations: null == locations ? _self.locations : locations // ignore: cast_nullable_to_non_nullable
-as List<dynamic>,services: null == services ? _self.services : services // ignore: cast_nullable_to_non_nullable
+as List<String>,locations: freezed == locations ? _self.locations : locations // ignore: cast_nullable_to_non_nullable
+as List<TrainerLocation>?,services: null == services ? _self.services : services // ignore: cast_nullable_to_non_nullable
 as List<dynamic>,averageRating: freezed == averageRating ? _self.averageRating : averageRating // ignore: cast_nullable_to_non_nullable
 as double?,businessCurrency: freezed == businessCurrency ? _self.businessCurrency : businessCurrency // ignore: cast_nullable_to_non_nullable
 as String?,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -160,7 +160,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? profilePhotoPath, @JsonKey(fromJson: _parseStringList)  List<String> certifications,  List<dynamic> locations,  List<dynamic> services,  double? averageRating,  String? businessCurrency,  String? name,  String? bio)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? profilePhotoPath, @JsonKey(fromJson: _parseStringList)  List<String> certifications,  List<TrainerLocation>? locations,  List<dynamic> services,  double? averageRating,  String? businessCurrency,  String? name,  String? bio)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TrainerProfileSummary() when $default != null:
 return $default(_that.profilePhotoPath,_that.certifications,_that.locations,_that.services,_that.averageRating,_that.businessCurrency,_that.name,_that.bio);case _:
@@ -181,7 +181,7 @@ return $default(_that.profilePhotoPath,_that.certifications,_that.locations,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? profilePhotoPath, @JsonKey(fromJson: _parseStringList)  List<String> certifications,  List<dynamic> locations,  List<dynamic> services,  double? averageRating,  String? businessCurrency,  String? name,  String? bio)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? profilePhotoPath, @JsonKey(fromJson: _parseStringList)  List<String> certifications,  List<TrainerLocation>? locations,  List<dynamic> services,  double? averageRating,  String? businessCurrency,  String? name,  String? bio)  $default,) {final _that = this;
 switch (_that) {
 case _TrainerProfileSummary():
 return $default(_that.profilePhotoPath,_that.certifications,_that.locations,_that.services,_that.averageRating,_that.businessCurrency,_that.name,_that.bio);case _:
@@ -201,7 +201,7 @@ return $default(_that.profilePhotoPath,_that.certifications,_that.locations,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? profilePhotoPath, @JsonKey(fromJson: _parseStringList)  List<String> certifications,  List<dynamic> locations,  List<dynamic> services,  double? averageRating,  String? businessCurrency,  String? name,  String? bio)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? profilePhotoPath, @JsonKey(fromJson: _parseStringList)  List<String> certifications,  List<TrainerLocation>? locations,  List<dynamic> services,  double? averageRating,  String? businessCurrency,  String? name,  String? bio)?  $default,) {final _that = this;
 switch (_that) {
 case _TrainerProfileSummary() when $default != null:
 return $default(_that.profilePhotoPath,_that.certifications,_that.locations,_that.services,_that.averageRating,_that.businessCurrency,_that.name,_that.bio);case _:
@@ -216,7 +216,7 @@ return $default(_that.profilePhotoPath,_that.certifications,_that.locations,_tha
 @JsonSerializable()
 
 class _TrainerProfileSummary implements TrainerProfileSummary {
-  const _TrainerProfileSummary({this.profilePhotoPath, @JsonKey(fromJson: _parseStringList) final  List<String> certifications = const <String>[], final  List<dynamic> locations = const <dynamic>[], final  List<dynamic> services = const <dynamic>[], this.averageRating, this.businessCurrency, this.name, this.bio}): _certifications = certifications,_locations = locations,_services = services;
+  const _TrainerProfileSummary({this.profilePhotoPath, @JsonKey(fromJson: _parseStringList) final  List<String> certifications = const <String>[], final  List<TrainerLocation>? locations, final  List<dynamic> services = const <dynamic>[], this.averageRating, this.businessCurrency, this.name, this.bio}): _certifications = certifications,_locations = locations,_services = services;
   factory _TrainerProfileSummary.fromJson(Map<String, dynamic> json) => _$TrainerProfileSummaryFromJson(json);
 
 @override final  String? profilePhotoPath;
@@ -227,11 +227,13 @@ class _TrainerProfileSummary implements TrainerProfileSummary {
   return EqualUnmodifiableListView(_certifications);
 }
 
- final  List<dynamic> _locations;
-@override@JsonKey() List<dynamic> get locations {
+ final  List<TrainerLocation>? _locations;
+@override List<TrainerLocation>? get locations {
+  final value = _locations;
+  if (value == null) return null;
   if (_locations is EqualUnmodifiableListView) return _locations;
   // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_locations);
+  return EqualUnmodifiableListView(value);
 }
 
  final  List<dynamic> _services;
@@ -279,7 +281,7 @@ abstract mixin class _$TrainerProfileSummaryCopyWith<$Res> implements $TrainerPr
   factory _$TrainerProfileSummaryCopyWith(_TrainerProfileSummary value, $Res Function(_TrainerProfileSummary) _then) = __$TrainerProfileSummaryCopyWithImpl;
 @override @useResult
 $Res call({
- String? profilePhotoPath,@JsonKey(fromJson: _parseStringList) List<String> certifications, List<dynamic> locations, List<dynamic> services, double? averageRating, String? businessCurrency, String? name, String? bio
+ String? profilePhotoPath,@JsonKey(fromJson: _parseStringList) List<String> certifications, List<TrainerLocation>? locations, List<dynamic> services, double? averageRating, String? businessCurrency, String? name, String? bio
 });
 
 
@@ -296,12 +298,12 @@ class __$TrainerProfileSummaryCopyWithImpl<$Res>
 
 /// Create a copy of TrainerProfileSummary
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? profilePhotoPath = freezed,Object? certifications = null,Object? locations = null,Object? services = null,Object? averageRating = freezed,Object? businessCurrency = freezed,Object? name = freezed,Object? bio = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? profilePhotoPath = freezed,Object? certifications = null,Object? locations = freezed,Object? services = null,Object? averageRating = freezed,Object? businessCurrency = freezed,Object? name = freezed,Object? bio = freezed,}) {
   return _then(_TrainerProfileSummary(
 profilePhotoPath: freezed == profilePhotoPath ? _self.profilePhotoPath : profilePhotoPath // ignore: cast_nullable_to_non_nullable
 as String?,certifications: null == certifications ? _self._certifications : certifications // ignore: cast_nullable_to_non_nullable
-as List<String>,locations: null == locations ? _self._locations : locations // ignore: cast_nullable_to_non_nullable
-as List<dynamic>,services: null == services ? _self._services : services // ignore: cast_nullable_to_non_nullable
+as List<String>,locations: freezed == locations ? _self._locations : locations // ignore: cast_nullable_to_non_nullable
+as List<TrainerLocation>?,services: null == services ? _self._services : services // ignore: cast_nullable_to_non_nullable
 as List<dynamic>,averageRating: freezed == averageRating ? _self.averageRating : averageRating // ignore: cast_nullable_to_non_nullable
 as double?,businessCurrency: freezed == businessCurrency ? _self.businessCurrency : businessCurrency // ignore: cast_nullable_to_non_nullable
 as String?,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
