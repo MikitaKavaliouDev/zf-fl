@@ -14,6 +14,8 @@ sealed class HomeState with _$HomeState {
   const factory HomeState.loaded({
     required ClientDashboardResponse dashboard,
     ActiveProgramResponse? activeProgram,
+    @Default(false) bool hasPendingInvitation,
+    String? pendingInvitationMessage,
   }) = HomeLoaded;
 
   const factory HomeState.error(String message) = HomeError;

@@ -125,12 +125,12 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( ClientDashboardResponse dashboard,  ActiveProgramResponse? activeProgram)?  loaded,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( ClientDashboardResponse dashboard,  ActiveProgramResponse? activeProgram,  bool hasPendingInvitation,  String? pendingInvitationMessage)?  loaded,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case HomeInitial() when initial != null:
 return initial();case HomeLoading() when loading != null:
 return loading();case HomeLoaded() when loaded != null:
-return loaded(_that.dashboard,_that.activeProgram);case HomeError() when error != null:
+return loaded(_that.dashboard,_that.activeProgram,_that.hasPendingInvitation,_that.pendingInvitationMessage);case HomeError() when error != null:
 return error(_that.message);case _:
   return orElse();
 
@@ -149,12 +149,12 @@ return error(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( ClientDashboardResponse dashboard,  ActiveProgramResponse? activeProgram)  loaded,required TResult Function( String message)  error,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( ClientDashboardResponse dashboard,  ActiveProgramResponse? activeProgram,  bool hasPendingInvitation,  String? pendingInvitationMessage)  loaded,required TResult Function( String message)  error,}) {final _that = this;
 switch (_that) {
 case HomeInitial():
 return initial();case HomeLoading():
 return loading();case HomeLoaded():
-return loaded(_that.dashboard,_that.activeProgram);case HomeError():
+return loaded(_that.dashboard,_that.activeProgram,_that.hasPendingInvitation,_that.pendingInvitationMessage);case HomeError():
 return error(_that.message);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -169,12 +169,12 @@ return error(_that.message);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( ClientDashboardResponse dashboard,  ActiveProgramResponse? activeProgram)?  loaded,TResult? Function( String message)?  error,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( ClientDashboardResponse dashboard,  ActiveProgramResponse? activeProgram,  bool hasPendingInvitation,  String? pendingInvitationMessage)?  loaded,TResult? Function( String message)?  error,}) {final _that = this;
 switch (_that) {
 case HomeInitial() when initial != null:
 return initial();case HomeLoading() when loading != null:
 return loading();case HomeLoaded() when loaded != null:
-return loaded(_that.dashboard,_that.activeProgram);case HomeError() when error != null:
+return loaded(_that.dashboard,_that.activeProgram,_that.hasPendingInvitation,_that.pendingInvitationMessage);case HomeError() when error != null:
 return error(_that.message);case _:
   return null;
 
@@ -251,11 +251,13 @@ String toString() {
 
 
 class HomeLoaded implements HomeState {
-  const HomeLoaded({required this.dashboard, this.activeProgram});
+  const HomeLoaded({required this.dashboard, this.activeProgram, this.hasPendingInvitation = false, this.pendingInvitationMessage});
   
 
  final  ClientDashboardResponse dashboard;
  final  ActiveProgramResponse? activeProgram;
+@JsonKey() final  bool hasPendingInvitation;
+ final  String? pendingInvitationMessage;
 
 /// Create a copy of HomeState
 /// with the given fields replaced by the non-null parameter values.
@@ -267,16 +269,16 @@ $HomeLoadedCopyWith<HomeLoaded> get copyWith => _$HomeLoadedCopyWithImpl<HomeLoa
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is HomeLoaded&&(identical(other.dashboard, dashboard) || other.dashboard == dashboard)&&(identical(other.activeProgram, activeProgram) || other.activeProgram == activeProgram));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HomeLoaded&&(identical(other.dashboard, dashboard) || other.dashboard == dashboard)&&(identical(other.activeProgram, activeProgram) || other.activeProgram == activeProgram)&&(identical(other.hasPendingInvitation, hasPendingInvitation) || other.hasPendingInvitation == hasPendingInvitation)&&(identical(other.pendingInvitationMessage, pendingInvitationMessage) || other.pendingInvitationMessage == pendingInvitationMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,dashboard,activeProgram);
+int get hashCode => Object.hash(runtimeType,dashboard,activeProgram,hasPendingInvitation,pendingInvitationMessage);
 
 @override
 String toString() {
-  return 'HomeState.loaded(dashboard: $dashboard, activeProgram: $activeProgram)';
+  return 'HomeState.loaded(dashboard: $dashboard, activeProgram: $activeProgram, hasPendingInvitation: $hasPendingInvitation, pendingInvitationMessage: $pendingInvitationMessage)';
 }
 
 
@@ -287,7 +289,7 @@ abstract mixin class $HomeLoadedCopyWith<$Res> implements $HomeStateCopyWith<$Re
   factory $HomeLoadedCopyWith(HomeLoaded value, $Res Function(HomeLoaded) _then) = _$HomeLoadedCopyWithImpl;
 @useResult
 $Res call({
- ClientDashboardResponse dashboard, ActiveProgramResponse? activeProgram
+ ClientDashboardResponse dashboard, ActiveProgramResponse? activeProgram, bool hasPendingInvitation, String? pendingInvitationMessage
 });
 
 
@@ -304,11 +306,13 @@ class _$HomeLoadedCopyWithImpl<$Res>
 
 /// Create a copy of HomeState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? dashboard = null,Object? activeProgram = freezed,}) {
+@pragma('vm:prefer-inline') $Res call({Object? dashboard = null,Object? activeProgram = freezed,Object? hasPendingInvitation = null,Object? pendingInvitationMessage = freezed,}) {
   return _then(HomeLoaded(
 dashboard: null == dashboard ? _self.dashboard : dashboard // ignore: cast_nullable_to_non_nullable
 as ClientDashboardResponse,activeProgram: freezed == activeProgram ? _self.activeProgram : activeProgram // ignore: cast_nullable_to_non_nullable
-as ActiveProgramResponse?,
+as ActiveProgramResponse?,hasPendingInvitation: null == hasPendingInvitation ? _self.hasPendingInvitation : hasPendingInvitation // ignore: cast_nullable_to_non_nullable
+as bool,pendingInvitationMessage: freezed == pendingInvitationMessage ? _self.pendingInvitationMessage : pendingInvitationMessage // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

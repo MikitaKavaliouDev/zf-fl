@@ -74,30 +74,33 @@ class ZiroHeader extends StatelessWidget {
                 ),
               ),
               // Bell icon
-              Padding(
-                padding: const EdgeInsets.all(4),
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    const Icon(
-                      Icons.notifications_outlined,
-                      size: 22,
-                      color: AppColors.foreground,
-                    ),
-                    // Red dot badge (static indicator for now)
-                    Positioned(
-                      top: -2,
-                      right: -2,
-                      child: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.redAccent,
+              GestureDetector(
+                onTap: () => context.go('/home/notifications'),
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      const Icon(
+                        Icons.notifications_outlined,
+                        size: 22,
+                        color: AppColors.foreground,
+                      ),
+                      // Red dot badge (static indicator for now)
+                      Positioned(
+                        top: -2,
+                        right: -2,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.redAccent,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ],
