@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -5,28 +6,129 @@ import 'package:injectable/injectable.dart';
 
 import '../data/models/notification_dto.dart';
 import '../data/repositories/notification_repository.dart';
+import '../data/services/notification_realtime_service.dart';
 import 'notifications_state.dart';
 
 @injectable
 class NotificationsCubit extends Cubit<NotificationsState> {
   final NotificationRepository _repository;
+  final NotificationRealtimeService _realtimeService;
+  StreamSubscription<NotificationRealtimeEvent>? _realtimeSubscription;
 
-  NotificationsCubit(this._repository) : super(const NotificationsState.initial());
+  /// Track notification IDs we've already seen to avoid duplicates
+  /// from real-time events racing with polling.
+  final Set<String> _seenIds = {};
 
-  /// Fetch all notifications and calculate unread count.
+  NotificationsCubit(this._repository, this._realtimeService)
+      : super(const NotificationsState.initial());
+
+  /// Fetch all notifications and subscribe to real-time updates.
   Future<void> fetchNotifications() async {
     emit(const NotificationsState.loading());
     try {
       final notifications = await _repository.fetchNotifications();
+      _seenIds.addAll(notifications.map((n) => n.id));
       final unreadCount = notifications.where((n) => !n.readStatus).length;
       emit(NotificationsState.loaded(
         notifications: notifications,
         unreadCount: unreadCount,
       ));
+
+      // Subscribe to real-time updates.
+      _subscribeToRealtime(notifications);
     } catch (e) {
-      developer.log('NotificationsCubit.fetchNotifications failed: $e', name: 'notifications');
+      developer.log('NotificationsCubit.fetchNotifications failed: $e',
+          name: 'notifications');
       emit(const NotificationsState.error('Failed to load notifications.'));
     }
+  }
+
+  /// Subscribe to the real-time event stream.
+  void _subscribeToRealtime(List<NotificationDto> initialNotifications) {
+    _realtimeSubscription?.cancel();
+    _realtimeSubscription = null;
+
+    final stream = _realtimeService.events;
+    _realtimeSubscription = stream.listen(_handleRealtimeEvent);
+
+    // Find userId from the first notification (all belong to current user)
+    final userId = initialNotifications.isNotEmpty
+        ? initialNotifications.first.userId
+        : null;
+    if (userId != null) {
+      _realtimeService.subscribe(userId);
+    }
+  }
+
+  /// Handle incoming real-time events.
+  void _handleRealtimeEvent(NotificationRealtimeEvent event) {
+    final currentState = state;
+    if (currentState is! NotificationsLoaded) return;
+
+    switch (event) {
+      case NotificationInserted(:final notification):
+        _handleInsert(notification, currentState);
+      case NotificationUpdated(:final notification):
+        _handleUpdate(notification, currentState);
+      case NotificationDeleted(:final id):
+        _handleDelete(id, currentState);
+      case NotificationRealtimeConnectionChanged(
+          isConnected: false,
+        ):
+        // Polling fallback or reconnection signal — do a full re-fetch.
+        fetchNotifications();
+      case NotificationRealtimeConnectionChanged(
+          isConnected: true,
+        ):
+        // Realtime reconnected; polling will be automatically stopped,
+        // so no action needed.
+        break;
+    }
+  }
+
+  void _handleInsert(
+    NotificationDto notification,
+    NotificationsLoaded currentState,
+  ) {
+    // Deduplicate: skip if we already have this ID.
+    if (_seenIds.contains(notification.id)) return;
+    _seenIds.add(notification.id);
+
+    final updatedList = [notification, ...currentState.notifications];
+    final unreadCount = updatedList.where((n) => !n.readStatus).length;
+    emit(NotificationsState.loaded(
+      notifications: updatedList,
+      unreadCount: unreadCount,
+    ));
+  }
+
+  void _handleUpdate(
+    NotificationDto notification,
+    NotificationsLoaded currentState,
+  ) {
+    final updatedList = currentState.notifications.map((n) {
+      if (n.id == notification.id) return notification;
+      return n;
+    }).toList();
+    final unreadCount = updatedList.where((n) => !n.readStatus).length;
+    emit(NotificationsState.loaded(
+      notifications: updatedList,
+      unreadCount: unreadCount,
+    ));
+  }
+
+  void _handleDelete(
+    String id,
+    NotificationsLoaded currentState,
+  ) {
+    _seenIds.remove(id);
+    final updatedList =
+        currentState.notifications.where((n) => n.id != id).toList();
+    final unreadCount = updatedList.where((n) => !n.readStatus).length;
+    emit(NotificationsState.loaded(
+      notifications: updatedList,
+      unreadCount: unreadCount,
+    ));
   }
 
   /// Mark a single notification as read (optimistic update + rollback on failure).
@@ -40,7 +142,10 @@ class NotificationsCubit extends Cubit<NotificationsState> {
       return n;
     }).toList();
     final unreadCount = updatedList.where((n) => !n.readStatus).length;
-    emit(NotificationsState.loaded(notifications: updatedList, unreadCount: unreadCount));
+    emit(NotificationsState.loaded(
+      notifications: updatedList,
+      unreadCount: unreadCount,
+    ));
 
     try {
       await _repository.markAsRead(id);
@@ -86,6 +191,7 @@ class NotificationsCubit extends Cubit<NotificationsState> {
       if (currentState is NotificationsLoaded) {
         final updatedList =
             currentState.notifications.where((n) => n.id != id).toList();
+        _seenIds.remove(id);
         final unreadCount = updatedList.where((n) => !n.readStatus).length;
         emit(NotificationsState.loaded(
           notifications: updatedList,
@@ -106,6 +212,7 @@ class NotificationsCubit extends Cubit<NotificationsState> {
       if (currentState is NotificationsLoaded) {
         final updatedList =
             currentState.notifications.where((n) => n.id != id).toList();
+        _seenIds.remove(id);
         final unreadCount = updatedList.where((n) => !n.readStatus).length;
         emit(NotificationsState.loaded(
           notifications: updatedList,
@@ -138,5 +245,12 @@ class NotificationsCubit extends Cubit<NotificationsState> {
     final currentState = state;
     if (currentState is! NotificationsLoaded) return 0;
     return currentState.unreadCount;
+  }
+
+  @override
+  Future<void> close() {
+    _realtimeSubscription?.cancel();
+    _realtimeService.unsubscribe();
+    return super.close();
   }
 }

@@ -232,7 +232,7 @@ SliverAppBar(
           top: MediaQuery.of(context).padding.top + 8,
           left: 16,
           child: GestureDetector(
-            onTap: () => context.pop(),
+            onTap: () => Navigator.of(context).maybePop(),
             child: Container(
               width: 36,
               height: 36,

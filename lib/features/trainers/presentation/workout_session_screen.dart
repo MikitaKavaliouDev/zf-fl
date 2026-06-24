@@ -10,6 +10,7 @@ import '../data/models/exercise_dto.dart';
 import '../data/models/exercise_log_dto.dart';
 import '../data/models/template_dto.dart';
 import 'widgets/cancel_workout_dialog.dart';
+import 'widgets/exercise_picker_sheet.dart';
 import 'widgets/finish_workout_dialog.dart';
 import 'widgets/rest_timer_sheet.dart';
 import 'widgets/rpe_picker.dart';
@@ -943,14 +944,17 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
 
     if (!context.mounted) return;
 
-    final selected = await showDialog<ExerciseDto>(
+    await showModalBottomSheet(
       context: context,
-      builder: (ctx) => _ExercisePickerDialog(exercises: allExercises),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ExercisePickerSheet.single(
+        exercises: allExercises,
+        onExerciseSelected: (selected) {
+          cubit.addExercises([selected.id]);
+        },
+      ),
     );
-
-    if (selected != null && context.mounted) {
-      cubit.addExercises([selected.id]);
-    }
   }
 
   void _confirmRemoveExercise(
@@ -1547,112 +1551,4 @@ class _ExerciseSummary {
   _ExerciseSummary({required this.name});
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Exercise Picker Dialog — searchable list of exercises from the library
-// ─────────────────────────────────────────────────────────────────────────────
 
-class _ExercisePickerDialog extends StatefulWidget {
-  final List<ExerciseDto> exercises;
-  const _ExercisePickerDialog({required this.exercises});
-
-  @override
-  State<_ExercisePickerDialog> createState() => _ExercisePickerDialogState();
-}
-
-class _ExercisePickerDialogState extends State<_ExercisePickerDialog> {
-  final _searchController = TextEditingController();
-  late List<ExerciseDto> _filtered;
-
-  @override
-  void initState() {
-    super.initState();
-    _filtered = widget.exercises;
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  // Simple fuzzy/typo-tolerant search: each character in the query must appear
-  // in order in the target string, but not necessarily consecutively.
-  bool _fuzzyMatch(String text, String query) {
-    if (query.isEmpty) return true;
-    final t = text.toLowerCase();
-    final q = query.toLowerCase();
-    int ti = 0;
-    for (int qi = 0; qi < q.length; qi++) {
-      ti = t.indexOf(q[qi], ti);
-      if (ti == -1) return false;
-      ti++;
-    }
-    return true;
-  }
-
-  void _filter(String query) {
-    setState(() {
-      if (query.isEmpty) {
-        _filtered = widget.exercises;
-      } else {
-        final lower = query.toLowerCase();
-        _filtered = widget.exercises.where((e) {
-          return _fuzzyMatch(e.name, lower) ||
-              _fuzzyMatch(e.muscleGroup ?? '', lower) ||
-              _fuzzyMatch(e.category ?? '', lower);
-        }).toList();
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Select Exercise'),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _searchController,
-              autofocus: true,
-              decoration: const InputDecoration(
-                hintText: 'Search exercises...',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.search_rounded),
-                isDense: true,
-              ),
-              onChanged: _filter,
-            ),
-            const SizedBox(height: 12),
-            Flexible(
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: _filtered.length,
-                itemBuilder: (context, index) {
-                  final ex = _filtered[index];
-                  return ListTile(
-                    dense: true,
-                    title: Text(ex.name),
-                    subtitle: ex.muscleGroup != null
-                        ? Text(ex.muscleGroup!,
-                            style: const TextStyle(fontSize: 12))
-                        : null,
-                    onTap: () => Navigator.of(context).pop(ex),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-      ],
-    );
-  }
-}

@@ -15,6 +15,9 @@ class ZiroSheetHeader extends StatelessWidget {
   final VoidCallback? onDone;
   final bool showCancel;
   final VoidCallback? onCancel;
+  final String? leadingText;
+  final String? trailingText;
+  final VoidCallback? onTrailingIconTap;
 
   const ZiroSheetHeader({
     super.key,
@@ -23,6 +26,9 @@ class ZiroSheetHeader extends StatelessWidget {
     this.onDone,
     this.showCancel = false,
     this.onCancel,
+    this.leadingText,
+    this.trailingText,
+    this.onTrailingIconTap,
   });
 
   @override
@@ -43,51 +49,50 @@ class ZiroSheetHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          // Header content
+          // Header content — Row layout avoids Stack/Positioned.fill overflow trap
           SizedBox(
             height: 44,
-            child: Stack(
-              alignment: Alignment.center,
+            child: Row(
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.foreground,
-                  ),
-                ),
-                if (showCancel || showDone)
-                  Positioned.fill(
-                    child: Row(
-                      children: [
-                        if (showCancel)
-                          TextButton(
-                            onPressed: onCancel,
-                            child: const Text(
-                              'Cancel',
-                              style: TextStyle(
-                                fontSize: 17,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          ),
-                        const Spacer(),
-                        if (showDone)
-                          TextButton(
-                            onPressed: onDone,
-                            child: const Text(
-                              'Done',
-                              style: TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          ),
-                      ],
+                if (showCancel)
+                  TextButton(
+                    onPressed: onCancel,
+                    child: Text(
+                      leadingText ?? 'Cancel',
+                      style: const TextStyle(
+                        fontSize: 17,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  )
+                else
+                  const SizedBox(width: 64),
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.foreground,
+                      ),
                     ),
                   ),
+                ),
+                if (showDone)
+                  TextButton(
+                    onPressed: onDone,
+                    child: Text(
+                      trailingText ?? 'Done',
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  )
+                else
+                  const SizedBox(width: 64),
               ],
             ),
           ),

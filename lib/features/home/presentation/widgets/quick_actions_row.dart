@@ -39,10 +39,7 @@ class QuickActionsRow extends StatelessWidget {
             const SizedBox(width: 16),
             Expanded(
               child: _QuickActionCard(
-                onTap: () {
-                  // Templates route not defined — fall back to workout
-                  context.go('/workout');
-                },
+                onTap: () => context.go('/home/templates-library'),
                 icon: Icons.grid_view_rounded,
                 label: 'Templates',
                 color: const Color(0xFF8B5CF6),

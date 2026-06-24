@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../cubit/home_cubit.dart';
 import '../cubit/home_state.dart';
+import '../cubit/program_cubit.dart';
 import '../data/models/active_program_response.dart';
 import '../data/models/client_dashboard_response.dart';
 import '../data/models/client_dashboard_session.dart';
@@ -49,9 +50,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 HomeInitial() || HomeLoading() => const _LoadingIndicator(),
                 HomeError(:final message) => _ErrorView(message: message),
                 HomeLoaded(:final dashboard, :final activeProgram) =>
-                  _DashboardContent(
-                    dashboard: dashboard,
-                    activeProgram: activeProgram,
+                  BlocProvider.value(
+                    value: context.read<ProgramCubit>(),
+                    child: _DashboardContent(
+                      dashboard: dashboard,
+                      activeProgram: activeProgram,
+                    ),
                   ),
               };
             },
@@ -376,8 +380,7 @@ class _ActiveProgramCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        // Navigate to program detail — placeholder for now
-        context.go('/workout');
+        context.go('/home/program-detail', extra: program);
       },
       child: Container(
         padding: const EdgeInsets.all(20),

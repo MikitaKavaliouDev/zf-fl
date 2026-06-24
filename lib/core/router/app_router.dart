@@ -12,7 +12,13 @@ import '../../features/auth/presentation/register_screen.dart';
 import '../../features/explore/presentation/event_detail_screen.dart';
 import '../../features/explore/presentation/explore_screen.dart';
 import '../../features/explore/presentation/trainer_discovery_screen.dart';
+import '../../features/home/data/models/active_program_response.dart';
+import '../../features/home/data/models/program_dto.dart';
 import '../../features/home/presentation/home_screen.dart';
+import '../../features/home/presentation/program_detail_screen.dart';
+import '../../features/home/presentation/routine_builder_screen.dart';
+import '../../features/home/presentation/routine_scheduler_screen.dart';
+import '../../features/home/presentation/templates_library_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/trainers/presentation/completed_session_detail_screen.dart';
@@ -245,7 +251,80 @@ GoRouter createAppRouter(AuthCubit authCubit) {
         path: '/home/program-detail',
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
-          child: const _PlaceholderScreen(title: 'Program Detail'),
+          child: ProgramDetailScreen(
+            activeProgram: state.extra is ActiveProgramResponse
+                ? state.extra as ActiveProgramResponse
+                : null,
+            programDto: state.extra is ProgramDto
+                ? state.extra as ProgramDto
+                : null,
+          ),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 1),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutCubic,
+              )),
+              child: child,
+            );
+          },
+        ),
+      ),
+      // Templates Library (matches iOS WorkoutTemplatesView)
+      GoRoute(
+        path: '/home/templates-library',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const TemplatesLibraryScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 1),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutCubic,
+              )),
+              child: child,
+            );
+          },
+        ),
+      ),
+      // Routine Builder (create / edit)
+      GoRoute(
+        path: '/home/routine-builder',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: RoutineBuilderScreen(
+            existingProgram: state.extra is ProgramDto
+                ? state.extra as ProgramDto
+                : null,
+          ),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 1),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutCubic,
+              )),
+              child: child,
+            );
+          },
+        ),
+      ),
+      // Routine Scheduler (requires ProgramDto as extra)
+      GoRoute(
+        path: '/home/routine-scheduler',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: RoutineSchedulerScreen(
+            program: state.extra as ProgramDto,
+          ),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return SlideTransition(
               position: Tween<Offset>(

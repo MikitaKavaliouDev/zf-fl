@@ -601,3 +601,124 @@ Enhance application resilience by adding error boundaries, handling edge cases, 
 #### Verification Criteria
 *   Confirm that the app handles lost connections gracefully, displaying a status bar banner indicating the offline state without interrupting active workouts.
 *   Assert that the sync engine successfully reconciles and pushes offline workouts to the server once connection is restored.
+
+---
+
+## 8. Feature Spec 3 — Programs & Routine Builder
+
+Clients can create training programs (routines) from workout templates, schedule them via the device calendar, and track progress through an active program.
+
+### 8.1 Program Model
+
+The backend Prisma model `WorkoutProgram` maps to:
+```dart
+class ProgramDto {
+  final String id;
+  final String name;
+  final String? description;
+  final String? trainerId;
+  final String? category;
+  final List<ProgramTemplate> templates;
+  final bool isScheduled;
+  final DateTime? scheduledStartDate;
+  final String? scheduleFrequency; // "DAILY" or "SEQUENTIAL"
+  final int activeTemplateIndex;
+  final String? trainerName;
+  final String? trainerAvatarUrl;
+  final String? source;
+  final String? assignmentId;
+  final DateTime? startDate;
+  final bool isActive;
+}
+```
+
+### 8.2 API Endpoints
+
+| Method | Path | Request | Response |
+|---|---|---|---|
+| `GET` | `/api/client/programs` | `?type=template&source=system\|personal\|all` | `{ assignedPrograms, personalPrograms, personalTemplates, systemTemplates, categories }` |
+| `POST` | `/api/client/programs` | `{ name, description? }` | `{ program }` |
+| `GET` | `/api/client/programs/[id]` | — | `{ program }` |
+| `POST` | `/api/client/programs/templates` | `{ name, programId, description? }` | `{ template }` |
+
+**Constraints:**
+- Clients **cannot update or delete** programs (trainer-only at `/api/trainer/programs/[programId]`)
+- No backend schedule endpoint exists — scheduling is device-calendar-only
+- `POST /api/client/programs/templates` creates a template within a program, not a standalone template
+
+### 8.3 Routine Builder Flow
+
+```
+  ┌─────────────────────────────────────────────────────┐
+  │              RoutineBuilderScreen                    │
+  │  - Enter program name                               │
+  │  - Tap "Add Templates" → opens TemplatePickerSheet  │
+  │  - Select templates from list (personal + system)   │
+  │  - Selected templates appear in reorderable list    │
+  │  - Save → POST /api/client/programs                 │
+  └─────────────────────┬───────────────────────────────┘
+                        │ (on save success)
+                        ▼
+  ┌─────────────────────────────────────────────────────┐
+  │              RoutineSchedulerScreen                  │
+  │  - Choose frequency: Daily / Sequential             │
+  │  - Pick start date (date picker)                    │
+  │  - Preview generated calendar events                │
+  │  - Save → add_2_calendar (device calendar)          │
+  └─────────────────────────────────────────────────────┘
+```
+
+### 8.4 Templates Library Screen
+
+Full-screen searchable list matching iOS `WorkoutTemplatesView`:
+- Loads templates via `ProgramCubit.loadTemplates()` (fetches `GET /api/client/programs?type=template&source=all`)
+- Combines personal + system templates into single searchable list
+- Each row: template name, exercise count badge, chevron
+- "Start" button navigates to `/workout`
+- Empty state when no templates exist
+
+### 8.5 Program Detail Screen
+
+Dual-model support — accepts either `ActiveProgramResponse` (from dashboard) or `ProgramDto` (from programs API). Normalizes internally for display:
+- Program name, description
+- Template list with status icons (COMPLETED → green check, NEXT → blue dot, PENDING → gray lock)
+- "Start" button for next template
+- Schedule info (frequency, next session date)
+
+### 8.6 Device Calendar Integration
+
+Using `add_2_calendar` package:
+- **Daily frequency**: One calendar event per template, consecutive days
+- **Sequential frequency**: One event per template, every other day
+- All events scheduled at 7:00 AM local time
+- Event title: program name + template name
+- Requires Android calendar permissions and iOS calendar usage descriptions
+
+### 8.7 State Management
+
+```dart
+@freezed
+sealed class ProgramState with _$ProgramState {
+  const factory ProgramState.initial() = ProgramInitial;
+  const factory ProgramState.loading() = ProgramLoading;
+  const factory ProgramState.loaded({
+    required List<ProgramDto> programs,
+    required List<TemplateDto> templates,
+  }) = ProgramLoaded;
+  const factory ProgramState.error(String message) = ProgramError;
+}
+```
+
+### 8.8 Implementation Notes
+
+- `ProgramCubit` is a singleton for cross-screen access
+- Routine Builder creates program via API first, then schedules locally
+- Template Picker consumes `ProgramCubit` (not direct repository) for consistent state
+- `ProgramDetailScreen` handles both `ActiveProgramResponse` and `ProgramDto` with unified display
+
+#### Verification Criteria
+*   Verify `POST /api/client/programs` returns a valid `ProgramDto` with generated UUID
+*   Confirm template picker loads templates from both personal and system sources
+*   Assert that saved calendar events appear in the device's native calendar app
+*   Verify that navigating to program detail shows correct template list with status icons
+*   Confirm that `GET /api/client/programs` correctly parses the `ProgramLibraryResponse` shape

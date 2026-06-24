@@ -1,0 +1,121 @@
+import 'package:dio/dio.dart';
+import 'package:injectable/injectable.dart';
+
+import '../../trainers/data/models/template_dto.dart';
+import 'models/program_dto.dart';
+import 'models/program_library_response.dart';
+
+/// API service for workout program / routine operations.
+///
+/// Actual backend endpoints (verified from `~/pr/zirofit-next`):
+///   GET    /api/client/programs                     — list all programs/templates
+///   POST   /api/client/programs                     — create a new program
+///   GET    /api/client/programs/:id                 — get single program with templates
+///   POST   /api/client/programs/templates           — create a template under a program
+///
+/// The client cannot update or delete programs — those are trainer-only operations.
+@injectable
+class ProgramApiService {
+  final Dio _dio;
+
+  ProgramApiService(this._dio);
+
+  /// GET /api/client/programs — list all programs and templates.
+  ///
+  /// Supports query filters:
+  ///   ?type=program   — only programs
+  ///   ?type=template  — only templates
+  ///   ?source=self|assigned|system
+  Future<ProgramLibraryResponse> getPrograms({
+    String? type,
+    String? source,
+  }) async {
+    final queryParams = <String, String>{};
+    if (type != null) queryParams['type'] = type;
+    if (source != null) queryParams['source'] = source;
+
+    final response = await _dio.get(
+      '/api/client/programs',
+      queryParameters: queryParams.isNotEmpty ? queryParams : null,
+    );
+    final data = response.data['data'] as Map<String, dynamic>;
+    return ProgramLibraryResponse.fromJson(data);
+  }
+
+  /// POST /api/client/programs — create a new program (name + description only).
+  ///
+  /// Returns the created program with its (empty) templates array.
+  /// Templates must be added separately via [createTemplate].
+  Future<ProgramDto> createProgram({
+    required String name,
+    String? description,
+  }) async {
+    final response = await _dio.post(
+      '/api/client/programs',
+      data: {
+        'name': name,
+        'description': description,
+      },
+    );
+    final data = response.data['data'] as Map<String, dynamic>;
+    final programJson = data['program'] as Map<String, dynamic>;
+    return ProgramDto.fromJson(programJson);
+  }
+
+  /// GET /api/client/programs/:id — get a single program with templates.
+  Future<ProgramDto> getProgram(String id) async {
+    final response = await _dio.get('/api/client/programs/$id');
+    final data = response.data['data'] as Map<String, dynamic>;
+    final programJson = data['program'] as Map<String, dynamic>;
+    return ProgramDto.fromJson(programJson);
+  }
+
+  /// POST /api/client/programs/templates — create a template under a program.
+  ///
+  /// Body: { name, description?, programId }
+  Future<TemplateDto> createTemplate({
+    required String programId,
+    required String name,
+    String? description,
+  }) async {
+    final response = await _dio.post(
+      '/api/client/programs/templates',
+      data: {
+        'name': name,
+        'programId': programId,
+        'description': description,
+      },
+    );
+    final data = response.data['data'] as Map<String, dynamic>;
+    final templateJson = data['template'] as Map<String, dynamic>;
+    return TemplateDto.fromJson(templateJson);
+  }
+
+  /// POST /api/client/programs/templates/:templateId/exercises — add exercise to template.
+  ///
+  /// Body: { exerciseId, targetReps?, targetSets?, durationSeconds?, notes?, order? }
+  Future<TemplateExerciseDto> addExerciseToTemplate({
+    required String templateId,
+    required String exerciseId,
+    String? targetReps,
+    int? targetSets,
+    int? durationSeconds,
+    String? notes,
+    int? order,
+  }) async {
+    final response = await _dio.post(
+      '/api/client/programs/templates/$templateId/exercises',
+      data: {
+        'exerciseId': exerciseId,
+        if (targetReps != null) 'targetReps': targetReps,
+        if (targetSets != null) 'targetSets': targetSets,
+        if (durationSeconds != null) 'durationSeconds': durationSeconds,
+        if (notes != null) 'notes': notes,
+        if (order != null) 'order': order,
+      },
+    );
+    final data = response.data['data'] as Map<String, dynamic>;
+    final exerciseJson = data['templateExercise'] as Map<String, dynamic>;
+    return TemplateExerciseDto.fromJson(exerciseJson);
+  }
+}

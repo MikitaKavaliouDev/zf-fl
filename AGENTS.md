@@ -43,20 +43,22 @@ This instruction file (`AGENTS.md`) is auto-loaded via `opencode.json` — agent
 | Cubits | `TrainerDetailCubit`, `TrainerListCubit`, `WorkoutSessionCubit`, `WorkoutHistoryCubit` |
 | API Services | `TrainerApiService` (trainer detail, packages, testimonials, link/unlink), `WorkoutSessionApiService` (sessions CRUD, exercises, logs, templates) |
 | Repositories | `TrainerRepository`, `WorkoutSessionRepository` |
-| Screens | `TrainerDetailScreen`, `WorkoutSessionScreen` (1716 lines), `WorkoutHistoryScreen`, `CompletedSessionDetailScreen`, `TrainerMapScreen`, `TrainerListScreen` (as `explore_screen.dart`) |
-| Widgets (10) | `TrainerCard`, `RestTimerSheet`, `PlateCalculator`, `RpePicker`, `WorkoutNumericKeyboard`, `FinishWorkoutDialog`, `CancelWorkoutDialog`, `SaveAsTemplateDialog`, `TemplatePickerDialog`, `SearchBar` |
+| Screens | `TrainerDetailScreen`, `WorkoutSessionScreen` (1441 lines), `WorkoutHistoryScreen`, `CompletedSessionDetailScreen`, `TrainerMapScreen`, `TrainerListScreen` (as `explore_screen.dart`) |
+| Widgets (11) | `ExercisePickerSheet`, `TrainerCard`, `RestTimerSheet`, `PlateCalculator`, `RpePicker`, `WorkoutNumericKeyboard`, `FinishWorkoutDialog`, `CancelWorkoutDialog`, `SaveAsTemplateDialog`, `TemplatePickerDialog`, `SearchBar` |
 | Models (10) | `TrainerListItemDto`, `TrainerDetailDto`, `TrainerPackageDto`, `TrainerLocation`, `PromotedTrainerDto`, `WorkoutSessionDto`, `WorkoutSessionResponse`, `ExerciseDto`, `ExerciseLogDto`, `TemplateDto` |
 | Tests | `trainer_detail_cubit_test.dart`, `trainer_list_cubit_test.dart` |
+| Docs | `docs/trainer-profile-analysis.md` — full iOS `PublicTrainerProfileView` replication reference, backend API contracts (aggregated profile, packages, testimonials, photos, schedule), gap analysis, data model mapping |
 
 #### Home (`lib/features/home/`) — ✅ Fully Implemented
 | Layer | Files |
 |---|---|
-| Cubit | `HomeCubit` with sealed `HomeState` (initial, loading, loaded, error) — fetches dashboard + active program in parallel |
-| API Service | `HomeApiService` — `GET /api/client/dashboard`, `GET /api/client/program/active` (returns null on 404) |
-| Repository | `HomeRepository` — wraps API service |
-| Screen | `HomeScreen` — main dashboard with floating header + scrollable content sections |
-| Widgets (11) | `ZiroHeader`, `CoachCard`, `CreditStatusWidget`, `NeedCoachBanner`, `CheckInBanner`, `NoRoutinePlaceholder`, `ActiveProgramWidget`, `InvitationHeroCard`, `StreakMotivationCard`, `UpcomingSessionsCarousel`, `QuickActionsRow`, `RecentHistorySection`, `DailyTargetsSection` |
-| Models (7) | `ClientDashboardResponse`, `ClientProfileData`, `ClientDashboardTrainer`, `ClientRecentSession`, `ClientDashboardSession`, `ActiveProgramResponse` (+ `ProgramBasicInfo`, `ProgramProgress`, `ProgramTemplateStatus`), `DashboardMeasurement` |
+| Cubits | `HomeCubit` with sealed `HomeState` (initial, loading, loaded, error) — fetches dashboard + active program in parallel; `ProgramCubit` with sealed `ProgramState` — load programs, load templates, create program, create template |
+| API Services | `HomeApiService` — `GET /api/client/dashboard`, `GET /api/client/program/active`; `ProgramApiService` — `GET /api/client/programs`, `POST /api/client/programs`, `GET /api/client/programs/[id]`, `POST /api/client/programs/templates` |
+| Repositories | `HomeRepository` — wraps dashboard API; `ProgramRepository` — wraps programs API |
+| Screens | `HomeScreen` — main dashboard; `RoutineBuilderScreen` — create program with name + templates; `RoutineSchedulerScreen` — device calendar scheduling (daily/sequential); `TemplatesLibraryScreen` — searchable template library; `ProgramDetailScreen` — dual-model detail view |
+| Widgets (13) | `ZiroHeader`, `CoachCard`, `CreditStatusWidget`, `NeedCoachBanner`, `CheckInBanner`, `NoRoutinePlaceholder`, `ActiveProgramWidget`, `InvitationHeroCard`, `StreakMotivationCard`, `UpcomingSessionsCarousel`, `QuickActionsRow`, `RecentHistorySection`, `DailyTargetsSection` |
+| Sheets | `TemplatePickerSheet` — modal for selecting templates to add to a program |
+| Models (9) | `ClientDashboardResponse`, `ClientProfileData`, `ClientDashboardTrainer`, `ClientRecentSession`, `ClientDashboardSession`, `ActiveProgramResponse` (+ `ProgramBasicInfo`, `ProgramProgress`, `ProgramTemplateStatus`), `DashboardMeasurement`, `ProgramDto` (+ `ProgramTemplate`), `ProgramLibraryResponse` |
 
 #### Notifications (`lib/features/notifications/`) — ✅ Fully Implemented
 | Layer | Files |
@@ -90,7 +92,7 @@ This instruction file (`AGENTS.md`) is auto-loaded via `opencode.json` — agent
 | **Router** | `app_router.dart` — GoRouter v17.3.0 with `ShellRoute` (4 tabs), full-screen sub-routes for detail/discovery/map, auth redirect guard, Stripe deep link handling | ✅ |
 | **Routing tables** | Auth: `/login`, `/register`, `/verify-email`, `/onboarding` | ✅ |
 | | Shell (bottom nav): `/` (Home), `/workout` (Session), `/explore`, `/profile` | ✅ |
-| | Full-screen: `/trainer/:username`, `/explore/discovery`, `/explore/map`, `/explore/event/:id`, `/workout/history`, `/workout/history/:id`, `/home/notifications` | ✅ |
+| | Full-screen: `/trainer/:username`, `/explore/discovery`, `/explore/map`, `/explore/event/:id`, `/workout/history`, `/workout/history/:id`, `/home/notifications`, `/home/program-detail`, `/home/templates-library`, `/home/routine-builder`, `/home/routine-scheduler` | ✅ |
 | | Deep links: `/stripe-return`, `/packages/:id/success`, `/packages/:id/cancel` | ✅ |
 | **DI** | `get_it` + `injectable` — `initDependencies()` in main, auto-generated `injection.config.dart` | ✅ |
 | **Networking** | `Dio` with `ApiLoggerInterceptor` (structured logging) + `AuthInterceptor` (JWT auto-refresh on 401) | ✅ |
@@ -122,6 +124,7 @@ This instruction file (`AGENTS.md`) is auto-loaded via `opencode.json` — agent
 | `intl` | ^0.20.2 | Date formatting |
 | `uuid` | ^4.5.1 | UUID generation |
 | `url_launcher` | ^6.3.1 | URL launching |
+| `add_2_calendar` | ^3.0.1 | Device calendar integration for routine scheduling |
 
 ### Test Coverage
 
@@ -141,6 +144,10 @@ This instruction file (`AGENTS.md`) is auto-loaded via `opencode.json` — agent
 - **Stripe checkout** — deep link routes exist, the actual Stripe payment sheet integration in Flutter is not wired
 - **Plate calculator** — widget exists (`plate_calculator.dart`) but isn't integrated into workout flow
 
+### Recently Resolved
+
+- **Exercise picker — unified bottom sheet** — The template creation `CreateTemplateView` and the live workout `WorkoutSessionScreen` previously had separate, non-shared exercise picker implementations (dialog vs bottom sheet). Both now use the shared `ExercisePickerSheet` widget, a reusable bottom sheet with fuzzy search, supporting both single-select (workout) and multi-select (template creation) via named constructors. See `docs/exercise-picker.md`.
+
 ## iOS Reference App
 
 The iOS version of ZIRO.FIT is at **`~/pr/Ziro-Fit`** (Swift/SwiftUI).
@@ -151,6 +158,10 @@ Key reference files:
 - Home tab: `Ziro Fit/Views/ZiroMe/PersonalHomeView.swift`
 - Notifications: `Ziro Fit/Views/Common/NotificationsView.swift` — `NotificationRow`, `NotificationsViewModel`, `NotificationModel`
 - Sheet header: `Ziro Fit/Views/Components/ZiroSheetHeader.swift` — reusable modal header
+- Routine Builder: `Ziro Fit/Views/ZiroMe/PlanBuilderView.swift` — program creation with template selection flow
+- Program detail: `Ziro Fit/Views/ZiroMe/MyProgramDetailView.swift` — active program with progress and template list
+- Workout templates: `Ziro Fit/Views/ZiroMe/WorkoutTemplatesView.swift` — template library with search
+- Trainer profile (public): `Ziro Fit/Views/ZiroMe/PublicTrainerProfileView.swift` — App Store-style profile with banner, tabs (About/Packages/Photos/Reviews/Schedule), connect states, custom program request. See `docs/trainer-profile-analysis.md`.
 
 ## NO PLACEHOLDERS — Full API Integration (STRICT RULE)
 
@@ -237,6 +248,18 @@ Backend has **no CI/CD pipeline** and `.env` is committed to git (not gitignored
 |---|---|---|---|
 | `GET` | `/api/client/dashboard` | — | `{ clientData: { id, userId, name, email, trainer: { id, name, username, email } \| null, workoutSessions: [...], measurements: [...] }, weightUnit: "KG", upcomingClientSessions: [...], lastCheckIn: string (ISO) \| null }` |
 | `GET` | `/api/client/program/active` | — | `{ program: { id, name, description? }, progress: { completedCount, totalCount, progressPercentage, nextTemplateId? }, templates: [{ id, name, description?, order, status: "COMPLETED"|"NEXT"|"PENDING", exerciseCount }] }` \| **null (404)** |
+
+### Programs & Routine Builder (Auth required)
+
+| Method | Path | Request / Query | Response (`{ data: ... }`) |
+|---|---|---|---|
+| `GET` | `/api/client/programs` | `?type=template&source=system\|personal\|all` | `{ assignedPrograms: Program[], personalPrograms: Program[], personalTemplates: Template[], systemTemplates: Template[], categories: string[] }` |
+| `POST` | `/api/client/programs` | `{ name: string, description?: string }` | `{ program: Program }` |
+| `GET` | `/api/client/programs/[id]` | — | `{ program: Program }` |
+| `POST` | `/api/client/programs/templates` | `{ name: string, programId: string, description?: string }` | `{ template: ProgramTemplate }` |
+
+**Program model (`ProgramDto`)**: `{ id, name, description?, trainerId?, category?, templates: ProgramTemplate[], isScheduled, scheduledStartDate?, scheduleFrequency?, activeTemplateIndex?, trainerName?, trainerAvatarUrl?, source?, assignmentId?, startDate?, isActive }`  
+**ProgramTemplate model**: `{ id, name, description?, order, exerciseCount, status?, templateType?, ... }`
 
 ### Promoted Trainers (Public)
 
@@ -434,3 +457,6 @@ Build a **structured logging system** so the full app behavior is traceable from
 - **Package prices from `/api/trainers/[username]/packages` are returned as strings** — the handler calls `pkg.price.toString()`. Your Flutter model must parse this from `String`, not `double`.
 - **Mobile Stripe deep link scheme**: When `isMobile: true` is sent to `/api/checkout/session`, the return URL uses the custom `zirofitapp://` scheme. Your Flutter app must register and handle `zirofitapp://stripe-return` and `zirofitapp://packages/{id}/success|cancel` deep links.
 - **Backend has no CI/CD pipeline** (no GitHub Actions, no Dockerfile). The `.env` file IS committed to git.
+- **`add_2_calendar` native permissions**: Android requires `READ_CALENDAR` and `WRITE_CALENDAR` in `AndroidManifest.xml`. iOS requires `NSCalendarsUsageDescription` and `NSCalendarsWriteOnlyAccessUsageDescription` in `Info.plist`. Run `flutter pub get` after adding the dependency.
+- **Client cannot update or delete programs** — those are trainer-only operations at `/api/trainer/programs/[programId]`. The client API only supports create and read.
+- **No backend schedule endpoint** — `POST /api/client/programs/:id/schedule` does not exist. Routine scheduling is done purely via device calendar (`add_2_calendar`), matching iOS behavior.

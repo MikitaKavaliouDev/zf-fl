@@ -67,11 +67,7 @@ class NoRoutinePlaceholder extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: _ActionButton(
-                  onTap: () {
-                    // Navigate to templates — route not defined yet,
-                    // fall back to workout screen
-                    context.go('/workout');
-                  },
+                  onTap: () => context.go('/home/templates-library'),
                   label: 'Templates',
                   icon: Icons.grid_view_rounded,
                   color: const Color(0xFF8B5CF6),
