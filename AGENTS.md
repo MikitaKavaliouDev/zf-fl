@@ -342,6 +342,60 @@ flutter pub run build_runner build --delete-conflicting-outputs
 - No snapshot testing conventions yet
 - Backend integration tests require local `npm run dev` running (port 3321)
 
+## Delivery Standards — E2E Production Readiness
+
+### Principle: Ship Finished Features, Not Skeleton Code
+
+Every feature delivered to this codebase must be **end-to-end production-ready**. The bar is not "it compiles" — it's "a real user can complete the full flow without hitting a stub, a crash, or an inconsistency."
+
+### Rules
+
+#### Rule 1: No Mock Data in Production Code
+- **Zero mock data** in any widget, cubit, repository, or service that ships to production.
+- Mock data belongs ONLY in test files (`*.test.dart`, `test/` directory) or dedicated mock classes.
+- A feature is not "done" until it fetches real data from a real endpoint. Mock-driven development is for exploration only — never commit mock data paths.
+- Exception: Only if the backend endpoint does not exist yet AND the feature is behind a feature flag.
+
+#### Rule 2: No Inconsistencies
+- Every new feature must be consistent with the existing codebase:
+  - **Pattern consistency**: Use the same state management pattern (Cubit + freezed sealed states), same DI pattern (`@injectable` / `@singleton`), same networking pattern (Dio service + repository).
+  - **Naming consistency**: Match existing file naming (`snake_case`), model naming (`XxxDto` for API DTOs), directory structure (`cubit/`, `data/`, `presentation/`).
+  - **Visual consistency**: Use only the 8 design tokens. No custom colors, radii, or typography values.
+  - **Error handling consistency**: Every API call must emit an error state. Every BlocConsumer must handle the error state.
+- Before writing any new code, read 2-3 existing files in the same layer to establish the pattern.
+
+#### Rule 3: Deep Analysis Before Feature Delivery
+Before implementing any feature:
+1. **Read the existing implementation** — check if similar functionality exists elsewhere in the codebase that can be reused or extended.
+2. **Read the iOS reference** (if applicable) — the iOS app at `~/pr/Ziro-Fit` is the design specification. Understand the full layout, component hierarchy, spacing, and interaction model before writing a single line of Flutter code.
+3. **Verify backend contracts** — read the Zod schema (`route.schema.ts`), route handler (`route.ts`), and Prisma schema (`schema.prisma`) for every endpoint the feature touches.
+4. **Identify reuse opportunities** — does this feature share models, widgets, or cubits with existing features? Extract shared code rather than duplicating.
+5. **Document analysis** — if the feature is complex, write an analysis doc in `docs/` (see `docs/trainer-profile-analysis.md`, `docs/home-page-analysis.md` for examples).
+
+#### Rule 4: No Dead Code Pathways
+- Every API method in a service must be called from a cubit. Every cubit method must be called from UI. Every UI action must trigger a real API call.
+- No `// TODO` comments that mark unfinished work. Either implement it fully or don't commit it.
+- No commented-out code. Delete it.
+- Every navigation route must lead to a real screen with real content. No "coming soon" screens.
+
+#### Rule 5: No Code Duplication
+- Same logic written twice = extract it. Same pattern across two files = shared widget/mixin/helper.
+- If two API responses share fields, create a shared base model. Never define the same field in two separate model files.
+- If two screens share a UI component, extract it into a shared widget file. Never copy-paste widget code.
+- See Anti-Slop Rule #3 below for detailed DRY enforcement.
+
+#### Rule 6: Full-Context Validation
+Before marking any feature complete, verify:
+- [ ] All widgets render with real data (not mock/placeholder)
+- [ ] All API endpoints called from the feature exist and return correct shapes
+- [ ] All error states are handled (loading, error, empty, success)
+- [ ] All navigation flows work end-to-end
+- [ ] `dart analyze` passes with zero errors
+- [ ] `flutter test` passes (all tests, not just your new ones)
+- [ ] No dead code, no print() statements, no commented-out code
+
+---
+
 ## Development Standards (Anti-Slop Rules)
 
 ### 1. Code Quality Gates (MANDATORY before any `completed`)
