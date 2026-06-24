@@ -72,22 +72,27 @@ class ProgramApiService {
 
   /// POST /api/client/programs/templates — create a template under a program.
   ///
-  /// Body: { name, description?, programId }
+  /// Body: { name, description?, programId, exercises? }
+  /// When [exercises] is provided, the backend creates the template + all
+  /// exercises in a single transaction — no need for separate add-exercise calls.
   Future<TemplateDto> createTemplate({
     required String programId,
     required String name,
     String? description,
+    List<Map<String, dynamic>>? exercises,
   }) async {
+    final data = <String, dynamic>{
+      'name': name,
+      'programId': programId,
+      if (description != null) 'description': description,
+      if (exercises != null && exercises.isNotEmpty) 'exercises': exercises,
+    };
     final response = await _dio.post(
       '/api/client/programs/templates',
-      data: {
-        'name': name,
-        'programId': programId,
-        'description': description,
-      },
+      data: data,
     );
-    final data = response.data['data'] as Map<String, dynamic>;
-    final templateJson = data['template'] as Map<String, dynamic>;
+    final responseData = response.data['data'] as Map<String, dynamic>;
+    final templateJson = responseData['template'] as Map<String, dynamic>;
     return TemplateDto.fromJson(templateJson);
   }
 

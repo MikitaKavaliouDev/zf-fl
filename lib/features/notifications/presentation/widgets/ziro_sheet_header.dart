@@ -79,20 +79,34 @@ class ZiroSheetHeader extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (showDone)
-                  TextButton(
-                    onPressed: onDone,
-                    child: Text(
-                      trailingText ?? 'Done',
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (onTrailingIconTap != null)
+                      IconButton(
+                        icon: const Icon(
+                          Icons.add_circle_outline_rounded,
+                          size: 24,
+                          color: AppColors.primary,
+                        ),
+                        onPressed: onTrailingIconTap,
                       ),
-                    ),
-                  )
-                else
-                  const SizedBox(width: 64),
+                    if (showDone)
+                      TextButton(
+                        onPressed: onDone,
+                        child: Text(
+                          trailingText ?? 'Done',
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      )
+                    else
+                      const SizedBox(width: 64),
+                  ],
+                ),
               ],
             ),
           ),

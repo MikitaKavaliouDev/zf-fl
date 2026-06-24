@@ -26,11 +26,13 @@ class ProgramRepository {
     required String programId,
     required String name,
     String? description,
+    List<Map<String, dynamic>>? exercises,
   }) =>
       _api.createTemplate(
         programId: programId,
         name: name,
         description: description,
+        exercises: exercises,
       );
 
   Future<TemplateExerciseDto> addExerciseToTemplate({

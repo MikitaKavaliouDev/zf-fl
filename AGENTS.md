@@ -3,7 +3,7 @@
 ## Project
 
 **ZIRO.FIT** client mobile app — Flutter fitness training platform.
-Backend is a Next.js REST API at `~/pr/zirofit-next` (separate repo).
+Backend is a Next.js REST API at `V:\zirofit-next` (separate repo).
 
 ## State
 
@@ -150,7 +150,7 @@ This instruction file (`AGENTS.md`) is auto-loaded via `opencode.json` — agent
 
 ## iOS Reference App
 
-The iOS version of ZIRO.FIT is at **`~/pr/Ziro-Fit`** (Swift/SwiftUI).
+The iOS version of ZIRO.FIT is at **`V:\Ziro-Fit`** (Swift/SwiftUI).
 Before building any UI feature, check the iOS implementation first for layout patterns, component hierarchy, spacing, typography, and color usage.
 Key reference files:
 - Explore tab (trainer cards): `Ziro Fit/Views/ZiroMe/TrainerDiscoveryView.swift` — `TrainerDiscoveryCard`, `ExploreTrainerCard`
@@ -178,7 +178,7 @@ Rules:
 
 ## How to Verify Backend Contracts
 
-**Do not trust `docs/implementation.md` blindly.** The backend repo at `~/pr/zirofit-next` is the source of truth for API shapes. Before creating any Flutter model or service:
+**Do not trust `docs/implementation.md` blindly.** The backend repo at `V:\zirofit-next` is the source of truth for API shapes. Before creating any Flutter model or service:
 
 1. Read the Zod schema file alongside each backend route: `src/app/api/<path>/route.schema.ts` — this defines the exact request/response contract.
 2. Read the route handler `route.ts` to confirm the runtime response shape.
@@ -186,9 +186,11 @@ Rules:
 4. For sync tables, read `src/lib/sync/utils.ts` for the exact `SYNC_TABLES` list and `TABLE_MODEL_MAP`.
 5. Read `src/lib/api/response.ts` to understand the `{ data }` / `{ error }` wrapper envelope.
 
+**Full client API reference**: `docs/api/client-routes.md` — complete request/response shapes with value types for all 48 endpoints across 21 client API modules (dashboard, programs, templates, check-ins, daily targets, fitness goals, habits, events, trainer link, privacy, sharing, progress, analytics, AI, upload, etc.).
+
 **Backend commands:**
 ```sh
-cd ~/pr/zirofit-next
+cd V:\zirofit-next
 npm run dev          # starts on port 3321
 npm run test         # Jest unit tests
 npm run lint         # ESLint
@@ -367,7 +369,7 @@ Every feature delivered to this codebase must be **end-to-end production-ready**
 #### Rule 3: Deep Analysis Before Feature Delivery
 Before implementing any feature:
 1. **Read the existing implementation** — check if similar functionality exists elsewhere in the codebase that can be reused or extended.
-2. **Read the iOS reference** (if applicable) — the iOS app at `~/pr/Ziro-Fit` is the design specification. Understand the full layout, component hierarchy, spacing, and interaction model before writing a single line of Flutter code.
+2. **Read the iOS reference** (if applicable) — the iOS app at `V:\Ziro-Fit` is the design specification. Understand the full layout, component hierarchy, spacing, and interaction model before writing a single line of Flutter code.
 3. **Verify backend contracts** — read the Zod schema (`route.schema.ts`), route handler (`route.ts`), and Prisma schema (`schema.prisma`) for every endpoint the feature touches.
 4. **Identify reuse opportunities** — does this feature share models, widgets, or cubits with existing features? Extract shared code rather than duplicating.
 5. **Document analysis** — if the feature is complex, write an analysis doc in `docs/` (see `docs/trainer-profile-analysis.md`, `docs/home-page-analysis.md` for examples).

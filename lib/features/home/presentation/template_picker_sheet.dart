@@ -106,7 +106,7 @@ class _TemplatePickerSheetState extends State<TemplatePickerSheet> {
   }
 
   void _showCreateTemplateDialog(BuildContext context) async {
-    final result = await Navigator.of(context).push(
+    final result = await Navigator.of(context).push<TemplateDto>(
       MaterialPageRoute(
         fullscreenDialog: true,
         builder: (_) => BlocProvider.value(
@@ -116,7 +116,10 @@ class _TemplatePickerSheetState extends State<TemplatePickerSheet> {
       ),
     );
 
-    if (result != null && result is TemplateDto && context.mounted) {
+    if (result != null && context.mounted) {
+      // Persist the template locally so it survives app restart,
+      // then return it to the routine builder.
+      context.read<ProgramCubit>().saveLocalTemplate(result);
       Navigator.of(context).pop(result);
     }
   }

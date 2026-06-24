@@ -1,8 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
-
-
 /// Drift table definition for workout templates.
 @DataClassName('WorkoutTemplateEntity')
 class WorkoutTemplates extends Table {
@@ -15,6 +13,10 @@ class WorkoutTemplates extends Table {
   IntColumn get updatedAt => integer()();
   IntColumn get deletedAt => integer().nullable()();
   TextColumn get syncStatus => text().clientDefault(() => 'pending')();
+
+  /// JSON-encoded list of template exercise objects.
+  /// Stored as a JSON string to avoid a separate join table for local templates.
+  TextColumn get exercisesJson => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};

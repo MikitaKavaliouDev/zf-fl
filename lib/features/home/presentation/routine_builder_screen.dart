@@ -130,7 +130,7 @@ class _RoutineBuilderScreenState extends State<RoutineBuilderScreen> {
                   : 'New Routine',
               showCancel: true,
               showDone: true,
-              onCancel: () => context.pop(),
+              onCancel: () => Navigator.of(context).maybePop(),
               onDone: _save,
               leadingText: 'Cancel',
               trailingText: 'Save',
@@ -431,7 +431,6 @@ class _RoutineBuilderScreenState extends State<RoutineBuilderScreen> {
 
     final cubit = context.read<ProgramCubit>();
 
-    ProgramDto? result;
     if (widget.existingProgram != null) {
       // The client API does not support updating programs — show a message.
       if (mounted) {
@@ -446,7 +445,7 @@ class _RoutineBuilderScreenState extends State<RoutineBuilderScreen> {
     }
 
     // Create the program via API (name + description only).
-    result = await cubit.createProgram(
+    final result = await cubit.createProgram(
       name: name,
       description: _descriptionController.text.trim().nullIfEmpty,
     );
@@ -456,37 +455,36 @@ class _RoutineBuilderScreenState extends State<RoutineBuilderScreen> {
       return;
     }
 
-    // Create any locally-created templates on the backend.
+    // Create ALL templates on the backend with inline exercises (single API call each).
     for (var i = 0; i < _slots.length; i++) {
       final slot = _slots[i];
-      if (slot.template.id.startsWith('local_')) {
-        final created = await cubit.createTemplate(
-          programId: result.id,
-          name: slot.template.name,
-          description: slot.template.description,
-        );
-        if (created != null) {
-          // Add exercises to the template on the backend.
-          for (final exercise in slot.template.exercises) {
-            await cubit.addExerciseToTemplate(
-              templateId: created.id,
-              exerciseId: exercise.exerciseId ?? exercise.exercise?.id ?? '',
-              targetReps: exercise.targetReps,
-              targetSets: exercise.targetSets,
-              durationSeconds: exercise.durationSeconds,
-              notes: exercise.notes,
-              order: exercise.order,
-            );
-          }
-          _slots[i] = _RoutineSlot(template: created, label: slot.label);
-        }
+
+      // Serialize exercises for the API request.
+      final exercises = slot.template.exercises.map((e) => {
+            'exerciseId': e.exerciseId ?? e.exercise?.id ?? '',
+            if (e.targetReps != null) 'targetReps': e.targetReps,
+            if (e.targetSets != null) 'targetSets': e.targetSets,
+            if (e.durationSeconds != null) 'durationSeconds': e.durationSeconds,
+            if (e.notes != null) 'notes': e.notes,
+            'order': e.order,
+          }).toList();
+
+      final created = await cubit.createTemplate(
+        programId: result.id,
+        name: slot.template.name,
+        description: slot.template.description,
+        exercises: exercises.isNotEmpty ? exercises : null,
+      );
+
+      if (created != null) {
+        _slots[i] = _RoutineSlot(template: created, label: slot.label);
       }
     }
 
     if (mounted) {
       setState(() => _isSaving = false);
       context.read<HomeCubit>().refresh();
-      context.pop();
+      Navigator.of(context).maybePop();
     }
   }
 }

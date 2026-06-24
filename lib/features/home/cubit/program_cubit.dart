@@ -5,15 +5,19 @@ import 'package:injectable/injectable.dart';
 
 import '../../trainers/data/models/exercise_dto.dart';
 import '../../trainers/data/models/template_dto.dart';
+import '../data/local_template_repository.dart';
 import '../data/models/program_dto.dart';
+import '../data/models/program_library_response.dart';
 import '../data/program_repository.dart';
 import 'program_state.dart';
 
 @injectable
 class ProgramCubit extends Cubit<ProgramState> {
   final ProgramRepository _repository;
+  final LocalTemplateRepository _localRepo;
 
-  ProgramCubit(this._repository) : super(const ProgramState.initial());
+  ProgramCubit(this._repository, this._localRepo)
+      : super(const ProgramState.initial());
 
   /// Load all programs for the current client.
   Future<void> loadPrograms() async {
@@ -34,25 +38,54 @@ class ProgramCubit extends Cubit<ProgramState> {
     }
   }
 
-  /// Load templates from the program library (type=template).
+  /// Load templates from the program library (type=template), merged with
+  /// persisted local templates. Local templates with IDs that collide with
+  /// API templates are skipped (API wins).
   Future<void> loadTemplates() async {
     emit(const ProgramState.loading());
     try {
+      // 1. Fetch API templates
       final library = await _repository.getPrograms(type: 'template');
-      final templateDtos = [
+      final apiTemplates = <String, TemplateDto>{};
+      for (final t in [
         ...library.personalTemplates.map(_toTemplateDto),
         ...library.systemTemplates.map(_toTemplateDto),
-      ];
+      ]) {
+        apiTemplates[t.id] = t;
+      }
+
+      // 2. Fetch local templates, merge with API (API wins on ID collision)
+      final localTemplates = await _localRepo.getAll();
+      for (final t in localTemplates) {
+        if (!apiTemplates.containsKey(t.id)) {
+          apiTemplates[t.id] = t;
+        }
+      }
+
       emit(ProgramState.loaded(
         programs: [
           ...library.assignedPrograms,
           ...library.personalPrograms,
         ],
-        templates: templateDtos,
+        templates: apiTemplates.values.toList(),
       ));
     } catch (e) {
       developer.log('ProgramCubit.loadTemplates failed: $e', name: 'program');
       emit(const ProgramState.error('Failed to load templates.'));
+    }
+  }
+
+  /// Save a [TemplateDto] to local persistence and refresh the template list.
+  Future<void> saveLocalTemplate(TemplateDto template) async {
+    try {
+      await _localRepo.save(template);
+      await loadTemplates();
+    } catch (e) {
+      developer.log(
+        'ProgramCubit.saveLocalTemplate failed: $e',
+        name: 'program',
+      );
+      emit(const ProgramState.error('Failed to save template.'));
     }
   }
 
@@ -87,17 +120,19 @@ class ProgramCubit extends Cubit<ProgramState> {
     }
   }
 
-  /// Create a template under a program.
+  /// Create a template under a program, optionally with inline exercises.
   Future<TemplateDto?> createTemplate({
     required String programId,
     required String name,
     String? description,
+    List<Map<String, dynamic>>? exercises,
   }) async {
     try {
       final template = await _repository.createTemplate(
         programId: programId,
         name: name,
         description: description,
+        exercises: exercises,
       );
       await loadPrograms();
       return template;
@@ -146,24 +181,24 @@ class ProgramCubit extends Cubit<ProgramState> {
       id: item.id,
       name: item.name,
       description: item.description,
-      exercises: (item.exercises as List<dynamic>?)?.map((e) {
-        final exercise = e['exercise'] as Map<String, dynamic>?;
-        return TemplateExerciseDto(
-          id: e['id'] as String,
-          order: (e['order'] as num?)?.toInt() ?? 0,
-          exerciseId: e['exerciseId'] as String?,
-          type: e['type'] as String?,
-          targetReps: e['targetReps'] as String?,
-          durationSeconds: (e['durationSeconds'] as num?)?.toInt(),
-          notes: e['notes'] as String?,
-          exercise: exercise != null
-              ? ExerciseDto(
-                  id: exercise['id'] as String,
-                  name: exercise['name'] as String,
-                )
-              : null,
-        );
-      }).toList() ??
+      exercises: (item.exercises as List<dynamic>?)
+              ?.map<TemplateExerciseDto>((e) {
+            final ex = e as TemplateLibraryExercise;
+            return TemplateExerciseDto(
+              id: ex.id,
+              order: ex.order,
+              exerciseId: ex.exerciseId,
+              type: ex.type,
+              targetReps: ex.targetReps,
+              durationSeconds: ex.durationSeconds,
+              notes: ex.notes,
+              exercise: ExerciseDto(
+                id: ex.exercise.id,
+                name: ex.exercise.name,
+                muscleGroup: ex.exercise.muscleGroup,
+              ),
+            );
+          }).toList() ??
           [],
     );
   }

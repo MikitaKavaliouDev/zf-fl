@@ -7,6 +7,7 @@ import '../../notifications/presentation/widgets/ziro_sheet_header.dart';
 import '../../trainers/data/models/template_dto.dart';
 import '../cubit/program_cubit.dart';
 import '../cubit/program_state.dart';
+import 'create_template_screen.dart';
 
 /// Templates Library screen — searchable list of all templates.
 ///
@@ -26,6 +27,19 @@ class _TemplatesLibraryScreenState extends State<TemplatesLibraryScreen> {
   void initState() {
     super.initState();
     context.read<ProgramCubit>().loadTemplates();
+  }
+
+  Future<void> _showCreateTemplate() async {
+    final result = await Navigator.of(context).push<TemplateDto>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => const CreateTemplateView(),
+      ),
+    );
+    if (result != null && mounted) {
+      // Persist the newly created local template before refreshing the list.
+      context.read<ProgramCubit>().saveLocalTemplate(result);
+    }
   }
 
   @override
@@ -100,6 +114,7 @@ class _TemplatesLibraryScreenState extends State<TemplatesLibraryScreen> {
               showDone: true,
               onDone: () => context.pop(),
               trailingText: 'Done',
+              onTrailingIconTap: _showCreateTemplate,
             ),
           ),
         ],
@@ -162,6 +177,10 @@ class _TemplatesLibraryScreenState extends State<TemplatesLibraryScreen> {
             onPlay: () {
               // Start a workout session with this template
               context.go('/workout');
+            },
+            onTap: () {
+              // Navigate to template detail (matches iOS tap → TemplateDetailView)
+              context.push('/home/template-detail', extra: template);
             },
           );
         },
@@ -227,15 +246,19 @@ class _TemplatesLibraryScreenState extends State<TemplatesLibraryScreen> {
 class _TemplateLibraryRow extends StatelessWidget {
   final TemplateDto template;
   final VoidCallback onPlay;
+  final VoidCallback? onTap;
 
   const _TemplateLibraryRow({
     required this.template,
     required this.onPlay,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -310,6 +333,7 @@ class _TemplateLibraryRow extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

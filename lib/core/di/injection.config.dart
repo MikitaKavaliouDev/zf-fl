@@ -35,8 +35,12 @@ import 'package:ziro_fit/features/explore/data/explore_repository.dart'
     as _i226;
 import 'package:ziro_fit/features/home/cubit/home_cubit.dart' as _i13;
 import 'package:ziro_fit/features/home/cubit/program_cubit.dart' as _i727;
+import 'package:ziro_fit/features/home/cubit/template_detail_cubit.dart'
+    as _i137;
 import 'package:ziro_fit/features/home/data/home_api_service.dart' as _i267;
 import 'package:ziro_fit/features/home/data/home_repository.dart' as _i516;
+import 'package:ziro_fit/features/home/data/local_template_repository.dart'
+    as _i783;
 import 'package:ziro_fit/features/home/data/program_api_service.dart' as _i755;
 import 'package:ziro_fit/features/home/data/program_repository.dart' as _i875;
 import 'package:ziro_fit/features/notifications/cubit/notifications_cubit.dart'
@@ -74,6 +78,7 @@ extension GetItInjectableX on _i174.GetIt {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
     final connectivityModule = _$ConnectivityModule();
     final networkModule = _$NetworkModule();
+    gh.factory<_i137.TemplateDetailCubit>(() => _i137.TemplateDetailCubit());
     gh.singleton<_i895.Connectivity>(() => connectivityModule.connectivity);
     gh.singleton<_i365.AppDatabase>(() => _i365.AppDatabase());
     gh.singleton<_i467.LocationService>(() => _i467.LocationService());
@@ -87,6 +92,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.singleton<_i124.ConnectivityService>(
       () => _i124.ConnectivityService(connectivity: gh<_i895.Connectivity>()),
       dispose: (i) => i.dispose(),
+    );
+    gh.singleton<_i783.LocalTemplateRepository>(
+      () => _i783.LocalTemplateRepository(gh<_i365.AppDatabase>()),
     );
     gh.singleton<_i680.AuthInterceptor>(
       () => _i680.AuthInterceptor(gh<_i601.TokenStorage>()),
@@ -165,9 +173,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.singleton<_i875.ProgramRepository>(
       () => _i875.ProgramRepository(gh<_i755.ProgramApiService>()),
     );
-    gh.factory<_i727.ProgramCubit>(
-      () => _i727.ProgramCubit(gh<_i875.ProgramRepository>()),
-    );
     gh.singleton<_i796.SyncCubit>(
       () => _i796.SyncCubit(
         gh<_i813.SyncRepository>(),
@@ -188,6 +193,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i329.TrainerListCubit>(
       () => _i329.TrainerListCubit(gh<_i1063.TrainerRepository>()),
+    );
+    gh.factory<_i727.ProgramCubit>(
+      () => _i727.ProgramCubit(
+        gh<_i875.ProgramRepository>(),
+        gh<_i783.LocalTemplateRepository>(),
+      ),
     );
     gh.factory<_i13.HomeCubit>(
       () => _i13.HomeCubit(gh<_i516.HomeRepository>()),

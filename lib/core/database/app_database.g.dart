@@ -4982,6 +4982,17 @@ class $WorkoutTemplatesTable extends WorkoutTemplates
     requiredDuringInsert: false,
     clientDefault: () => 'pending',
   );
+  static const VerificationMeta _exercisesJsonMeta = const VerificationMeta(
+    'exercisesJson',
+  );
+  @override
+  late final GeneratedColumn<String> exercisesJson = GeneratedColumn<String>(
+    'exercises_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -4993,6 +5004,7 @@ class $WorkoutTemplatesTable extends WorkoutTemplates
     updatedAt,
     deletedAt,
     syncStatus,
+    exercisesJson,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -5068,6 +5080,15 @@ class $WorkoutTemplatesTable extends WorkoutTemplates
         syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
       );
     }
+    if (data.containsKey('exercises_json')) {
+      context.handle(
+        _exercisesJsonMeta,
+        exercisesJson.isAcceptableOrUnknown(
+          data['exercises_json']!,
+          _exercisesJsonMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -5113,6 +5134,10 @@ class $WorkoutTemplatesTable extends WorkoutTemplates
         DriftSqlType.string,
         data['${effectivePrefix}sync_status'],
       )!,
+      exercisesJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}exercises_json'],
+      ),
     );
   }
 
@@ -5133,6 +5158,10 @@ class WorkoutTemplateEntity extends DataClass
   final int updatedAt;
   final int? deletedAt;
   final String syncStatus;
+
+  /// JSON-encoded list of template exercise objects.
+  /// Stored as a JSON string to avoid a separate join table for local templates.
+  final String? exercisesJson;
   const WorkoutTemplateEntity({
     required this.id,
     required this.name,
@@ -5143,6 +5172,7 @@ class WorkoutTemplateEntity extends DataClass
     required this.updatedAt,
     this.deletedAt,
     required this.syncStatus,
+    this.exercisesJson,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -5160,6 +5190,9 @@ class WorkoutTemplateEntity extends DataClass
       map['deleted_at'] = Variable<int>(deletedAt);
     }
     map['sync_status'] = Variable<String>(syncStatus);
+    if (!nullToAbsent || exercisesJson != null) {
+      map['exercises_json'] = Variable<String>(exercisesJson);
+    }
     return map;
   }
 
@@ -5178,6 +5211,9 @@ class WorkoutTemplateEntity extends DataClass
           ? const Value.absent()
           : Value(deletedAt),
       syncStatus: Value(syncStatus),
+      exercisesJson: exercisesJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(exercisesJson),
     );
   }
 
@@ -5196,6 +5232,7 @@ class WorkoutTemplateEntity extends DataClass
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
       deletedAt: serializer.fromJson<int?>(json['deletedAt']),
       syncStatus: serializer.fromJson<String>(json['syncStatus']),
+      exercisesJson: serializer.fromJson<String?>(json['exercisesJson']),
     );
   }
   @override
@@ -5211,6 +5248,7 @@ class WorkoutTemplateEntity extends DataClass
       'updatedAt': serializer.toJson<int>(updatedAt),
       'deletedAt': serializer.toJson<int?>(deletedAt),
       'syncStatus': serializer.toJson<String>(syncStatus),
+      'exercisesJson': serializer.toJson<String?>(exercisesJson),
     };
   }
 
@@ -5224,6 +5262,7 @@ class WorkoutTemplateEntity extends DataClass
     int? updatedAt,
     Value<int?> deletedAt = const Value.absent(),
     String? syncStatus,
+    Value<String?> exercisesJson = const Value.absent(),
   }) => WorkoutTemplateEntity(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -5234,6 +5273,9 @@ class WorkoutTemplateEntity extends DataClass
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
     syncStatus: syncStatus ?? this.syncStatus,
+    exercisesJson: exercisesJson.present
+        ? exercisesJson.value
+        : this.exercisesJson,
   );
   WorkoutTemplateEntity copyWithCompanion(WorkoutTemplatesCompanion data) {
     return WorkoutTemplateEntity(
@@ -5250,6 +5292,9 @@ class WorkoutTemplateEntity extends DataClass
       syncStatus: data.syncStatus.present
           ? data.syncStatus.value
           : this.syncStatus,
+      exercisesJson: data.exercisesJson.present
+          ? data.exercisesJson.value
+          : this.exercisesJson,
     );
   }
 
@@ -5264,7 +5309,8 @@ class WorkoutTemplateEntity extends DataClass
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
-          ..write('syncStatus: $syncStatus')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('exercisesJson: $exercisesJson')
           ..write(')'))
         .toString();
   }
@@ -5280,6 +5326,7 @@ class WorkoutTemplateEntity extends DataClass
     updatedAt,
     deletedAt,
     syncStatus,
+    exercisesJson,
   );
   @override
   bool operator ==(Object other) =>
@@ -5293,7 +5340,8 @@ class WorkoutTemplateEntity extends DataClass
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
-          other.syncStatus == this.syncStatus);
+          other.syncStatus == this.syncStatus &&
+          other.exercisesJson == this.exercisesJson);
 }
 
 class WorkoutTemplatesCompanion extends UpdateCompanion<WorkoutTemplateEntity> {
@@ -5306,6 +5354,7 @@ class WorkoutTemplatesCompanion extends UpdateCompanion<WorkoutTemplateEntity> {
   final Value<int> updatedAt;
   final Value<int?> deletedAt;
   final Value<String> syncStatus;
+  final Value<String?> exercisesJson;
   final Value<int> rowid;
   const WorkoutTemplatesCompanion({
     this.id = const Value.absent(),
@@ -5317,6 +5366,7 @@ class WorkoutTemplatesCompanion extends UpdateCompanion<WorkoutTemplateEntity> {
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.syncStatus = const Value.absent(),
+    this.exercisesJson = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   WorkoutTemplatesCompanion.insert({
@@ -5329,6 +5379,7 @@ class WorkoutTemplatesCompanion extends UpdateCompanion<WorkoutTemplateEntity> {
     required int updatedAt,
     this.deletedAt = const Value.absent(),
     this.syncStatus = const Value.absent(),
+    this.exercisesJson = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : name = Value(name),
        programId = Value(programId),
@@ -5344,6 +5395,7 @@ class WorkoutTemplatesCompanion extends UpdateCompanion<WorkoutTemplateEntity> {
     Expression<int>? updatedAt,
     Expression<int>? deletedAt,
     Expression<String>? syncStatus,
+    Expression<String>? exercisesJson,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -5356,6 +5408,7 @@ class WorkoutTemplatesCompanion extends UpdateCompanion<WorkoutTemplateEntity> {
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (syncStatus != null) 'sync_status': syncStatus,
+      if (exercisesJson != null) 'exercises_json': exercisesJson,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -5370,6 +5423,7 @@ class WorkoutTemplatesCompanion extends UpdateCompanion<WorkoutTemplateEntity> {
     Value<int>? updatedAt,
     Value<int?>? deletedAt,
     Value<String>? syncStatus,
+    Value<String?>? exercisesJson,
     Value<int>? rowid,
   }) {
     return WorkoutTemplatesCompanion(
@@ -5382,6 +5436,7 @@ class WorkoutTemplatesCompanion extends UpdateCompanion<WorkoutTemplateEntity> {
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
       syncStatus: syncStatus ?? this.syncStatus,
+      exercisesJson: exercisesJson ?? this.exercisesJson,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -5416,6 +5471,9 @@ class WorkoutTemplatesCompanion extends UpdateCompanion<WorkoutTemplateEntity> {
     if (syncStatus.present) {
       map['sync_status'] = Variable<String>(syncStatus.value);
     }
+    if (exercisesJson.present) {
+      map['exercises_json'] = Variable<String>(exercisesJson.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -5434,6 +5492,7 @@ class WorkoutTemplatesCompanion extends UpdateCompanion<WorkoutTemplateEntity> {
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
           ..write('syncStatus: $syncStatus, ')
+          ..write('exercisesJson: $exercisesJson, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -16816,6 +16875,7 @@ typedef $$WorkoutTemplatesTableCreateCompanionBuilder =
       required int updatedAt,
       Value<int?> deletedAt,
       Value<String> syncStatus,
+      Value<String?> exercisesJson,
       Value<int> rowid,
     });
 typedef $$WorkoutTemplatesTableUpdateCompanionBuilder =
@@ -16829,6 +16889,7 @@ typedef $$WorkoutTemplatesTableUpdateCompanionBuilder =
       Value<int> updatedAt,
       Value<int?> deletedAt,
       Value<String> syncStatus,
+      Value<String?> exercisesJson,
       Value<int> rowid,
     });
 
@@ -16883,6 +16944,11 @@ class $$WorkoutTemplatesTableFilterComposer
 
   ColumnFilters<String> get syncStatus => $composableBuilder(
     column: $table.syncStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get exercisesJson => $composableBuilder(
+    column: $table.exercisesJson,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -16940,6 +17006,11 @@ class $$WorkoutTemplatesTableOrderingComposer
     column: $table.syncStatus,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get exercisesJson => $composableBuilder(
+    column: $table.exercisesJson,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$WorkoutTemplatesTableAnnotationComposer
@@ -16979,6 +17050,11 @@ class $$WorkoutTemplatesTableAnnotationComposer
 
   GeneratedColumn<String> get syncStatus => $composableBuilder(
     column: $table.syncStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get exercisesJson => $composableBuilder(
+    column: $table.exercisesJson,
     builder: (column) => column,
   );
 }
@@ -17029,6 +17105,7 @@ class $$WorkoutTemplatesTableTableManager
                 Value<int> updatedAt = const Value.absent(),
                 Value<int?> deletedAt = const Value.absent(),
                 Value<String> syncStatus = const Value.absent(),
+                Value<String?> exercisesJson = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => WorkoutTemplatesCompanion(
                 id: id,
@@ -17040,6 +17117,7 @@ class $$WorkoutTemplatesTableTableManager
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
                 syncStatus: syncStatus,
+                exercisesJson: exercisesJson,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -17053,6 +17131,7 @@ class $$WorkoutTemplatesTableTableManager
                 required int updatedAt,
                 Value<int?> deletedAt = const Value.absent(),
                 Value<String> syncStatus = const Value.absent(),
+                Value<String?> exercisesJson = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => WorkoutTemplatesCompanion.insert(
                 id: id,
@@ -17064,6 +17143,7 @@ class $$WorkoutTemplatesTableTableManager
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
                 syncStatus: syncStatus,
+                exercisesJson: exercisesJson,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

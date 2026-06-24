@@ -14,10 +14,12 @@ import '../../features/explore/presentation/explore_screen.dart';
 import '../../features/explore/presentation/trainer_discovery_screen.dart';
 import '../../features/home/data/models/active_program_response.dart';
 import '../../features/home/data/models/program_dto.dart';
+import '../../features/trainers/data/models/template_dto.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/home/presentation/program_detail_screen.dart';
 import '../../features/home/presentation/routine_builder_screen.dart';
 import '../../features/home/presentation/routine_scheduler_screen.dart';
+import '../../features/home/presentation/template_detail_screen.dart';
 import '../../features/home/presentation/templates_library_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
@@ -279,6 +281,28 @@ GoRouter createAppRouter(AuthCubit authCubit) {
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
           child: const TemplatesLibraryScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 1),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutCubic,
+              )),
+              child: child,
+            );
+          },
+        ),
+      ),
+      // Template Detail (matches iOS TemplateDetailView)
+      GoRoute(
+        path: '/home/template-detail',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: TemplateDetailScreen(
+            template: state.extra as TemplateDto,
+          ),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return SlideTransition(
               position: Tween<Offset>(

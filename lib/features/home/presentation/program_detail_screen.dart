@@ -1,3 +1,4 @@
+import 'package:add_2_calendar/add_2_calendar.dart' as cal;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -38,6 +39,14 @@ class ProgramDetailScreen extends StatelessWidget {
   int get _templateCount {
     if (activeProgram != null) return activeProgram!.templates.length;
     return programDto!.templates.length;
+  }
+
+  /// Template names normalized from either model.
+  List<String> get _templateNames {
+    if (activeProgram != null) {
+      return activeProgram!.templates.map((t) => t.name).toList();
+    }
+    return programDto!.templates.map((t) => t.name).toList();
   }
 
   @override
@@ -177,6 +186,13 @@ class ProgramDetailScreen extends StatelessWidget {
                   exerciseCount: template.exercises.length,
                 ),
               ),
+
+            const SizedBox(height: 24),
+            _CalendarButton(
+              programName: _name,
+              templateNames: _templateNames,
+            ),
+            const SizedBox(height: 32),
           ],
         ),
       ),
@@ -240,6 +256,88 @@ class _StatBadge extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Stateful calendar button matching iOS MyProgramDetailView's addAllToCalendar.
+class _CalendarButton extends StatefulWidget {
+  final String programName;
+  final List<String> templateNames;
+
+  const _CalendarButton({
+    required this.programName,
+    required this.templateNames,
+  });
+
+  @override
+  State<_CalendarButton> createState() => _CalendarButtonState();
+}
+
+class _CalendarButtonState extends State<_CalendarButton> {
+  bool _addedToCalendar = false;
+
+  Future<void> _addAllToCalendar() async {
+    final now = DateTime.now();
+    final tomorrow = DateTime(now.year, now.month, now.day + 1);
+
+    for (var i = 0; i < widget.templateNames.length; i++) {
+      final startDate = tomorrow.add(Duration(days: i));
+      final endDate = startDate.add(const Duration(hours: 1));
+
+      final event = cal.Event(
+        title: '${widget.programName} - ${widget.templateNames[i]}',
+        startDate: startDate,
+        endDate: endDate,
+        location: 'ZIRO.FIT',
+      );
+
+      try {
+        await cal.Add2Calendar.addEvent2Cal(event);
+      } catch (_) {
+        // Calendar integration failure is non-blocking (matching iOS behavior).
+      }
+    }
+
+    if (mounted) {
+      setState(() => _addedToCalendar = true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.templateNames.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: _addedToCalendar ? null : _addAllToCalendar,
+          icon: Icon(
+            _addedToCalendar
+                ? Icons.check_circle_rounded
+                : Icons.calendar_month_rounded,
+            size: 20,
+          ),
+          label: Text(
+            _addedToCalendar ? 'Added to Calendar' : 'Add All to Calendar',
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor:
+                _addedToCalendar ? const Color(0xFF22C55E) : AppColors.primary,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            textStyle: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
