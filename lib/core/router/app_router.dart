@@ -13,6 +13,7 @@ import '../../features/explore/presentation/event_detail_screen.dart';
 import '../../features/explore/presentation/explore_screen.dart';
 import '../../features/explore/presentation/trainer_discovery_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
+import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/trainers/presentation/completed_session_detail_screen.dart';
 import '../../features/trainers/presentation/trainer_detail_screen.dart';
@@ -263,7 +264,7 @@ GoRouter createAppRouter(AuthCubit authCubit) {
         path: '/home/notifications',
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
-          child: const _PlaceholderScreen(title: 'Notifications'),
+          child: const NotificationsScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return SlideTransition(
               position: Tween<Offset>(

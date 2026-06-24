@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/cubit/auth_cubit.dart';
 import '../../../auth/cubit/auth_state.dart';
+import '../../../notifications/cubit/notifications_cubit.dart';
 
 /// Floating header that sits above the home scroll content.
 ///
@@ -18,6 +19,7 @@ class ZiroHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthCubit>().state;
+    final unreadCount = context.watch<NotificationsCubit>().unreadCount;
     final userName = switch (authState) {
       AuthAuthenticated(:final user) => user.name ?? 'Athlete',
       _ => 'Home',
@@ -86,19 +88,20 @@ class ZiroHeader extends StatelessWidget {
                         size: 22,
                         color: AppColors.foreground,
                       ),
-                      // Red dot badge (static indicator for now)
-                      Positioned(
-                        top: -2,
-                        right: -2,
-                        child: Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.redAccent,
+                      // Red dot badge (shown when unread notifications exist)
+                      if (unreadCount > 0)
+                        Positioned(
+                          top: -2,
+                          right: -2,
+                          child: Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.redAccent,
+                            ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                 ),

@@ -13,7 +13,7 @@ See the **Current Codebase State** section below for detailed per-feature invent
 
 This instruction file (`AGENTS.md`) is auto-loaded via `opencode.json` — agents do **not** need to be told to read it.
 
-## Current Codebase State (2026-06-23)
+## Current Codebase State (2026-06-24)
 
 ### Feature Inventory
 
@@ -58,6 +58,18 @@ This instruction file (`AGENTS.md`) is auto-loaded via `opencode.json` — agent
 | Widgets (11) | `ZiroHeader`, `CoachCard`, `CreditStatusWidget`, `NeedCoachBanner`, `CheckInBanner`, `NoRoutinePlaceholder`, `ActiveProgramWidget`, `InvitationHeroCard`, `StreakMotivationCard`, `UpcomingSessionsCarousel`, `QuickActionsRow`, `RecentHistorySection`, `DailyTargetsSection` |
 | Models (7) | `ClientDashboardResponse`, `ClientProfileData`, `ClientDashboardTrainer`, `ClientRecentSession`, `ClientDashboardSession`, `ActiveProgramResponse` (+ `ProgramBasicInfo`, `ProgramProgress`, `ProgramTemplateStatus`), `DashboardMeasurement` |
 
+#### Notifications (`lib/features/notifications/`) — ✅ Fully Implemented
+| Layer | Files |
+|---|---|
+| Cubit | `NotificationsCubit` with sealed `NotificationsState` (initial, loading, loaded, error) — optimistic mark-as-read with rollback, accept/decline link requests |
+| API Service | `NotificationApiService` — `GET /api/notifications`, `PUT /api/notifications/:id`, `PUT /api/notifications/read-all`, `POST /api/notifications/:id/accept`, `POST /api/notifications/:id/decline` |
+| Repository | `NotificationRepository` — wraps API service, sorts by date descending |
+| Screen | `NotificationsScreen` — full-screen list with ZiroSheetHeader overlay, pull-to-refresh, loading/empty/error states |
+| Widgets (3) | `NotificationRow` (40×40 icon circle, 15pt message, 11pt date, unread dot, cross-mode badges, Accept/Decline buttons), `ZiroSheetHeader` (drag handle, centered title, Cancel/Done buttons), `_EmptyState` |
+| Models | `NotificationDto` (freezed — `id`, `userId`, `senderId?`, `message`, `type`, `readStatus`, `createdAt`, `targetRole?`, `metadata?`, `syncStatus`) |
+| Integration | `ZiroHeader` bell badge driven by `NotificationsCubit.unreadCount` (dynamic red dot, not static), registered in app-level `MultiBlocProvider`, auto-fetches on startup |
+| Docs | `docs/notifications-feature.md` — full iOS replication reference, design tokens, API contracts, spacing specs |
+
 #### Profile (`lib/features/profile/`) — 🟡 Minimal Implementation
 | Layer | Files |
 |---|---|
@@ -78,7 +90,7 @@ This instruction file (`AGENTS.md`) is auto-loaded via `opencode.json` — agent
 | **Router** | `app_router.dart` — GoRouter v17.3.0 with `ShellRoute` (4 tabs), full-screen sub-routes for detail/discovery/map, auth redirect guard, Stripe deep link handling | ✅ |
 | **Routing tables** | Auth: `/login`, `/register`, `/verify-email`, `/onboarding` | ✅ |
 | | Shell (bottom nav): `/` (Home), `/workout` (Session), `/explore`, `/profile` | ✅ |
-| | Full-screen: `/trainer/:username`, `/explore/discovery`, `/explore/map`, `/explore/event/:id`, `/workout/history`, `/workout/history/:id` | ✅ |
+| | Full-screen: `/trainer/:username`, `/explore/discovery`, `/explore/map`, `/explore/event/:id`, `/workout/history`, `/workout/history/:id`, `/home/notifications` | ✅ |
 | | Deep links: `/stripe-return`, `/packages/:id/success`, `/packages/:id/cancel` | ✅ |
 | **DI** | `get_it` + `injectable` — `initDependencies()` in main, auto-generated `injection.config.dart` | ✅ |
 | **Networking** | `Dio` with `ApiLoggerInterceptor` (structured logging) + `AuthInterceptor` (JWT auto-refresh on 401) | ✅ |
@@ -137,6 +149,8 @@ Key reference files:
 - Explore tab (trainer cards): `Ziro Fit/Views/ZiroMe/TrainerDiscoveryView.swift` — `TrainerDiscoveryCard`, `ExploreTrainerCard`
 - Workout session: `Ziro Fit/Views/Common/WorkoutSessionView.swift` — timer, exercise list, set logging, rest timer, controls
 - Home tab: `Ziro Fit/Views/ZiroMe/PersonalHomeView.swift`
+- Notifications: `Ziro Fit/Views/Common/NotificationsView.swift` — `NotificationRow`, `NotificationsViewModel`, `NotificationModel`
+- Sheet header: `Ziro Fit/Views/Components/ZiroSheetHeader.swift` — reusable modal header
 
 ## NO PLACEHOLDERS — Full API Integration (STRICT RULE)
 

@@ -36,6 +36,12 @@ import 'package:ziro_fit/features/explore/data/explore_repository.dart'
 import 'package:ziro_fit/features/home/cubit/home_cubit.dart' as _i13;
 import 'package:ziro_fit/features/home/data/home_api_service.dart' as _i267;
 import 'package:ziro_fit/features/home/data/home_repository.dart' as _i516;
+import 'package:ziro_fit/features/notifications/cubit/notifications_cubit.dart'
+    as _i861;
+import 'package:ziro_fit/features/notifications/data/api/notification_api_service.dart'
+    as _i781;
+import 'package:ziro_fit/features/notifications/data/repositories/notification_repository.dart'
+    as _i329;
 import 'package:ziro_fit/features/sync/cubit/sync_cubit.dart' as _i796;
 import 'package:ziro_fit/features/sync/data/sync_api_service.dart' as _i93;
 import 'package:ziro_fit/features/sync/data/sync_repository.dart' as _i813;
@@ -92,6 +98,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i267.HomeApiService>(
       () => _i267.HomeApiService(gh<_i361.Dio>()),
     );
+    gh.factory<_i781.NotificationApiService>(
+      () => _i781.NotificationApiService(gh<_i361.Dio>()),
+    );
     gh.factory<_i93.SyncApiService>(() => _i93.SyncApiService(gh<_i361.Dio>()));
     gh.factory<_i680.TrainerApiService>(
       () => _i680.TrainerApiService(gh<_i361.Dio>()),
@@ -108,6 +117,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i93.SyncApiService>(),
         gh<_i365.AppDatabase>(),
       ),
+    );
+    gh.singleton<_i329.NotificationRepository>(
+      () => _i329.NotificationRepository(gh<_i781.NotificationApiService>()),
+    );
+    gh.factory<_i861.NotificationsCubit>(
+      () => _i861.NotificationsCubit(gh<_i329.NotificationRepository>()),
     );
     gh.singleton<_i516.HomeRepository>(
       () => _i516.HomeRepository(gh<_i267.HomeApiService>()),

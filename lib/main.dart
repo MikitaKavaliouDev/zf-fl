@@ -10,6 +10,7 @@ import 'features/auth/cubit/auth_cubit.dart';
 import 'features/explore/cubit/explore_cubit.dart';
 import 'features/explore/cubit/trainer_discovery_cubit.dart';
 import 'features/home/cubit/home_cubit.dart';
+import 'features/notifications/cubit/notifications_cubit.dart';
 import 'features/trainers/cubit/trainer_list_cubit.dart';
 import 'features/trainers/cubit/workout_session_cubit.dart';
 
@@ -39,6 +40,7 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
   late final WorkoutSessionCubit _workoutSessionCubit;
   late final ExploreCubit _exploreCubit;
   late final TrainerDiscoveryCubit _trainerDiscoveryCubit;
+  late final NotificationsCubit _notificationsCubit;
   late final GoRouter _router;
 
   @override
@@ -50,10 +52,12 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
     _workoutSessionCubit = di.getIt<WorkoutSessionCubit>();
     _exploreCubit = di.getIt<ExploreCubit>();
     _trainerDiscoveryCubit = di.getIt<TrainerDiscoveryCubit>();
+    _notificationsCubit = di.getIt<NotificationsCubit>();
     _router = createAppRouter(_authCubit);
     // Check auth status on first frame.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _authCubit.checkAuthStatus();
+      _notificationsCubit.fetchNotifications();
     });
   }
 
@@ -65,6 +69,7 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
     _workoutSessionCubit.close();
     _exploreCubit.close();
     _trainerDiscoveryCubit.close();
+    _notificationsCubit.close();
     super.dispose();
   }
 
@@ -78,6 +83,7 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
         BlocProvider.value(value: _workoutSessionCubit),
         BlocProvider.value(value: _exploreCubit),
         BlocProvider.value(value: _trainerDiscoveryCubit),
+        BlocProvider.value(value: _notificationsCubit),
       ],
       child: MaterialApp.router(
         title: 'ZIRO.FIT',
