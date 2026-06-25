@@ -25,7 +25,7 @@ class TrainerSpotlightHeroCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: GestureDetector(
         onTap: trainer!.username != null
-            ? () => context.go('/trainer/${trainer!.username}')
+            ? () => context.push('/trainer/${trainer!.username}')
             : null,
         child: Container(
           width: double.infinity,
@@ -194,3 +194,4 @@ class TrainerSpotlightHeroCard extends StatelessWidget {
     );
   }
 }
+      

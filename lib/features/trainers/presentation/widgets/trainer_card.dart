@@ -42,7 +42,7 @@ class TrainerCard extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: GestureDetector(
         onTap: trainer.username != null
-            ? () => context.go('/trainer/${trainer.username}')
+            ? () => context.push('/trainer/${trainer.username}')
             : null,
         child: Container(
           decoration: BoxDecoration(
@@ -134,8 +134,8 @@ class TrainerCard extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                fontSize: 12,
-                                color: AppColors.mutedText,
+                                  fontSize: 12,
+                                  color: AppColors.mutedText,
                               ),
                             ),
                           ),
@@ -255,3 +255,4 @@ class _Placeholder extends StatelessWidget {
     );
   }
 }
+      

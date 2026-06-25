@@ -16,7 +16,7 @@ class CoachCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.go('/trainer/${trainer.username}'),
+      onTap: () => context.push('/trainer/${trainer.username}'),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
@@ -81,3 +81,4 @@ class CoachCard extends StatelessWidget {
     );
   }
 }
+      

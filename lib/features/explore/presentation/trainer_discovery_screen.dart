@@ -212,7 +212,7 @@ class _TrainerDiscoveryScreenState extends State<TrainerDiscoveryScreen> {
           return _TrainerDiscoveryCard(
             trainer: trainer,
             onTap: trainer.username != null
-                ? () => context.go('/trainer/${trainer.username}')
+                ? () => context.push('/trainer/${trainer.username}')
                 : null,
           );
         },
@@ -913,3 +913,4 @@ class _EmptyState extends StatelessWidget {
     );
   }
 }
+      
