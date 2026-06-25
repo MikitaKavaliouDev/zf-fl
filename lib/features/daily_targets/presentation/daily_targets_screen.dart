@@ -52,7 +52,10 @@ class _DailyTargetsScreenState extends State<DailyTargetsScreen> {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_rounded,
                 color: AppColors.foreground),
-            onPressed: () => context.pop(),
+            onPressed: () {
+              final router = GoRouter.of(context);
+              if (router.canPop()) router.pop();
+            },
           ),
           title: const Text(
             'Daily Targets',

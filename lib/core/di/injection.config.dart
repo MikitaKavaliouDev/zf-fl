@@ -91,6 +91,10 @@ import 'package:ziro_fit/features/trainers/cubit/workout_history_cubit.dart'
     as _i195;
 import 'package:ziro_fit/features/trainers/cubit/workout_session_cubit.dart'
     as _i871;
+import 'package:ziro_fit/features/trainers/data/booking_api_service.dart'
+    as _i637;
+import 'package:ziro_fit/features/trainers/data/booking_repository.dart'
+    as _i549;
 import 'package:ziro_fit/features/trainers/data/trainer_api_service.dart'
     as _i680;
 import 'package:ziro_fit/features/trainers/data/trainer_repository.dart'
@@ -170,6 +174,9 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i796.SharingApiService(gh<_i361.Dio>()),
     );
     gh.factory<_i93.SyncApiService>(() => _i93.SyncApiService(gh<_i361.Dio>()));
+    gh.factory<_i637.BookingApiService>(
+      () => _i637.BookingApiService(gh<_i361.Dio>()),
+    );
     gh.factory<_i680.TrainerApiService>(
       () => _i680.TrainerApiService(gh<_i361.Dio>()),
     );
@@ -188,6 +195,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.singleton<_i459.WorkoutSessionRepository>(
       () =>
           _i459.WorkoutSessionRepository(gh<_i662.WorkoutSessionApiService>()),
+    );
+    gh.singleton<_i549.BookingRepository>(
+      () => _i549.BookingRepository(gh<_i637.BookingApiService>()),
     );
     gh.singleton<_i813.SyncRepository>(
       () => _i813.SyncRepository(

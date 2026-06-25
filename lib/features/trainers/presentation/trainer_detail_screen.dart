@@ -206,13 +206,17 @@ class _ProfileContent extends StatelessWidget {
                       return const SizedBox.shrink();
                     }
                     return ScheduleSection(
+                      trainerId: trainer.id,
+                      trainerName: name,
                       schedule: state.schedule,
                       isLoading: state.isLoadingSchedule,
-                      onDaySelected: () {
+                      onLoadSchedule: () {
                         if (state.schedule == null && !state.isLoadingSchedule) {
                           cubit.loadSchedule(username);
                         }
                       },
+                      onBookingSuccess: () =>
+                          context.read<TrainerDetailCubit>().refresh(username),
                     );
                   },
                 ),
@@ -231,7 +235,14 @@ class _ProfileContent extends StatelessWidget {
               children: [
                 // Dismiss button
                 GestureDetector(
-                  onTap: () => context.pop(),
+                  onTap: () {
+                    final router = GoRouter.of(context);
+                    if (router.canPop()) {
+                      router.pop();
+                    } else {
+                      context.go('/explore');
+                    }
+                  },
                   child: Container(
                     width: 36,
                     height: 36,
@@ -705,3 +716,4 @@ class _ReviewsSection extends StatelessWidget {
     );
   }
 }
+      

@@ -1,0 +1,12 @@
+# Add patterns to ignore here, one per line
+# Example:
+# *.log
+# tmp/
+android/build/reports/problems/problems-report.html
+pubspec.lock
+lib/features/home/data/models/program_library_response.freezed.dart
+lib/core/database/app_database.g.dart
+lib/features/trainers/data/models/trainer_list_item_dto.freezed.dart
+*.freezed.dart
+*.md
+ios/Runner.xcodeproj/project.pbxproj
