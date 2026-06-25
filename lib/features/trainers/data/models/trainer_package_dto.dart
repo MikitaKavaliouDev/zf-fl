@@ -10,7 +10,9 @@ abstract class TrainerPackageDto with _$TrainerPackageDto {
     required String name,
     String? description,
     required String price,
+    String? currency,
     required int numberOfSessions,
+    @Default(false) bool isActive,
   }) = _TrainerPackageDto;
 
   factory TrainerPackageDto.fromJson(Map<String, dynamic> json) =>

@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TrainerPackageDto {
 
- String get id; String get name; String? get description; String get price; int get numberOfSessions;
+ String get id; String get name; String? get description; String get price; String? get currency; int get numberOfSessions; bool get isActive;
 /// Create a copy of TrainerPackageDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $TrainerPackageDtoCopyWith<TrainerPackageDto> get copyWith => _$TrainerPackageDt
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TrainerPackageDto&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.price, price) || other.price == price)&&(identical(other.numberOfSessions, numberOfSessions) || other.numberOfSessions == numberOfSessions));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TrainerPackageDto&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.price, price) || other.price == price)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.numberOfSessions, numberOfSessions) || other.numberOfSessions == numberOfSessions)&&(identical(other.isActive, isActive) || other.isActive == isActive));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,description,price,numberOfSessions);
+int get hashCode => Object.hash(runtimeType,id,name,description,price,currency,numberOfSessions,isActive);
 
 @override
 String toString() {
-  return 'TrainerPackageDto(id: $id, name: $name, description: $description, price: $price, numberOfSessions: $numberOfSessions)';
+  return 'TrainerPackageDto(id: $id, name: $name, description: $description, price: $price, currency: $currency, numberOfSessions: $numberOfSessions, isActive: $isActive)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $TrainerPackageDtoCopyWith<$Res>  {
   factory $TrainerPackageDtoCopyWith(TrainerPackageDto value, $Res Function(TrainerPackageDto) _then) = _$TrainerPackageDtoCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String? description, String price, int numberOfSessions
+ String id, String name, String? description, String price, String? currency, int numberOfSessions, bool isActive
 });
 
 
@@ -65,14 +65,16 @@ class _$TrainerPackageDtoCopyWithImpl<$Res>
 
 /// Create a copy of TrainerPackageDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? description = freezed,Object? price = null,Object? numberOfSessions = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? description = freezed,Object? price = null,Object? currency = freezed,Object? numberOfSessions = null,Object? isActive = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,price: null == price ? _self.price : price // ignore: cast_nullable_to_non_nullable
-as String,numberOfSessions: null == numberOfSessions ? _self.numberOfSessions : numberOfSessions // ignore: cast_nullable_to_non_nullable
-as int,
+as String,currency: freezed == currency ? _self.currency : currency // ignore: cast_nullable_to_non_nullable
+as String?,numberOfSessions: null == numberOfSessions ? _self.numberOfSessions : numberOfSessions // ignore: cast_nullable_to_non_nullable
+as int,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -157,10 +159,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String? description,  String price,  int numberOfSessions)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String? description,  String price,  String? currency,  int numberOfSessions,  bool isActive)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TrainerPackageDto() when $default != null:
-return $default(_that.id,_that.name,_that.description,_that.price,_that.numberOfSessions);case _:
+return $default(_that.id,_that.name,_that.description,_that.price,_that.currency,_that.numberOfSessions,_that.isActive);case _:
   return orElse();
 
 }
@@ -178,10 +180,10 @@ return $default(_that.id,_that.name,_that.description,_that.price,_that.numberOf
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String? description,  String price,  int numberOfSessions)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String? description,  String price,  String? currency,  int numberOfSessions,  bool isActive)  $default,) {final _that = this;
 switch (_that) {
 case _TrainerPackageDto():
-return $default(_that.id,_that.name,_that.description,_that.price,_that.numberOfSessions);case _:
+return $default(_that.id,_that.name,_that.description,_that.price,_that.currency,_that.numberOfSessions,_that.isActive);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -198,10 +200,10 @@ return $default(_that.id,_that.name,_that.description,_that.price,_that.numberOf
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String? description,  String price,  int numberOfSessions)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String? description,  String price,  String? currency,  int numberOfSessions,  bool isActive)?  $default,) {final _that = this;
 switch (_that) {
 case _TrainerPackageDto() when $default != null:
-return $default(_that.id,_that.name,_that.description,_that.price,_that.numberOfSessions);case _:
+return $default(_that.id,_that.name,_that.description,_that.price,_that.currency,_that.numberOfSessions,_that.isActive);case _:
   return null;
 
 }
@@ -213,14 +215,16 @@ return $default(_that.id,_that.name,_that.description,_that.price,_that.numberOf
 @JsonSerializable()
 
 class _TrainerPackageDto implements TrainerPackageDto {
-  const _TrainerPackageDto({required this.id, required this.name, this.description, required this.price, required this.numberOfSessions});
+  const _TrainerPackageDto({required this.id, required this.name, this.description, required this.price, this.currency, required this.numberOfSessions, this.isActive = false});
   factory _TrainerPackageDto.fromJson(Map<String, dynamic> json) => _$TrainerPackageDtoFromJson(json);
 
 @override final  String id;
 @override final  String name;
 @override final  String? description;
 @override final  String price;
+@override final  String? currency;
 @override final  int numberOfSessions;
+@override@JsonKey() final  bool isActive;
 
 /// Create a copy of TrainerPackageDto
 /// with the given fields replaced by the non-null parameter values.
@@ -235,16 +239,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TrainerPackageDto&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.price, price) || other.price == price)&&(identical(other.numberOfSessions, numberOfSessions) || other.numberOfSessions == numberOfSessions));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TrainerPackageDto&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.price, price) || other.price == price)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.numberOfSessions, numberOfSessions) || other.numberOfSessions == numberOfSessions)&&(identical(other.isActive, isActive) || other.isActive == isActive));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,description,price,numberOfSessions);
+int get hashCode => Object.hash(runtimeType,id,name,description,price,currency,numberOfSessions,isActive);
 
 @override
 String toString() {
-  return 'TrainerPackageDto(id: $id, name: $name, description: $description, price: $price, numberOfSessions: $numberOfSessions)';
+  return 'TrainerPackageDto(id: $id, name: $name, description: $description, price: $price, currency: $currency, numberOfSessions: $numberOfSessions, isActive: $isActive)';
 }
 
 
@@ -255,7 +259,7 @@ abstract mixin class _$TrainerPackageDtoCopyWith<$Res> implements $TrainerPackag
   factory _$TrainerPackageDtoCopyWith(_TrainerPackageDto value, $Res Function(_TrainerPackageDto) _then) = __$TrainerPackageDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String? description, String price, int numberOfSessions
+ String id, String name, String? description, String price, String? currency, int numberOfSessions, bool isActive
 });
 
 
@@ -272,14 +276,16 @@ class __$TrainerPackageDtoCopyWithImpl<$Res>
 
 /// Create a copy of TrainerPackageDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? description = freezed,Object? price = null,Object? numberOfSessions = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? description = freezed,Object? price = null,Object? currency = freezed,Object? numberOfSessions = null,Object? isActive = null,}) {
   return _then(_TrainerPackageDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,price: null == price ? _self.price : price // ignore: cast_nullable_to_non_nullable
-as String,numberOfSessions: null == numberOfSessions ? _self.numberOfSessions : numberOfSessions // ignore: cast_nullable_to_non_nullable
-as int,
+as String,currency: freezed == currency ? _self.currency : currency // ignore: cast_nullable_to_non_nullable
+as String?,numberOfSessions: null == numberOfSessions ? _self.numberOfSessions : numberOfSessions // ignore: cast_nullable_to_non_nullable
+as int,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

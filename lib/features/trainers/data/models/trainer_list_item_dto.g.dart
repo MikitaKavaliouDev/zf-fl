@@ -16,7 +16,11 @@ _TrainerProfileSummary _$TrainerProfileSummaryFromJson(
   locations: (json['locations'] as List<dynamic>?)
       ?.map((e) => TrainerLocation.fromJson(e as Map<String, dynamic>))
       .toList(),
-  services: json['services'] as List<dynamic>? ?? const <dynamic>[],
+  services:
+      (json['services'] as List<dynamic>?)
+          ?.map((e) => TrainerServiceDto.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <TrainerServiceDto>[],
   averageRating: (json['averageRating'] as num?)?.toDouble(),
   businessCurrency: json['businessCurrency'] as String?,
   name: json['name'] as String?,

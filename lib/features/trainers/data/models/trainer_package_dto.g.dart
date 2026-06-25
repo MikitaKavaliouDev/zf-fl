@@ -12,7 +12,9 @@ _TrainerPackageDto _$TrainerPackageDtoFromJson(Map<String, dynamic> json) =>
       name: json['name'] as String,
       description: json['description'] as String?,
       price: json['price'] as String,
+      currency: json['currency'] as String?,
       numberOfSessions: (json['numberOfSessions'] as num).toInt(),
+      isActive: json['isActive'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$TrainerPackageDtoToJson(_TrainerPackageDto instance) =>
@@ -21,5 +23,7 @@ Map<String, dynamic> _$TrainerPackageDtoToJson(_TrainerPackageDto instance) =>
       'name': instance.name,
       'description': instance.description,
       'price': instance.price,
+      'currency': instance.currency,
       'numberOfSessions': instance.numberOfSessions,
+      'isActive': instance.isActive,
     };

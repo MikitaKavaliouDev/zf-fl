@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'trainer_location.dart';
+import 'trainer_service_dto.dart';
 
 part 'trainer_list_item_dto.freezed.dart';
 part 'trainer_list_item_dto.g.dart';
@@ -21,7 +22,7 @@ abstract class TrainerProfileSummary with _$TrainerProfileSummary {
     String? profilePhotoPath,
     @JsonKey(fromJson: _parseStringList) @Default(<String>[]) List<String> certifications,
     List<TrainerLocation>? locations,
-    @Default(<dynamic>[]) List<dynamic> services,
+    @Default(<TrainerServiceDto>[]) List<TrainerServiceDto> services,
     double? averageRating,
     String? businessCurrency,
     String? name,

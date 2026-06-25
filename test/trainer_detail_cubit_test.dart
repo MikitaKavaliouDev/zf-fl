@@ -36,8 +36,6 @@ void main() {
                   username: 'testuser',
                   name: 'Test Trainer',
                 ));
-        when(() => repository.getTrainerPackages('testuser'))
-            .thenAnswer((_) async => []);
         return cubit;
       },
       act: (cubit) => cubit.load('testuser'),

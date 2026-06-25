@@ -125,12 +125,12 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( TrainerDetailDto trainer,  List<TrainerPackageDto> packages)?  loaded,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( TrainerDetailDto trainer,  TrainerScheduleDto? schedule,  bool isLoadingSchedule,  List<TrainerPreviewMediaDto> previewMedia,  bool isLinking,  bool isUnlinking,  bool linkRequestPending,  String? linkError)?  loaded,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case TrainerDetailInitial() when initial != null:
 return initial();case TrainerDetailLoading() when loading != null:
 return loading();case TrainerDetailLoaded() when loaded != null:
-return loaded(_that.trainer,_that.packages);case TrainerDetailError() when error != null:
+return loaded(_that.trainer,_that.schedule,_that.isLoadingSchedule,_that.previewMedia,_that.isLinking,_that.isUnlinking,_that.linkRequestPending,_that.linkError);case TrainerDetailError() when error != null:
 return error(_that.message);case _:
   return orElse();
 
@@ -149,12 +149,12 @@ return error(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( TrainerDetailDto trainer,  List<TrainerPackageDto> packages)  loaded,required TResult Function( String message)  error,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( TrainerDetailDto trainer,  TrainerScheduleDto? schedule,  bool isLoadingSchedule,  List<TrainerPreviewMediaDto> previewMedia,  bool isLinking,  bool isUnlinking,  bool linkRequestPending,  String? linkError)  loaded,required TResult Function( String message)  error,}) {final _that = this;
 switch (_that) {
 case TrainerDetailInitial():
 return initial();case TrainerDetailLoading():
 return loading();case TrainerDetailLoaded():
-return loaded(_that.trainer,_that.packages);case TrainerDetailError():
+return loaded(_that.trainer,_that.schedule,_that.isLoadingSchedule,_that.previewMedia,_that.isLinking,_that.isUnlinking,_that.linkRequestPending,_that.linkError);case TrainerDetailError():
 return error(_that.message);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -169,12 +169,12 @@ return error(_that.message);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( TrainerDetailDto trainer,  List<TrainerPackageDto> packages)?  loaded,TResult? Function( String message)?  error,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( TrainerDetailDto trainer,  TrainerScheduleDto? schedule,  bool isLoadingSchedule,  List<TrainerPreviewMediaDto> previewMedia,  bool isLinking,  bool isUnlinking,  bool linkRequestPending,  String? linkError)?  loaded,TResult? Function( String message)?  error,}) {final _that = this;
 switch (_that) {
 case TrainerDetailInitial() when initial != null:
 return initial();case TrainerDetailLoading() when loading != null:
 return loading();case TrainerDetailLoaded() when loaded != null:
-return loaded(_that.trainer,_that.packages);case TrainerDetailError() when error != null:
+return loaded(_that.trainer,_that.schedule,_that.isLoadingSchedule,_that.previewMedia,_that.isLinking,_that.isUnlinking,_that.linkRequestPending,_that.linkError);case TrainerDetailError() when error != null:
 return error(_that.message);case _:
   return null;
 
@@ -251,17 +251,23 @@ String toString() {
 
 
 class TrainerDetailLoaded implements TrainerDetailState {
-  const TrainerDetailLoaded({required this.trainer, final  List<TrainerPackageDto> packages = const <TrainerPackageDto>[]}): _packages = packages;
+  const TrainerDetailLoaded({required this.trainer, this.schedule, this.isLoadingSchedule = false, final  List<TrainerPreviewMediaDto> previewMedia = const <TrainerPreviewMediaDto>[], this.isLinking = false, this.isUnlinking = false, this.linkRequestPending = false, this.linkError}): _previewMedia = previewMedia;
   
 
  final  TrainerDetailDto trainer;
- final  List<TrainerPackageDto> _packages;
-@JsonKey() List<TrainerPackageDto> get packages {
-  if (_packages is EqualUnmodifiableListView) return _packages;
+ final  TrainerScheduleDto? schedule;
+@JsonKey() final  bool isLoadingSchedule;
+ final  List<TrainerPreviewMediaDto> _previewMedia;
+@JsonKey() List<TrainerPreviewMediaDto> get previewMedia {
+  if (_previewMedia is EqualUnmodifiableListView) return _previewMedia;
   // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_packages);
+  return EqualUnmodifiableListView(_previewMedia);
 }
 
+@JsonKey() final  bool isLinking;
+@JsonKey() final  bool isUnlinking;
+@JsonKey() final  bool linkRequestPending;
+ final  String? linkError;
 
 /// Create a copy of TrainerDetailState
 /// with the given fields replaced by the non-null parameter values.
@@ -273,16 +279,16 @@ $TrainerDetailLoadedCopyWith<TrainerDetailLoaded> get copyWith => _$TrainerDetai
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TrainerDetailLoaded&&(identical(other.trainer, trainer) || other.trainer == trainer)&&const DeepCollectionEquality().equals(other._packages, _packages));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TrainerDetailLoaded&&(identical(other.trainer, trainer) || other.trainer == trainer)&&(identical(other.schedule, schedule) || other.schedule == schedule)&&(identical(other.isLoadingSchedule, isLoadingSchedule) || other.isLoadingSchedule == isLoadingSchedule)&&const DeepCollectionEquality().equals(other._previewMedia, _previewMedia)&&(identical(other.isLinking, isLinking) || other.isLinking == isLinking)&&(identical(other.isUnlinking, isUnlinking) || other.isUnlinking == isUnlinking)&&(identical(other.linkRequestPending, linkRequestPending) || other.linkRequestPending == linkRequestPending)&&(identical(other.linkError, linkError) || other.linkError == linkError));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,trainer,const DeepCollectionEquality().hash(_packages));
+int get hashCode => Object.hash(runtimeType,trainer,schedule,isLoadingSchedule,const DeepCollectionEquality().hash(_previewMedia),isLinking,isUnlinking,linkRequestPending,linkError);
 
 @override
 String toString() {
-  return 'TrainerDetailState.loaded(trainer: $trainer, packages: $packages)';
+  return 'TrainerDetailState.loaded(trainer: $trainer, schedule: $schedule, isLoadingSchedule: $isLoadingSchedule, previewMedia: $previewMedia, isLinking: $isLinking, isUnlinking: $isUnlinking, linkRequestPending: $linkRequestPending, linkError: $linkError)';
 }
 
 
@@ -293,11 +299,11 @@ abstract mixin class $TrainerDetailLoadedCopyWith<$Res> implements $TrainerDetai
   factory $TrainerDetailLoadedCopyWith(TrainerDetailLoaded value, $Res Function(TrainerDetailLoaded) _then) = _$TrainerDetailLoadedCopyWithImpl;
 @useResult
 $Res call({
- TrainerDetailDto trainer, List<TrainerPackageDto> packages
+ TrainerDetailDto trainer, TrainerScheduleDto? schedule, bool isLoadingSchedule, List<TrainerPreviewMediaDto> previewMedia, bool isLinking, bool isUnlinking, bool linkRequestPending, String? linkError
 });
 
 
-$TrainerDetailDtoCopyWith<$Res> get trainer;
+$TrainerDetailDtoCopyWith<$Res> get trainer;$TrainerScheduleDtoCopyWith<$Res>? get schedule;
 
 }
 /// @nodoc
@@ -310,11 +316,17 @@ class _$TrainerDetailLoadedCopyWithImpl<$Res>
 
 /// Create a copy of TrainerDetailState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? trainer = null,Object? packages = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? trainer = null,Object? schedule = freezed,Object? isLoadingSchedule = null,Object? previewMedia = null,Object? isLinking = null,Object? isUnlinking = null,Object? linkRequestPending = null,Object? linkError = freezed,}) {
   return _then(TrainerDetailLoaded(
 trainer: null == trainer ? _self.trainer : trainer // ignore: cast_nullable_to_non_nullable
-as TrainerDetailDto,packages: null == packages ? _self._packages : packages // ignore: cast_nullable_to_non_nullable
-as List<TrainerPackageDto>,
+as TrainerDetailDto,schedule: freezed == schedule ? _self.schedule : schedule // ignore: cast_nullable_to_non_nullable
+as TrainerScheduleDto?,isLoadingSchedule: null == isLoadingSchedule ? _self.isLoadingSchedule : isLoadingSchedule // ignore: cast_nullable_to_non_nullable
+as bool,previewMedia: null == previewMedia ? _self._previewMedia : previewMedia // ignore: cast_nullable_to_non_nullable
+as List<TrainerPreviewMediaDto>,isLinking: null == isLinking ? _self.isLinking : isLinking // ignore: cast_nullable_to_non_nullable
+as bool,isUnlinking: null == isUnlinking ? _self.isUnlinking : isUnlinking // ignore: cast_nullable_to_non_nullable
+as bool,linkRequestPending: null == linkRequestPending ? _self.linkRequestPending : linkRequestPending // ignore: cast_nullable_to_non_nullable
+as bool,linkError: freezed == linkError ? _self.linkError : linkError // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -326,6 +338,18 @@ $TrainerDetailDtoCopyWith<$Res> get trainer {
   
   return $TrainerDetailDtoCopyWith<$Res>(_self.trainer, (value) {
     return _then(_self.copyWith(trainer: value));
+  });
+}/// Create a copy of TrainerDetailState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TrainerScheduleDtoCopyWith<$Res>? get schedule {
+    if (_self.schedule == null) {
+    return null;
+  }
+
+  return $TrainerScheduleDtoCopyWith<$Res>(_self.schedule!, (value) {
+    return _then(_self.copyWith(schedule: value));
   });
 }
 }
