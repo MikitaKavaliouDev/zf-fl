@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AnalyticsResponseDto {
 
- List<String> get heatmapDates; List<VolumeDataPoint> get volumeHistory; List<MuscleDataPoint> get muscleDistribution; List<PRDataPoint> get recentPRs; int get consistency;
+ List<String> get heatmapDates; List<VolumeDataPoint> get volumeHistory; List<MuscleDataPoint> get muscleDistribution; List<PRDataPoint> get recentPRs; double get consistency;
 /// Create a copy of AnalyticsResponseDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $AnalyticsResponseDtoCopyWith<$Res>  {
   factory $AnalyticsResponseDtoCopyWith(AnalyticsResponseDto value, $Res Function(AnalyticsResponseDto) _then) = _$AnalyticsResponseDtoCopyWithImpl;
 @useResult
 $Res call({
- List<String> heatmapDates, List<VolumeDataPoint> volumeHistory, List<MuscleDataPoint> muscleDistribution, List<PRDataPoint> recentPRs, int consistency
+ List<String> heatmapDates, List<VolumeDataPoint> volumeHistory, List<MuscleDataPoint> muscleDistribution, List<PRDataPoint> recentPRs, double consistency
 });
 
 
@@ -72,7 +72,7 @@ as List<String>,volumeHistory: null == volumeHistory ? _self.volumeHistory : vol
 as List<VolumeDataPoint>,muscleDistribution: null == muscleDistribution ? _self.muscleDistribution : muscleDistribution // ignore: cast_nullable_to_non_nullable
 as List<MuscleDataPoint>,recentPRs: null == recentPRs ? _self.recentPRs : recentPRs // ignore: cast_nullable_to_non_nullable
 as List<PRDataPoint>,consistency: null == consistency ? _self.consistency : consistency // ignore: cast_nullable_to_non_nullable
-as int,
+as double,
   ));
 }
 
@@ -157,7 +157,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<String> heatmapDates,  List<VolumeDataPoint> volumeHistory,  List<MuscleDataPoint> muscleDistribution,  List<PRDataPoint> recentPRs,  int consistency)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<String> heatmapDates,  List<VolumeDataPoint> volumeHistory,  List<MuscleDataPoint> muscleDistribution,  List<PRDataPoint> recentPRs,  double consistency)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AnalyticsResponseDto() when $default != null:
 return $default(_that.heatmapDates,_that.volumeHistory,_that.muscleDistribution,_that.recentPRs,_that.consistency);case _:
@@ -178,7 +178,7 @@ return $default(_that.heatmapDates,_that.volumeHistory,_that.muscleDistribution,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<String> heatmapDates,  List<VolumeDataPoint> volumeHistory,  List<MuscleDataPoint> muscleDistribution,  List<PRDataPoint> recentPRs,  int consistency)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<String> heatmapDates,  List<VolumeDataPoint> volumeHistory,  List<MuscleDataPoint> muscleDistribution,  List<PRDataPoint> recentPRs,  double consistency)  $default,) {final _that = this;
 switch (_that) {
 case _AnalyticsResponseDto():
 return $default(_that.heatmapDates,_that.volumeHistory,_that.muscleDistribution,_that.recentPRs,_that.consistency);case _:
@@ -198,7 +198,7 @@ return $default(_that.heatmapDates,_that.volumeHistory,_that.muscleDistribution,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<String> heatmapDates,  List<VolumeDataPoint> volumeHistory,  List<MuscleDataPoint> muscleDistribution,  List<PRDataPoint> recentPRs,  int consistency)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<String> heatmapDates,  List<VolumeDataPoint> volumeHistory,  List<MuscleDataPoint> muscleDistribution,  List<PRDataPoint> recentPRs,  double consistency)?  $default,) {final _that = this;
 switch (_that) {
 case _AnalyticsResponseDto() when $default != null:
 return $default(_that.heatmapDates,_that.volumeHistory,_that.muscleDistribution,_that.recentPRs,_that.consistency);case _:
@@ -213,7 +213,7 @@ return $default(_that.heatmapDates,_that.volumeHistory,_that.muscleDistribution,
 @JsonSerializable()
 
 class _AnalyticsResponseDto implements AnalyticsResponseDto {
-  const _AnalyticsResponseDto({final  List<String> heatmapDates = const <String>[], final  List<VolumeDataPoint> volumeHistory = const <VolumeDataPoint>[], final  List<MuscleDataPoint> muscleDistribution = const <MuscleDataPoint>[], final  List<PRDataPoint> recentPRs = const <PRDataPoint>[], this.consistency = 0}): _heatmapDates = heatmapDates,_volumeHistory = volumeHistory,_muscleDistribution = muscleDistribution,_recentPRs = recentPRs;
+  const _AnalyticsResponseDto({final  List<String> heatmapDates = const <String>[], final  List<VolumeDataPoint> volumeHistory = const <VolumeDataPoint>[], final  List<MuscleDataPoint> muscleDistribution = const <MuscleDataPoint>[], final  List<PRDataPoint> recentPRs = const <PRDataPoint>[], this.consistency = 0.0}): _heatmapDates = heatmapDates,_volumeHistory = volumeHistory,_muscleDistribution = muscleDistribution,_recentPRs = recentPRs;
   factory _AnalyticsResponseDto.fromJson(Map<String, dynamic> json) => _$AnalyticsResponseDtoFromJson(json);
 
  final  List<String> _heatmapDates;
@@ -244,7 +244,7 @@ class _AnalyticsResponseDto implements AnalyticsResponseDto {
   return EqualUnmodifiableListView(_recentPRs);
 }
 
-@override@JsonKey() final  int consistency;
+@override@JsonKey() final  double consistency;
 
 /// Create a copy of AnalyticsResponseDto
 /// with the given fields replaced by the non-null parameter values.
@@ -279,7 +279,7 @@ abstract mixin class _$AnalyticsResponseDtoCopyWith<$Res> implements $AnalyticsR
   factory _$AnalyticsResponseDtoCopyWith(_AnalyticsResponseDto value, $Res Function(_AnalyticsResponseDto) _then) = __$AnalyticsResponseDtoCopyWithImpl;
 @override @useResult
 $Res call({
- List<String> heatmapDates, List<VolumeDataPoint> volumeHistory, List<MuscleDataPoint> muscleDistribution, List<PRDataPoint> recentPRs, int consistency
+ List<String> heatmapDates, List<VolumeDataPoint> volumeHistory, List<MuscleDataPoint> muscleDistribution, List<PRDataPoint> recentPRs, double consistency
 });
 
 
@@ -303,7 +303,7 @@ as List<String>,volumeHistory: null == volumeHistory ? _self._volumeHistory : vo
 as List<VolumeDataPoint>,muscleDistribution: null == muscleDistribution ? _self._muscleDistribution : muscleDistribution // ignore: cast_nullable_to_non_nullable
 as List<MuscleDataPoint>,recentPRs: null == recentPRs ? _self._recentPRs : recentPRs // ignore: cast_nullable_to_non_nullable
 as List<PRDataPoint>,consistency: null == consistency ? _self.consistency : consistency // ignore: cast_nullable_to_non_nullable
-as int,
+as double,
   ));
 }
 

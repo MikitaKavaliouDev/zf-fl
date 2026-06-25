@@ -50,7 +50,6 @@ class PlateCalculator extends StatelessWidget {
   }
 
   const PlateCalculator._inline({
-    super.key,
     required this.targetWeight,
     this.barbellWeight = 20,
   }) : _mode = _PlateCalculatorMode.inline;

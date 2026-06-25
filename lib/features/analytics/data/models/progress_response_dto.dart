@@ -12,10 +12,24 @@ abstract class ProgressResponseDto with _$ProgressResponseDto {
     @Default(<ExercisePerformanceDto>[])
     List<ExercisePerformanceDto> exercisePerformance,
     @Default(<FavoriteExerciseDto>[]) List<FavoriteExerciseDto> favoriteExercises,
+    @Default(<WorstPerformingExerciseDto>[])
+    List<WorstPerformingExerciseDto> worstPerformingExercises,
   }) = _ProgressResponseDto;
 
   factory ProgressResponseDto.fromJson(Map<String, dynamic> json) =>
       _$ProgressResponseDtoFromJson(json);
+}
+
+@freezed
+abstract class WorstPerformingExerciseDto with _$WorstPerformingExerciseDto {
+  const factory WorstPerformingExerciseDto({
+    required String exerciseId,
+    required String exerciseName,
+    @Default('') String issue,
+  }) = _WorstPerformingExerciseDto;
+
+  factory WorstPerformingExerciseDto.fromJson(Map<String, dynamic> json) =>
+      _$WorstPerformingExerciseDtoFromJson(json);
 }
 
 @freezed

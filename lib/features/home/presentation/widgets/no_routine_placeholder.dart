@@ -67,7 +67,7 @@ class NoRoutinePlaceholder extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: _ActionButton(
-                  onTap: () => context.go('/home/templates-library'),
+                  onTap: () => context.push('/home/templates-library'),
                   label: 'Templates',
                   icon: Icons.grid_view_rounded,
                   color: const Color(0xFF8B5CF6),
@@ -124,3 +124,4 @@ class _ActionButton extends StatelessWidget {
     );
   }
 }
+      

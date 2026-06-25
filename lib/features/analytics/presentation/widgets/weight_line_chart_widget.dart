@@ -47,14 +47,14 @@ class WeightLineChartWidget extends StatelessWidget {
               spots: spots,
               isCurved: true,
               preventCurveOverShooting: true,
-              color: AppColors.primary,
+              color: const Color(0xFF7B2FBE),
               barWidth: 2.5,
               dotData: FlDotData(
                 show: data.length <= 20,
                 getDotPainter: (spot, percent, barData, index) {
                   return FlDotCirclePainter(
                     radius: 3,
-                    color: AppColors.primary,
+                    color: const Color(0xFF7B2FBE),
                     strokeWidth: 0,
                   );
                 },
@@ -65,8 +65,8 @@ class WeightLineChartWidget extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    AppColors.primary.withValues(alpha: 0.3),
-                    AppColors.primary.withValues(alpha: 0.05),
+                    const Color(0xFF7B2FBE).withValues(alpha: 0.3),
+                    const Color(0xFF7B2FBE).withValues(alpha: 0.05),
                   ],
                 ),
               ),

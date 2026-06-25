@@ -66,13 +66,14 @@ class _RoutineBuilderScreenState extends State<RoutineBuilderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
           // Main scrollable content with reorderable list
           Padding(
-            padding: const EdgeInsets.only(top: 60),
+            padding: EdgeInsets.only(top: topPadding + 80),
             child: SingleChildScrollView(
               padding: const EdgeInsets.only(bottom: 120),
               child: Column(
@@ -130,7 +131,14 @@ class _RoutineBuilderScreenState extends State<RoutineBuilderScreen> {
                   : 'New Routine',
               showCancel: true,
               showDone: true,
-              onCancel: () => Navigator.of(context).maybePop(),
+              onCancel: () {
+                final router = GoRouter.of(context);
+                if (router.canPop()) {
+                  router.pop();
+                } else {
+                  context.go('/');
+                }
+              },
               onDone: _save,
               leadingText: 'Cancel',
               trailingText: 'Save',
@@ -492,3 +500,4 @@ class _RoutineBuilderScreenState extends State<RoutineBuilderScreen> {
 extension on String {
   String? get nullIfEmpty => isEmpty ? null : this;
 }
+      

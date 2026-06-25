@@ -45,13 +45,14 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
 
   @override
   Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
           // Main content
           Padding(
-            padding: const EdgeInsets.only(top: 60),
+            padding: EdgeInsets.only(top: topPadding + 80),
             child: Column(
               children: [
                 // Header fields
@@ -437,3 +438,4 @@ class _TemplateExerciseEntry {
 extension on String {
   String? get nullIfEmpty => isEmpty ? null : this;
 }
+      

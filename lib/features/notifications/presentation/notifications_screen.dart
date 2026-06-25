@@ -92,13 +92,14 @@ class _NotificationList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<NotificationsCubit>();
+    final topPadding = MediaQuery.of(context).padding.top;
 
     return RefreshIndicator(
       onRefresh: () => cubit.fetchNotifications(),
       color: AppColors.primary,
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(top: 108), // header height
+        padding: EdgeInsets.only(top: topPadding + 108), // header height + status bar
         itemCount: notifications.length,
         itemBuilder: (context, index) {
           final notification = notifications[index];
@@ -119,25 +120,30 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top;
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.notifications_off_rounded,
-            size: 50,
-            color: AppColors.mutedText.withValues(alpha: 0.5),
-          ),
-          const SizedBox(height: 20),
-          const Text(
-            'No notifications',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColors.mutedText,
+      child: Padding(
+        padding: EdgeInsets.only(top: topPadding + 108),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.notifications_off_rounded,
+              size: 50,
+              color: AppColors.mutedText.withValues(alpha: 0.5),
             ),
-          ),
-        ],
+            const SizedBox(height: 20),
+            const Text(
+              'No notifications',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.mutedText,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
+      

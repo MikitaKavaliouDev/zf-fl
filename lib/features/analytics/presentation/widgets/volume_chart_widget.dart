@@ -110,7 +110,15 @@ class VolumeChartWidget extends StatelessWidget {
               barRods: [
                 BarChartRodData(
                   toY: d.volume,
-                  color: AppColors.primary.withValues(alpha: 0.8),
+                  color: const Color(0xFF7B2FBE).withValues(alpha: 0.8),
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [
+                      const Color(0xFF7B2FBE).withValues(alpha: 0.4),
+                      const Color(0xFF7B2FBE).withValues(alpha: 0.9),
+                    ],
+                  ),
                   width: 12,
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(4)),

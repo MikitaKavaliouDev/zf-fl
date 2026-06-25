@@ -29,7 +29,7 @@ _AnalyticsResponseDto _$AnalyticsResponseDtoFromJson(
           ?.map((e) => PRDataPoint.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const <PRDataPoint>[],
-  consistency: (json['consistency'] as num?)?.toInt() ?? 0,
+  consistency: (json['consistency'] as num?)?.toDouble() ?? 0.0,
 );
 
 Map<String, dynamic> _$AnalyticsResponseDtoToJson(

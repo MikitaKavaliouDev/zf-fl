@@ -1,601 +1,939 @@
 <response>
   <reasoning>
-    The header layout UI issue (where the user's name/avatar and the system status bar overlap) is caused by the custom floating headers (`ZiroHeader` and `ZiroSheetHeader`) being positioned at the absolute top of the screen (`top: 0`) without taking into account the status bar height (`MediaQuery.of(context).padding.top`).
+    The "Cancel" button on the "New Routine" screen (and other similar sub-screens) is failing because the sub-screens are being opened using `context.go` instead of `context.push` in the parent screen (`WorkoutHistoryScreen`, `NoRoutinePlaceholder`, and `QuickActionsRow`). When `context.go` is used, the navigation history is cleared, causing `Navigator.of(context).maybePop()` or `router.canPop()` to do nothing and leave the user stuck on the screen.
 
-    To fix this issue:
-    1. We will update `ZiroHeader` in `lib/features/home/presentation/widgets/ziro_header.dart` to retrieve and prepend the status bar height to its top padding.
-    2. We will adjust the list padding of `_DashboardContent` inside `lib/features/home/presentation/home_screen.dart` so that it is pushed down dynamically by the status bar height, avoiding overlapping the header.
-    3. We will modify `ZiroSheetHeader` in `lib/features/notifications/presentation/widgets/ziro_sheet_header.dart` to use a `SafeArea(bottom: false)` to push header controls below the status bar dynamically on all devices.
-    4. We will propagate the top safe area padding adjustments to the main list views and grids on other screens using `ZiroSheetHeader` (namely `NotificationsScreen`, `CreateTemplateView`, `RoutineBuilderScreen`, `TemplatesLibraryScreen`, and `RoutineSchedulerScreen`) to ensure consistent alignment.
-    5. We will append the task to `TASKS.md` and mark it complete.
+    To resolve this issue, I will do the following:
+    1. Update the template library and routine builder button callbacks inside `lib/features/trainers/presentation/workout_history_screen.dart` to use `context.push` instead of `context.go`.
+    2. Update the "Templates" action buttons inside `lib/features/home/presentation/widgets/no_routine_placeholder.dart` and `lib/features/home/presentation/widgets/quick_actions_row.dart` to use `context.push` instead of `context.go`.
+    3. Update the `onCancel` callbacks inside `lib/features/home/presentation/routine_builder_screen.dart` and `lib/features/home/presentation/create_template_screen.dart` to check `router.canPop() ? router.pop() : context.go('/')` to gracefully exit the screen.
+    4. Safe-guard the on-close callback inside `lib/features/home/presentation/routine_scheduler_screen.dart` and `lib/features/home/presentation/template_picker_sheet.dart` with a similar safety fallback.
+    5. Update `TASKS.md` with these changes.
   </reasoning>
   <modifications>
-    <file path="lib/features/home/presentation/widgets/ziro_header.dart">
+    <file path="lib/features/trainers/presentation/workout_history_screen.dart">
       <![CDATA[
-import 'dart:ui' as ui;
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
-import '../../../../core/theme/app_theme.dart';
-import '../../../auth/cubit/auth_cubit.dart';
-import '../../../auth/cubit/auth_state.dart';
-import '../../../notifications/cubit/notifications_cubit.dart';
+import '../../../core/di/injection.dart';
+import '../../../core/theme/app_theme.dart';
+import '../cubit/workout_history_cubit.dart';
+import '../cubit/workout_history_state.dart';
+import '../data/models/workout_session_dto.dart';
 
-/// Floating header that sits above the home scroll content.
-///
-/// Matches iOS ZiroHeader — PersonalHomeView.swift lines 77-102.
-/// Layout: [Avatar circle] [User name] [Spacer] [Bell icon]
-class ZiroHeader extends StatelessWidget {
-  const ZiroHeader({super.key});
+class WorkoutHistoryScreen extends StatefulWidget {
+  final bool showAppBar;
+
+  const WorkoutHistoryScreen({super.key, this.showAppBar = false});
+
+  @override
+  State<WorkoutHistoryScreen> createState() => _WorkoutHistoryScreenState();
+}
+
+class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
+  final _scrollController = ScrollController();
+  final _searchController = TextEditingController();
+  final _collapsedDates = <DateTime>{};
+  final _searchFocusNode = FocusNode();
+  Timer? _debounceTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    _debounceTimer?.cancel();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      context.read<WorkoutHistoryCubit>().loadMore();
+    }
+  }
+
+  void _onSearchChanged(String value) {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+      context.read<WorkoutHistoryCubit>().setSearchQuery(value);
+    });
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    context.read<WorkoutHistoryCubit>().setSearchQuery('');
+    _searchFocusNode.unfocus();
+  }
+
+  // ── Filter helpers ──
+
+  List<WorkoutSessionDto> _filterSessions(
+    List<WorkoutSessionDto> sessions, {
+    required String query,
+    required DateTime? selectedDate,
+  }) {
+    var filtered = sessions;
+    if (selectedDate != null) {
+      filtered = filtered.where((s) {
+        final dt = DateTime.tryParse(s.startTime);
+        if (dt == null) return false;
+        return dt.year == selectedDate.year &&
+            dt.month == selectedDate.month &&
+            dt.day == selectedDate.day;
+      }).toList();
+    }
+    if (query.isNotEmpty) {
+      final q = query.toLowerCase();
+      filtered = filtered.where((s) {
+        if (s.name?.toLowerCase().contains(q) == true) return true;
+        if (s.notes?.toLowerCase().contains(q) == true) return true;
+        if (s.exerciseLogs != null) {
+          for (final log in s.exerciseLogs!) {
+            if (log.exercise?.name.toLowerCase().contains(q) == true) {
+              return true;
+            }
+            if (log.notes?.toLowerCase().contains(q) == true) return true;
+          }
+        }
+        return false;
+      }).toList();
+    }
+    return filtered;
+  }
+
+  int _thisWeekCount(List<WorkoutSessionDto> sessions) {
+    final now = DateTime.now();
+    final weekday = now.weekday;
+    final weekStart = now.subtract(Duration(days: weekday - 1));
+    final weekStartDay = DateTime(weekStart.year, weekStart.month, weekStart.day);
+    final weekEndDay = weekStartDay.add(const Duration(days: 7));
+    return sessions.where((s) {
+      final dt = DateTime.tryParse(s.startTime);
+      if (dt == null) return false;
+      return !dt.isBefore(weekStartDay) && dt.isBefore(weekEndDay);
+    }).length;
+  }
+
+  // ── Grouping ──
+
+  Map<DateTime, List<WorkoutSessionDto>> _groupByDate(
+    List<WorkoutSessionDto> sessions,
+  ) {
+    final map = <DateTime, List<WorkoutSessionDto>>{};
+    for (final s in sessions) {
+      final dt = _parseDateTime(s.startTime);
+      final day = DateTime(dt.year, dt.month, dt.day);
+      map.putIfAbsent(day, () => []);
+      map[day]!.add(s);
+    }
+    return map;
+  }
+
+  // ── Date helpers ──
+
+  DateTime _parseDateTime(String iso) {
+    return DateTime.tryParse(iso) ?? DateTime.now();
+  }
+
+  String? _computeDuration(DateTime start, DateTime? end) {
+    if (end == null) return null;
+    final diff = end.difference(start);
+    if (diff.inHours > 0) {
+      return '${diff.inHours}h ${diff.inMinutes.remainder(60)}m';
+    }
+    return '${diff.inMinutes}m';
+  }
+
+  String _formatTimeRange(DateTime start, DateTime? end) {
+    final startStr = _formatTime(start);
+    if (end == null) return startStr;
+    final endStr = _formatTime(end);
+    return '$startStr - $endStr';
+  }
+
+  String _formatTime(DateTime dt) {
+    return DateFormat('h:mm a').format(dt);
+  }
+
+  String _formatDateLabel(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final target = DateTime(date.year, date.month, date.day);
+    final diff = target.difference(today).inDays;
+
+    if (diff == 0) return 'Today';
+    if (diff == -1) return 'Yesterday';
+    return DateFormat('EEE, MMM d').format(date);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final authState = context.watch<AuthCubit>().state;
-    final unreadCount = context.watch<NotificationsCubit>().unreadCount;
-    final userName = switch (authState) {
-      AuthAuthenticated(:final user) => user.name ?? 'Athlete',
-      _ => 'Home',
-    };
-    final avatarUrl = switch (authState) {
-      AuthAuthenticated(:final user) => user.profilePhotoPath,
-      _ => null,
-    };
-    final topPadding = MediaQuery.of(context).padding.top;
-
-    return Container(
-      padding: EdgeInsets.only(left: 16, right: 12, top: topPadding + 8, bottom: 8),
-      decoration: BoxDecoration(
-        color: AppColors.background.withValues(alpha: 0.75),
-      ),
-      child: ClipRect(
-        child: BackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: Row(
-            children: [
-              // Avatar circle
-              GestureDetector(
-                onTap: () => context.go('/profile'),
-                child: CircleAvatar(
-                  radius: 16,
-                  backgroundColor: AppColors.primary,
-                  backgroundImage:
-                      avatarUrl != null ? NetworkImage(avatarUrl) : null,
-                  child: avatarUrl == null
-                      ? Text(
-                          userName.isNotEmpty
-                              ? userName[0].toUpperCase()
-                              : '?',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        )
-                      : null,
+    return BlocProvider(
+      create: (_) => getIt<WorkoutHistoryCubit>()..loadHistory(),
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: widget.showAppBar
+            ? AppBar(
+                backgroundColor: AppColors.background,
+                elevation: 0,
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back_rounded,
+                      color: AppColors.foreground),
+                  onPressed: () => context.pop(),
                 ),
-              ),
-              const SizedBox(width: 10),
-              // User name
-              Expanded(
-                child: Text(
-                  userName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                title: const Text(
+                  'Workout History',
+                  style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
                     color: AppColors.foreground,
                   ),
                 ),
-              ),
-              // Bell icon
-              GestureDetector(
-                onTap: () => context.push('/home/notifications'),
-                child: Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      const Icon(
-                        Icons.notifications_outlined,
-                        size: 22,
-                        color: AppColors.foreground,
-                      ),
-                      // Red dot badge (shown when unread notifications exist)
-                      if (unreadCount > 0)
-                        Positioned(
-                          top: -2,
-                          right: -2,
-                          child: Container(
-                            width: 8,
-                            height: 8,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.redAccent,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
+              )
+            : null,
+        body: BlocConsumer<WorkoutHistoryCubit, WorkoutHistoryState>(
+          listener: (context, state) {
+            if (state is WorkoutHistoryError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  behavior: SnackBarBehavior.floating,
                 ),
-              ),
-            ],
-          ),
+              );
+            }
+          },
+          builder: (context, state) {
+            return switch (state) {
+              WorkoutHistoryInitial() || WorkoutHistoryLoading() =>
+                const Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                ),
+              WorkoutHistoryLoaded(
+                :final sessions,
+                :final hasMore,
+                :final isLoadingMore,
+                :final isRefreshing,
+                :final searchQuery,
+                :final selectedDate,
+              ) =>
+                _buildLoaded(
+                  context,
+                  sessions,
+                  hasMore,
+                  isLoadingMore,
+                  isRefreshing,
+                  searchQuery,
+                  selectedDate,
+                ),
+              WorkoutHistoryError(:final message) =>
+                _buildError(context, message),
+            };
+          },
         ),
       ),
     );
   }
-}
-      ]]>
-    </file>
-    <file path="lib/features/home/presentation/home_screen.dart">
-      <![CDATA[
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_theme.dart';
-import '../../notifications/cubit/notifications_cubit.dart';
-import '../cubit/home_cubit.dart';
-import '../cubit/home_state.dart';
-import '../cubit/program_cubit.dart';
-import '../data/models/active_program_response.dart';
-import '../data/models/client_dashboard_response.dart';
-import '../data/models/client_recent_session.dart';
-import 'widgets/check_in_banner.dart';
-import 'widgets/coach_card.dart';
-import 'widgets/credit_status_widget.dart';
-import 'widgets/daily_targets_section.dart';
-import 'widgets/invitation_hero_card.dart';
-import 'widgets/need_coach_banner.dart';
-import 'widgets/no_routine_placeholder.dart';
-import 'widgets/quick_actions_row.dart';
-import 'widgets/recent_history_section.dart';
-import 'widgets/streak_motivation_card.dart';
-import 'widgets/upcoming_sessions_carousel.dart';
-import 'widgets/ziro_header.dart';
+  Widget _buildLoaded(
+    BuildContext context,
+    List<WorkoutSessionDto> allSessions,
+    bool hasMore,
+    bool isLoadingMore,
+    bool isRefreshing,
+    String searchQuery,
+    DateTime? selectedDate,
+  ) {
+    final filteredSessions = _filterSessions(
+      allSessions,
+      query: searchQuery,
+      selectedDate: selectedDate,
+    );
 
-/// Main client-facing dashboard after login.
-///
-/// Matches iOS PersonalHomeView — PersonalHomeView.swift lines 1-297.
-/// Structure: Stack with floating ZiroHeader on top and scrollable content below.
-/// Content sections follow the iOS order with 24pt spacing.
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+    if (allSessions.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: () => context.read<WorkoutHistoryCubit>().refresh(),
+        child: ListView(
+          children: [
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.6,
+              child: _buildEmpty(context),
+            ),
+          ],
+        ),
+      );
+    }
 
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
+    final grouped = _groupByDate(filteredSessions);
+    final sortedDates = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
 
-class _HomeScreenState extends State<HomeScreen> {
-  @override
-  void initState() {
-    super.initState();
-    context.read<HomeCubit>().fetchDashboard();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Stack(
-        children: [
-          BlocBuilder<HomeCubit, HomeState>(
-            builder: (context, state) {
-              return switch (state) {
-                HomeInitial() || HomeLoading() => const _LoadingIndicator(),
-                HomeError(:final message) => _ErrorView(message: message),
-                HomeLoaded(:final dashboard, :final activeProgram) =>
-                  BlocProvider.value(
-                    value: context.read<ProgramCubit>(),
-                    child: _DashboardContent(
-                      dashboard: dashboard,
-                      activeProgram: activeProgram,
+    return RefreshIndicator(
+      onRefresh: () => context.read<WorkoutHistoryCubit>().refresh(),
+      child: NotificationListener<ScrollNotification>(
+        onNotification: (notification) {
+          if (notification is ScrollUpdateNotification && !hasMore) {
+            // prevent unnecessary rebuilds
+          }
+          return false;
+        },
+        child: CustomScrollView(
+          controller: _scrollController,
+          slivers: [
+            // ── Header ──
+            SliverToBoxAdapter(
+              child: _buildHeader(context, selectedDate, allSessions),
+            ),
+            // ── This Week summary card ──
+            if (searchQuery.isEmpty && selectedDate == null)
+              SliverToBoxAdapter(
+                child: _buildThisWeekCard(context, allSessions),
+              ),
+            // ── Search bar ──
+            SliverToBoxAdapter(
+              child: _buildSearchBar(context, searchQuery),
+            ),
+            // ── Refreshing indicator ──
+            if (isRefreshing)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Center(
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primary,
+                      ),
                     ),
                   ),
-              };
-            },
-          ),
-          // Floating header on top of scroll content
-          const Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: ZiroHeader(),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Full-screen loading spinner.
-class _LoadingIndicator extends StatelessWidget {
-  const _LoadingIndicator();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: CircularProgressIndicator(
-        strokeWidth: 3,
-        color: AppColors.primary,
-      ),
-    );
-  }
-}
-
-/// Error state with retry button.
-class _ErrorView extends StatelessWidget {
-  final String message;
-
-  const _ErrorView({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.cloud_off_rounded,
-              size: 56,
-              color: AppColors.mutedText,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.mutedText,
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () => context.read<HomeCubit>().refresh(),
-              icon: const Icon(Icons.refresh_rounded, size: 18),
-              label: const Text('Retry'),
+            // ── Empty filtered state ──
+            if (filteredSessions.isEmpty && allSessions.isNotEmpty)
+              SliverFillRemaining(
+                child: _buildEmptySearch(context),
+              ),
+            // ── Date-grouped sessions ──
+            if (filteredSessions.isNotEmpty)
+              ...sortedDates.expand((date) {
+                final dateSessions = grouped[date]!;
+                final isCollapsed = _collapsedDates.contains(date);
+                return [
+                  SliverToBoxAdapter(
+                    child: _buildDateHeader(context, date, dateSessions, isCollapsed),
+                  ),
+                  if (!isCollapsed)
+                    SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final session = dateSessions[index];
+                          return _buildSessionCard(context, session);
+                        },
+                        childCount: dateSessions.length,
+                      ),
+                    ),
+                ];
+              }),
+            // ── Load more ──
+            if (isLoadingMore)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Center(
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            const SliverToBoxAdapter(
+              child: SizedBox(height: 24),
             ),
           ],
         ),
       ),
     );
   }
-}
 
-/// Scrollable dashboard content with all section widgets.
-///
-/// Order matches iOS PersonalHomeView:
-/// 1. Coach Card / Need Coach Banner
-/// 2. Credit Status
-/// 3. Streak Motivation Card
-/// 4. Active Program / No Routine Placeholder
-/// 5. Nutrition & Habits Link
-/// 6. Invitation Hero Card
-/// 7. Check-in Banner
-/// 8. Upcoming Sessions Carousel
-/// 9. Daily Targets Section
-/// 10. Quick Actions Row
-/// 11. Recent History Section
-class _DashboardContent extends StatelessWidget {
-  final ClientDashboardResponse dashboard;
-  final ActiveProgramResponse? activeProgram;
+  // ── Header ──
 
-  const _DashboardContent({
-    required this.dashboard,
-    this.activeProgram,
-  });
-
-  bool get _isCheckInComplete {
-    final lastCheckIn = dashboard.lastCheckIn;
-    if (lastCheckIn == null) return false;
-    return lastCheckIn.isAfter(
-      DateTime.now().subtract(const Duration(days: 7)),
-    );
-  }
-
-  bool get _hasCheckInBanner => dashboard.lastCheckIn != null;
-
-  /// Compute consecutive-day workout streak from completed sessions.
-  static int _computeStreak(List<ClientRecentSession> sessions) {
-    if (sessions.isEmpty) return 0;
-
-    // Collect unique dates from completed sessions
-    final uniqueDates = <DateTime>{};
-    for (final session in sessions) {
-      if (session.status == 'completed') {
-        final day = DateTime(
-          session.startTime.year,
-          session.startTime.month,
-          session.startTime.day,
-        );
-        uniqueDates.add(day);
-      }
-    }
-
-    if (uniqueDates.isEmpty) return 0;
-
-    final sortedDates = uniqueDates.toList()
-      ..sort((a, b) => b.compareTo(a));
-
-    final today = DateTime.now();
-    final todayDate = DateTime(today.year, today.month, today.day);
-    final mostRecent = sortedDates.first;
-
-    // Streak must include today or yesterday
-    if (mostRecent.difference(todayDate).inDays > 1) return 0;
-
-    // Count consecutive days backwards
-    int streak = 1;
-    for (int i = 1; i < sortedDates.length; i++) {
-      final diff = sortedDates[i - 1].difference(sortedDates[i]).inDays;
-      if (diff == 1) {
-        streak++;
-      } else {
-        break;
-      }
-    }
-
-    return streak;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final trainer = dashboard.clientData.trainer;
-    final remainingCredits = dashboard.clientData.remainingCredits;
-    final sessions = dashboard.clientData.workoutSessions;
-    final upcomingSessions = dashboard.upcomingClientSessions;
-    final streak = _computeStreak(sessions);
-    final topPadding = MediaQuery.of(context).padding.top;
-
-    // Check for pending link requests via NotificationsCubit
-    final notifCubit = context.watch<NotificationsCubit>();
-    final pendingRequest = notifCubit.pendingLinkRequest;
-
-    return RefreshIndicator(
-      onRefresh: () => context.read<HomeCubit>().refresh(),
-      color: AppColors.primary,
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.only(
-          left: 16,
-          right: 16,
-          top: topPadding + 60,  // space for floating header and status bar
-          bottom: 100, // space for tab bar
-        ),
+  Widget _buildHeader(
+    BuildContext context,
+    DateTime? selectedDate,
+    List<WorkoutSessionDto> allSessions,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Row(
         children: [
-          // ── 1. Coach Card or Need Coach Banner ──
-          if (trainer != null)
-            CoachCard(trainer: trainer)
-          else
-            const NeedCoachBanner(),
-
-          const SizedBox(height: 24),
-
-          // ── 2. Credit Status (only when linked to a trainer) ──
-          if (trainer != null && remainingCredits != null)
-            CreditStatusWidget(remainingCredits: remainingCredits),
-
-          if (trainer != null && remainingCredits != null)
-            const SizedBox(height: 24),
-
-          // ── 3. Streak Motivation Card (if streak > 0) ──
-          if (streak > 0)
-            StreakMotivationCard(streak: streak),
-
-          if (streak > 0) const SizedBox(height: 24),
-
-          // ── 4. Active Program or No Routine Placeholder ──
-          if (activeProgram != null)
-            _ActiveProgramCard(program: activeProgram!)
-          else if (trainer != null)
-            const NoRoutinePlaceholder(),
-
-          if (activeProgram != null || (trainer != null))
-            const SizedBox(height: 24),
-
-          // ── 5. Nutrition & Habits Link ──
-          _NutritionHabitsCard(onTap: () => context.push('/daily-targets')),
-
-          const SizedBox(height: 24),
-
-          // ── 6. Invitation Hero Card (if pending request) ──
-          if (pendingRequest != null)
-            InvitationHeroCard(
-              message: pendingRequest.message,
-              onAccept: () => notifCubit.acceptRequest(pendingRequest.id),
-              onDecline: () => notifCubit.declineRequest(pendingRequest.id),
+          const Text(
+            'Workouts',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: AppColors.foreground,
             ),
-
-          if (pendingRequest != null) const SizedBox(height: 24),
-
-          // ── 7. Check-in Banner ──
-          if (_hasCheckInBanner)
-            CheckInBanner(
-              isComplete: _isCheckInComplete,
-              onTapCheckIn: () {
-                context.push('/home/check-in');
-              },
-              hasTrainer: trainer != null,
-            ),
-
-          if (_hasCheckInBanner) const SizedBox(height: 24),
-
-          // ── 8. Upcoming Sessions Carousel ──
-          if (upcomingSessions.isNotEmpty)
-            UpcomingSessionsCarousel(
-              sessions: upcomingSessions,
-              onSessionTap: (_) => context.go('/workout'),
-            ),
-
-          if (upcomingSessions.isNotEmpty) const SizedBox(height: 24),
-
-          // ── 9. Daily Targets Section ──
-          DailyTargetsSection(
-            isEnabled: true,
-            onTapSetTarget: () => context.push('/daily-targets'),
-            onTapAddTarget: () => context.push('/daily-targets'),
           ),
-
-          const SizedBox(height: 24),
-
-          // ── 10. Quick Actions ──
-          const QuickActionsRow(),
-
-          const SizedBox(height: 24),
-
-          // ── 11. Recent History ──
-          RecentHistorySection(sessions: sessions),
+          const Spacer(),
+          // Calendar filter button
+          if (selectedDate != null) ...[
+            GestureDetector(
+              onTap: () => context.read<WorkoutHistoryCubit>().clearSelectedDate(),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(99),
+                ),
+                child: Text(
+                  DateFormat('MMM d').format(selectedDate),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+          // Calendar button
+          IconButton(
+            icon: const Icon(Icons.calendar_month_outlined),
+            color: AppColors.foreground,
+            onPressed: () => _showCalendarPicker(context),
+          ),
+          // Templates library button
+          IconButton(
+            icon: const Icon(Icons.dashboard_customize_outlined),
+            color: AppColors.foreground,
+            onPressed: () => context.push('/home/templates-library'),
+          ),
+          // Routine builder button
+          IconButton(
+            icon: const Icon(Icons.assignment_outlined),
+            color: AppColors.foreground,
+            onPressed: () => context.push('/home/routine-builder'),
+          ),
         ],
       ),
     );
   }
-}
 
-/// Card linking to Nutrition & Habits screen.
-///
-/// Matches iOS green fork.knife card — PersonalHomeView.
-class _NutritionHabitsCard extends StatelessWidget {
-  final VoidCallback onTap;
+  // ── This Week card ──
 
-  const _NutritionHabitsCard({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
+  Widget _buildThisWeekCard(BuildContext context, List<WorkoutSessionDto> allSessions) {
+    final weekCount = _thisWeekCount(allSessions);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.mutedSurface,
-          borderRadius: BorderRadius.circular(20),
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.borderMuted),
         ),
         child: Row(
           children: [
-            // Green circle with fork.knife icon
-            Container(
-              width: 50,
-              height: 50,
-              decoration: const BoxDecoration(
-                color: Color(0xFF22C55E),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.restaurant_rounded,
-                size: 24,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text(
-                    'NUTRITION & HABITS',
+                    'THIS WEEK',
                     style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
                       color: AppColors.mutedText,
                       letterSpacing: 0.5,
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  const Text(
-                    'View Nutrition Plan & Habits',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                  const SizedBox(height: 4),
+                  Text(
+                    '$weekCount Workout${weekCount == 1 ? '' : 's'} Done',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                       color: AppColors.foreground,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(
-              Icons.chevron_right_rounded,
-              size: 20,
-              color: AppColors.mutedText,
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.bar_chart_rounded,
+                color: AppColors.primary,
+                size: 24,
+              ),
             ),
           ],
         ),
       ),
     );
   }
-}
 
-/// Card showing the client's active program.
-class _ActiveProgramCard extends StatelessWidget {
-  final ActiveProgramResponse program;
+  // ── Search bar ──
 
-  const _ActiveProgramCard({required this.program});
+  Widget _buildSearchBar(BuildContext context, String searchQuery) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: TextField(
+        controller: _searchController,
+        focusNode: _searchFocusNode,
+        onChanged: _onSearchChanged,
+        decoration: InputDecoration(
+          hintText: 'Search workouts...',
+          prefixIcon: const Icon(
+            Icons.search_rounded,
+            size: 20,
+            color: AppColors.mutedText,
+          ),
+          suffixIcon: searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.close_rounded, size: 18),
+                  onPressed: _clearSearch,
+                  color: AppColors.mutedText,
+                )
+              : null,
+          filled: true,
+          fillColor: AppColors.mutedSurface,
+          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: AppColors.borderMuted),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: AppColors.borderMuted),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: AppColors.borderActive, width: 2),
+          ),
+        ),
+      ),
+    );
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    final progress = program.progress;
+  // ── Date header with collapse/expand ──
 
+  Widget _buildDateHeader(
+    BuildContext context,
+    DateTime date,
+    List<WorkoutSessionDto> sessions,
+    bool isCollapsed,
+  ) {
+    final dateLabel = _formatDateLabel(date);
     return GestureDetector(
       onTap: () {
-        context.push('/home/program-detail', extra: program);
+        setState(() {
+          if (isCollapsed) {
+            _collapsedDates.remove(date);
+          } else {
+            _collapsedDates.add(date);
+          }
+        });
       },
       child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: AppColors.mutedSurface,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        color: isCollapsed ? Colors.green.withValues(alpha: 0.06) : null,
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+        child: Row(
           children: [
-            // Program name
             Text(
-              program.program.name,
+              dateLabel,
               style: const TextStyle(
                 fontSize: 16,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.bold,
                 color: AppColors.foreground,
               ),
             ),
-            if (program.program.description != null &&
-                program.program.description!.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text(
-                program.program.description!,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: AppColors.mutedSurface,
+                borderRadius: BorderRadius.circular(99),
+              ),
+              child: Text(
+                '${sessions.length}',
                 style: const TextStyle(
-                  fontSize: 13,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
                   color: AppColors.mutedText,
                 ),
               ),
+            ),
+            const Spacer(),
+            AnimatedRotation(
+              turns: isCollapsed ? -0.25 : 0,
+              duration: const Duration(milliseconds: 200),
+              child: const Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: AppColors.mutedText,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Session card ──
+
+  Widget _buildSessionCard(BuildContext context, WorkoutSessionDto session) {
+    final startTime = _parseDateTime(session.startTime);
+    final endTime = session.endTime != null
+        ? _parseDateTime(session.endTime!)
+        : null;
+
+    final durationStr = _computeDuration(startTime, endTime);
+    final timeRangeStr = _formatTimeRange(startTime, endTime);
+
+    final logs = session.exerciseLogs ?? [];
+    final exerciseCount = logs.map((l) => l.exerciseId).toSet().length;
+    final setCount = logs.length;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: GestureDetector(
+        onTap: () {
+          context.go('/workout/history/${session.id}');
+        },
+        onLongPressStart: (details) {
+          _showSessionContextMenu(context, details, session);
+        },
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.card,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.borderMuted),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Title row
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      session.name ?? 'Workout',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.foreground,
+                      ),
+                    ),
+                  ),
+                  _buildStatusBadge('Completed'),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              // Date + time range
+              Row(
+                children: [
+                  const Icon(Icons.schedule_rounded,
+                      size: 14, color: AppColors.mutedText),
+                  const SizedBox(width: 4),
+                  Text(
+                    timeRangeStr,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.mutedText,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              // Stats row
+              Row(
+                children: [
+                  // Duration
+                  if (durationStr != null) ...[
+                    const Icon(Icons.timer_outlined,
+                        size: 14, color: AppColors.primary),
+                    const SizedBox(width: 4),
+                    Text(
+                      durationStr,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                  ],
+                  // Exercises
+                  if (exerciseCount > 0) ...[
+                    const Icon(Icons.fitness_center_rounded,
+                        size: 14, color: AppColors.mutedText),
+                    const SizedBox(width: 4),
+                    Text(
+                      '$exerciseCount ${exerciseCount == 1 ? 'exercise' : 'exercises'}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.mutedText,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                  ],
+                  // Sets
+                  if (setCount > 0) ...[
+                    const Icon(Icons.repeat_rounded,
+                        size: 14, color: AppColors.mutedText),
+                    const SizedBox(width: 4),
+                    Text(
+                      '$setCount ${setCount == 1 ? 'set' : 'sets'}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.mutedText,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showSessionContextMenu(
+    BuildContext outerContext,
+    LongPressStartDetails details,
+    WorkoutSessionDto session,
+  ) {
+    final cubit = outerContext.read<WorkoutHistoryCubit>();
+    showMenu<String>(
+      context: outerContext,
+      position: RelativeRect.fromLTRB(
+        details.globalPosition.dx,
+        details.globalPosition.dy,
+        details.globalPosition.dx + 1,
+        details.globalPosition.dy + 1,
+      ),
+      items: [
+        const PopupMenuItem(
+          value: 'delete',
+          child: Row(
+            children: [
+              Icon(Icons.delete_outline_rounded, size: 18, color: Colors.redAccent),
+              SizedBox(width: 10),
+              Text('Delete Workout', style: TextStyle(color: Colors.redAccent)),
+            ],
+          ),
+        ),
+      ],
+    ).then((value) {
+      if (value == 'delete') {
+        _confirmDeleteSession(cubit, session);
+      }
+    });
+  }
+
+  void _confirmDeleteSession(WorkoutHistoryCubit cubit, WorkoutSessionDto session) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.card,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: AppColors.borderMuted),
+        ),
+        title: const Text(
+          'Delete Workout',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          'Are you sure you want to delete "${session.name ?? 'Workout'}"? This action cannot be undone.',
+          style: const TextStyle(fontSize: 14, color: AppColors.mutedText),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              cubit.deleteSession(session.id);
+            },
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: Colors.redAccent),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusBadge(String status) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.green.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: Text(
+        status,
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: Colors.green,
+        ),
+      ),
+    );
+  }
+
+  // ── Calendar picker ──
+
+  Future<void> _showCalendarPicker(BuildContext outerContext) async {
+    final cubit = outerContext.read<WorkoutHistoryCubit>();
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: outerContext,
+      initialDate: now,
+      firstDate: now.subtract(const Duration(days: 365)),
+      lastDate: now,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.primary,
+              onPrimary: Colors.white,
+              surface: AppColors.card,
+              onSurface: AppColors.foreground,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      cubit.setSelectedDate(picked);
+    }
+  }
+
+  // ── Empty / Error states ──
+
+  Widget _buildError(BuildContext context, String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.error_outline_rounded,
+              size: 64,
+              color: AppColors.mutedText,
+            ),
             const SizedBox(height: 16),
-            // Progress bar
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: progress.totalCount > 0
-                    ? progress.completedCount / progress.totalCount
-                    : 0,
-                minHeight: 6,
-                backgroundColor: AppColors.borderMuted,
-                valueColor: const AlwaysStoppedAnimation<Color>(
-                  AppColors.primary,
-                ),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () =>
+                  context.read<WorkoutHistoryCubit>().loadHistory(),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmpty(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.fitness_center_rounded,
+              size: 80,
+              color: AppColors.mutedText.withValues(alpha: 0.3),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'No workouts yet',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.foreground,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Complete a workout to see it here.',
+              style: TextStyle(fontSize: 14, color: AppColors.mutedText),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptySearch(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.search_off_rounded,
+              size: 64,
+              color: AppColors.mutedText,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'No workouts found',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.foreground,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              '${progress.completedCount} of ${progress.totalCount} workouts',
-              style: const TextStyle(
-                fontSize: 12,
-                color: AppColors.mutedText,
-              ),
+              _searchController.text.isNotEmpty
+                  ? 'No workouts matching "${_searchController.text}"'
+                  : 'No workouts on this date.',
+              style: const TextStyle(fontSize: 14, color: AppColors.mutedText),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -605,723 +943,236 @@ class _ActiveProgramCard extends StatelessWidget {
 }
       ]]>
     </file>
-    <file path="lib/features/notifications/presentation/widgets/ziro_sheet_header.dart">
+    <file path="lib/features/home/presentation/widgets/quick_actions_row.dart">
       <![CDATA[
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
 
-/// Reusable bottom sheet / overlay header — replicates ZiroSheetHeader.swift.
+/// Quick actions row — two side-by-side cards for Quick Start and Templates.
 ///
-/// Layout:
-/// - Drag handle (40×5 rounded pill)
-/// - Title centered in a 44pt bar
-/// - Optional Cancel (left) and Done (right) buttons
-/// - Background uses .ultraThinMaterial effect (simulated with 95% opacity white)
-class ZiroSheetHeader extends StatelessWidget {
-  final String title;
-  final bool showDone;
-  final VoidCallback? onDone;
-  final bool showCancel;
-  final VoidCallback? onCancel;
-  final String? leadingText;
-  final String? trailingText;
-  final VoidCallback? onTrailingIconTap;
+/// Matches iOS Quick Actions — PersonalHomeView.swift lines 833-883.
+class QuickActionsRow extends StatelessWidget {
+  const QuickActionsRow({super.key});
 
-  const ZiroSheetHeader({
-    super.key,
-    required this.title,
-    this.showDone = false,
-    this.onDone,
-    this.showCancel = false,
-    this.onCancel,
-    this.leadingText,
-    this.trailingText,
-    this.onTrailingIconTap,
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.zero,
+          child: Text(
+            'Actions',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppColors.mutedText,
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _QuickActionCard(
+                onTap: () => context.go('/workout'),
+                icon: Icons.bolt_rounded,
+                label: 'Quick Start',
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _QuickActionCard(
+                onTap: () => context.push('/home/templates-library'),
+                icon: Icons.grid_view_rounded,
+                label: 'Templates',
+                color: const Color(0xFF8B5CF6),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// A tall card button used inside [QuickActionsRow].
+class _QuickActionCard extends StatelessWidget {
+  final VoidCallback onTap;
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  const _QuickActionCard({
+    required this.onTap,
+    required this.icon,
+    required this.label,
+    required this.color,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.background.withValues(alpha: 0.95),
-      child: SafeArea(
-        bottom: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 10),
-            // Drag handle
-            Container(
-              width: 40,
-              height: 5,
-              decoration: BoxDecoration(
-                color: Colors.grey.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2.5),
-              ),
-            ),
-            const SizedBox(height: 8),
-            // Header content — Row layout avoids Stack/Positioned.fill overflow trap
-            SizedBox(
-              height: 44,
-              child: Row(
-                children: [
-                  if (showCancel)
-                    TextButton(
-                      onPressed: onCancel,
-                      child: Text(
-                        leadingText ?? 'Cancel',
-                        style: const TextStyle(
-                          fontSize: 17,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    )
-                  else
-                    const SizedBox(width: 64),
-                  Expanded(
-                    child: Center(
-                      child: Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.foreground,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (onTrailingIconTap != null)
-                        IconButton(
-                          icon: const Icon(
-                            Icons.add_circle_outline_rounded,
-                            size: 24,
-                            color: AppColors.primary,
-                          ),
-                          onPressed: onTrailingIconTap,
-                        ),
-                      if (showDone)
-                        TextButton(
-                          onPressed: onDone,
-                          child: Text(
-                            trailingText ?? 'Done',
-                            style: const TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        )
-                      else
-                        const SizedBox(width: 64),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 90,
+        decoration: BoxDecoration(
+          color: AppColors.mutedSurface,
+          borderRadius: BorderRadius.circular(16),
         ),
-      ),
-    );
-  }
-}
-      ]]>
-    </file>
-    <file path="lib/features/notifications/presentation/notifications_screen.dart">
-      <![CDATA[
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-
-import '../../../core/theme/app_theme.dart';
-import '../cubit/notifications_cubit.dart';
-import '../cubit/notifications_state.dart';
-import '../data/models/notification_dto.dart';
-import 'widgets/notification_row.dart';
-import 'widgets/ziro_sheet_header.dart';
-
-/// Full-screen notifications list — replicates iOS NotificationsView exactly.
-///
-/// Layout:
-/// - ZiroSheetHeader pinned at top (title: "Notifications", Done button pops)
-/// - Scrollable notification list with pull-to-refresh
-/// - Empty state when no notifications
-/// - Loading spinner on initial load
-class NotificationsScreen extends StatelessWidget {
-  const NotificationsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocProvider<NotificationsCubit>(
-      create: (context) =>
-          context.read<NotificationsCubit>()..fetchNotifications(),
-      child: const _NotificationsBody(),
-    );
-  }
-}
-
-class _NotificationsBody extends StatelessWidget {
-  const _NotificationsBody();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Stack(
-        alignment: Alignment.topCenter,
-        children: [
-          // Main content
-          BlocBuilder<NotificationsCubit, NotificationsState>(
-            builder: (context, state) {
-              return switch (state) {
-                NotificationsInitial() || NotificationsLoading()
-                    when _notificationsList(state).isEmpty =>
-                  const Center(
-                    child: CircularProgressIndicator(
-                      strokeWidth: 3,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                NotificationsLoaded(:final notifications)
-                    when notifications.isEmpty =>
-                  const _EmptyState(),
-                NotificationsError() => const _EmptyState(),
-                NotificationsLoaded(:final notifications) =>
-                  _NotificationList(notifications: notifications),
-                _ => const _EmptyState(),
-              };
-            },
-          ),
-          // Pinned header overlay
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: ZiroSheetHeader(
-              title: 'Notifications',
-              showDone: true,
-              onDone: () => Navigator.of(context).pop(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Extract the notifications list from any state (empty list for non-loaded).
-  List<NotificationDto> _notificationsList(NotificationsState state) {
-    if (state is NotificationsLoaded) return state.notifications;
-    return const [];
-  }
-}
-
-/// Scrollable list of notification rows with pull-to-refresh.
-class _NotificationList extends StatelessWidget {
-  final List<NotificationDto> notifications;
-
-  const _NotificationList({required this.notifications});
-
-  @override
-  Widget build(BuildContext context) {
-    final cubit = context.read<NotificationsCubit>();
-    final topPadding = MediaQuery.of(context).padding.top;
-
-    return RefreshIndicator(
-      onRefresh: () => cubit.fetchNotifications(),
-      color: AppColors.primary,
-      child: ListView.builder(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.only(top: topPadding + 108), // header height + status bar
-        itemCount: notifications.length,
-        itemBuilder: (context, index) {
-          final notification = notifications[index];
-          return NotificationRow(
-            notification: notification,
-            cubit: cubit,
-            currentMode: 'client',
-          );
-        },
-      ),
-    );
-  }
-}
-
-/// Shown when the notification list is empty.
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
-
-  @override
-  Widget build(BuildContext context) {
-    final topPadding = MediaQuery.of(context).padding.top;
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.only(top: topPadding + 108),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.notifications_off_rounded,
-              size: 50,
-              color: AppColors.mutedText.withValues(alpha: 0.5),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'No notifications',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.mutedText,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-      ]]>
-    </file>
-    <file path="lib/features/home/presentation/create_template_screen.dart">
-      <![CDATA[
-import 'package:flutter/material.dart';
-
-import '../../../core/di/injection.dart' as di;
-import '../../../core/theme/app_theme.dart';
-import '../../notifications/presentation/widgets/ziro_sheet_header.dart';
-import '../../trainers/data/models/exercise_dto.dart';
-import '../../trainers/data/models/template_dto.dart';
-import '../../trainers/data/workout_session_api_service.dart';
-import '../../trainers/presentation/widgets/exercise_picker_sheet.dart';
-
-/// Full-screen template creation view matching iOS `CreateTemplateView.swift`.
-///
-/// Allows the user to:
-/// 1. Enter a template name and optional description
-/// 2. Add exercises from the exercise library
-/// 3. Reorder exercises via drag-and-drop
-/// 4. Remove exercises
-/// 5. Save as a local template (returned via Navigator.pop)
-class CreateTemplateView extends StatefulWidget {
-  const CreateTemplateView({super.key});
-
-  @override
-  State<CreateTemplateView> createState() => _CreateTemplateViewState();
-}
-
-class _CreateTemplateViewState extends State<CreateTemplateView> {
-  late final TextEditingController _nameController;
-  late final TextEditingController _descriptionController;
-  final List<_TemplateExerciseEntry> _exercises = [];
-  bool _isSaving = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController();
-    _descriptionController = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _descriptionController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final topPadding = MediaQuery.of(context).padding.top;
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Stack(
-        children: [
-          // Main content
-          Padding(
-            padding: EdgeInsets.only(top: topPadding + 80),
-            child: Column(
-              children: [
-                // Header fields
-                _buildHeaderSection(),
-                const SizedBox(height: 16),
-                // Exercise list or empty state
-                Expanded(
-                  child: _exercises.isEmpty
-                      ? _buildEmptyState()
-                      : _buildExerciseList(),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 24, color: color),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: color,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-
-          // Floating header
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: ZiroSheetHeader(
-              title: 'New Template',
-              showCancel: true,
-              showDone: true,
-              onCancel: () => Navigator.of(context).maybePop(),
-              onDone: _save,
-              leadingText: 'Cancel',
-              trailingText: 'Save',
-            ),
-          ),
-
-          // Saving overlay
-          if (_isSaving)
-            Container(
-              color: Colors.black26,
-              child: const Center(child: CircularProgressIndicator()),
-            ),
-        ],
+        ),
       ),
     );
   }
+}
+      ]]>
+    </file>
+    <file path="lib/features/home/presentation/widgets/no_routine_placeholder.dart">
+      <![CDATA[
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
-  Widget _buildHeaderSection() {
+import '../../../../core/theme/app_theme.dart';
+
+/// Placeholder shown when a client has a trainer but no active routine.
+///
+/// Matches iOS No Routine Assigned — PersonalHomeView.swift lines 561-615.
+class NoRoutinePlaceholder extends StatelessWidget {
+  const NoRoutinePlaceholder({super.key});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.mutedSurface,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TextField(
-            controller: _nameController,
-            decoration: const InputDecoration(
-              hintText: 'Template Name (e.g. Leg Day)',
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.all(16),
-            ),
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppColors.foreground,
-            ),
-            textCapitalization: TextCapitalization.words,
+          // Icon + text
+          const Row(
+            children: [
+              Icon(
+                Icons.assignment_rounded,
+                size: 28,
+                color: Color(0xFFF97316),
+              ),
+              SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'No Routine Assigned',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.foreground,
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Awaiting your coach...',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.mutedText,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          const Divider(height: 1, color: AppColors.borderMuted),
-          TextField(
-            controller: _descriptionController,
-            decoration: const InputDecoration(
-              hintText: 'Description (Optional)',
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.all(16),
-            ),
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.foreground,
-            ),
+          const SizedBox(height: 16),
+          // Action buttons
+          Row(
+            children: [
+              Expanded(
+                child: _ActionButton(
+                  onTap: () => context.go('/workout'),
+                  label: 'Quick Start',
+                  icon: Icons.bolt_rounded,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _ActionButton(
+                  onTap: () => context.push('/home/templates-library'),
+                  label: 'Templates',
+                  icon: Icons.grid_view_rounded,
+                  color: const Color(0xFF8B5CF6),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.fitness_center_rounded,
-              size: 60,
-              color: AppColors.mutedText.withValues(alpha: 0.3),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Your Template is Empty',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: AppColors.foreground,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Add exercises to build your workout template.',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.mutedText,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _showExercisePicker,
-              icon: const Icon(Icons.add_circle_outline_rounded, size: 20),
-              label: const Text('Add Exercise'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildExerciseList() {
-    return Column(
-      children: [
-        // Section header
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              const Text(
-                'Exercises',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.foreground,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                '${_exercises.length} exercises',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.mutedText,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-
-        // Reorderable exercise list
-        Expanded(
-          child: ReorderableListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: _exercises.length,
-            onReorder: (oldIndex, newIndex) {
-              setState(() {
-                if (newIndex > oldIndex) newIndex--;
-                final item = _exercises.removeAt(oldIndex);
-                _exercises.insert(newIndex, item);
-                // Update order values
-                for (var i = 0; i < _exercises.length; i++) {
-                  _exercises[i] = _TemplateExerciseEntry(
-                    id: _exercises[i].id,
-                    exercise: _exercises[i].exercise,
-                    targetReps: _exercises[i].targetReps,
-                    targetSets: _exercises[i].targetSets,
-                    order: i,
-                  );
-                }
-              });
-            },
-            itemBuilder: (context, index) {
-              final entry = _exercises[index];
-              return _buildExerciseCard(entry, index);
-            },
-          ),
-        ),
-
-        // Add exercise button at bottom
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: _showExercisePicker,
-              icon: const Icon(Icons.add_circle_outline_rounded, size: 20),
-              label: const Text('Add Exercise'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.primary,
-                side: const BorderSide(color: AppColors.primary),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildExerciseCard(_TemplateExerciseEntry entry, int index) {
-    return Container(
-      key: ValueKey(entry.id),
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: AppColors.mutedSurface,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: ListTile(
-        leading: const Icon(
-          Icons.drag_handle_rounded,
-          size: 20,
-          color: AppColors.mutedText,
-        ),
-        title: Text(
-          entry.exercise.name,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: AppColors.foreground,
-          ),
-        ),
-        subtitle: entry.exercise.muscleGroup != null
-            ? Text(
-                entry.exercise.muscleGroup!,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.mutedText,
-                ),
-              )
-            : null,
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Sets/Reps badge
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                '${entry.targetSets}×${entry.targetReps}',
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            // Remove button
-            GestureDetector(
-              onTap: () => setState(() => _exercises.removeAt(index)),
-              child: const Icon(
-                Icons.close_rounded,
-                size: 18,
-                color: AppColors.mutedText,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _showExercisePicker() async {
-    // Fetch exercises on-demand (same pattern as workout session screen).
-    final apiService = di.getIt<WorkoutSessionApiService>();
-    List<ExerciseDto> allExercises;
-    try {
-      allExercises = await apiService.getExerciseLibrary();
-    } catch (_) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not load exercise library.'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
-    if (!context.mounted) return;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => ExercisePickerSheet.multiple(
-        exercises: allExercises,
-        isLoading: false,
-        onExercisesSelected: (selected) {
-          setState(() {
-            for (final exercise in selected) {
-              _exercises.add(_TemplateExerciseEntry(
-                id: 'local_${DateTime.now().millisecondsSinceEpoch}_${exercise.id}',
-                exercise: exercise,
-                targetReps: '10',
-                targetSets: 3,
-                order: _exercises.length,
-              ));
-            }
-          });
-        },
-      ),
-    );
-  }
-
-  void _save() {
-    final name = _nameController.text.trim();
-    if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a template name')),
-      );
-      return;
-    }
-
-    if (_exercises.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please add at least one exercise')),
-      );
-      return;
-    }
-
-    // Create the template with exercises
-    final template = TemplateDto(
-      id: 'local_${DateTime.now().millisecondsSinceEpoch}',
-      name: name,
-      description: _descriptionController.text.trim().nullIfEmpty,
-      exercises: _exercises.map((e) => TemplateExerciseDto(
-        id: e.id,
-        order: e.order,
-        exerciseId: e.exercise.id,
-        type: 'EXERCISE',
-        targetReps: e.targetReps,
-        targetSets: e.targetSets,
-        exercise: e.exercise,
-      )).toList(),
-    );
-
-    Navigator.of(context).pop(template);
-  }
 }
 
-/// Internal model for an exercise entry in the template.
-class _TemplateExerciseEntry {
-  final String id;
-  final ExerciseDto exercise;
-  final String targetReps;
-  final int targetSets;
-  final int order;
+/// Small rounded button used inside [NoRoutinePlaceholder].
+class _ActionButton extends StatelessWidget {
+  final VoidCallback onTap;
+  final String label;
+  final IconData icon;
+  final Color color;
 
-  _TemplateExerciseEntry({
-    required this.id,
-    required this.exercise,
-    required this.targetReps,
-    required this.targetSets,
-    required this.order,
+  const _ActionButton({
+    required this.onTap,
+    required this.label,
+    required this.icon,
+    required this.color,
   });
-}
 
-
-
-extension on String {
-  String? get nullIfEmpty => isEmpty ? null : this;
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 14, color: color),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
       ]]>
     </file>
@@ -1460,7 +1311,14 @@ class _RoutineBuilderScreenState extends State<RoutineBuilderScreen> {
                   : 'New Routine',
               showCancel: true,
               showDone: true,
-              onCancel: () => Navigator.of(context).maybePop(),
+              onCancel: () {
+                final router = GoRouter.of(context);
+                if (router.canPop()) {
+                  router.pop();
+                } else {
+                  context.go('/');
+                }
+              },
               onDone: _save,
               leadingText: 'Cancel',
               trailingText: 'Save',
@@ -1940,8 +1798,25 @@ class _TemplatesLibraryScreenState extends State<TemplatesLibraryScreen> {
             right: 0,
             child: ZiroSheetHeader(
               title: 'Templates Library',
+              showCancel: true,
+              onCancel: () {
+                final router = GoRouter.of(context);
+                if (router.canPop()) {
+                  router.pop();
+                } else {
+                  context.go('/');
+                }
+              },
+              leadingText: 'Back',
               showDone: true,
-              onDone: () => context.pop(),
+              onDone: () {
+                final router = GoRouter.of(context);
+                if (router.canPop()) {
+                  router.pop();
+                } else {
+                  context.go('/');
+                }
+              },
               trailingText: 'Done',
               onTrailingIconTap: _showCreateTemplate,
             ),
@@ -2194,7 +2069,7 @@ class RoutineSchedulerScreen extends StatefulWidget {
   const RoutineSchedulerScreen({super.key, required this.program});
 
   @override
-  State<RoutineSchedulerScreen> createState() => _RoutineSchedulerScreenState();
+  State<_RoutineSchedulerScreenState> createState() => _RoutineSchedulerScreenState();
 }
 
 class _RoutineSchedulerScreenState extends State<RoutineSchedulerScreen> {
@@ -2311,7 +2186,14 @@ class _RoutineSchedulerScreenState extends State<RoutineSchedulerScreen> {
           right: 0,
           child: ZiroSheetHeader(
             title: 'Schedule Routine',
-            onTrailingIconTap: () => Navigator.of(context).pop(),
+            onTrailingIconTap: () {
+              final router = GoRouter.of(context);
+              if (router.canPop()) {
+                router.pop();
+              } else {
+                context.go('/');
+              }
+            },
           ),
         ),
 
@@ -2653,11 +2535,300 @@ class _RoutineSchedulerScreenState extends State<RoutineSchedulerScreen> {
 }
       ]]>
     </file>
+    <file path="lib/features/home/presentation/template_picker_sheet.dart">
+      <![CDATA[
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../core/theme/app_theme.dart';
+import '../../notifications/presentation/widgets/ziro_sheet_header.dart';
+import '../../trainers/data/models/template_dto.dart';
+import '../cubit/program_cubit.dart';
+import '../cubit/program_state.dart';
+import 'create_template_screen.dart';
+
+/// Modal bottom sheet for picking a workout template to add to a routine.
+///
+/// Matches iOS `RoutineTemplatePickerView` — RoutineBuilderView.swift lines 207-262.
+class TemplatePickerSheet extends StatefulWidget {
+  /// IDs already in the routine — these will be hidden or disabled.
+  final Set<String> existingTemplateIds;
+
+  const TemplatePickerSheet({
+    super.key,
+    this.existingTemplateIds = const {},
+  });
+
+  @override
+  State<TemplatePickerSheet> createState() => _TemplatePickerSheetState();
+}
+
+class _TemplatePickerSheetState extends State<TemplatePickerSheet> {
+  @override
+  void initState() {
+    super.initState();
+    // Load templates through the cubit on mount
+    context.read<ProgramCubit>().loadTemplates();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.7,
+      minChildSize: 0.5,
+      maxChildSize: 0.9,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: AppColors.background,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+          child: Column(
+            children: [
+              // Sheet header
+              ZiroSheetHeader(
+                title: 'Choose Template',
+                showCancel: true,
+                onCancel: () {
+                  final router = GoRouter.of(context);
+                  if (router.canPop()) {
+                    router.pop();
+                  } else {
+                    context.go('/');
+                  }
+                },
+                leadingText: 'Back',
+              ),
+              const Divider(height: 1, color: AppColors.borderMuted),
+
+              // Content driven by cubit state
+              Expanded(
+                child: BlocBuilder<ProgramCubit, ProgramState>(
+                  builder: (context, state) {
+                    return switch (state) {
+                      ProgramInitial() || ProgramLoading() => const Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 3,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      ProgramError(:final message) => _buildError(message),
+                      ProgramLoaded(:final templates) =>
+                        _buildTemplateList(scrollController, templates),
+                    };
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildError(String message) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.cloud_off_rounded,
+              size: 40, color: AppColors.mutedText),
+          const SizedBox(height: 12),
+          Text(
+            message,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.mutedText,
+            ),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () => context.read<ProgramCubit>().loadTemplates(),
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCreateTemplateDialog(BuildContext context) async {
+    final result = await Navigator.of(context).push<TemplateDto>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => BlocProvider.value(
+          value: context.read<ProgramCubit>(),
+          child: const CreateTemplateView(),
+        ),
+      ),
+    );
+
+    if (result != null && context.mounted) {
+      // Persist the template locally so it survives app restart,
+      // then return it to the routine builder.
+      context.read<ProgramCubit>().saveLocalTemplate(result);
+      Navigator.of(context).pop(result);
+    }
+  }
+
+  Widget _buildTemplateList(
+    ScrollController scrollController,
+    List<TemplateDto> templates,
+  ) {
+    if (templates.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.grid_view_rounded,
+                size: 60,
+                color: AppColors.mutedText.withValues(alpha: 0.3),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'No Templates Yet',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.foreground,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Create a workout template to get started.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.mutedText,
+                ),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => _showCreateTemplateDialog(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('Create New Template'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return ListView.separated(
+      controller: scrollController,
+      padding: const EdgeInsets.all(16),
+      itemCount: templates.length,
+      separatorBuilder: (_, _) => const SizedBox(height: 8),
+      itemBuilder: (context, index) {
+        final template = templates[index];
+        final isUsed = widget.existingTemplateIds.contains(template.id);
+        return _TemplateRow(
+          template: template,
+          isUsed: isUsed,
+          onTap: isUsed
+              ? null
+              : () {
+                  Navigator.of(context).pop(template);
+                },
+        );
+      },
+    );
+  }
+}
+
+/// A single row in the template picker list.
+class _TemplateRow extends StatelessWidget {
+  final TemplateDto template;
+  final bool isUsed;
+  final VoidCallback? onTap;
+
+  const _TemplateRow({
+    required this.template,
+    required this.isUsed,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isUsed
+              ? AppColors.mutedSurface.withValues(alpha: 0.5)
+              : AppColors.mutedSurface,
+          borderRadius: BorderRadius.circular(12),
+          border: isUsed ? Border.all(color: AppColors.borderMuted) : null,
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    template.name,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: isUsed
+                          ? AppColors.mutedText
+                          : AppColors.foreground,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${template.exercises.length} Exercises',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.mutedText,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isUsed)
+              const Text(
+                'Added',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.mutedText,
+                ),
+              )
+            else
+              const Icon(
+                Icons.add_circle_outline_rounded,
+                size: 24,
+                color: AppColors.primary,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+      ]]>
+    </file>
     <file path="TASKS.md">
       <![CDATA[
 - [x] Fix back button on trainer profile screen by using `context.push` instead of `context.go` for trainer details and adding fallback pop routing in TrainerDetailScreen.
 - [x] Fix navigation GoError crash on Check-In screen and other sub-sheets/sub-screens by switching from `context.go` to `context.push` and incorporating safe fallback routing on pop actions.
 - [x] Fix status bar overlap / header layout UI on HomeScreen and other screens utilizing custom floating headers by dynamically calculating and adding top safe area padding.
+- [x] Fix missing back button on Templates Library screen by enabling the back navigation link with a chevron-left arrow in ZiroSheetHeader.
+- [x] Fix broken cancel / close actions on Routine Builder, Routine Scheduler, Template Creator, and other builder sheets by ensuring all buttons utilize `context.push` for opening and safe fallback-pop checks.
       ]]>
     </file>
   </modifications>

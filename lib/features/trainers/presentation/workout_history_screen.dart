@@ -409,13 +409,13 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
           IconButton(
             icon: const Icon(Icons.dashboard_customize_outlined),
             color: AppColors.foreground,
-            onPressed: () => context.go('/home/templates-library'),
+            onPressed: () => context.push('/home/templates-library'),
           ),
           // Routine builder button
           IconButton(
             icon: const Icon(Icons.assignment_outlined),
             color: AppColors.foreground,
-            onPressed: () => context.go('/home/routine-builder'),
+            onPressed: () => context.push('/home/routine-builder'),
           ),
         ],
       ),
@@ -543,7 +543,8 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
           }
         });
       },
-      child: Padding(
+      child: Container(
+        color: isCollapsed ? Colors.green.withValues(alpha: 0.06) : null,
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
         child: Row(
           children: [
@@ -926,3 +927,4 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
     );
   }
 }
+      

@@ -1,5 +1,6 @@
 import 'package:add_2_calendar/add_2_calendar.dart' as cal;
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -21,7 +22,7 @@ class RoutineSchedulerScreen extends StatefulWidget {
   const RoutineSchedulerScreen({super.key, required this.program});
 
   @override
-  State<RoutineSchedulerScreen> createState() => _RoutineSchedulerScreenState();
+  _RoutineSchedulerScreenState createState() => _RoutineSchedulerScreenState();
 }
 
 class _RoutineSchedulerScreenState extends State<RoutineSchedulerScreen> {
@@ -111,11 +112,12 @@ class _RoutineSchedulerScreenState extends State<RoutineSchedulerScreen> {
   }
 
   Widget _buildSchedulerView() {
+    final topPadding = MediaQuery.of(context).padding.top;
     return Stack(
       children: [
         // Scrollable content
         Padding(
-          padding: const EdgeInsets.only(top: 60),
+          padding: EdgeInsets.only(top: topPadding + 80),
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -137,7 +139,14 @@ class _RoutineSchedulerScreenState extends State<RoutineSchedulerScreen> {
           right: 0,
           child: ZiroSheetHeader(
             title: 'Schedule Routine',
-            onTrailingIconTap: () => Navigator.of(context).pop(),
+            onTrailingIconTap: () {
+              final router = GoRouter.of(context);
+              if (router.canPop()) {
+                router.pop();
+              } else {
+                context.go('/');
+              }
+            },
           ),
         ),
 
@@ -477,3 +486,4 @@ class _RoutineSchedulerScreenState extends State<RoutineSchedulerScreen> {
     );
   }
 }
+      

@@ -125,12 +125,12 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( AnalyticsResponseDto analytics,  ProgressResponseDto progress,  WidgetConfigDto widgets)?  loaded,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( AnalyticsResponseDto analytics,  ProgressResponseDto progress,  WidgetConfigDto widgets,  int currentStreak,  int longestStreak,  double volumeTrend,  double consistencyTrend,  double frequencyTrend,  double averageVolumeTrend)?  loaded,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case AnalyticsInitial() when initial != null:
 return initial();case AnalyticsLoading() when loading != null:
 return loading();case AnalyticsLoaded() when loaded != null:
-return loaded(_that.analytics,_that.progress,_that.widgets);case AnalyticsError() when error != null:
+return loaded(_that.analytics,_that.progress,_that.widgets,_that.currentStreak,_that.longestStreak,_that.volumeTrend,_that.consistencyTrend,_that.frequencyTrend,_that.averageVolumeTrend);case AnalyticsError() when error != null:
 return error(_that.message);case _:
   return orElse();
 
@@ -149,12 +149,12 @@ return error(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( AnalyticsResponseDto analytics,  ProgressResponseDto progress,  WidgetConfigDto widgets)  loaded,required TResult Function( String message)  error,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( AnalyticsResponseDto analytics,  ProgressResponseDto progress,  WidgetConfigDto widgets,  int currentStreak,  int longestStreak,  double volumeTrend,  double consistencyTrend,  double frequencyTrend,  double averageVolumeTrend)  loaded,required TResult Function( String message)  error,}) {final _that = this;
 switch (_that) {
 case AnalyticsInitial():
 return initial();case AnalyticsLoading():
 return loading();case AnalyticsLoaded():
-return loaded(_that.analytics,_that.progress,_that.widgets);case AnalyticsError():
+return loaded(_that.analytics,_that.progress,_that.widgets,_that.currentStreak,_that.longestStreak,_that.volumeTrend,_that.consistencyTrend,_that.frequencyTrend,_that.averageVolumeTrend);case AnalyticsError():
 return error(_that.message);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -169,12 +169,12 @@ return error(_that.message);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( AnalyticsResponseDto analytics,  ProgressResponseDto progress,  WidgetConfigDto widgets)?  loaded,TResult? Function( String message)?  error,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( AnalyticsResponseDto analytics,  ProgressResponseDto progress,  WidgetConfigDto widgets,  int currentStreak,  int longestStreak,  double volumeTrend,  double consistencyTrend,  double frequencyTrend,  double averageVolumeTrend)?  loaded,TResult? Function( String message)?  error,}) {final _that = this;
 switch (_that) {
 case AnalyticsInitial() when initial != null:
 return initial();case AnalyticsLoading() when loading != null:
 return loading();case AnalyticsLoaded() when loaded != null:
-return loaded(_that.analytics,_that.progress,_that.widgets);case AnalyticsError() when error != null:
+return loaded(_that.analytics,_that.progress,_that.widgets,_that.currentStreak,_that.longestStreak,_that.volumeTrend,_that.consistencyTrend,_that.frequencyTrend,_that.averageVolumeTrend);case AnalyticsError() when error != null:
 return error(_that.message);case _:
   return null;
 
@@ -251,12 +251,18 @@ String toString() {
 
 
 class AnalyticsLoaded implements AnalyticsState {
-  const AnalyticsLoaded({required this.analytics, required this.progress, required this.widgets});
+  const AnalyticsLoaded({required this.analytics, required this.progress, required this.widgets, this.currentStreak = 0, this.longestStreak = 0, this.volumeTrend = 0.0, this.consistencyTrend = 0.0, this.frequencyTrend = 0.0, this.averageVolumeTrend = 0.0});
   
 
  final  AnalyticsResponseDto analytics;
  final  ProgressResponseDto progress;
  final  WidgetConfigDto widgets;
+@JsonKey() final  int currentStreak;
+@JsonKey() final  int longestStreak;
+@JsonKey() final  double volumeTrend;
+@JsonKey() final  double consistencyTrend;
+@JsonKey() final  double frequencyTrend;
+@JsonKey() final  double averageVolumeTrend;
 
 /// Create a copy of AnalyticsState
 /// with the given fields replaced by the non-null parameter values.
@@ -268,16 +274,16 @@ $AnalyticsLoadedCopyWith<AnalyticsLoaded> get copyWith => _$AnalyticsLoadedCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AnalyticsLoaded&&(identical(other.analytics, analytics) || other.analytics == analytics)&&(identical(other.progress, progress) || other.progress == progress)&&(identical(other.widgets, widgets) || other.widgets == widgets));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AnalyticsLoaded&&(identical(other.analytics, analytics) || other.analytics == analytics)&&(identical(other.progress, progress) || other.progress == progress)&&(identical(other.widgets, widgets) || other.widgets == widgets)&&(identical(other.currentStreak, currentStreak) || other.currentStreak == currentStreak)&&(identical(other.longestStreak, longestStreak) || other.longestStreak == longestStreak)&&(identical(other.volumeTrend, volumeTrend) || other.volumeTrend == volumeTrend)&&(identical(other.consistencyTrend, consistencyTrend) || other.consistencyTrend == consistencyTrend)&&(identical(other.frequencyTrend, frequencyTrend) || other.frequencyTrend == frequencyTrend)&&(identical(other.averageVolumeTrend, averageVolumeTrend) || other.averageVolumeTrend == averageVolumeTrend));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,analytics,progress,widgets);
+int get hashCode => Object.hash(runtimeType,analytics,progress,widgets,currentStreak,longestStreak,volumeTrend,consistencyTrend,frequencyTrend,averageVolumeTrend);
 
 @override
 String toString() {
-  return 'AnalyticsState.loaded(analytics: $analytics, progress: $progress, widgets: $widgets)';
+  return 'AnalyticsState.loaded(analytics: $analytics, progress: $progress, widgets: $widgets, currentStreak: $currentStreak, longestStreak: $longestStreak, volumeTrend: $volumeTrend, consistencyTrend: $consistencyTrend, frequencyTrend: $frequencyTrend, averageVolumeTrend: $averageVolumeTrend)';
 }
 
 
@@ -288,7 +294,7 @@ abstract mixin class $AnalyticsLoadedCopyWith<$Res> implements $AnalyticsStateCo
   factory $AnalyticsLoadedCopyWith(AnalyticsLoaded value, $Res Function(AnalyticsLoaded) _then) = _$AnalyticsLoadedCopyWithImpl;
 @useResult
 $Res call({
- AnalyticsResponseDto analytics, ProgressResponseDto progress, WidgetConfigDto widgets
+ AnalyticsResponseDto analytics, ProgressResponseDto progress, WidgetConfigDto widgets, int currentStreak, int longestStreak, double volumeTrend, double consistencyTrend, double frequencyTrend, double averageVolumeTrend
 });
 
 
@@ -305,12 +311,18 @@ class _$AnalyticsLoadedCopyWithImpl<$Res>
 
 /// Create a copy of AnalyticsState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? analytics = null,Object? progress = null,Object? widgets = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? analytics = null,Object? progress = null,Object? widgets = null,Object? currentStreak = null,Object? longestStreak = null,Object? volumeTrend = null,Object? consistencyTrend = null,Object? frequencyTrend = null,Object? averageVolumeTrend = null,}) {
   return _then(AnalyticsLoaded(
 analytics: null == analytics ? _self.analytics : analytics // ignore: cast_nullable_to_non_nullable
 as AnalyticsResponseDto,progress: null == progress ? _self.progress : progress // ignore: cast_nullable_to_non_nullable
 as ProgressResponseDto,widgets: null == widgets ? _self.widgets : widgets // ignore: cast_nullable_to_non_nullable
-as WidgetConfigDto,
+as WidgetConfigDto,currentStreak: null == currentStreak ? _self.currentStreak : currentStreak // ignore: cast_nullable_to_non_nullable
+as int,longestStreak: null == longestStreak ? _self.longestStreak : longestStreak // ignore: cast_nullable_to_non_nullable
+as int,volumeTrend: null == volumeTrend ? _self.volumeTrend : volumeTrend // ignore: cast_nullable_to_non_nullable
+as double,consistencyTrend: null == consistencyTrend ? _self.consistencyTrend : consistencyTrend // ignore: cast_nullable_to_non_nullable
+as double,frequencyTrend: null == frequencyTrend ? _self.frequencyTrend : frequencyTrend // ignore: cast_nullable_to_non_nullable
+as double,averageVolumeTrend: null == averageVolumeTrend ? _self.averageVolumeTrend : averageVolumeTrend // ignore: cast_nullable_to_non_nullable
+as double,
   ));
 }
 

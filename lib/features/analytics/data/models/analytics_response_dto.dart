@@ -10,7 +10,7 @@ abstract class AnalyticsResponseDto with _$AnalyticsResponseDto {
     @Default(<VolumeDataPoint>[]) List<VolumeDataPoint> volumeHistory,
     @Default(<MuscleDataPoint>[]) List<MuscleDataPoint> muscleDistribution,
     @Default(<PRDataPoint>[]) List<PRDataPoint> recentPRs,
-    @Default(0) int consistency,
+    @Default(0.0) double consistency,
   }) = _AnalyticsResponseDto;
 
   factory AnalyticsResponseDto.fromJson(Map<String, dynamic> json) =>

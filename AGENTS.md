@@ -13,7 +13,7 @@ See the **Current Codebase State** section below for detailed per-feature invent
 
 This instruction file (`AGENTS.md`) is auto-loaded via `opencode.json` — agents do **not** need to be told to read it.
 
-## Current Codebase State (2026-06-24)
+## Current Codebase State (2026-06-25)
 
 ### Feature Inventory
 
@@ -27,38 +27,87 @@ This instruction file (`AGENTS.md`) is auto-loaded via `opencode.json` — agent
 | Models | `User`, `AuthResponse`, `RegisterRequest`, `RegisterResponse`, `LoginRequest`, `RefreshResponse` |
 | Tests | `auth_cubit_test.dart` |
 
+#### Check-In (`lib/features/check_in/`) — ✅ Fully Implemented
+| Layer | Files |
+|---|---|
+| Cubit | `CheckInCubit` with sealed `CheckInState` — multi-step check-in flow |
+| API Service | `CheckInApiService` — GET config, POST submission, GET history, GET detail, POST photo upload |
+| Repository | `CheckInRepository` |
+| Screens | `CheckInScreen` (multi-step), `CheckInDetailScreen`, `CheckInHistoryScreen`, `CheckInSuccessWidget` |
+| Steps (4) | `BodyMetricsStep`, `NotesStep`, `PhotosStep`, `WellnessStep` |
+| Models (5) | `CheckInConfigDto`, `CheckInDetailDto`, `CheckInHistoryItemDto`, `CheckInResponseDto`, `CheckInSubmissionDto`, `UploadResponseDto` |
+
+#### Daily Targets (`lib/features/daily_targets/`) — ✅ Fully Implemented
+| Layer | Files |
+|---|---|
+| Cubit | `DailyTargetsCubit` with sealed `DailyTargetsState` |
+| API Service | `DailyTargetsApiService` — GET / PUT daily targets |
+| Repository | `DailyTargetsRepository` |
+| Screen | `DailyTargetsScreen` (goal tracking with progress) |
+| Model | `DailyTargetDto` |
+
+#### Fitness Goals (`lib/features/fitness_goals/`) — ✅ Fully Implemented
+| Layer | Files |
+|---|---|
+| Cubit | `FitnessGoalsCubit` with sealed `FitnessGoalsState` |
+| API Service | `FitnessGoalsApiService` — CRUD fitness goals |
+| Repository | `FitnessGoalsRepository` |
+| Screen | `FitnessGoalsScreen` (goal management) |
+| Model | `FitnessGoalDto` |
+
+#### Sharing (`lib/features/sharing/`) — ✅ Fully Implemented
+| Layer | Files |
+|---|---|
+| Cubit | `SharingCubit` with sealed `SharingState` |
+| API Service | `SharingApiService` — GET / PUT sharing config |
+| Repository | `SharingRepository` |
+| Screen | `SharingScreen` (privacy toggles, visibility controls) |
+| Model | `SharingConfigDto` |
+
+#### Analytics (`lib/features/analytics/`) — ✅ Fully Implemented
+| Layer | Files |
+|---|---|
+| Cubit | `AnalyticsCubit` with sealed `AnalyticsState` — loads progress data, manages dashboard widgets |
+| API Service | `AnalyticsApiService` — GET progress data, GET widget config, PUT widget config |
+| Repository | `AnalyticsRepository` |
+| Screens | `AnalyticsScreen` (widget-based dashboard), `ManageWidgetsSheet` (add/remove/reorder) |
+| Widgets (7) | `ConsistencyWidget`, `HeatmapWidget`, `MuscleDonutChartWidget`, `PrsListWidget`, `VolumeChartWidget`, `VolumeLineChartWidget`, `WeightLineChartWidget`, `WidgetContainer` (drag-to-reorder wrapper) |
+| Models | `AnalyticsResponseDto`, `ProgressResponseDto`, `WidgetConfigDto` |
+
 #### Explore (`lib/features/explore/`) — ✅ Fully Implemented
 | Layer | Files |
 |---|---|
 | Cubits | `ExploreCubit`, `ExploreMapCubit`, `TrainerDiscoveryCubit`, `EventDetailCubit` |
 | API Service | `ExploreApiService` — metadata, featured content, promoted trainers, trainers search, events, event detail |
 | Repository | `ExploreRepository` |
-| Screens | `ExploreScreen` (main tab), `TrainerDiscoveryScreen`, `TrainerMapScreen`, `EventDetailScreen` |
+| Screens | `ExploreScreen` (main tab), `TrainerDiscoveryScreen`, `TrainerMapScreen`, `EventDetailScreen`, `EventsListViewScreen` |
 | Widgets (19) | `ExploreTrainerCard`, `TrainerSpotlightHeroCard`, `ExploreFeatureCarousel`, `ExploreEventCard`, `ExploreEventRow`, `CityPickerSheet`, `ExploreCategoryFilter`, `ExploreCityHeader`, `ExploreSlidingSegment`, `TrendingTagsView`, `MapClusterListView`, `MapTrainerCard`, `MapEventCard`, `MapFilterMenu`, `MapSearchBar`, `MapSingleItemAnnotation`, `MapClusterAnnotation`, `MapSpotlightPreviewCard`, `ExploreEmptyEventsView` |
 | Models (8) | `ExploreCity`, `ExploreCategory`, `ExploreMetadata`, `FeaturedContent`, `ExploreEventDto`, `EventDetailDto`, `PaginatedEvents` |
 
 #### Trainers (`lib/features/trainers/`) — ✅ Fully Implemented
 | Layer | Files |
 |---|---|
-| Cubits | `TrainerDetailCubit`, `TrainerListCubit`, `WorkoutSessionCubit`, `WorkoutHistoryCubit` |
-| API Services | `TrainerApiService` (trainer detail, packages, testimonials, link/unlink), `WorkoutSessionApiService` (sessions CRUD, exercises, logs, templates) |
-| Repositories | `TrainerRepository`, `WorkoutSessionRepository` |
-| Screens | `TrainerDetailScreen`, `WorkoutSessionScreen` (1441 lines), `WorkoutHistoryScreen`, `CompletedSessionDetailScreen`, `TrainerMapScreen`, `TrainerListScreen` (as `explore_screen.dart`) |
-| Widgets (11) | `ExercisePickerSheet`, `TrainerCard`, `RestTimerSheet`, `PlateCalculator`, `RpePicker`, `WorkoutNumericKeyboard`, `FinishWorkoutDialog`, `CancelWorkoutDialog`, `SaveAsTemplateDialog`, `TemplatePickerDialog`, `SearchBar` |
-| Models (10) | `TrainerListItemDto`, `TrainerDetailDto`, `TrainerPackageDto`, `TrainerLocation`, `PromotedTrainerDto`, `WorkoutSessionDto`, `WorkoutSessionResponse`, `ExerciseDto`, `ExerciseLogDto`, `TemplateDto` |
+| Cubits | `TrainerDetailCubit`, `TrainerListCubit`, `WorkoutSessionCubit`, `WorkoutHistoryCubit`, `BookingCubit` |
+| API Services | `TrainerApiService` (detail, packages, testimonials, link/unlink), `WorkoutSessionApiService` (CRUD, exercises, logs, templates), `BookingApiService` (create booking) |
+| Repositories | `TrainerRepository`, `WorkoutSessionRepository`, `BookingRepository` |
+| Screens | `TrainerDetailScreen` (719 lines — full App Store-style profile), `WorkoutSessionScreen`, `WorkoutHistoryScreen`, `CompletedSessionDetailScreen`, `TrainerMapScreen`, `TrainerListScreen`, `ExerciseDetailScreen` (847 lines — chart, history, progression) |
+| Widgets (23) | `ExercisePickerSheet`, `TrainerCard`, `RestTimerSheet`, `PlateCalculator`, `RpePicker`, `WorkoutNumericKeyboard`, `FinishWorkoutDialog`, `CancelWorkoutDialog`, `SaveAsTemplateDialog`, `TemplatePickerDialog`, `SearchBar`, `TrainerProfileBanner`, `ConnectButton`, `TagBadge`, `AboutSection`, `PackageCard`, `PhotosSection`, `ReviewCard`, `ScheduleSection`, `PreviewCarousel`, `CustomProgramRequestSheet`, `CoachNoteCard`, `FocusMetricSelector`, `YouTubePlayerWidget` |
+| Models (11) | `TrainerListItemDto`, `TrainerDetailDto`, `TrainerPackageDto`, `TrainerLocation`, `PromotedTrainerDto`, `WorkoutSessionDto`, `WorkoutSessionResponse`, `ExerciseDto`, `ExerciseLogDto`, `TemplateDto`, `TrainerBenefitDto`, `TrainerExternalLinkDto`, `TrainerSocialLinkDto`, `TrainerTestimonialDto`, `TrainerTransformationPhotoDto`, `TrainerScheduleDto`, `TrainerPreviewMediaDto`, `TrainerServiceDto`, `BookingResponseDto` |
+| Domain | `WorkoutStreakUtil` — weekly count, current streak, longest streak |
 | Tests | `trainer_detail_cubit_test.dart`, `trainer_list_cubit_test.dart` |
 | Docs | `docs/trainer-profile-analysis.md` — full iOS `PublicTrainerProfileView` replication reference, backend API contracts (aggregated profile, packages, testimonials, photos, schedule), gap analysis, data model mapping |
 
 #### Home (`lib/features/home/`) — ✅ Fully Implemented
 | Layer | Files |
 |---|---|
-| Cubits | `HomeCubit` with sealed `HomeState` (initial, loading, loaded, error) — fetches dashboard + active program in parallel; `ProgramCubit` with sealed `ProgramState` — load programs, load templates, create program, create template |
+| Cubits | `HomeCubit` with sealed `HomeState` (initial, loading, loaded, error) — fetches dashboard + active program in parallel; `ProgramCubit` with sealed `ProgramState` — load programs, load templates, create program, create template; `TemplateDetailCubit` — manage template exercises |
 | API Services | `HomeApiService` — `GET /api/client/dashboard`, `GET /api/client/program/active`; `ProgramApiService` — `GET /api/client/programs`, `POST /api/client/programs`, `GET /api/client/programs/[id]`, `POST /api/client/programs/templates` |
-| Repositories | `HomeRepository` — wraps dashboard API; `ProgramRepository` — wraps programs API |
-| Screens | `HomeScreen` — main dashboard; `RoutineBuilderScreen` — create program with name + templates; `RoutineSchedulerScreen` — device calendar scheduling (daily/sequential); `TemplatesLibraryScreen` — searchable template library; `ProgramDetailScreen` — dual-model detail view |
+| Repositories | `HomeRepository`, `ProgramRepository`, `LocalTemplateRepository` (Drift-backed local storage for user-created templates) |
+| Screens | `HomeScreen` — main dashboard; `RoutineBuilderScreen` — create program with name + templates; `RoutineSchedulerScreen` — device calendar scheduling (daily/sequential); `TemplatesLibraryScreen` — searchable template library; `ProgramDetailScreen` — dual-model detail view; `TemplateDetailScreen` — view/edit exercises in a template; `CreateTemplateView` — full-screen template creation (441 lines) |
 | Widgets (13) | `ZiroHeader`, `CoachCard`, `CreditStatusWidget`, `NeedCoachBanner`, `CheckInBanner`, `NoRoutinePlaceholder`, `ActiveProgramWidget`, `InvitationHeroCard`, `StreakMotivationCard`, `UpcomingSessionsCarousel`, `QuickActionsRow`, `RecentHistorySection`, `DailyTargetsSection` |
 | Sheets | `TemplatePickerSheet` — modal for selecting templates to add to a program |
 | Models (9) | `ClientDashboardResponse`, `ClientProfileData`, `ClientDashboardTrainer`, `ClientRecentSession`, `ClientDashboardSession`, `ActiveProgramResponse` (+ `ProgramBasicInfo`, `ProgramProgress`, `ProgramTemplateStatus`), `DashboardMeasurement`, `ProgramDto` (+ `ProgramTemplate`), `ProgramLibraryResponse` |
+| Tests | `program_cubit_test.dart` (252 lines), `local_template_repository_test.dart` (239 lines) |
 
 #### Notifications (`lib/features/notifications/`) — ✅ Fully Implemented
 | Layer | Files |
@@ -69,13 +118,19 @@ This instruction file (`AGENTS.md`) is auto-loaded via `opencode.json` — agent
 | Screen | `NotificationsScreen` — full-screen list with ZiroSheetHeader overlay, pull-to-refresh, loading/empty/error states |
 | Widgets (3) | `NotificationRow` (40×40 icon circle, 15pt message, 11pt date, unread dot, cross-mode badges, Accept/Decline buttons), `ZiroSheetHeader` (drag handle, centered title, Cancel/Done buttons), `_EmptyState` |
 | Models | `NotificationDto` (freezed — `id`, `userId`, `senderId?`, `message`, `type`, `readStatus`, `createdAt`, `targetRole?`, `metadata?`, `syncStatus`) |
+| Realtime | `NotificationRealtimeService` — Supabase Realtime subscription with polling fallback; emits `NotificationInserted`, `NotificationUpdated`, `NotificationDeleted`, `NotificationRealtimeConnectionChanged` |
 | Integration | `ZiroHeader` bell badge driven by `NotificationsCubit.unreadCount` (dynamic red dot, not static), registered in app-level `MultiBlocProvider`, auto-fetches on startup |
 | Docs | `docs/notifications-feature.md` — full iOS replication reference, design tokens, API contracts, spacing specs |
 
-#### Profile (`lib/features/profile/`) — 🟡 Minimal Implementation
+#### Profile (`lib/features/profile/`) — ✅ Fully Implemented
 | Layer | Files |
 |---|---|
-| Screens | `ProfileScreen` (basic scaffold, no content loaded) |
+| Cubit | `MoreCubit` with sealed `MoreState` (initial, loading, loaded with user+privacy, error) — loads user data and privacy settings, sign-out |
+| API Service | `ProfileApiService` — `GET /api/client/privacy`, `PUT /api/client/privacy` |
+| Model | `PrivacySettingsDto` |
+| Screen | `ProfileScreen` (867 lines, "More" screen) — full settings menu with 11 sub-screens |
+| Settings screens (11) | `LanguageSettingsScreen`, `AICoachSettingsScreen`, `ContactSupportScreen`, `MyPackagesScreen`, `DataPrivacyScreen`, `PurchaseHistoryScreen`, `NotificationSettingsScreen`, `CustomExercisesScreen`, `DashboardPromptsScreen`, `AppearanceSettingsScreen` |
+| Integration | Registered in app-level DI via `@injectable`, uses `AuthCubit` for user data |
 
 #### Sync (`lib/features/sync/`) — ✅ Fully Implemented
 | Layer | Files |
@@ -85,18 +140,24 @@ This instruction file (`AGENTS.md`) is auto-loaded via `opencode.json` — agent
 | Repository | `SyncRepository` — orchestrates pull/push against local Drift DB |
 | Tests | `sync_cubit_test.dart` |
 
+### Onboarding (`lib/features/onboarding/`) — ✅ Fully Implemented
+| Layer | Files |
+|---|---|
+| Screens | `EducationalOnboardingScreen` (383 lines), `OnboardingSlideWidget` — swipeable educational intro slides |
+
 ### Core Infrastructure
 
 | Module | Files | Status |
 |---|---|---|
-| **Router** | `app_router.dart` — GoRouter v17.3.0 with `ShellRoute` (4 tabs), full-screen sub-routes for detail/discovery/map, auth redirect guard, Stripe deep link handling | ✅ |
+| **Router** | `app_router.dart` — GoRouter v17.3.0 with `ShellRoute` (4 tabs), full-screen sub-routes for detail/discovery/map, auth redirect guard, Stripe deep link handling, analytics/check-in/daily-targets/fitness-goals/sharing routes | ✅ |
 | **Routing tables** | Auth: `/login`, `/register`, `/verify-email`, `/onboarding` | ✅ |
 | | Shell (bottom nav): `/` (Home), `/workout` (Session), `/explore`, `/profile` | ✅ |
-| | Full-screen: `/trainer/:username`, `/explore/discovery`, `/explore/map`, `/explore/event/:id`, `/workout/history`, `/workout/history/:id`, `/home/notifications`, `/home/program-detail`, `/home/templates-library`, `/home/routine-builder`, `/home/routine-scheduler` | ✅ |
+| | Full-screen: `/trainer/:username`, `/explore/discovery`, `/explore/map`, `/explore/event/:id`, `/workout/history`, `/workout/history/:id`, `/home/notifications`, `/home/program-detail`, `/home/templates-library`, `/home/routine-builder`, `/home/routine-scheduler`, `/home/create-template`, `/home/template-detail`, `/analytics`, `/check-in`, `/check-in/history`, `/check-in/:id`, `/daily-targets`, `/fitness-goals`, `/sharing`, `/onboarding/educational` | ✅ |
 | | Deep links: `/stripe-return`, `/packages/:id/success`, `/packages/:id/cancel` | ✅ |
 | **DI** | `get_it` + `injectable` — `initDependencies()` in main, auto-generated `injection.config.dart` | ✅ |
 | **Networking** | `Dio` with `ApiLoggerInterceptor` (structured logging) + `AuthInterceptor` (JWT auto-refresh on 401) | ✅ |
 | | Base URL: `http://10.0.2.2:3321` (Android), `http://localhost:3321` (iOS), override via `API_BASE_URL` env var | ✅ |
+| **Supabase** | `SupabaseConfig` — Supabase URL + anon key for realtime subscriptions (notifications) | ✅ |
 | **Auth Security** | `flutter_secure_storage` for JWT tokens, `QueuedInterceptor` for silent refresh | ✅ |
 | **Local DB** | Drift/SQLite with 17 tables: `SyncMetadata`, `ClientsTable`, `ProfilesTable`, `WorkoutSessionsTable`, `ExercisesTable`, `WorkoutTemplates`, `ClientMeasurements`, `ClientPhotos`, `Notifications`, `BookingTable`, `PackageTable`, `TestimonialTable`, `ClientExerciseLogs`, `Services`, `Programs`, `CalendarEvents`, `ClientAssessments`, `TrainerProfilesTable` | ✅ |
 | **Theme** | `AppColors` (8 tokens: primary `#007aff`, background, card, mutedSurface, borderMuted, borderActive, foreground, mutedText), forced light mode only, `shadcn/ui` Zinc/Neutral palette | ✅ |
@@ -111,7 +172,7 @@ This instruction file (`AGENTS.md`) is auto-loaded via `opencode.json` — agent
 | `flutter_bloc` | ^9.1.1 | State management |
 | `get_it` + `injectable` | ^9.2.1 / ^3.0.0 | Dependency injection |
 | `dio` | ^5.7.0 | HTTP client |
-| `drift` + `sqlite3` | ^2.25.0 | Local database |
+| `drift` + `sqlite3` | ^2.25.0 / ^3.3.3 | Local database |
 | `go_router` | ^17.3.0 | Declarative routing |
 | `flutter_map` + `latlong2` | ^8.3.0 / ^0.9.0 | OpenStreetMap maps |
 | `geolocator` | ^13.0.0 | Device location |
@@ -125,6 +186,11 @@ This instruction file (`AGENTS.md`) is auto-loaded via `opencode.json` — agent
 | `uuid` | ^4.5.1 | UUID generation |
 | `url_launcher` | ^6.3.1 | URL launching |
 | `add_2_calendar` | ^3.0.1 | Device calendar integration for routine scheduling |
+| `supabase_flutter` | ^2.0.0 | Supabase Realtime subscriptions (notifications) |
+| `fl_chart` | ^1.2.0 | Charts in exercise detail and analytics screens |
+| `flutter_local_notifications` | ^18.0.1 | Local push notifications |
+| `image_picker` | ^1.1.2 | Photo upload (check-in) |
+| `shared_preferences` | ^2.3.4 | Key-value local storage |
 
 ### Test Coverage
 
@@ -134,19 +200,34 @@ This instruction file (`AGENTS.md`) is auto-loaded via `opencode.json` — agent
 | `test/trainer_list_cubit_test.dart` | Trainer list cubit: load, pagination, error |
 | `test/trainer_detail_cubit_test.dart` | Trainer detail cubit: load, link/unlink |
 | `test/sync_cubit_test.dart` | Sync cubit: idle/in-progress/error transitions, auto-sync on reconnect |
+| `test/program_cubit_test.dart` | Program cubit: load programs, templates, create, error states (252 lines) |
+| `test/local_template_repository_test.dart` | Local template CRUD with Drift in-memory DB (239 lines) |
 | `test/widget_test.dart` | Smoke test |
 
 ### Known Gaps / TODO
-- **Profile screen** — basic scaffold only, no content implemented
-- **Workout templates** — save/load dialogs exist, full create/edit template flow not wired
-- **Push notifications** — not implemented
+- **Push notifications** — local notification support added (`flutter_local_notifications`), but remote push (FCM/APNs) not wired
 - **Offline sync** — architecture is in place (Drift tables, sync cubit, pull/push endpoints) but hasn't been end-to-end tested
 - **Stripe checkout** — deep link routes exist, the actual Stripe payment sheet integration in Flutter is not wired
 - **Plate calculator** — widget exists (`plate_calculator.dart`) but isn't integrated into workout flow
+- **Exercise picker — multi-select for template creation** — shared `ExercisePickerSheet` supports both single (workout) and multi-select (template) modes
 
 ### Recently Resolved
 
 - **Exercise picker — unified bottom sheet** — The template creation `CreateTemplateView` and the live workout `WorkoutSessionScreen` previously had separate, non-shared exercise picker implementations (dialog vs bottom sheet). Both now use the shared `ExercisePickerSheet` widget, a reusable bottom sheet with fuzzy search, supporting both single-select (workout) and multi-select (template creation) via named constructors. See `docs/exercise-picker.md`.
+
+- **Trainer profile — comprehensive detail view** — The trainer detail screen was expanded from a basic profile to a full App Store-style layout matching iOS `PublicTrainerProfileView` (banner, avatar, identity row, tag badges, About section, Packages carousel, Photos carousel, Reviews carousel, Schedule section, Connect button, Custom Program Request sheet). 19 new model DTOs, 14 new widgets, and a `BookingCubit` + `BookingApiService` were added.
+
+- **Profile — More screen expansion** — Profile went from a basic scaffold to a full settings menu (867 lines) with 11 sub-screens (language, AI coach, contact support, packages, privacy, purchase history, notifications, custom exercises, dashboard prompts, appearance), backed by `MoreCubit` + `ProfileApiService`.
+
+- **Home — program management & templates** — Implemented full program lifecycle: `ProgramCubit`, `ProgramApiService`, `ProgramRepository`, `RoutineBuilderScreen`, `RoutineSchedulerScreen`, `TemplatesLibraryScreen`, `ProgramDetailScreen`, `TemplateDetailScreen`, `CreateTemplateView`, and `LocalTemplateRepository` (Drift-backed local storage for user-created templates).
+
+- **Analytics dashboard** — New analytics feature with 7 widget types (consistency, heatmap, muscle donut, PRs, volume bars, volume line, weight line) in a drag-to-reorder grid layout. Backed by `AnalyticsCubit`, `AnalyticsApiService`, `AnalyticsRepository`.
+
+- **Check-in flow** — Multi-step check-in (body metrics → wellness → notes → photos) with history, detail view, and photo upload. Backed by `CheckInCubit`, `CheckInApiService`, `CheckInRepository`.
+
+- **Daily Targets & Fitness Goals** — Goal tracking screens backed by dedicated cubits, API services, and repositories.
+
+- **Notification realtime service** — Supabase Realtime subscription for live notification updates with automatic polling fallback. Handles insert/update/delete events and connection state changes.
 
 ## iOS Reference App
 
@@ -281,6 +362,34 @@ Backend has **no CI/CD pipeline** and `.env` is committed to git (not gitignored
 | `GET` | `/api/trainers/[username]/testimonials` | — | Testimonials |
 | `GET` | `/api/trainers/[username]/transformation-photos` | — | Transformation photos |
 
+### Client Check-in / Daily Targets / Fitness Goals (Auth required)
+
+| Method | Path | Request / Query | Response (`{ data: ... }`) |
+|---|---|---|---|
+| `GET` | `/api/client/check-in/config` | — | Check-in configuration (body metrics, wellness, photos, notes) |
+| `POST` | `/api/client/check-in` | Check-in submission body | Check-in response |
+| `GET` | `/api/client/check-in/history` | — | List of past check-ins |
+| `GET` | `/api/client/check-in/:id` | — | Single check-in detail |
+| `POST` | `/api/client/check-in/upload` | multipart photo | Upload response |
+| `GET` | `/api/client/daily-targets` | — | Daily targets config |
+| `PUT` | `/api/client/daily-targets` | Updated targets | Updated targets |
+| `GET` | `/api/client/fitness-goals` | — | Fitness goals list |
+| `POST` | `/api/client/fitness-goals` | New goal | Created goal |
+| `PUT` | `/api/client/fitness-goals/:id` | Updated goal | Updated goal |
+| `DELETE` | `/api/client/fitness-goals/:id` | — | Deletion confirmation |
+| `GET` | `/api/client/sharing` | — | Sharing config |
+| `PUT` | `/api/client/sharing` | Updated config | Updated config |
+| `GET` | `/api/client/privacy` | — | Privacy settings |
+| `PUT` | `/api/client/privacy` | Partial updates | Updated privacy settings |
+
+### Analytics & Progress (Auth required)
+
+| Method | Path | Request / Query | Response (`{ data: ... }`) |
+|---|---|---|---|
+| `GET` | `/api/client/progress` | — | Progress data (volume, weight, consistency, heatmap, PRs) |
+| `GET` | `/api/client/analytics/widgets` | — | Widget layout config |
+| `PUT` | `/api/client/analytics/widgets` | Updated widget layout | Updated layout |
+
 ### Workout Sessions (Auth required)
 
 | Method | Path | Request / Query | Response |
@@ -313,7 +422,7 @@ notifications, bookings, trainer_profiles, calendar_events
 
 ## Conventions (from spec + backend verification)
 
-- **Directory layout**: `lib/core/{di,network,database,security,theme}/` + `lib/features/{auth,trainers,workout,sync}/`
+- **Directory layout**: `lib/core/{di,network,database,security,theme}/` + `lib/features/{auth,trainers,workout,sync,home,explore,notifications,profile,analytics,check_in,daily_targets,fitness_goals,sharing,onboarding}/`
 - **Offline-first**: writes go to local SQLite immediately; `sync_status` column tracks pending changes; LWW reconciliation on reconnection
 - **Auth**: JWT tokens stored in `flutter_secure_storage`; Dio `QueuedInterceptor` handles silent refresh on 401 via `POST /api/auth/refresh`
 - **Workout state**: `WorkoutCubit` with sealed `WorkoutState` hierarchy — use **freezed** for data classes and sealed unions (already implied by backend `Prisma` enum patterns)

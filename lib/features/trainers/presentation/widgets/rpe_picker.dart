@@ -55,7 +55,6 @@ class RpePicker extends StatefulWidget {
   }
 
   const RpePicker._inline({
-    super.key,
     this.currentRpe,
     required this.onSelected,
   }) : _mode = _RpePickerMode.inline;

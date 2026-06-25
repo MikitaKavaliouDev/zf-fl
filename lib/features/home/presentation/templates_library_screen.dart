@@ -50,13 +50,14 @@ class _TemplatesLibraryScreenState extends State<TemplatesLibraryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
           Column(
             children: [
-              const SizedBox(height: 62),
+              SizedBox(height: topPadding + 80),
               // Search bar
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -111,8 +112,25 @@ class _TemplatesLibraryScreenState extends State<TemplatesLibraryScreen> {
             right: 0,
             child: ZiroSheetHeader(
               title: 'Templates Library',
+              showCancel: true,
+              onCancel: () {
+                final router = GoRouter.of(context);
+                if (router.canPop()) {
+                  router.pop();
+                } else {
+                  context.go('/');
+                }
+              },
+              leadingText: 'Back',
               showDone: true,
-              onDone: () => context.pop(),
+              onDone: () {
+                final router = GoRouter.of(context);
+                if (router.canPop()) {
+                  router.pop();
+                } else {
+                  context.go('/');
+                }
+              },
               trailingText: 'Done',
               onTrailingIconTap: _showCreateTemplate,
             ),
@@ -338,3 +356,4 @@ class _TemplateLibraryRow extends StatelessWidget {
     );
   }
 }
+      

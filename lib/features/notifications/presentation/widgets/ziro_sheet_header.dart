@@ -35,83 +35,102 @@ class ZiroSheetHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: AppColors.background.withValues(alpha: 0.95),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 10),
-          // Drag handle
-          Container(
-            width: 40,
-            height: 5,
-            decoration: BoxDecoration(
-              color: Colors.grey.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(2.5),
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 10),
+            // Drag handle
+            Container(
+              width: 40,
+              height: 5,
+              decoration: BoxDecoration(
+                color: Colors.grey.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2.5),
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          // Header content — Row layout avoids Stack/Positioned.fill overflow trap
-          SizedBox(
-            height: 44,
-            child: Row(
-              children: [
-                if (showCancel)
-                  TextButton(
-                    onPressed: onCancel,
-                    child: Text(
-                      leadingText ?? 'Cancel',
-                      style: const TextStyle(
-                        fontSize: 17,
-                        color: AppColors.primary,
+            const SizedBox(height: 8),
+            // Header content — Row layout avoids Stack/Positioned.fill overflow trap
+            SizedBox(
+              height: 44,
+              child: Row(
+                children: [
+                  if (showCancel)
+                    TextButton(
+                      onPressed: onCancel,
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
                       ),
-                    ),
-                  )
-                else
-                  const SizedBox(width: 64),
-                Expanded(
-                  child: Center(
-                    child: Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.foreground,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (leadingText == 'Back')
+                            const Icon(
+                              Icons.arrow_back_ios_new_rounded,
+                              size: 16,
+                              color: AppColors.primary,
+                            ),
+                          if (leadingText == 'Back') const SizedBox(width: 4),
+                          Text(
+                            leadingText ?? 'Cancel',
+                            style: const TextStyle(
+                              fontSize: 17,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    const SizedBox(width: 80),
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.foreground,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (onTrailingIconTap != null)
-                      IconButton(
-                        icon: const Icon(
-                          Icons.add_circle_outline_rounded,
-                          size: 24,
-                          color: AppColors.primary,
-                        ),
-                        onPressed: onTrailingIconTap,
-                      ),
-                    if (showDone)
-                      TextButton(
-                        onPressed: onDone,
-                        child: Text(
-                          trailingText ?? 'Done',
-                          style: const TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (onTrailingIconTap != null)
+                        IconButton(
+                          icon: const Icon(
+                            Icons.add_circle_outline_rounded,
+                            size: 24,
                             color: AppColors.primary,
                           ),
+                          onPressed: onTrailingIconTap,
                         ),
-                      )
-                    else
-                      const SizedBox(width: 64),
-                  ],
-                ),
-              ],
+                      if (showDone)
+                        TextButton(
+                          onPressed: onDone,
+                          child: Text(
+                            trailingText ?? 'Done',
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        )
+                      else
+                        const SizedBox(width: 80),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
+      

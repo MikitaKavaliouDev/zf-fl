@@ -6,39 +6,45 @@ part of 'progress_response_dto.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_ProgressResponseDto _$ProgressResponseDtoFromJson(Map<String, dynamic> json) =>
-    _ProgressResponseDto(
-      weight:
-          (json['weight'] as List<dynamic>?)
-              ?.map((e) => DataPoint.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          const <DataPoint>[],
-      bodyFat:
-          (json['bodyFat'] as List<dynamic>?)
-              ?.map((e) => DataPoint.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          const <DataPoint>[],
-      volume:
-          (json['volume'] as List<dynamic>?)
-              ?.map((e) => DataPoint.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          const <DataPoint>[],
-      exercisePerformance:
-          (json['exercisePerformance'] as List<dynamic>?)
-              ?.map(
-                (e) =>
-                    ExercisePerformanceDto.fromJson(e as Map<String, dynamic>),
-              )
-              .toList() ??
-          const <ExercisePerformanceDto>[],
-      favoriteExercises:
-          (json['favoriteExercises'] as List<dynamic>?)
-              ?.map(
-                (e) => FavoriteExerciseDto.fromJson(e as Map<String, dynamic>),
-              )
-              .toList() ??
-          const <FavoriteExerciseDto>[],
-    );
+_ProgressResponseDto _$ProgressResponseDtoFromJson(
+  Map<String, dynamic> json,
+) => _ProgressResponseDto(
+  weight:
+      (json['weight'] as List<dynamic>?)
+          ?.map((e) => DataPoint.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <DataPoint>[],
+  bodyFat:
+      (json['bodyFat'] as List<dynamic>?)
+          ?.map((e) => DataPoint.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <DataPoint>[],
+  volume:
+      (json['volume'] as List<dynamic>?)
+          ?.map((e) => DataPoint.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <DataPoint>[],
+  exercisePerformance:
+      (json['exercisePerformance'] as List<dynamic>?)
+          ?.map(
+            (e) => ExercisePerformanceDto.fromJson(e as Map<String, dynamic>),
+          )
+          .toList() ??
+      const <ExercisePerformanceDto>[],
+  favoriteExercises:
+      (json['favoriteExercises'] as List<dynamic>?)
+          ?.map((e) => FavoriteExerciseDto.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <FavoriteExerciseDto>[],
+  worstPerformingExercises:
+      (json['worstPerformingExercises'] as List<dynamic>?)
+          ?.map(
+            (e) =>
+                WorstPerformingExerciseDto.fromJson(e as Map<String, dynamic>),
+          )
+          .toList() ??
+      const <WorstPerformingExerciseDto>[],
+);
 
 Map<String, dynamic> _$ProgressResponseDtoToJson(
   _ProgressResponseDto instance,
@@ -48,6 +54,23 @@ Map<String, dynamic> _$ProgressResponseDtoToJson(
   'volume': instance.volume,
   'exercisePerformance': instance.exercisePerformance,
   'favoriteExercises': instance.favoriteExercises,
+  'worstPerformingExercises': instance.worstPerformingExercises,
+};
+
+_WorstPerformingExerciseDto _$WorstPerformingExerciseDtoFromJson(
+  Map<String, dynamic> json,
+) => _WorstPerformingExerciseDto(
+  exerciseId: json['exerciseId'] as String,
+  exerciseName: json['exerciseName'] as String,
+  issue: json['issue'] as String? ?? '',
+);
+
+Map<String, dynamic> _$WorstPerformingExerciseDtoToJson(
+  _WorstPerformingExerciseDto instance,
+) => <String, dynamic>{
+  'exerciseId': instance.exerciseId,
+  'exerciseName': instance.exerciseName,
+  'issue': instance.issue,
 };
 
 _DataPoint _$DataPointFromJson(Map<String, dynamic> json) => _DataPoint(

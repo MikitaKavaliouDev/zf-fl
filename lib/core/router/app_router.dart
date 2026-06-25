@@ -25,6 +25,7 @@ import '../../features/home/presentation/routine_scheduler_screen.dart';
 import '../../features/home/presentation/template_detail_screen.dart';
 import '../../features/home/presentation/templates_library_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
+import '../../features/analytics/cubit/analytics_cubit.dart';
 import '../../features/analytics/presentation/analytics_screen.dart';
 import '../../features/check_in/presentation/check_in_detail_screen.dart';
 import '../../features/check_in/presentation/check_in_history_screen.dart';
@@ -175,7 +176,10 @@ GoRouter createAppRouter(AuthCubit authCubit) {
             routes: [
               GoRoute(
                 path: '/analytics',
-                builder: (_, _) => const AnalyticsScreen(),
+                builder: (_, _) => BlocProvider(
+                  create: (_) => getIt<AnalyticsCubit>(),
+                  child: const AnalyticsScreen(),
+                ),
               ),
             ],
           ),

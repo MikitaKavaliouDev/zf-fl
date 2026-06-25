@@ -27,6 +27,8 @@ import 'package:ziro_fit/features/analytics/data/analytics_api_service.dart'
     as _i396;
 import 'package:ziro_fit/features/analytics/data/analytics_repository.dart'
     as _i512;
+import 'package:ziro_fit/features/analytics/data/exercise_progress_api_service.dart'
+    as _i1003;
 import 'package:ziro_fit/features/auth/cubit/auth_cubit.dart' as _i514;
 import 'package:ziro_fit/features/auth/data/auth_api_service.dart' as _i568;
 import 'package:ziro_fit/features/auth/data/auth_repository.dart' as _i736;
@@ -143,6 +145,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i396.AnalyticsApiService>(
       () => _i396.AnalyticsApiService(gh<_i361.Dio>()),
     );
+    gh.factory<_i1003.ExerciseProgressApiService>(
+      () => _i1003.ExerciseProgressApiService(gh<_i361.Dio>()),
+    );
     gh.factory<_i568.AuthApiService>(
       () => _i568.AuthApiService(gh<_i361.Dio>()),
     );
@@ -229,11 +234,14 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i467.LocationService>(),
       ),
     );
-    gh.singleton<_i512.AnalyticsRepository>(
-      () => _i512.AnalyticsRepository(gh<_i396.AnalyticsApiService>()),
-    );
     gh.singleton<_i1063.TrainerRepository>(
       () => _i1063.TrainerRepository(gh<_i680.TrainerApiService>()),
+    );
+    gh.singleton<_i512.AnalyticsRepository>(
+      () => _i512.AnalyticsRepository(
+        gh<_i396.AnalyticsApiService>(),
+        gh<_i1003.ExerciseProgressApiService>(),
+      ),
     );
     gh.factory<_i861.NotificationsCubit>(
       () => _i861.NotificationsCubit(

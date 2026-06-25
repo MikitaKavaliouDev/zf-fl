@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-
+import '../../../core/di/injection.dart';
+import '../../../core/events/event_bus.dart';
 import '../../../core/theme/app_theme.dart';
 import '../cubit/workout_session_cubit.dart';
 import '../cubit/workout_session_state.dart';
@@ -19,10 +20,8 @@ import 'widgets/template_picker_dialog.dart';
 import 'widgets/workout_numeric_keyboard.dart';
 import 'package:flutter/services.dart';
 import 'widgets/coach_note_card.dart';
-import 'widgets/focus_metric_selector.dart';
 import 'widgets/plate_calculator.dart';
 import 'widgets/youtube_player_widget.dart';
-import 'exercise_detail_screen.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Focus / input system types (local to this screen)
@@ -66,7 +65,6 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
   String _activeInputText = '';
   _InputOverlay _overlayMode = _InputOverlay.none;
   bool _dismissedLongWarning = false;
-  bool _isMinimized = false;
   double _dragOffset = 0;
 
   @override
@@ -112,6 +110,13 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
                 behavior: SnackBarBehavior.floating,
               ),
             );
+            // Emit event for cross-feature updates (analytics, home, etc.)
+            getIt<EventBus>().emit(WorkoutCompletedEvent(
+              sessionId: state.session.id,
+              duration: state.totalDuration,
+            ));
+            // Navigate back to shell home
+            context.go('/');
           }
           if (state is WorkoutSessionActive && state.newPrRecord) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -150,7 +155,6 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
               :final restStartedAt,
               :final restElapsed,
               :final restRemaining,
-              :final showLongSessionWarning,
               :final showRestFinishedToast,
               :final sessionNewRecords,
             ) =>
@@ -353,7 +357,7 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
                               child: FractionallySizedBox(
                                 alignment: Alignment.centerLeft,
                                 widthFactor: (restRemaining != null && (context.read<WorkoutSessionCubit>().state as WorkoutSessionActive).restDuration != null && (context.read<WorkoutSessionCubit>().state as WorkoutSessionActive).restDuration! > 0)
-                                    ? restRemaining! / (context.read<WorkoutSessionCubit>().state as WorkoutSessionActive).restDuration!
+                                    ? restRemaining / (context.read<WorkoutSessionCubit>().state as WorkoutSessionActive).restDuration!
                                     : 0,
                                 child: Container(
                                   decoration: BoxDecoration(

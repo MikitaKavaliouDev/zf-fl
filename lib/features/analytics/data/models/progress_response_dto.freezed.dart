@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ProgressResponseDto {
 
- List<DataPoint> get weight; List<DataPoint> get bodyFat; List<DataPoint> get volume; List<ExercisePerformanceDto> get exercisePerformance; List<FavoriteExerciseDto> get favoriteExercises;
+ List<DataPoint> get weight; List<DataPoint> get bodyFat; List<DataPoint> get volume; List<ExercisePerformanceDto> get exercisePerformance; List<FavoriteExerciseDto> get favoriteExercises; List<WorstPerformingExerciseDto> get worstPerformingExercises;
 /// Create a copy of ProgressResponseDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $ProgressResponseDtoCopyWith<ProgressResponseDto> get copyWith => _$ProgressResp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ProgressResponseDto&&const DeepCollectionEquality().equals(other.weight, weight)&&const DeepCollectionEquality().equals(other.bodyFat, bodyFat)&&const DeepCollectionEquality().equals(other.volume, volume)&&const DeepCollectionEquality().equals(other.exercisePerformance, exercisePerformance)&&const DeepCollectionEquality().equals(other.favoriteExercises, favoriteExercises));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ProgressResponseDto&&const DeepCollectionEquality().equals(other.weight, weight)&&const DeepCollectionEquality().equals(other.bodyFat, bodyFat)&&const DeepCollectionEquality().equals(other.volume, volume)&&const DeepCollectionEquality().equals(other.exercisePerformance, exercisePerformance)&&const DeepCollectionEquality().equals(other.favoriteExercises, favoriteExercises)&&const DeepCollectionEquality().equals(other.worstPerformingExercises, worstPerformingExercises));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(weight),const DeepCollectionEquality().hash(bodyFat),const DeepCollectionEquality().hash(volume),const DeepCollectionEquality().hash(exercisePerformance),const DeepCollectionEquality().hash(favoriteExercises));
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(weight),const DeepCollectionEquality().hash(bodyFat),const DeepCollectionEquality().hash(volume),const DeepCollectionEquality().hash(exercisePerformance),const DeepCollectionEquality().hash(favoriteExercises),const DeepCollectionEquality().hash(worstPerformingExercises));
 
 @override
 String toString() {
-  return 'ProgressResponseDto(weight: $weight, bodyFat: $bodyFat, volume: $volume, exercisePerformance: $exercisePerformance, favoriteExercises: $favoriteExercises)';
+  return 'ProgressResponseDto(weight: $weight, bodyFat: $bodyFat, volume: $volume, exercisePerformance: $exercisePerformance, favoriteExercises: $favoriteExercises, worstPerformingExercises: $worstPerformingExercises)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $ProgressResponseDtoCopyWith<$Res>  {
   factory $ProgressResponseDtoCopyWith(ProgressResponseDto value, $Res Function(ProgressResponseDto) _then) = _$ProgressResponseDtoCopyWithImpl;
 @useResult
 $Res call({
- List<DataPoint> weight, List<DataPoint> bodyFat, List<DataPoint> volume, List<ExercisePerformanceDto> exercisePerformance, List<FavoriteExerciseDto> favoriteExercises
+ List<DataPoint> weight, List<DataPoint> bodyFat, List<DataPoint> volume, List<ExercisePerformanceDto> exercisePerformance, List<FavoriteExerciseDto> favoriteExercises, List<WorstPerformingExerciseDto> worstPerformingExercises
 });
 
 
@@ -65,14 +65,15 @@ class _$ProgressResponseDtoCopyWithImpl<$Res>
 
 /// Create a copy of ProgressResponseDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? weight = null,Object? bodyFat = null,Object? volume = null,Object? exercisePerformance = null,Object? favoriteExercises = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? weight = null,Object? bodyFat = null,Object? volume = null,Object? exercisePerformance = null,Object? favoriteExercises = null,Object? worstPerformingExercises = null,}) {
   return _then(_self.copyWith(
 weight: null == weight ? _self.weight : weight // ignore: cast_nullable_to_non_nullable
 as List<DataPoint>,bodyFat: null == bodyFat ? _self.bodyFat : bodyFat // ignore: cast_nullable_to_non_nullable
 as List<DataPoint>,volume: null == volume ? _self.volume : volume // ignore: cast_nullable_to_non_nullable
 as List<DataPoint>,exercisePerformance: null == exercisePerformance ? _self.exercisePerformance : exercisePerformance // ignore: cast_nullable_to_non_nullable
 as List<ExercisePerformanceDto>,favoriteExercises: null == favoriteExercises ? _self.favoriteExercises : favoriteExercises // ignore: cast_nullable_to_non_nullable
-as List<FavoriteExerciseDto>,
+as List<FavoriteExerciseDto>,worstPerformingExercises: null == worstPerformingExercises ? _self.worstPerformingExercises : worstPerformingExercises // ignore: cast_nullable_to_non_nullable
+as List<WorstPerformingExerciseDto>,
   ));
 }
 
@@ -157,10 +158,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<DataPoint> weight,  List<DataPoint> bodyFat,  List<DataPoint> volume,  List<ExercisePerformanceDto> exercisePerformance,  List<FavoriteExerciseDto> favoriteExercises)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<DataPoint> weight,  List<DataPoint> bodyFat,  List<DataPoint> volume,  List<ExercisePerformanceDto> exercisePerformance,  List<FavoriteExerciseDto> favoriteExercises,  List<WorstPerformingExerciseDto> worstPerformingExercises)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ProgressResponseDto() when $default != null:
-return $default(_that.weight,_that.bodyFat,_that.volume,_that.exercisePerformance,_that.favoriteExercises);case _:
+return $default(_that.weight,_that.bodyFat,_that.volume,_that.exercisePerformance,_that.favoriteExercises,_that.worstPerformingExercises);case _:
   return orElse();
 
 }
@@ -178,10 +179,10 @@ return $default(_that.weight,_that.bodyFat,_that.volume,_that.exercisePerformanc
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<DataPoint> weight,  List<DataPoint> bodyFat,  List<DataPoint> volume,  List<ExercisePerformanceDto> exercisePerformance,  List<FavoriteExerciseDto> favoriteExercises)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<DataPoint> weight,  List<DataPoint> bodyFat,  List<DataPoint> volume,  List<ExercisePerformanceDto> exercisePerformance,  List<FavoriteExerciseDto> favoriteExercises,  List<WorstPerformingExerciseDto> worstPerformingExercises)  $default,) {final _that = this;
 switch (_that) {
 case _ProgressResponseDto():
-return $default(_that.weight,_that.bodyFat,_that.volume,_that.exercisePerformance,_that.favoriteExercises);case _:
+return $default(_that.weight,_that.bodyFat,_that.volume,_that.exercisePerformance,_that.favoriteExercises,_that.worstPerformingExercises);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -198,10 +199,10 @@ return $default(_that.weight,_that.bodyFat,_that.volume,_that.exercisePerformanc
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<DataPoint> weight,  List<DataPoint> bodyFat,  List<DataPoint> volume,  List<ExercisePerformanceDto> exercisePerformance,  List<FavoriteExerciseDto> favoriteExercises)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<DataPoint> weight,  List<DataPoint> bodyFat,  List<DataPoint> volume,  List<ExercisePerformanceDto> exercisePerformance,  List<FavoriteExerciseDto> favoriteExercises,  List<WorstPerformingExerciseDto> worstPerformingExercises)?  $default,) {final _that = this;
 switch (_that) {
 case _ProgressResponseDto() when $default != null:
-return $default(_that.weight,_that.bodyFat,_that.volume,_that.exercisePerformance,_that.favoriteExercises);case _:
+return $default(_that.weight,_that.bodyFat,_that.volume,_that.exercisePerformance,_that.favoriteExercises,_that.worstPerformingExercises);case _:
   return null;
 
 }
@@ -213,7 +214,7 @@ return $default(_that.weight,_that.bodyFat,_that.volume,_that.exercisePerformanc
 @JsonSerializable()
 
 class _ProgressResponseDto implements ProgressResponseDto {
-  const _ProgressResponseDto({final  List<DataPoint> weight = const <DataPoint>[], final  List<DataPoint> bodyFat = const <DataPoint>[], final  List<DataPoint> volume = const <DataPoint>[], final  List<ExercisePerformanceDto> exercisePerformance = const <ExercisePerformanceDto>[], final  List<FavoriteExerciseDto> favoriteExercises = const <FavoriteExerciseDto>[]}): _weight = weight,_bodyFat = bodyFat,_volume = volume,_exercisePerformance = exercisePerformance,_favoriteExercises = favoriteExercises;
+  const _ProgressResponseDto({final  List<DataPoint> weight = const <DataPoint>[], final  List<DataPoint> bodyFat = const <DataPoint>[], final  List<DataPoint> volume = const <DataPoint>[], final  List<ExercisePerformanceDto> exercisePerformance = const <ExercisePerformanceDto>[], final  List<FavoriteExerciseDto> favoriteExercises = const <FavoriteExerciseDto>[], final  List<WorstPerformingExerciseDto> worstPerformingExercises = const <WorstPerformingExerciseDto>[]}): _weight = weight,_bodyFat = bodyFat,_volume = volume,_exercisePerformance = exercisePerformance,_favoriteExercises = favoriteExercises,_worstPerformingExercises = worstPerformingExercises;
   factory _ProgressResponseDto.fromJson(Map<String, dynamic> json) => _$ProgressResponseDtoFromJson(json);
 
  final  List<DataPoint> _weight;
@@ -251,6 +252,13 @@ class _ProgressResponseDto implements ProgressResponseDto {
   return EqualUnmodifiableListView(_favoriteExercises);
 }
 
+ final  List<WorstPerformingExerciseDto> _worstPerformingExercises;
+@override@JsonKey() List<WorstPerformingExerciseDto> get worstPerformingExercises {
+  if (_worstPerformingExercises is EqualUnmodifiableListView) return _worstPerformingExercises;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_worstPerformingExercises);
+}
+
 
 /// Create a copy of ProgressResponseDto
 /// with the given fields replaced by the non-null parameter values.
@@ -265,16 +273,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ProgressResponseDto&&const DeepCollectionEquality().equals(other._weight, _weight)&&const DeepCollectionEquality().equals(other._bodyFat, _bodyFat)&&const DeepCollectionEquality().equals(other._volume, _volume)&&const DeepCollectionEquality().equals(other._exercisePerformance, _exercisePerformance)&&const DeepCollectionEquality().equals(other._favoriteExercises, _favoriteExercises));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ProgressResponseDto&&const DeepCollectionEquality().equals(other._weight, _weight)&&const DeepCollectionEquality().equals(other._bodyFat, _bodyFat)&&const DeepCollectionEquality().equals(other._volume, _volume)&&const DeepCollectionEquality().equals(other._exercisePerformance, _exercisePerformance)&&const DeepCollectionEquality().equals(other._favoriteExercises, _favoriteExercises)&&const DeepCollectionEquality().equals(other._worstPerformingExercises, _worstPerformingExercises));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_weight),const DeepCollectionEquality().hash(_bodyFat),const DeepCollectionEquality().hash(_volume),const DeepCollectionEquality().hash(_exercisePerformance),const DeepCollectionEquality().hash(_favoriteExercises));
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_weight),const DeepCollectionEquality().hash(_bodyFat),const DeepCollectionEquality().hash(_volume),const DeepCollectionEquality().hash(_exercisePerformance),const DeepCollectionEquality().hash(_favoriteExercises),const DeepCollectionEquality().hash(_worstPerformingExercises));
 
 @override
 String toString() {
-  return 'ProgressResponseDto(weight: $weight, bodyFat: $bodyFat, volume: $volume, exercisePerformance: $exercisePerformance, favoriteExercises: $favoriteExercises)';
+  return 'ProgressResponseDto(weight: $weight, bodyFat: $bodyFat, volume: $volume, exercisePerformance: $exercisePerformance, favoriteExercises: $favoriteExercises, worstPerformingExercises: $worstPerformingExercises)';
 }
 
 
@@ -285,7 +293,7 @@ abstract mixin class _$ProgressResponseDtoCopyWith<$Res> implements $ProgressRes
   factory _$ProgressResponseDtoCopyWith(_ProgressResponseDto value, $Res Function(_ProgressResponseDto) _then) = __$ProgressResponseDtoCopyWithImpl;
 @override @useResult
 $Res call({
- List<DataPoint> weight, List<DataPoint> bodyFat, List<DataPoint> volume, List<ExercisePerformanceDto> exercisePerformance, List<FavoriteExerciseDto> favoriteExercises
+ List<DataPoint> weight, List<DataPoint> bodyFat, List<DataPoint> volume, List<ExercisePerformanceDto> exercisePerformance, List<FavoriteExerciseDto> favoriteExercises, List<WorstPerformingExerciseDto> worstPerformingExercises
 });
 
 
@@ -302,14 +310,284 @@ class __$ProgressResponseDtoCopyWithImpl<$Res>
 
 /// Create a copy of ProgressResponseDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? weight = null,Object? bodyFat = null,Object? volume = null,Object? exercisePerformance = null,Object? favoriteExercises = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? weight = null,Object? bodyFat = null,Object? volume = null,Object? exercisePerformance = null,Object? favoriteExercises = null,Object? worstPerformingExercises = null,}) {
   return _then(_ProgressResponseDto(
 weight: null == weight ? _self._weight : weight // ignore: cast_nullable_to_non_nullable
 as List<DataPoint>,bodyFat: null == bodyFat ? _self._bodyFat : bodyFat // ignore: cast_nullable_to_non_nullable
 as List<DataPoint>,volume: null == volume ? _self._volume : volume // ignore: cast_nullable_to_non_nullable
 as List<DataPoint>,exercisePerformance: null == exercisePerformance ? _self._exercisePerformance : exercisePerformance // ignore: cast_nullable_to_non_nullable
 as List<ExercisePerformanceDto>,favoriteExercises: null == favoriteExercises ? _self._favoriteExercises : favoriteExercises // ignore: cast_nullable_to_non_nullable
-as List<FavoriteExerciseDto>,
+as List<FavoriteExerciseDto>,worstPerformingExercises: null == worstPerformingExercises ? _self._worstPerformingExercises : worstPerformingExercises // ignore: cast_nullable_to_non_nullable
+as List<WorstPerformingExerciseDto>,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$WorstPerformingExerciseDto {
+
+ String get exerciseId; String get exerciseName; String get issue;
+/// Create a copy of WorstPerformingExerciseDto
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$WorstPerformingExerciseDtoCopyWith<WorstPerformingExerciseDto> get copyWith => _$WorstPerformingExerciseDtoCopyWithImpl<WorstPerformingExerciseDto>(this as WorstPerformingExerciseDto, _$identity);
+
+  /// Serializes this WorstPerformingExerciseDto to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WorstPerformingExerciseDto&&(identical(other.exerciseId, exerciseId) || other.exerciseId == exerciseId)&&(identical(other.exerciseName, exerciseName) || other.exerciseName == exerciseName)&&(identical(other.issue, issue) || other.issue == issue));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,exerciseId,exerciseName,issue);
+
+@override
+String toString() {
+  return 'WorstPerformingExerciseDto(exerciseId: $exerciseId, exerciseName: $exerciseName, issue: $issue)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $WorstPerformingExerciseDtoCopyWith<$Res>  {
+  factory $WorstPerformingExerciseDtoCopyWith(WorstPerformingExerciseDto value, $Res Function(WorstPerformingExerciseDto) _then) = _$WorstPerformingExerciseDtoCopyWithImpl;
+@useResult
+$Res call({
+ String exerciseId, String exerciseName, String issue
+});
+
+
+
+
+}
+/// @nodoc
+class _$WorstPerformingExerciseDtoCopyWithImpl<$Res>
+    implements $WorstPerformingExerciseDtoCopyWith<$Res> {
+  _$WorstPerformingExerciseDtoCopyWithImpl(this._self, this._then);
+
+  final WorstPerformingExerciseDto _self;
+  final $Res Function(WorstPerformingExerciseDto) _then;
+
+/// Create a copy of WorstPerformingExerciseDto
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? exerciseId = null,Object? exerciseName = null,Object? issue = null,}) {
+  return _then(_self.copyWith(
+exerciseId: null == exerciseId ? _self.exerciseId : exerciseId // ignore: cast_nullable_to_non_nullable
+as String,exerciseName: null == exerciseName ? _self.exerciseName : exerciseName // ignore: cast_nullable_to_non_nullable
+as String,issue: null == issue ? _self.issue : issue // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [WorstPerformingExerciseDto].
+extension WorstPerformingExerciseDtoPatterns on WorstPerformingExerciseDto {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _WorstPerformingExerciseDto value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _WorstPerformingExerciseDto() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _WorstPerformingExerciseDto value)  $default,){
+final _that = this;
+switch (_that) {
+case _WorstPerformingExerciseDto():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _WorstPerformingExerciseDto value)?  $default,){
+final _that = this;
+switch (_that) {
+case _WorstPerformingExerciseDto() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String exerciseId,  String exerciseName,  String issue)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _WorstPerformingExerciseDto() when $default != null:
+return $default(_that.exerciseId,_that.exerciseName,_that.issue);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String exerciseId,  String exerciseName,  String issue)  $default,) {final _that = this;
+switch (_that) {
+case _WorstPerformingExerciseDto():
+return $default(_that.exerciseId,_that.exerciseName,_that.issue);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String exerciseId,  String exerciseName,  String issue)?  $default,) {final _that = this;
+switch (_that) {
+case _WorstPerformingExerciseDto() when $default != null:
+return $default(_that.exerciseId,_that.exerciseName,_that.issue);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _WorstPerformingExerciseDto implements WorstPerformingExerciseDto {
+  const _WorstPerformingExerciseDto({required this.exerciseId, required this.exerciseName, this.issue = ''});
+  factory _WorstPerformingExerciseDto.fromJson(Map<String, dynamic> json) => _$WorstPerformingExerciseDtoFromJson(json);
+
+@override final  String exerciseId;
+@override final  String exerciseName;
+@override@JsonKey() final  String issue;
+
+/// Create a copy of WorstPerformingExerciseDto
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$WorstPerformingExerciseDtoCopyWith<_WorstPerformingExerciseDto> get copyWith => __$WorstPerformingExerciseDtoCopyWithImpl<_WorstPerformingExerciseDto>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$WorstPerformingExerciseDtoToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _WorstPerformingExerciseDto&&(identical(other.exerciseId, exerciseId) || other.exerciseId == exerciseId)&&(identical(other.exerciseName, exerciseName) || other.exerciseName == exerciseName)&&(identical(other.issue, issue) || other.issue == issue));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,exerciseId,exerciseName,issue);
+
+@override
+String toString() {
+  return 'WorstPerformingExerciseDto(exerciseId: $exerciseId, exerciseName: $exerciseName, issue: $issue)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$WorstPerformingExerciseDtoCopyWith<$Res> implements $WorstPerformingExerciseDtoCopyWith<$Res> {
+  factory _$WorstPerformingExerciseDtoCopyWith(_WorstPerformingExerciseDto value, $Res Function(_WorstPerformingExerciseDto) _then) = __$WorstPerformingExerciseDtoCopyWithImpl;
+@override @useResult
+$Res call({
+ String exerciseId, String exerciseName, String issue
+});
+
+
+
+
+}
+/// @nodoc
+class __$WorstPerformingExerciseDtoCopyWithImpl<$Res>
+    implements _$WorstPerformingExerciseDtoCopyWith<$Res> {
+  __$WorstPerformingExerciseDtoCopyWithImpl(this._self, this._then);
+
+  final _WorstPerformingExerciseDto _self;
+  final $Res Function(_WorstPerformingExerciseDto) _then;
+
+/// Create a copy of WorstPerformingExerciseDto
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? exerciseId = null,Object? exerciseName = null,Object? issue = null,}) {
+  return _then(_WorstPerformingExerciseDto(
+exerciseId: null == exerciseId ? _self.exerciseId : exerciseId // ignore: cast_nullable_to_non_nullable
+as String,exerciseName: null == exerciseName ? _self.exerciseName : exerciseName // ignore: cast_nullable_to_non_nullable
+as String,issue: null == issue ? _self.issue : issue // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 

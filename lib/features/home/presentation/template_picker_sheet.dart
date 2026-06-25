@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../notifications/presentation/widgets/ziro_sheet_header.dart';
@@ -50,7 +51,14 @@ class _TemplatePickerSheetState extends State<TemplatePickerSheet> {
               ZiroSheetHeader(
                 title: 'Choose Template',
                 showCancel: true,
-                onCancel: () => Navigator.of(this.context).pop(),
+                onCancel: () {
+                  final router = GoRouter.of(context);
+                  if (router.canPop()) {
+                    router.pop();
+                  } else {
+                    context.go('/');
+                  }
+                },
                 leadingText: 'Back',
               ),
               const Divider(height: 1, color: AppColors.borderMuted),
@@ -274,3 +282,4 @@ class _TemplateRow extends StatelessWidget {
     );
   }
 }
+      

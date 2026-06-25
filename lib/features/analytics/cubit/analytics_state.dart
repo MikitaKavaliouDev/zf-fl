@@ -16,6 +16,12 @@ sealed class AnalyticsState with _$AnalyticsState {
     required AnalyticsResponseDto analytics,
     required ProgressResponseDto progress,
     required WidgetConfigDto widgets,
+    @Default(0) int currentStreak,
+    @Default(0) int longestStreak,
+    @Default(0.0) double volumeTrend,
+    @Default(0.0) double consistencyTrend,
+    @Default(0.0) double frequencyTrend,
+    @Default(0.0) double averageVolumeTrend,
   }) = AnalyticsLoaded;
 
   const factory AnalyticsState.error(String message) = AnalyticsError;

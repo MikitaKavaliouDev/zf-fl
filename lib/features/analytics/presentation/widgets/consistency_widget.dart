@@ -1,67 +1,68 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_theme.dart';
-
-/// Circular progress + linear bar showing workout consistency percentage.
+/// iOS-style consistency widget — large purple percentage + purple-blue
+/// gradient capsule bar. Matches PersonalAnalyticsView.
 class ConsistencyWidget extends StatelessWidget {
   final int consistency;
 
   const ConsistencyWidget({super.key, required this.consistency});
+
+  static const Color _purple = Color(0xFF7B2FBE);
 
   @override
   Widget build(BuildContext context) {
     final percentage = consistency / 100.0;
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(
-          height: 120,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              SizedBox(
-                width: 100,
-                height: 100,
-                child: CircularProgressIndicator(
-                  value: percentage,
-                  strokeWidth: 8,
-                  backgroundColor: AppColors.borderMuted,
-                  valueColor: const AlwaysStoppedAnimation<Color>(
-                    AppColors.primary,
-                  ),
-                ),
+        // Percentage text, right-aligned
+        Row(
+          children: [
+            const Spacer(),
+            Text(
+              '${(percentage * 100).toInt()}%',
+              style: const TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: _purple,
               ),
-              Column(
-                mainAxisSize: MainAxisSize.min,
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        // Purple-blue gradient capsule bar
+        SizedBox(
+          height: 8,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return Stack(
                 children: [
-                  Text(
-                    '$consistency%',
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.foreground,
+                  // Background track
+                  Container(
+                    width: constraints.maxWidth,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: _purple.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(99),
                     ),
                   ),
-                  const Text(
-                    'Consistency',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.mutedText,
+                  // Foreground fill
+                  FractionallySizedBox(
+                    widthFactor: percentage.clamp(0.0, 1.0),
+                    child: Container(
+                      height: 8,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [_purple, Colors.blue],
+                        ),
+                        borderRadius: BorderRadius.circular(99),
+                      ),
                     ),
                   ),
                 ],
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: percentage,
-            minHeight: 6,
-            backgroundColor: AppColors.borderMuted,
-            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+              );
+            },
           ),
         ),
       ],

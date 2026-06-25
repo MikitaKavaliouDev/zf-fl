@@ -39,7 +39,7 @@ class QuickActionsRow extends StatelessWidget {
             const SizedBox(width: 16),
             Expanded(
               child: _QuickActionCard(
-                onTap: () => context.go('/home/templates-library'),
+                onTap: () => context.push('/home/templates-library'),
                 icon: Icons.grid_view_rounded,
                 label: 'Templates',
                 color: const Color(0xFF8B5CF6),
@@ -97,3 +97,4 @@ class _QuickActionCard extends StatelessWidget {
     );
   }
 }
+      
