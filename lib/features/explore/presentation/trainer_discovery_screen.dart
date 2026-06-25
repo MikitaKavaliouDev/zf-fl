@@ -311,17 +311,43 @@ class _DiscoveryHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Drag handle
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 5,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: AppColors.borderActive,
-                    borderRadius: BorderRadius.circular(99),
+              // Drag handle + back button row
+              Row(
+                children: [
+                  Expanded(
+                    child: Center(
+                      child: Container(
+                        width: 40,
+                        height: 5,
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: AppColors.borderActive,
+                          borderRadius: BorderRadius.circular(99),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  // Close button
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: GestureDetector(
+                      onTap: () => Navigator.of(context).maybePop(),
+                      child: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: AppColors.mutedSurface,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.close_rounded,
+                          size: 18,
+                          color: AppColors.foreground,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
 
               // Title

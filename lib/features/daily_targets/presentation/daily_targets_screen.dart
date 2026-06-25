@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/di/injection.dart';
@@ -46,7 +47,21 @@ class _DailyTargetsScreenState extends State<DailyTargetsScreen> {
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
-          title: const Text('Daily Targets'),
+          backgroundColor: AppColors.background,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_rounded,
+                color: AppColors.foreground),
+            onPressed: () => context.pop(),
+          ),
+          title: const Text(
+            'Daily Targets',
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+              color: AppColors.foreground,
+            ),
+          ),
         ),
         body: Column(
           children: [

@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
@@ -62,12 +64,58 @@ class AuthRepository {
 
   // ── Token / session helpers ──
 
+  /// Restore the current user session from stored tokens.
+  ///
+  /// Tries the access token first (via [getMe]). If that fails (missing,
+  /// expired, or server rejection), falls back to the refresh token via
+  /// [AuthApiService.refresh] to obtain fresh credentials.
+  ///
+  /// Returns the [User] if a valid session exists, or `null` otherwise.
   Future<User?> getCurrentUser() async {
-    final token = await _tokenStorage.getAccessToken();
-    if (token == null) return null;
+    // 1. Try access token → GET /api/auth/me
+    final accessToken = await _tokenStorage.getAccessToken();
+    if (accessToken != null) {
+      try {
+        return await _api.getMe();
+      } on DioException catch (e) {
+        developer.log(
+          'getCurrentUser: getMe failed (${e.response?.statusCode}), '
+          'falling back to refresh token',
+          name: 'auth',
+        );
+        // Fall through to refresh token attempt
+      } catch (_) {
+        // Non-Dio error — do not attempt refresh
+        return null;
+      }
+    }
+
+    // 2. Fallback: refresh token → POST /api/auth/refresh
+    final refreshToken = await _tokenStorage.getRefreshToken();
+    if (refreshToken == null) {
+      developer.log('getCurrentUser: no stored tokens', name: 'auth');
+      return null;
+    }
+
     try {
-      return await _api.getMe();
-    } catch (_) {
+      final response = await _api.refresh(refreshToken);
+      // Persist the new token pair so subsequent calls are authenticated.
+      await _tokenStorage.saveTokens(
+        accessToken: response.accessToken,
+        refreshToken: response.refreshToken,
+      );
+      developer.log(
+        'getCurrentUser: session restored via refresh token',
+        name: 'auth',
+      );
+      return response.user;
+    } catch (e) {
+      developer.log(
+        'getCurrentUser: refresh failed — clearing tokens',
+        name: 'auth',
+        error: e,
+      );
+      await _tokenStorage.clearTokens();
       return null;
     }
   }

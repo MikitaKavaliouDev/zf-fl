@@ -12,7 +12,9 @@ import '../cubit/workout_history_state.dart';
 import '../data/models/workout_session_dto.dart';
 
 class WorkoutHistoryScreen extends StatefulWidget {
-  const WorkoutHistoryScreen({super.key});
+  final bool showAppBar;
+
+  const WorkoutHistoryScreen({super.key, this.showAppBar = false});
 
   @override
   State<WorkoutHistoryScreen> createState() => _WorkoutHistoryScreenState();
@@ -167,6 +169,25 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
       create: (_) => getIt<WorkoutHistoryCubit>()..loadHistory(),
       child: Scaffold(
         backgroundColor: AppColors.background,
+        appBar: widget.showAppBar
+            ? AppBar(
+                backgroundColor: AppColors.background,
+                elevation: 0,
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back_rounded,
+                      color: AppColors.foreground),
+                  onPressed: () => context.pop(),
+                ),
+                title: const Text(
+                  'Workout History',
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.foreground,
+                  ),
+                ),
+              )
+            : null,
         body: BlocConsumer<WorkoutHistoryCubit, WorkoutHistoryState>(
           listener: (context, state) {
             if (state is WorkoutHistoryError) {

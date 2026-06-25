@@ -299,7 +299,7 @@ GoRouter createAppRouter(AuthCubit authCubit) {
       // Workout history routes (full-screen, no bottom nav)
       GoRoute(
         path: '/workout/history',
-        builder: (_, _) => const WorkoutHistoryScreen(),
+        builder: (_, _) => const WorkoutHistoryScreen(showAppBar: true),
       ),
       GoRoute(
         path: '/workout/history/:id',

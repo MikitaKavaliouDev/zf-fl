@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -9,6 +11,7 @@ import 'core/logging/state_logger.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/cubit/auth_cubit.dart';
+import 'features/auth/cubit/auth_state.dart';
 import 'features/explore/cubit/explore_cubit.dart';
 import 'features/explore/cubit/trainer_discovery_cubit.dart';
 import 'features/home/cubit/home_cubit.dart';
@@ -61,6 +64,7 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
   late final TrainerDiscoveryCubit _trainerDiscoveryCubit;
   late final NotificationsCubit _notificationsCubit;
   late final GoRouter _router;
+  StreamSubscription<AuthState>? _authSubscription;
 
   @override
   void initState() {
@@ -77,12 +81,21 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
     // Check auth status on first frame.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _authCubit.checkAuthStatus();
-      _notificationsCubit.fetchNotifications();
+    });
+    // Fetch notifications only after auth state is resolved.
+    _authSubscription = _authCubit.stream.listen((state) {
+      if (state is AuthAuthenticated) {
+        _notificationsCubit.fetchNotifications();
+        _authSubscription?.cancel();
+      } else if (state is AuthUnauthenticated) {
+        _authSubscription?.cancel();
+      }
     });
   }
 
   @override
   void dispose() {
+    _authSubscription?.cancel();
     _authCubit.close();
     _homeCubit.close();
     _programCubit.close();
