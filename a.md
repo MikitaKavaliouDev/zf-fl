@@ -1,215 +1,128 @@
 <response>
   <reasoning>
-    Tapping the back button on the Trainer profile screen (`TrainerDetailScreen`) was not working because the app navigated to `/trainer/:username` using `context.go` instead of `context.push`. This replaces the history stack in GoRouter, which meant `router.canPop()` returned false and the back button did nothing.
+    The header layout UI issue (where the user's name/avatar and the system status bar overlap) is caused by the custom floating headers (`ZiroHeader` and `ZiroSheetHeader`) being positioned at the absolute top of the screen (`top: 0`) without taking into account the status bar height (`MediaQuery.of(context).padding.top`).
 
-    To resolve this issue:
-    1. We will update all navigation sites that lead to `/trainer/:username` to use `context.push` instead of `context.go`. This preserves the previous screens (like Explore, Home, or Map) in the history stack, so returning behaves naturally.
-    2. We will also add a fallback to `context.go('/explore')` (or go back to a default shell tab) inside the back button's `onTap` within `TrainerDetailScreen` so that in any edge cases where a user navigates directly or without history, the button still gracefully navigates them out of the trainer screen.
-    3. We will create a `TASKS.md` file to list this task as complete.
+    To fix this issue:
+    1. We will update `ZiroHeader` in `lib/features/home/presentation/widgets/ziro_header.dart` to retrieve and prepend the status bar height to its top padding.
+    2. We will adjust the list padding of `_DashboardContent` inside `lib/features/home/presentation/home_screen.dart` so that it is pushed down dynamically by the status bar height, avoiding overlapping the header.
+    3. We will modify `ZiroSheetHeader` in `lib/features/notifications/presentation/widgets/ziro_sheet_header.dart` to use a `SafeArea(bottom: false)` to push header controls below the status bar dynamically on all devices.
+    4. We will propagate the top safe area padding adjustments to the main list views and grids on other screens using `ZiroSheetHeader` (namely `NotificationsScreen`, `CreateTemplateView`, `RoutineBuilderScreen`, `TemplatesLibraryScreen`, and `RoutineSchedulerScreen`) to ensure consistent alignment.
+    5. We will append the task to `TASKS.md` and mark it complete.
   </reasoning>
   <modifications>
-    <file path="lib/features/explore/presentation/widgets/explore_trainer_card.dart">
+    <file path="lib/features/home/presentation/widgets/ziro_header.dart">
       <![CDATA[
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
-import '../../../trainers/data/models/trainer_list_item_dto.dart';
+import '../../../auth/cubit/auth_cubit.dart';
+import '../../../auth/cubit/auth_state.dart';
+import '../../../notifications/cubit/notifications_cubit.dart';
 
-/// Horizontal scroll trainer card used in "Near You", "Featured", "Recommends" sections.
-/// Matches iOS ExploreTrainerCard — ExploreComponents.swift lines 541-652.
-class ExploreTrainerCard extends StatelessWidget {
-  final TrainerListItemDto trainer;
-  final String? promotionLabel;
-
-  const ExploreTrainerCard({
-    super.key,
-    required this.trainer,
-    this.promotionLabel,
-  });
-
-  String get _name =>
-      trainer.name ?? trainer.profile?.name ?? trainer.username ?? 'Trainer';
-
-  String? get _specialty {
-    final certs = trainer.profile?.certifications;
-    if (certs != null && certs.isNotEmpty) return certs.first;
-    return null;
-  }
-
-  double? get _rating => trainer.profile?.averageRating;
-
-  String? get _photoPath => trainer.profile?.profilePhotoPath;
-
-  String? get _location {
-    final locations = trainer.profile?.locations;
-    if (locations != null && locations.isNotEmpty) {
-      final loc = locations.first;
-      final address = loc.address;
-      if (address != null && address.isNotEmpty) return address;
-      return loc.toString();
-    }
-    return null;
-  }
+/// Floating header that sits above the home scroll content.
+///
+/// Matches iOS ZiroHeader — PersonalHomeView.swift lines 77-102.
+/// Layout: [Avatar circle] [User name] [Spacer] [Bell icon]
+class ZiroHeader extends StatelessWidget {
+  const ZiroHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: trainer.username != null
-          ? () => context.push('/trainer/${trainer.username}')
-          : null,
-      child: Container(
-        width: 144,
-        decoration: BoxDecoration(
-          color: AppColors.card,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image area (144x144)
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                  child: Container(
-                    width: 144,
-                    height: 144,
-                    color: AppColors.mutedSurface,
-                    child: _photoPath != null
-                        ? Image.network(
-                            _photoPath!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => const Icon(
-                              Icons.person_rounded,
-                              size: 48,
-                              color: AppColors.mutedText,
-                            ),
-                          )
-                        : const Icon(
-                            Icons.person_rounded,
-                            size: 48,
-                            color: AppColors.mutedText,
-                          ),
-                  ),
-                ),
-                // Rating overlay top-right
-                if (_rating != null)
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.6),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.star_rounded, size: 10, color: Colors.amber),
-                          const SizedBox(width: 2),
-                          Text(
-                            _rating!.toStringAsFixed(1),
-                            style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                // Promotion badge top-left
-                if (promotionLabel != null)
-                  Positioned(
-                    top: 8,
-                    left: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: promotionLabel == 'Featured'
-                            ? Colors.amber.withValues(alpha: 0.9)
-                            : const Color(0xFF4F46E5).withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            promotionLabel == 'Featured'
-                                ? Icons.star_rounded
-                                : Icons.auto_awesome_rounded,
-                            size: 10,
+    final authState = context.watch<AuthCubit>().state;
+    final unreadCount = context.watch<NotificationsCubit>().unreadCount;
+    final userName = switch (authState) {
+      AuthAuthenticated(:final user) => user.name ?? 'Athlete',
+      _ => 'Home',
+    };
+    final avatarUrl = switch (authState) {
+      AuthAuthenticated(:final user) => user.profilePhotoPath,
+      _ => null,
+    };
+    final topPadding = MediaQuery.of(context).padding.top;
+
+    return Container(
+      padding: EdgeInsets.only(left: 16, right: 12, top: topPadding + 8, bottom: 8),
+      decoration: BoxDecoration(
+        color: AppColors.background.withValues(alpha: 0.75),
+      ),
+      child: ClipRect(
+        child: BackdropFilter(
+          filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Row(
+            children: [
+              // Avatar circle
+              GestureDetector(
+                onTap: () => context.go('/profile'),
+                child: CircleAvatar(
+                  radius: 16,
+                  backgroundColor: AppColors.primary,
+                  backgroundImage:
+                      avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                  child: avatarUrl == null
+                      ? Text(
+                          userName.isNotEmpty
+                              ? userName[0].toUpperCase()
+                              : '?',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
-                          const SizedBox(width: 2),
-                          Text(
-                            promotionLabel!,
-                            style: const TextStyle(
-                              fontSize: 8,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
+                        )
+                      : null,
+                ),
+              ),
+              const SizedBox(width: 10),
+              // User name
+              Expanded(
+                child: Text(
+                  userName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.foreground,
+                  ),
+                ),
+              ),
+              // Bell icon
+              GestureDetector(
+                onTap: () => context.push('/home/notifications'),
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      const Icon(
+                        Icons.notifications_outlined,
+                        size: 22,
+                        color: AppColors.foreground,
                       ),
-                    ),
-                  ),
-              ],
-            ),
-            // Info section
-            Padding(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.foreground,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _specialty ?? 'Fitness Professional',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.mutedText,
-                    ),
-                  ),
-                  if (_location != null) ...[
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        const Icon(Icons.location_on_outlined, size: 10, color: AppColors.mutedText),
-                        const SizedBox(width: 2),
-                        Expanded(
-                          child: Text(
-                            _location!,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 10,
-                              color: AppColors.mutedText,
+                      // Red dot badge (shown when unread notifications exist)
+                      if (unreadCount > 0)
+                        Positioned(
+                          top: -2,
+                          right: -2,
+                          child: Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.redAccent,
                             ),
                           ),
                         ),
-                      ],
-                    ),
-                  ],
-                ],
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -217,58 +130,374 @@ class ExploreTrainerCard extends StatelessWidget {
 }
       ]]>
     </file>
-    <file path="lib/features/home/presentation/widgets/coach_card.dart">
+    <file path="lib/features/home/presentation/home_screen.dart">
       <![CDATA[
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/theme/app_theme.dart';
-import '../../data/models/client_dashboard_trainer.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../notifications/cubit/notifications_cubit.dart';
+import '../cubit/home_cubit.dart';
+import '../cubit/home_state.dart';
+import '../cubit/program_cubit.dart';
+import '../data/models/active_program_response.dart';
+import '../data/models/client_dashboard_response.dart';
+import '../data/models/client_recent_session.dart';
+import 'widgets/check_in_banner.dart';
+import 'widgets/coach_card.dart';
+import 'widgets/credit_status_widget.dart';
+import 'widgets/daily_targets_section.dart';
+import 'widgets/invitation_hero_card.dart';
+import 'widgets/need_coach_banner.dart';
+import 'widgets/no_routine_placeholder.dart';
+import 'widgets/quick_actions_row.dart';
+import 'widgets/recent_history_section.dart';
+import 'widgets/streak_motivation_card.dart';
+import 'widgets/upcoming_sessions_carousel.dart';
+import 'widgets/ziro_header.dart';
 
-/// Card showing the client's linked coach.
+/// Main client-facing dashboard after login.
 ///
-/// Matches iOS Coach Card — PersonalHomeView.swift lines 417-470.
-/// Shows: shield icon, "COACH" label, trainer name, chevron right.
-class CoachCard extends StatelessWidget {
-  final ClientDashboardTrainer trainer;
+/// Matches iOS PersonalHomeView — PersonalHomeView.swift lines 1-297.
+/// Structure: Stack with floating ZiroHeader on top and scrollable content below.
+/// Content sections follow the iOS order with 24pt spacing.
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
 
-  const CoachCard({super.key, required this.trainer});
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<HomeCubit>().fetchDashboard();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: Stack(
+        children: [
+          BlocBuilder<HomeCubit, HomeState>(
+            builder: (context, state) {
+              return switch (state) {
+                HomeInitial() || HomeLoading() => const _LoadingIndicator(),
+                HomeError(:final message) => _ErrorView(message: message),
+                HomeLoaded(:final dashboard, :final activeProgram) =>
+                  BlocProvider.value(
+                    value: context.read<ProgramCubit>(),
+                    child: _DashboardContent(
+                      dashboard: dashboard,
+                      activeProgram: activeProgram,
+                    ),
+                  ),
+              };
+            },
+          ),
+          // Floating header on top of scroll content
+          const Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: ZiroHeader(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Full-screen loading spinner.
+class _LoadingIndicator extends StatelessWidget {
+  const _LoadingIndicator();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: CircularProgressIndicator(
+        strokeWidth: 3,
+        color: AppColors.primary,
+      ),
+    );
+  }
+}
+
+/// Error state with retry button.
+class _ErrorView extends StatelessWidget {
+  final String message;
+
+  const _ErrorView({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.cloud_off_rounded,
+              size: 56,
+              color: AppColors.mutedText,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 14,
+                color: AppColors.mutedText,
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () => context.read<HomeCubit>().refresh(),
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              label: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Scrollable dashboard content with all section widgets.
+///
+/// Order matches iOS PersonalHomeView:
+/// 1. Coach Card / Need Coach Banner
+/// 2. Credit Status
+/// 3. Streak Motivation Card
+/// 4. Active Program / No Routine Placeholder
+/// 5. Nutrition & Habits Link
+/// 6. Invitation Hero Card
+/// 7. Check-in Banner
+/// 8. Upcoming Sessions Carousel
+/// 9. Daily Targets Section
+/// 10. Quick Actions Row
+/// 11. Recent History Section
+class _DashboardContent extends StatelessWidget {
+  final ClientDashboardResponse dashboard;
+  final ActiveProgramResponse? activeProgram;
+
+  const _DashboardContent({
+    required this.dashboard,
+    this.activeProgram,
+  });
+
+  bool get _isCheckInComplete {
+    final lastCheckIn = dashboard.lastCheckIn;
+    if (lastCheckIn == null) return false;
+    return lastCheckIn.isAfter(
+      DateTime.now().subtract(const Duration(days: 7)),
+    );
+  }
+
+  bool get _hasCheckInBanner => dashboard.lastCheckIn != null;
+
+  /// Compute consecutive-day workout streak from completed sessions.
+  static int _computeStreak(List<ClientRecentSession> sessions) {
+    if (sessions.isEmpty) return 0;
+
+    // Collect unique dates from completed sessions
+    final uniqueDates = <DateTime>{};
+    for (final session in sessions) {
+      if (session.status == 'completed') {
+        final day = DateTime(
+          session.startTime.year,
+          session.startTime.month,
+          session.startTime.day,
+        );
+        uniqueDates.add(day);
+      }
+    }
+
+    if (uniqueDates.isEmpty) return 0;
+
+    final sortedDates = uniqueDates.toList()
+      ..sort((a, b) => b.compareTo(a));
+
+    final today = DateTime.now();
+    final todayDate = DateTime(today.year, today.month, today.day);
+    final mostRecent = sortedDates.first;
+
+    // Streak must include today or yesterday
+    if (mostRecent.difference(todayDate).inDays > 1) return 0;
+
+    // Count consecutive days backwards
+    int streak = 1;
+    for (int i = 1; i < sortedDates.length; i++) {
+      final diff = sortedDates[i - 1].difference(sortedDates[i]).inDays;
+      if (diff == 1) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+
+    return streak;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final trainer = dashboard.clientData.trainer;
+    final remainingCredits = dashboard.clientData.remainingCredits;
+    final sessions = dashboard.clientData.workoutSessions;
+    final upcomingSessions = dashboard.upcomingClientSessions;
+    final streak = _computeStreak(sessions);
+    final topPadding = MediaQuery.of(context).padding.top;
+
+    // Check for pending link requests via NotificationsCubit
+    final notifCubit = context.watch<NotificationsCubit>();
+    final pendingRequest = notifCubit.pendingLinkRequest;
+
+    return RefreshIndicator(
+      onRefresh: () => context.read<HomeCubit>().refresh(),
+      color: AppColors.primary,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: topPadding + 60,  // space for floating header and status bar
+          bottom: 100, // space for tab bar
+        ),
+        children: [
+          // ── 1. Coach Card or Need Coach Banner ──
+          if (trainer != null)
+            CoachCard(trainer: trainer)
+          else
+            const NeedCoachBanner(),
+
+          const SizedBox(height: 24),
+
+          // ── 2. Credit Status (only when linked to a trainer) ──
+          if (trainer != null && remainingCredits != null)
+            CreditStatusWidget(remainingCredits: remainingCredits),
+
+          if (trainer != null && remainingCredits != null)
+            const SizedBox(height: 24),
+
+          // ── 3. Streak Motivation Card (if streak > 0) ──
+          if (streak > 0)
+            StreakMotivationCard(streak: streak),
+
+          if (streak > 0) const SizedBox(height: 24),
+
+          // ── 4. Active Program or No Routine Placeholder ──
+          if (activeProgram != null)
+            _ActiveProgramCard(program: activeProgram!)
+          else if (trainer != null)
+            const NoRoutinePlaceholder(),
+
+          if (activeProgram != null || (trainer != null))
+            const SizedBox(height: 24),
+
+          // ── 5. Nutrition & Habits Link ──
+          _NutritionHabitsCard(onTap: () => context.push('/daily-targets')),
+
+          const SizedBox(height: 24),
+
+          // ── 6. Invitation Hero Card (if pending request) ──
+          if (pendingRequest != null)
+            InvitationHeroCard(
+              message: pendingRequest.message,
+              onAccept: () => notifCubit.acceptRequest(pendingRequest.id),
+              onDecline: () => notifCubit.declineRequest(pendingRequest.id),
+            ),
+
+          if (pendingRequest != null) const SizedBox(height: 24),
+
+          // ── 7. Check-in Banner ──
+          if (_hasCheckInBanner)
+            CheckInBanner(
+              isComplete: _isCheckInComplete,
+              onTapCheckIn: () {
+                context.push('/home/check-in');
+              },
+              hasTrainer: trainer != null,
+            ),
+
+          if (_hasCheckInBanner) const SizedBox(height: 24),
+
+          // ── 8. Upcoming Sessions Carousel ──
+          if (upcomingSessions.isNotEmpty)
+            UpcomingSessionsCarousel(
+              sessions: upcomingSessions,
+              onSessionTap: (_) => context.go('/workout'),
+            ),
+
+          if (upcomingSessions.isNotEmpty) const SizedBox(height: 24),
+
+          // ── 9. Daily Targets Section ──
+          DailyTargetsSection(
+            isEnabled: true,
+            onTapSetTarget: () => context.push('/daily-targets'),
+            onTapAddTarget: () => context.push('/daily-targets'),
+          ),
+
+          const SizedBox(height: 24),
+
+          // ── 10. Quick Actions ──
+          const QuickActionsRow(),
+
+          const SizedBox(height: 24),
+
+          // ── 11. Recent History ──
+          RecentHistorySection(sessions: sessions),
+        ],
+      ),
+    );
+  }
+}
+
+/// Card linking to Nutrition & Habits screen.
+///
+/// Matches iOS green fork.knife card — PersonalHomeView.
+class _NutritionHabitsCard extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _NutritionHabitsCard({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.push('/trainer/${trainer.username}'),
+      onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.card,
+          color: AppColors.mutedSurface,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
           children: [
-            // Shield icon in blue circle
+            // Green circle with fork.knife icon
             Container(
               width: 50,
               height: 50,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
+              decoration: const BoxDecoration(
+                color: Color(0xFF22C55E),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons.shield_rounded,
+                Icons.restaurant_rounded,
                 size: 24,
-                color: AppColors.primary,
+                color: Colors.white,
               ),
             ),
             const SizedBox(width: 16),
-            // Label + name
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text(
-                    'COACH',
+                    'NUTRITION & HABITS',
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
@@ -277,11 +506,9 @@ class CoachCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 2),
-                  Text(
-                    trainer.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                  const Text(
+                    'View Nutrition Plan & Habits',
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: AppColors.foreground,
@@ -290,7 +517,6 @@ class CoachCard extends StatelessWidget {
                 ],
               ),
             ),
-            // Chevron right
             const Icon(
               Icons.chevron_right_rounded,
               size: 20,
@@ -302,1183 +528,1559 @@ class CoachCard extends StatelessWidget {
     );
   }
 }
-      ]]>
-    </file>
-    <file path="lib/features/trainers/presentation/widgets/trainer_card.dart">
-      <![CDATA[
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../../core/network/image_url_helper.dart';
-import '../../../../core/theme/app_theme.dart';
-import '../../data/models/trainer_list_item_dto.dart';
+/// Card showing the client's active program.
+class _ActiveProgramCard extends StatelessWidget {
+  final ActiveProgramResponse program;
 
-class TrainerCard extends StatelessWidget {
-  final TrainerListItemDto trainer;
-
-  const TrainerCard({super.key, required this.trainer});
-
-  String get _name =>
-      trainer.name ?? trainer.profile?.name ?? trainer.username ?? 'Trainer';
-
-  String? get _photoPath => trainer.profile?.profilePhotoPath;
-
-  String? get _specialty {
-    final certs = trainer.profile?.certifications;
-    if (certs != null && certs.isNotEmpty) return certs.first;
-    return null;
-  }
-
-  String? get _location {
-    final locations = trainer.profile?.locations;
-    if (locations != null && locations.isNotEmpty) {
-      final loc = locations.first;
-      final address = loc.address;
-      if (address != null && address.isNotEmpty) return address;
-      return loc.toString();
-    }
-    return null;
-  }
-
-  double? get _rating => trainer.profile?.averageRating;
-
-  int get _reviewCount => trainer.stats?.reviewCount ?? 0;
+  const _ActiveProgramCard({required this.program});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: GestureDetector(
-        onTap: trainer.username != null
-            ? () => context.push('/trainer/${trainer.username}')
-            : null,
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.borderMuted, width: 0.5),
-          ),
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // --- Left: Profile Image (80x80, radius 12) ---
-              _ProfileImage(photoPath: _photoPath),
+    final progress = program.progress;
 
-              const SizedBox(width: 16),
-
-              // --- Right: Info Column ---
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Name + Rating row
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            _name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.foreground,
-                            ),
-                          ),
-                        ),
-                        if (_rating != null) ...[
-                          const SizedBox(width: 8),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.star_rounded,
-                                size: 16,
-                                color: Colors.amber,
-                              ),
-                              const SizedBox(width: 2),
-                              Text(
-                                _rating!.toStringAsFixed(1),
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.foreground,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-
-                    // Specialty
-                    Text(
-                      _specialty ?? 'Fitness Professional',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.mutedText,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-
-                    // Location row
-                    if (_location != null) ...[
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.location_on_outlined,
-                            size: 14,
-                            color: AppColors.mutedText,
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              _location!,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.mutedText,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                    ],
-
-                    // Distance
-                    if (trainer.distance != null)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 4),
-                        child: Text(
-                          '${trainer.distance!.toStringAsFixed(1)} km away',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.mutedText,
-                          ),
-                        ),
-                      ),
-
-                    // Reviews + Link status row
-                    Row(
-                      children: [
-                        if (_reviewCount > 0)
-                          Text(
-                            '$_reviewCount Reviews',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        const Spacer(),
-                        if (trainer.isLinked)
-                          const Icon(
-                            Icons.link_rounded,
-                            size: 16,
-                            color: AppColors.primary,
-                          ),
-                      ],
-                    ),
-                  ],
+    return GestureDetector(
+      onTap: () {
+        context.push('/home/program-detail', extra: program);
+      },
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppColors.mutedSurface,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Program name
+            Text(
+              program.program.name,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppColors.foreground,
+              ),
+            ),
+            if (program.program.description != null &&
+                program.program.description!.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                program.program.description!,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.mutedText,
                 ),
               ),
             ],
-          ),
+            const SizedBox(height: 16),
+            // Progress bar
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: progress.totalCount > 0
+                    ? progress.completedCount / progress.totalCount
+                    : 0,
+                minHeight: 6,
+                backgroundColor: AppColors.borderMuted,
+                valueColor: const AlwaysStoppedAnimation<Color>(
+                  AppColors.primary,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '${progress.completedCount} of ${progress.totalCount} workouts',
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.mutedText,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
+      ]]>
+    </file>
+    <file path="lib/features/notifications/presentation/widgets/ziro_sheet_header.dart">
+      <![CDATA[
+import 'package:flutter/material.dart';
 
-/// 80×80 rounded profile image with loading and error states.
-class _ProfileImage extends StatelessWidget {
-  final String? photoPath;
+import '../../../../core/theme/app_theme.dart';
 
-  const _ProfileImage({required this.photoPath});
+/// Reusable bottom sheet / overlay header — replicates ZiroSheetHeader.swift.
+///
+/// Layout:
+/// - Drag handle (40×5 rounded pill)
+/// - Title centered in a 44pt bar
+/// - Optional Cancel (left) and Done (right) buttons
+/// - Background uses .ultraThinMaterial effect (simulated with 95% opacity white)
+class ZiroSheetHeader extends StatelessWidget {
+  final String title;
+  final bool showDone;
+  final VoidCallback? onDone;
+  final bool showCancel;
+  final VoidCallback? onCancel;
+  final String? leadingText;
+  final String? trailingText;
+  final VoidCallback? onTrailingIconTap;
 
-  @override
-  Widget build(BuildContext context) {
-    final url = resolveImageUrl(photoPath);
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: SizedBox(
-        width: 80,
-        height: 80,
-        child: url.isNotEmpty
-            ? Image.network(
-                url,
-                fit: BoxFit.cover,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  final total = loadingProgress.expectedTotalBytes;
-                  final progress = total != null
-                      ? loadingProgress.cumulativeBytesLoaded / total
-                      : null;
-                  return _Placeholder(
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        value: progress,
-                        strokeWidth: 2,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  );
-                },
-                errorBuilder: (context, error, stackTrace) =>
-                    const _Placeholder(
-                  child: Icon(Icons.person_rounded, size: 36),
-                ),
-              )
-            : const _Placeholder(
-                child: Icon(Icons.person_rounded, size: 36),
-              ),
-      ),
-    );
-  }
-}
-
-/// Gray placeholder used for image loading and error states.
-class _Placeholder extends StatelessWidget {
-  final Widget child;
-
-  const _Placeholder({required this.child});
+  const ZiroSheetHeader({
+    super.key,
+    required this.title,
+    this.showDone = false,
+    this.onDone,
+    this.showCancel = false,
+    this.onCancel,
+    this.leadingText,
+    this.trailingText,
+    this.onTrailingIconTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 80,
-      height: 80,
-      decoration: BoxDecoration(
-        color: AppColors.mutedSurface,
-        borderRadius: BorderRadius.circular(12),
+      color: AppColors.background.withValues(alpha: 0.95),
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 10),
+            // Drag handle
+            Container(
+              width: 40,
+              height: 5,
+              decoration: BoxDecoration(
+                color: Colors.grey.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2.5),
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Header content — Row layout avoids Stack/Positioned.fill overflow trap
+            SizedBox(
+              height: 44,
+              child: Row(
+                children: [
+                  if (showCancel)
+                    TextButton(
+                      onPressed: onCancel,
+                      child: Text(
+                        leadingText ?? 'Cancel',
+                        style: const TextStyle(
+                          fontSize: 17,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    )
+                  else
+                    const SizedBox(width: 64),
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.foreground,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (onTrailingIconTap != null)
+                        IconButton(
+                          icon: const Icon(
+                            Icons.add_circle_outline_rounded,
+                            size: 24,
+                            color: AppColors.primary,
+                          ),
+                          onPressed: onTrailingIconTap,
+                        ),
+                      if (showDone)
+                        TextButton(
+                          onPressed: onDone,
+                          child: Text(
+                            trailingText ?? 'Done',
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        )
+                      else
+                        const SizedBox(width: 64),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
-      child: child,
     );
   }
 }
       ]]>
     </file>
-    <file path="lib/features/explore/presentation/trainer_map_screen.dart">
+    <file path="lib/features/notifications/presentation/notifications_screen.dart">
       <![CDATA[
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:go_router/go_router.dart';
-import 'package:latlong2/latlong.dart' as latlong;
 
-import 'package:ziro_fit/core/di/injection.dart' as di;
-import 'package:ziro_fit/features/explore/cubit/explore_map_cubit.dart';
-import 'package:ziro_fit/features/explore/cubit/explore_map_state.dart';
-import 'package:ziro_fit/features/explore/presentation/widgets/map_cluster_annotation.dart';
-import 'package:ziro_fit/features/explore/presentation/widgets/map_cluster_list_view.dart';
-import 'package:ziro_fit/features/explore/presentation/widgets/map_event_card.dart';
-import 'package:ziro_fit/features/explore/presentation/widgets/map_filter_menu.dart';
-import 'package:ziro_fit/features/explore/presentation/widgets/map_search_bar.dart';
-import 'package:ziro_fit/features/explore/presentation/widgets/map_single_item_annotation.dart';
-import 'package:ziro_fit/features/explore/presentation/widgets/map_trainer_card.dart';
+import '../../../core/theme/app_theme.dart';
+import '../cubit/notifications_cubit.dart';
+import '../cubit/notifications_state.dart';
+import '../data/models/notification_dto.dart';
+import 'widgets/notification_row.dart';
+import 'widgets/ziro_sheet_header.dart';
 
-/// Full-screen map with clustered trainer and event markers.
+/// Full-screen notifications list — replicates iOS NotificationsView exactly.
 ///
-/// Mirrors iOS [TrainerMapView] layout:
-///   - Map with flutter_map (OSM tiles) as the base layer
-///   - Filter pill + overlay menu (top right)
-///   - Location re-center button (below filter pill)
-///   - Close button (top left)
-///   - Selection content card (bottom, above search bar)
-///   - MapSearchBar (bottom)
-class TrainerMapScreen extends StatefulWidget {
-  const TrainerMapScreen({super.key});
+/// Layout:
+/// - ZiroSheetHeader pinned at top (title: "Notifications", Done button pops)
+/// - Scrollable notification list with pull-to-refresh
+/// - Empty state when no notifications
+/// - Loading spinner on initial load
+class NotificationsScreen extends StatelessWidget {
+  const NotificationsScreen({super.key});
 
   @override
-  State<TrainerMapScreen> createState() => _TrainerMapScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider<NotificationsCubit>(
+      create: (context) =>
+          context.read<NotificationsCubit>()..fetchNotifications(),
+      child: const _NotificationsBody(),
+    );
+  }
 }
 
-class _TrainerMapScreenState extends State<TrainerMapScreen> {
-  final MapController _mapController = MapController();
-  late final ExploreMapCubit _cubit;
-  bool _hasZoomedToUser = false;
-  bool _showFilterMenu = false;
-  final FocusNode _searchFocusNode = FocusNode();
+class _NotificationsBody extends StatelessWidget {
+  const _NotificationsBody();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: Stack(
+        alignment: Alignment.topCenter,
+        children: [
+          // Main content
+          BlocBuilder<NotificationsCubit, NotificationsState>(
+            builder: (context, state) {
+              return switch (state) {
+                NotificationsInitial() || NotificationsLoading()
+                    when _notificationsList(state).isEmpty =>
+                  const Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                NotificationsLoaded(:final notifications)
+                    when notifications.isEmpty =>
+                  const _EmptyState(),
+                NotificationsError() => const _EmptyState(),
+                NotificationsLoaded(:final notifications) =>
+                  _NotificationList(notifications: notifications),
+                _ => const _EmptyState(),
+              };
+            },
+          ),
+          // Pinned header overlay
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: ZiroSheetHeader(
+              title: 'Notifications',
+              showDone: true,
+              onDone: () => Navigator.of(context).pop(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Extract the notifications list from any state (empty list for non-loaded).
+  List<NotificationDto> _notificationsList(NotificationsState state) {
+    if (state is NotificationsLoaded) return state.notifications;
+    return const [];
+  }
+}
+
+/// Scrollable list of notification rows with pull-to-refresh.
+class _NotificationList extends StatelessWidget {
+  final List<NotificationDto> notifications;
+
+  const _NotificationList({required this.notifications});
+
+  @override
+  Widget build(BuildContext context) {
+    final cubit = context.read<NotificationsCubit>();
+    final topPadding = MediaQuery.of(context).padding.top;
+
+    return RefreshIndicator(
+      onRefresh: () => cubit.fetchNotifications(),
+      color: AppColors.primary,
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.only(top: topPadding + 108), // header height + status bar
+        itemCount: notifications.length,
+        itemBuilder: (context, index) {
+          final notification = notifications[index];
+          return NotificationRow(
+            notification: notification,
+            cubit: cubit,
+            currentMode: 'client',
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Shown when the notification list is empty.
+class _EmptyState extends StatelessWidget {
+  const _EmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top;
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.only(top: topPadding + 108),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.notifications_off_rounded,
+              size: 50,
+              color: AppColors.mutedText.withValues(alpha: 0.5),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'No notifications',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.mutedText,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+      ]]>
+    </file>
+    <file path="lib/features/home/presentation/create_template_screen.dart">
+      <![CDATA[
+import 'package:flutter/material.dart';
+
+import '../../../core/di/injection.dart' as di;
+import '../../../core/theme/app_theme.dart';
+import '../../notifications/presentation/widgets/ziro_sheet_header.dart';
+import '../../trainers/data/models/exercise_dto.dart';
+import '../../trainers/data/models/template_dto.dart';
+import '../../trainers/data/workout_session_api_service.dart';
+import '../../trainers/presentation/widgets/exercise_picker_sheet.dart';
+
+/// Full-screen template creation view matching iOS `CreateTemplateView.swift`.
+///
+/// Allows the user to:
+/// 1. Enter a template name and optional description
+/// 2. Add exercises from the exercise library
+/// 3. Reorder exercises via drag-and-drop
+/// 4. Remove exercises
+/// 5. Save as a local template (returned via Navigator.pop)
+class CreateTemplateView extends StatefulWidget {
+  const CreateTemplateView({super.key});
+
+  @override
+  State<CreateTemplateView> createState() => _CreateTemplateViewState();
+}
+
+class _CreateTemplateViewState extends State<CreateTemplateView> {
+  late final TextEditingController _nameController;
+  late final TextEditingController _descriptionController;
+  final List<_TemplateExerciseEntry> _exercises = [];
+  bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
-    _cubit = di.getIt<ExploreMapCubit>()..load();
+    _nameController = TextEditingController();
+    _descriptionController = TextEditingController();
   }
 
   @override
   void dispose() {
-    _cubit.close();
-    _mapController.dispose();
-    _searchFocusNode.dispose();
+    _nameController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top;
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: BlocConsumer<ExploreMapCubit, ExploreMapState>(
-        bloc: _cubit,
-        listener: (context, state) {
-          if (state is ExploreMapLoaded) {
-            // Auto-zoom to user location on first successful load.
-            if (!_hasZoomedToUser &&
-                state.userLat != null &&
-                state.userLng != null) {
-              _mapController.move(
-                latlong.LatLng(state.userLat!, state.userLng!),
-                12.0,
-              );
-              _hasZoomedToUser = true;
-            }
-          } else if (state is ExploreMapError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
-            );
-          }
-        },
-        builder: (context, state) {
-          if (state is ExploreMapLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (state is ExploreMapError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  state.message,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Color(0xFF8E8E93)),
+      backgroundColor: AppColors.background,
+      body: Stack(
+        children: [
+          // Main content
+          Padding(
+            padding: EdgeInsets.only(top: topPadding + 80),
+            child: Column(
+              children: [
+                // Header fields
+                _buildHeaderSection(),
+                const SizedBox(height: 16),
+                // Exercise list or empty state
+                Expanded(
+                  child: _exercises.isEmpty
+                      ? _buildEmptyState()
+                      : _buildExerciseList(),
                 ),
-              ),
-            );
-          }
+              ],
+            ),
+          ),
 
-          if (state is ExploreMapLoaded) {
-            return _buildMapContent(state);
-          }
+          // Floating header
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: ZiroSheetHeader(
+              title: 'New Template',
+              showCancel: true,
+              showDone: true,
+              onCancel: () => Navigator.of(context).maybePop(),
+              onDone: _save,
+              leadingText: 'Cancel',
+              trailingText: 'Save',
+            ),
+          ),
 
-          return const SizedBox.shrink();
-        },
+          // Saving overlay
+          if (_isSaving)
+            Container(
+              color: Colors.black26,
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+        ],
       ),
     );
   }
 
-  /// Builds the full map UI with all overlay layers.
-  Widget _buildMapContent(ExploreMapLoaded state) {
-    return Stack(
-      children: [
-        // 1. Map layer (base)
-        FlutterMap(
-          mapController: _mapController,
-          options: MapOptions(
-            initialCenter: const latlong.LatLng(52.2297, 21.0122),
-            initialZoom: 11.0,
-            onMapEvent: _onMapEvent,
-          ),
-          children: [
-            TileLayer(
-              urlTemplate:
-                  'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              userAgentPackageName: 'fit.ziro.app',
+  Widget _buildHeaderSection() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: AppColors.mutedSurface,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          TextField(
+            controller: _nameController,
+            decoration: const InputDecoration(
+              hintText: 'Template Name (e.g. Leg Day)',
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.all(16),
             ),
-            MarkerLayer(
-              markers: _buildMarkers(state.clusters, state.selectedClusterId),
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppColors.foreground,
+            ),
+            textCapitalization: TextCapitalization.words,
+          ),
+          const Divider(height: 1, color: AppColors.borderMuted),
+          TextField(
+            controller: _descriptionController,
+            decoration: const InputDecoration(
+              hintText: 'Description (Optional)',
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.all(16),
+            ),
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.foreground,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.fitness_center_rounded,
+              size: 60,
+              color: AppColors.mutedText.withValues(alpha: 0.3),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Your Template is Empty',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: AppColors.foreground,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Add exercises to build your workout template.',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.mutedText,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: _showExercisePicker,
+              icon: const Icon(Icons.add_circle_outline_rounded, size: 20),
+              label: const Text('Add Exercise'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
             ),
           ],
         ),
+      ),
+    );
+  }
 
-        // 2. Dismiss overlay (taps outside filter menu close it)
-        if (_showFilterMenu)
-          GestureDetector(
-            onTap: () {
-              setState(() => _showFilterMenu = false);
-            },
-            child: Container(color: Colors.transparent),
-          ),
-
-        // 3. Header layer (top)
-        Positioned(
-          top: MediaQuery.of(context).padding.top + 8,
-          left: 16,
-          right: 16,
+  Widget _buildExerciseList() {
+    return Column(
+      children: [
+        // Section header
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Close button (top left)
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () => Navigator.of(context).pop(),
-                  customBorder: const CircleBorder(),
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.7),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.close,
-                      size: 16,
-                      color: Colors.black,
-                    ),
-                  ),
+              const Text(
+                'Exercises',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.foreground,
                 ),
               ),
               const Spacer(),
-              // Right column: filter pill -> location button
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  // Filter pill + overlay menu
-                  Stack(
-                    children: [
-                      MapFilterPill(
-                        onTap: () {
-                          setState(
-                              () => _showFilterMenu = !_showFilterMenu);
-                        },
-                      ),
-                      if (_showFilterMenu)
-                        Positioned(
-                          top: 50,
-                          right: 0,
-                          child: MapFilterMenu(
-                            selectedMode: state.filterMode,
-                            onSelect: (mode) {
-                              _cubit.setFilter(mode);
-                              setState(() => _showFilterMenu = false);
-                            },
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  // Location re-center button
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: _centerOnUser,
-                      customBorder: const CircleBorder(),
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.7),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.my_location,
-                          size: 16,
-                          color: Color(0xFF007aff),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+              Text(
+                '${_exercises.length} exercises',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.mutedText,
+                ),
               ),
             ],
           ),
         ),
+        const SizedBox(height: 8),
 
-        // 4. Bottom layer: selection card + search bar
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Selection card (if any trainer/event/cluster is selected)
-              if (state.selectedClusterId != null ||
-                  state.selectedTrainer != null ||
-                  state.selectedEvent != null)
-                _buildSelectionContent(state),
-
-              // Search bar
-              MapSearchBar(
-                onSearch: (query) {
-                  _cubit.search(query);
-                },
-                onLocationSelected: (lat, lng, name) {
-                  _mapController.move(latlong.LatLng(lat, lng), 14.0);
-                  FocusScope.of(context).unfocus();
-                },
-              ),
-
-              // Safe area inset at the very bottom
-              SizedBox(
-                height: MediaQuery.of(context).padding.bottom + 8,
-              ),
-            ],
+        // Reorderable exercise list
+        Expanded(
+          child: ReorderableListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: _exercises.length,
+            onReorder: (oldIndex, newIndex) {
+              setState(() {
+                if (newIndex > oldIndex) newIndex--;
+                final item = _exercises.removeAt(oldIndex);
+                _exercises.insert(newIndex, item);
+                // Update order values
+                for (var i = 0; i < _exercises.length; i++) {
+                  _exercises[i] = _TemplateExerciseEntry(
+                    id: _exercises[i].id,
+                    exercise: _exercises[i].exercise,
+                    targetReps: _exercises[i].targetReps,
+                    targetSets: _exercises[i].targetSets,
+                    order: i,
+                  );
+                }
+              });
+            },
+            itemBuilder: (context, index) {
+              final entry = _exercises[index];
+              return _buildExerciseCard(entry, index);
+            },
           ),
         ),
 
-        // Tap-outside-to-dismiss keyboard (covers the map area above
-        // the bottom content). We use a translucent listener so map
-        // gestures are not stolen.
-        Positioned(
-          top: 0,
-          bottom: MediaQuery.of(context).size.height -
-              MediaQuery.of(context).padding.bottom -
-              200, // above the search bar zone
-          child: Listener(
-            onPointerDown: (_) => FocusScope.of(context).unfocus(),
-            child: Container(color: Colors.transparent),
+        // Add exercise button at bottom
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _showExercisePicker,
+              icon: const Icon(Icons.add_circle_outline_rounded, size: 20),
+              label: const Text('Add Exercise'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                side: const BorderSide(color: AppColors.primary),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
           ),
         ),
       ],
     );
   }
 
-  /// Build flutter_map [Marker]s from the cubit's cluster list.
-  ///
-  /// Markers outside the visible viewport are culled by flutter_map
-  /// automatically, so we can safely return all clusters here.
-  List<Marker> _buildMarkers(
-    List<MapCluster> clusters,
-    String? selectedClusterId,
-  ) {
-    return clusters.map((cluster) {
-      final isSelected = cluster.id == selectedClusterId;
-      return Marker(
-        point: latlong.LatLng(cluster.latitude, cluster.longitude),
-        width: 80,
-        height: 80,
-        child: cluster.items.length == 1
-            ? SingleItemAnnotation(
-                item: cluster.items.first,
-                isSelected: isSelected,
-                onTap: () => _cubit.selectCluster(cluster.id),
-              )
-            : ClusterAnnotation(
-                cluster: cluster,
-                isSelected: isSelected,
-                onTap: () => _cubit.selectCluster(cluster.id),
-              ),
-      );
-    }).toList();
-  }
-
-  /// Handles map camera events.
-  ///
-  /// On [MapEventMoveEnd] we extract the current zoom and notify the
-  /// cubit so it can recalculate clusters at the new zoom level.
-  void _onMapEvent(MapEvent event) {
-    if (event is MapEventMoveEnd) {
-      final zoom = _mapController.camera.zoom;
-      _cubit.setZoomLevel(zoom);
-    }
-  }
-
-  /// Re-centres the map to the user's current location (zoom 14).
-  void _centerOnUser() {
-    final state = _cubit.state;
-    if (state is ExploreMapLoaded &&
-        state.userLat != null &&
-        state.userLng != null) {
-      _mapController.move(
-        latlong.LatLng(state.userLat!, state.userLng!),
-        14.0,
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Location not available')),
-      );
-    }
-  }
-
-  /// Renders the appropriate selection card based on what is selected.
-  ///
-  /// Priority:
-  ///   1. Single trainer selected ([state.selectedTrainer])
-  ///   2. Single event selected ([state.selectedEvent])
-  ///   3. Cluster with 1 item -> show detail card for that item
-  ///   4. Cluster with >1 items -> show [ClusterListView]
-  Widget _buildSelectionContent(ExploreMapLoaded state) {
-    // Single trainer selected directly (e.g. from ClusterListView tap).
-    if (state.selectedTrainer != null) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: TrainerMapCard(
-            trainer: state.selectedTrainer!,
-            onOpen: () {
-              final username = state.selectedTrainer!.username;
-              if (username != null) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  context.push('/trainer/$username');
-                });
-              }
-            },
+  Widget _buildExerciseCard(_TemplateExerciseEntry entry, int index) {
+    return Container(
+      key: ValueKey(entry.id),
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: AppColors.mutedSurface,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ListTile(
+        leading: const Icon(
+          Icons.drag_handle_rounded,
+          size: 20,
+          color: AppColors.mutedText,
+        ),
+        title: Text(
+          entry.exercise.name,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: AppColors.foreground,
           ),
-        );
-      }
-
-    // Single event selected directly.
-    if (state.selectedEvent != null) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: EventMapCard(
-          event: state.selectedEvent!,
-          onView: () {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              context.push('/explore/event/${state.selectedEvent!.id}');
-            });
-          },
         ),
-      );
-    }
-
-    // Cluster selection.
-    final clusterId = state.selectedClusterId;
-    if (clusterId != null) {
-      final cluster =
-          state.clusters.where((c) => c.id == clusterId).firstOrNull;
-      if (cluster == null) return const SizedBox.shrink();
-
-      if (cluster.items.length == 1) {
-        // Single item inside the cluster → show detail card directly.
-        return cluster.items.first.when(
-          trainer: (trainer) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: TrainerMapCard(
-                trainer: trainer,
-                onOpen: () {
-                  final username = trainer.username;
-                  if (username != null) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      context.push('/trainer/$username');
-                    });
-                  }
-                },
+        subtitle: entry.exercise.muscleGroup != null
+            ? Text(
+                entry.exercise.muscleGroup!,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.mutedText,
+                ),
+              )
+            : null,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Sets/Reps badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(6),
               ),
-            );
-          },
-          event: (event) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: EventMapCard(
-                event: event,
-                onView: () {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    context.push('/explore/event/${event.id}');
-                  });
-                },
+              child: Text(
+                '${entry.targetSets}×${entry.targetReps}',
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
               ),
-            );
-          },
-        );
-      }
-
-      // Multi-item cluster → show list view.
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: ClusterListView(
-          items: cluster.items,
-          onSelectTrainer: (trainer) {
-            _cubit.selectTrainer(trainer);
-          },
-          onSelectEvent: (event) {
-            _cubit.selectEvent(event);
-          },
-          onClose: () {
-            _cubit.clearSelection();
-          },
+            ),
+            const SizedBox(width: 8),
+            // Remove button
+            GestureDetector(
+              onTap: () => setState(() => _exercises.removeAt(index)),
+              child: const Icon(
+                Icons.close_rounded,
+                size: 18,
+                color: AppColors.mutedText,
+              ),
+            ),
+          ],
         ),
-      );
-    }
-
-    return const SizedBox.shrink();
+      ),
+    );
   }
+
+  Future<void> _showExercisePicker() async {
+    // Fetch exercises on-demand (same pattern as workout session screen).
+    final apiService = di.getIt<WorkoutSessionApiService>();
+    List<ExerciseDto> allExercises;
+    try {
+      allExercises = await apiService.getExerciseLibrary();
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not load exercise library.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    if (!context.mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ExercisePickerSheet.multiple(
+        exercises: allExercises,
+        isLoading: false,
+        onExercisesSelected: (selected) {
+          setState(() {
+            for (final exercise in selected) {
+              _exercises.add(_TemplateExerciseEntry(
+                id: 'local_${DateTime.now().millisecondsSinceEpoch}_${exercise.id}',
+                exercise: exercise,
+                targetReps: '10',
+                targetSets: 3,
+                order: _exercises.length,
+              ));
+            }
+          });
+        },
+      ),
+    );
+  }
+
+  void _save() {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a template name')),
+      );
+      return;
+    }
+
+    if (_exercises.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please add at least one exercise')),
+      );
+      return;
+    }
+
+    // Create the template with exercises
+    final template = TemplateDto(
+      id: 'local_${DateTime.now().millisecondsSinceEpoch}',
+      name: name,
+      description: _descriptionController.text.trim().nullIfEmpty,
+      exercises: _exercises.map((e) => TemplateExerciseDto(
+        id: e.id,
+        order: e.order,
+        exerciseId: e.exercise.id,
+        type: 'EXERCISE',
+        targetReps: e.targetReps,
+        targetSets: e.targetSets,
+        exercise: e.exercise,
+      )).toList(),
+    );
+
+    Navigator.of(context).pop(template);
+  }
+}
+
+/// Internal model for an exercise entry in the template.
+class _TemplateExerciseEntry {
+  final String id;
+  final ExerciseDto exercise;
+  final String targetReps;
+  final int targetSets;
+  final int order;
+
+  _TemplateExerciseEntry({
+    required this.id,
+    required this.exercise,
+    required this.targetReps,
+    required this.targetSets,
+    required this.order,
+  });
+}
+
+
+
+extension on String {
+  String? get nullIfEmpty => isEmpty ? null : this;
 }
       ]]>
     </file>
-    <file path="lib/features/explore/presentation/trainer_discovery_screen.dart">
+    <file path="lib/features/home/presentation/routine_builder_screen.dart">
       <![CDATA[
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
-import '../cubit/trainer_discovery_cubit.dart';
-import '../cubit/trainer_discovery_state.dart';
-import 'widgets/explore_event_row.dart';
+import '../../notifications/presentation/widgets/ziro_sheet_header.dart';
+import '../../trainers/data/models/template_dto.dart';
+import '../cubit/home_cubit.dart';
+import '../cubit/program_cubit.dart';
+import '../data/models/program_dto.dart';
+import 'template_picker_sheet.dart';
 
-/// Full Trainer/Event Discovery Screen — opened as a sheet from explore.
-/// Matches iOS TrainerDiscoveryView.
-class TrainerDiscoveryScreen extends StatefulWidget {
-  final String? initialQuery;
-  final String? initialSpecialty;
+/// A slot holding a template together with an editable day label.
+///
+/// Matches iOS `RoutineTemplateSlot` — RoutineBuilderView.swift line 3-7.
+class _RoutineSlot {
+  final TemplateDto template;
+  String label;
 
-  const TrainerDiscoveryScreen({
-    super.key,
-    this.initialQuery,
-    this.initialSpecialty,
-  });
-
-  @override
-  State<TrainerDiscoveryScreen> createState() => _TrainerDiscoveryScreenState();
+  _RoutineSlot({required this.template, required this.label});
 }
 
-class _TrainerDiscoveryScreenState extends State<TrainerDiscoveryScreen> {
-  final _searchController = TextEditingController();
-  final _scrollController = ScrollController();
-  bool _initialized = false;
+/// Full-screen routine builder for creating or editing workout programs.
+///
+/// Matches iOS `RoutineBuilderView` — RoutineBuilderView.swift lines 9-205.
+class RoutineBuilderScreen extends StatefulWidget {
+  /// If non-null, we're editing an existing program.
+  final ProgramDto? existingProgram;
+
+  const RoutineBuilderScreen({super.key, this.existingProgram});
+
+  @override
+  State<RoutineBuilderScreen> createState() => _RoutineBuilderScreenState();
+}
+
+class _RoutineBuilderScreenState extends State<RoutineBuilderScreen> {
+  late final TextEditingController _nameController;
+  late final TextEditingController _descriptionController;
+  late List<_RoutineSlot> _slots;
+  bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
-    _searchController.text = widget.initialQuery ?? '';
-    _scrollController.addListener(_onScroll);
+    final program = widget.existingProgram;
+    _nameController = TextEditingController(text: program?.name ?? '');
+    _descriptionController =
+        TextEditingController(text: program?.description ?? '');
+    _slots = (program?.templates ?? []).asMap().entries.map((e) {
+      final index = e.key;
+      final template = e.value;
+      final labels = program?.templateLabels ?? [];
+      return _RoutineSlot(
+        template: template,
+        label: index < labels.length ? labels[index] : 'Day ${index + 1}',
+      );
+    }).toList();
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_initialized) {
-      _initialized = true;
-      final extra = GoRouterState.of(context).extra as Map<String, dynamic>?;
-      context.read<TrainerDiscoveryCubit>().init(
-        initialQuery: widget.initialQuery,
-        initialSpecialty: widget.initialSpecialty ??
-            (extra?['specialty'] as String?),
-        initialLocation: extra?['location'] as String?,
+  void dispose() {
+    _nameController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top;
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: Stack(
+        children: [
+          // Main scrollable content with reorderable list
+          Padding(
+            padding: EdgeInsets.only(top: topPadding + 80),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 120),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildInfoSection(),
+                  const SizedBox(height: 24),
+                  _buildSlotsSection(),
+                ],
+              ),
+            ),
+          ),
+
+          // Fixed bottom "Add Workout" button
+          if (_slots.isNotEmpty)
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 32,
+              child: SafeArea(
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _openTemplatePicker,
+                    icon: const Icon(Icons.add_circle_outline_rounded,
+                        size: 20),
+                    label: const Text('Add Workout'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 4,
+                      shadowColor: AppColors.primary.withValues(alpha: 0.3),
+                      textStyle: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+          // Floating header
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: ZiroSheetHeader(
+              title: widget.existingProgram != null
+                  ? 'Edit Routine'
+                  : 'New Routine',
+              showCancel: true,
+              showDone: true,
+              onCancel: () => Navigator.of(context).maybePop(),
+              onDone: _save,
+              leadingText: 'Cancel',
+              trailingText: 'Save',
+            ),
+          ),
+
+          // Saving overlay
+          if (_isSaving)
+            Container(
+              color: Colors.black26,
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoSection() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: AppColors.mutedSurface,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          TextField(
+            controller: _nameController,
+            decoration: const InputDecoration(
+              hintText: 'Routine Name',
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.all(16),
+            ),
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppColors.foreground,
+            ),
+          ),
+          const Divider(height: 1, color: AppColors.borderMuted),
+          TextField(
+            controller: _descriptionController,
+            decoration: const InputDecoration(
+              hintText: 'Description (Optional)',
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.all(16),
+            ),
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.foreground,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSlotsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section header
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              const Text(
+                'Workout Slots',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.foreground,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${_slots.length} Sessions',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.mutedText,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // Reorderable slot list or empty state
+        if (_slots.isEmpty)
+          _buildEmptyState()
+        else
+          // Use ReorderableListView.builder for drag-to-reorder
+          ReorderableListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            buildDefaultDragHandles: false,
+            itemCount: _slots.length,
+            onReorderItem: _onReorder,
+            proxyDecorator: (child, index, animation) {
+              return AnimatedBuilder(
+                animation: animation,
+                builder: (context, child) {
+                  return Material(
+                    elevation: 2,
+                    borderRadius: BorderRadius.circular(16),
+                    color: Colors.transparent,
+                    child: child,
+                  );
+                },
+                child: child,
+              );
+            },
+            itemBuilder: (context, index) =>
+                _buildSlotCard(index, _slots[index]),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: GestureDetector(
+        onTap: _openTemplatePicker,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 40),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.3),
+              width: 2,
+            ),
+          ),
+          child: Column(
+            children: [
+              Icon(
+                Icons.add_circle_rounded,
+                size: 32,
+                color: AppColors.primary.withValues(alpha: 0.7),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Add your first workout template',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary.withValues(alpha: 0.8),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSlotCard(int index, _RoutineSlot slot) {
+    // Key is required by ReorderableListView for stable item identity.
+    // Using ValueKey(slot.template.id) ensures Flutter tracks items through reorder.
+    return Container(
+      key: ValueKey(slot.template.id),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.mutedSurface,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Slot header: drag handle + label + delete
+          Row(
+            children: [
+              // Drag handle — triggers ReorderableListView reorder
+              GestureDetector(
+                onLongPressStart: (_) {
+                  // ReorderableListView detects long-press on drag handle.
+                  // We wrap with LongPressDraggable via default behavior.
+                },
+                child: const Icon(
+                  Icons.drag_handle_rounded,
+                  size: 20,
+                  color: AppColors.mutedText,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: SizedBox(
+                  width: 120,
+                  child: TextField(
+                    controller: TextEditingController(text: slot.label),
+                    onChanged: (v) => slot.label = v,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                ),
+              ),
+              const Spacer(),
+              GestureDetector(
+                onTap: () => setState(() => _slots.removeAt(index)),
+                child: const Icon(
+                  Icons.delete_rounded,
+                  size: 20,
+                  color: Colors.redAccent,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Template info
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      slot.template.name,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.foreground,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${slot.template.exercises.length} Exercises',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.mutedText,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _onReorder(int oldIndex, int newIndex) {
+    setState(() {
+      // newIndex accounts for the removed item — no manual adjustment needed.
+      final slot = _slots.removeAt(oldIndex);
+      _slots.insert(newIndex, slot);
+    });
+  }
+
+  void _openTemplatePicker() async {
+    final result = await showModalBottomSheet<TemplateDto>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => BlocProvider.value(
+        value: context.read<ProgramCubit>(),
+        child: TemplatePickerSheet(
+          existingTemplateIds: _slots.map((s) => s.template.id).toSet(),
+        ),
+      ),
+    );
+
+    if (result != null && mounted) {
+      setState(() {
+        _slots.add(_RoutineSlot(
+          template: result,
+          label: 'Day ${_slots.length + 1}',
+        ));
+      });
+    }
+  }
+
+  Future<void> _save() async {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a routine name')),
       );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    final cubit = context.read<ProgramCubit>();
+
+    if (widget.existingProgram != null) {
+      // The client API does not support updating programs — show a message.
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Editing is only available through your trainer.'),
+          ),
+        );
+      }
+      return;
+    }
+
+    // Create the program via API (name + description only).
+    final result = await cubit.createProgram(
+      name: name,
+      description: _descriptionController.text.trim().nullIfEmpty,
+    );
+
+    if (result == null || !mounted) {
+      setState(() => _isSaving = false);
+      return;
+    }
+
+    // Create ALL templates on the backend with inline exercises (single API call each).
+    for (var i = 0; i < _slots.length; i++) {
+      final slot = _slots[i];
+
+      // Serialize exercises for the API request.
+      final exercises = slot.template.exercises.map((e) => {
+            'exerciseId': e.exerciseId ?? e.exercise?.id ?? '',
+            if (e.targetReps != null) 'targetReps': e.targetReps,
+            if (e.targetSets != null) 'targetSets': e.targetSets,
+            if (e.durationSeconds != null) 'durationSeconds': e.durationSeconds,
+            if (e.notes != null) 'notes': e.notes,
+            'order': e.order,
+          }).toList();
+
+      final created = await cubit.createTemplate(
+        programId: result.id,
+        name: slot.template.name,
+        description: slot.template.description,
+        exercises: exercises.isNotEmpty ? exercises : null,
+      );
+
+      if (created != null) {
+        _slots[i] = _RoutineSlot(template: created, label: slot.label);
+      }
+    }
+
+    if (mounted) {
+      setState(() => _isSaving = false);
+      context.read<HomeCubit>().refresh();
+      Navigator.of(context).maybePop();
+    }
+  }
+}
+
+extension on String {
+  String? get nullIfEmpty => isEmpty ? null : this;
+}
+      ]]>
+    </file>
+    <file path="lib/features/home/presentation/templates_library_screen.dart">
+      <![CDATA[
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../core/theme/app_theme.dart';
+import '../../notifications/presentation/widgets/ziro_sheet_header.dart';
+import '../../trainers/data/models/template_dto.dart';
+import '../cubit/program_cubit.dart';
+import '../cubit/program_state.dart';
+import 'create_template_screen.dart';
+
+/// Templates Library screen — searchable list of all templates.
+///
+/// Matches iOS `WorkoutTemplatesView` — WorkoutTemplatesView.swift lines 1-264.
+class TemplatesLibraryScreen extends StatefulWidget {
+  const TemplatesLibraryScreen({super.key});
+
+  @override
+  State<TemplatesLibraryScreen> createState() => _TemplatesLibraryScreenState();
+}
+
+class _TemplatesLibraryScreenState extends State<TemplatesLibraryScreen> {
+  final _searchController = TextEditingController();
+  String _searchText = '';
+
+  @override
+  void initState() {
+    super.initState();
+    context.read<ProgramCubit>().loadTemplates();
+  }
+
+  Future<void> _showCreateTemplate() async {
+    final result = await Navigator.of(context).push<TemplateDto>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => const CreateTemplateView(),
+      ),
+    );
+    if (result != null && mounted) {
+      // Persist the newly created local template before refreshing the list.
+      context.read<ProgramCubit>().saveLocalTemplate(result);
     }
   }
 
   @override
   void dispose() {
     _searchController.dispose();
-    _scrollController.dispose();
     super.dispose();
   }
 
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
-      context.read<TrainerDiscoveryCubit>().loadMoreTrainers();
-      context.read<TrainerDiscoveryCubit>().loadMoreEvents();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top;
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: BlocBuilder<TrainerDiscoveryCubit, TrainerDiscoveryState>(
-        builder: (context, state) {
-          return CustomScrollView(
-            controller: _scrollController,
-            slivers: [
-              // Header overlay area
-              SliverToBoxAdapter(
-                child: _DiscoveryHeader(
-                  searchController: _searchController,
-                  onSearchChanged: (value) =>
-                      context.read<TrainerDiscoveryCubit>().search(value),
+      body: Stack(
+        children: [
+          Column(
+            children: [
+              SizedBox(height: topPadding + 80),
+              // Search bar
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.mutedSurface.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (v) => setState(() => _searchText = v),
+                    decoration: const InputDecoration(
+                      hintText: 'Search templates...',
+                      prefixIcon: Icon(Icons.search_rounded,
+                          size: 20, color: AppColors.mutedText),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.foreground,
+                    ),
+                  ),
                 ),
               ),
-
-              // Results
-              if (state is TrainerDiscoveryLoaded) ...[
-                // Active filter chips
-                if (state.hasActiveFilters)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                      child: Wrap(
-                        spacing: 8,
-                        runSpacing: 4,
-                        children: [
-                          if (state.location != null && state.location!.isNotEmpty)
-                            _FilterChip(
-                              label: state.location!,
-                              onRemove: () => context.read<TrainerDiscoveryCubit>().applyFilters(location: null),
-                            ),
-                          if (state.specialty != null)
-                            _FilterChip(
-                              label: state.specialty!,
-                              onRemove: () => context.read<TrainerDiscoveryCubit>().applyFilters(specialty: null),
-                            ),
-                          if (state.minRating > 0)
-                            _FilterChip(
-                              label: '★ ${state.minRating.toStringAsFixed(1)}+',
-                              onRemove: () => context.read<TrainerDiscoveryCubit>().applyFilters(minRating: 0),
-                            ),
-                        ],
+              const SizedBox(height: 12),
+              // Content
+              Expanded(
+                child: BlocBuilder<ProgramCubit, ProgramState>(
+                  builder: (context, state) {
+                    return switch (state) {
+                      ProgramInitial() || ProgramLoading() => const Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 3,
+                          color: AppColors.primary,
+                        ),
                       ),
-                    ),
-                  ),
-
-                // Specialists section
-                if (state.discoveryType != DiscoveryType.events)
-                  _buildTrainersSection(state, context),
-
-                // Events section
-                if (state.discoveryType != DiscoveryType.specialists)
-                  _buildEventsSection(state, context),
-              ],
-
-              // Empty state
-              if (state is TrainerDiscoveryLoaded &&
-                  state.trainers.isEmpty &&
-                  state.events.isEmpty)
-                SliverFillRemaining(
-                  child: _EmptyState(state: state),
+                      ProgramError(:final message) => _buildError(message),
+                      ProgramLoaded(:final templates) =>
+                        _buildTemplateList(templates),
+                    };
+                  },
                 ),
-
-              // Error state
-              if (state is TrainerDiscoveryError)
-                SliverFillRemaining(
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.error_outline_rounded, size: 48, color: AppColors.mutedText),
-                          const SizedBox(height: 16),
-                          Text(state.message, textAlign: TextAlign.center),
-                          const SizedBox(height: 20),
-                          ElevatedButton(
-                            onPressed: () => context.read<TrainerDiscoveryCubit>().refresh(),
-                            child: const Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+              ),
             ],
+          ),
+
+          // Header overlay
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: ZiroSheetHeader(
+              title: 'Templates Library',
+              showDone: true,
+              onDone: () => context.pop(),
+              trailingText: 'Done',
+              onTrailingIconTap: _showCreateTemplate,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildError(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.cloud_off_rounded,
+                size: 48, color: AppColors.mutedText),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 14,
+                color: AppColors.mutedText,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => context.read<ProgramCubit>().loadTemplates(),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTemplateList(List<TemplateDto> templates) {
+    final filtered = _searchText.isEmpty
+        ? templates
+        : templates.where((t) {
+            final q = _searchText.toLowerCase();
+            return t.name.toLowerCase().contains(q) ||
+                (t.description?.toLowerCase().contains(q) ?? false);
+          }).toList();
+
+    if (filtered.isEmpty) {
+      return _buildEmptyState(templates.isEmpty);
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => context.read<ProgramCubit>().loadTemplates(),
+      color: AppColors.primary,
+      child: ListView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+        itemCount: filtered.length,
+        itemBuilder: (context, index) {
+          final template = filtered[index];
+          return _TemplateLibraryRow(
+            template: template,
+            onPlay: () {
+              // Start a workout session with this template
+              context.go('/workout');
+            },
+            onTap: () {
+              // Navigate to template detail (matches iOS tap → TemplateDetailView)
+              context.push('/home/template-detail', extra: template);
+            },
           );
         },
       ),
     );
   }
 
-  Widget _buildTrainersSection(TrainerDiscoveryLoaded state, BuildContext context) {
-    if (state.loadingTrainers) {
-      return const SliverToBoxAdapter(
-        child: Center(
-          child: Padding(
-            padding: EdgeInsets.all(32),
-            child: CircularProgressIndicator(color: AppColors.primary),
-          ),
-        ),
-      );
-    }
-
-    if (state.trainers.isEmpty) {
-      return SliverToBoxAdapter(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            children: [
-              const Icon(Icons.search_rounded, size: 48, color: AppColors.mutedText),
-              const SizedBox(height: 12),
-              Text(
-                state.searchQuery.isNotEmpty
-                    ? 'No specialists found for "${state.searchQuery}"'
-                    : 'No specialists found',
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 14, color: AppColors.mutedText),
+  Widget _buildEmptyState(bool noTemplatesAtAll) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.grid_view_rounded,
+              size: 60,
+              color: AppColors.mutedText.withValues(alpha: 0.3),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'No Templates Yet',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: AppColors.foreground,
               ),
-              const SizedBox(height: 4),
-              const Text(
-                'Try a different name or specialty',
-                style: TextStyle(fontSize: 12, color: AppColors.mutedText),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Create a routine to get started.',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.mutedText,
+              ),
+            ),
+            if (noTemplatesAtAll) ...[
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => context.go('/home/routine-builder'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('Create New Routine'),
               ),
             ],
-          ),
+          ],
         ),
-      );
-    }
-
-    return SliverList(
-      delegate: SliverChildBuilderDelegate(
-        (context, index) {
-          // Loading spinner as last item when loading more
-          if (index == state.trainers.length) {
-            return const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
-            );
-          }
-          final trainer = state.trainers[index];
-          return _TrainerDiscoveryCard(
-            trainer: trainer,
-            onTap: trainer.username != null
-                ? () => context.push('/trainer/${trainer.username}')
-                : null,
-          );
-        },
-        childCount: state.trainers.length + (state.loadingTrainers ? 1 : 0),
-      ),
-    );
-  }
-
-  Widget _buildEventsSection(TrainerDiscoveryLoaded state, BuildContext context) {
-    if (state.loadingEvents) {
-      return const SliverToBoxAdapter(
-        child: Center(
-          child: Padding(
-            padding: EdgeInsets.all(32),
-            child: CircularProgressIndicator(color: AppColors.primary),
-          ),
-        ),
-      );
-    }
-
-    if (state.events.isEmpty) {
-      return SliverToBoxAdapter(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            children: [
-              const Icon(Icons.event_busy_rounded, size: 48, color: AppColors.mutedText),
-              const SizedBox(height: 12),
-              const Text(
-                'No events found',
-                style: TextStyle(fontSize: 14, color: AppColors.mutedText),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return SliverList(
-      delegate: SliverChildBuilderDelegate(
-        (context, index) {
-          // Loading spinner as last item when loading more
-          if (index == state.events.length) {
-            return const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
-            );
-          }
-          final event = state.events[index];
-          return Padding(
-            padding: EdgeInsets.only(
-              left: 16,
-              right: 16,
-              bottom: index == state.events.length - 1 ? 0 : 12,
-            ),
-            child: ExploreEventRow(
-              event: event,
-              onTap: () => context.push('/explore/event/${event.id}'),
-            ),
-          );
-        },
-        childCount: state.events.length + (state.loadingEvents ? 1 : 0),
       ),
     );
   }
 }
 
-// ─── HEADER ─────────────────────────────────────────────────────
+/// A single template row in the templates library list.
+class _TemplateLibraryRow extends StatelessWidget {
+  final TemplateDto template;
+  final VoidCallback onPlay;
+  final VoidCallback? onTap;
 
-class _DiscoveryHeader extends StatelessWidget {
-  final TextEditingController searchController;
-  final ValueChanged<String> onSearchChanged;
-
-  const _DiscoveryHeader({
-    required this.searchController,
-    required this.onSearchChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<TrainerDiscoveryCubit, TrainerDiscoveryState>(
-      builder: (context, state) {
-        return Container(
-          padding: EdgeInsets.only(
-            top: MediaQuery.of(context).padding.top + 12,
-            left: 16,
-            right: 16,
-            bottom: 16,
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.background,
-            border: Border(
-              bottom: BorderSide(color: AppColors.borderMuted, width: 0.5),
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Drag handle + back button row
-              Row(
-                children: [
-                  Expanded(
-                    child: Center(
-                      child: Container(
-                        width: 40,
-                        height: 5,
-                        margin: const EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          color: AppColors.borderActive,
-                          borderRadius: BorderRadius.circular(99),
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Close button
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: GestureDetector(
-                      onTap: () => Navigator.of(context).maybePop(),
-                      child: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: AppColors.mutedSurface,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.close_rounded,
-                          size: 18,
-                          color: AppColors.foreground,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              // Title
-              const Text(
-                'Discover specialists and events',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.foreground,
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Segmented picker
-              Row(
-                children: [
-                  _SegmentButton(
-                    label: 'Specialists',
-                    selected: state is TrainerDiscoveryLoaded &&
-                        state.discoveryType == DiscoveryType.specialists,
-                    onTap: () => context.read<TrainerDiscoveryCubit>().setDiscoveryType(DiscoveryType.specialists),
-                  ),
-                  const SizedBox(width: 8),
-                  _SegmentButton(
-                    label: 'Events',
-                    selected: state is TrainerDiscoveryLoaded &&
-                        state.discoveryType == DiscoveryType.events,
-                    onTap: () => context.read<TrainerDiscoveryCubit>().setDiscoveryType(DiscoveryType.events),
-                  ),
-                  const SizedBox(width: 8),
-                  _SegmentButton(
-                    label: 'All',
-                    selected: state is TrainerDiscoveryLoaded &&
-                        state.discoveryType == DiscoveryType.all,
-                    onTap: () => context.read<TrainerDiscoveryCubit>().setDiscoveryType(DiscoveryType.all),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Search bar + filter
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: searchController,
-                      decoration: InputDecoration(
-                        hintText: state is TrainerDiscoveryLoaded && state.discoveryType == DiscoveryType.events
-                            ? 'Search events...'
-                            : 'Specialty or Specialist Name',
-                        prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        filled: true,
-                        fillColor: AppColors.mutedSurface,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      onChanged: onSearchChanged,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () => _showFilterSheet(context),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: AppColors.mutedSurface,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.filter_list_rounded,
-                        size: 20,
-                        color: state is TrainerDiscoveryLoaded && state.hasActiveFilters
-                            ? AppColors.primary
-                            : AppColors.mutedText,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _showFilterSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.background,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => _FilterSheetContent(),
-    );
-  }
-}
-
-class _SegmentButton extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _SegmentButton({
-    required this.label,
-    required this.selected,
-    required this.onTap,
+  const _TemplateLibraryRow({
+    required this.template,
+    required this.onPlay,
+    this.onTap,
   });
 
   @override
@@ -1486,345 +2088,444 @@ class _SegmentButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.primary : AppColors.mutedSurface,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-            color: selected ? Colors.white : AppColors.foreground,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.mutedSurface.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  template.name,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.foreground,
+                  ),
+                ),
+                if (template.description != null &&
+                    template.description!.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    template.description!,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.mutedText,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${template.exercises.length} Exercises',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Play button
+          GestureDetector(
+            onTap: onPlay,
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: const BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.play_arrow_rounded,
+                size: 22,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+      ),
+    );
+  }
+}
+      ]]>
+    </file>
+    <file path="lib/features/home/presentation/routine_scheduler_screen.dart">
+      <![CDATA[
+import 'package:add_2_calendar/add_2_calendar.dart' as cal;
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
+import '../../../core/theme/app_theme.dart';
+import '../../notifications/presentation/widgets/ziro_sheet_header.dart';
+import '../data/models/program_dto.dart';
+
+/// Full-screen scheduler for setting up a routine's calendar schedule.
+///
+/// Matches iOS `RoutineSchedulerView` — RoutineSchedulerView.swift lines 1-171.
+/// Also matches iOS PlanSchedulerView — WorkoutTemplatesView.swift lines 328-474.
+///
+/// Since the backend does not have a POST /api/client/programs/:id/schedule
+/// endpoint, scheduling adds events to the device calendar and records the
+/// schedule locally. The program's `isScheduled`, `scheduledStartDate`,
+/// and `scheduleFrequency` fields are stored in-memory.
+class RoutineSchedulerScreen extends StatefulWidget {
+  final ProgramDto program;
+
+  const RoutineSchedulerScreen({super.key, required this.program});
+
+  @override
+  State<RoutineSchedulerScreen> createState() => _RoutineSchedulerScreenState();
+}
+
+class _RoutineSchedulerScreenState extends State<RoutineSchedulerScreen> {
+  late DateTime _startDate;
+  String _frequency = 'Sequential';
+  int _weeks = 4;
+  bool _isScheduling = false;
+  bool _isSuccess = false;
+
+  final _frequencies = ['Sequential', 'Daily'];
+
+  @override
+  void initState() {
+    super.initState();
+    _startDate = DateTime.now();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: _isSuccess ? _buildSuccessView() : _buildSchedulerView(),
+    );
+  }
+
+  Widget _buildSuccessView() {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check_circle_rounded,
+                  size: 48,
+                  color: Colors.green,
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Routine Scheduled!',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.foreground,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '${widget.program.name} has been scheduled for $_weeks weeks.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppColors.mutedText,
+                ),
+              ),
+              const SizedBox(height: 32),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 14,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+                child: const Text('Done'),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
-}
 
-// ─── FILTER SHEET ──────────────────────────────────────────────
+  Widget _buildSchedulerView() {
+    final topPadding = MediaQuery.of(context).padding.top;
+    return Stack(
+      children: [
+        // Scrollable content
+        Padding(
+          padding: EdgeInsets.only(top: topPadding + 80),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildRoutineInfo(),
+                const SizedBox(height: 20),
+                _buildConfiguration(),
+                const SizedBox(height: 32),
+              ],
+            ),
+          ),
+        ),
 
-class _FilterSheetContent extends StatefulWidget {
-  @override
-  State<_FilterSheetContent> createState() => _FilterSheetContentState();
-}
+        // Header
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: ZiroSheetHeader(
+            title: 'Schedule Routine',
+            onTrailingIconTap: () => Navigator.of(context).pop(),
+          ),
+        ),
 
-class _FilterSheetContentState extends State<_FilterSheetContent> {
-  final _locationController = TextEditingController();
-  SortOption _selectedSort = SortOption.closest;
-  String? _selectedSpecialty;
-  double _minRating = 0;
-
-  static const _specialties = [
-    'Strength', 'Yoga', 'HIIT', 'Calisthenics', 'Pilates', 'Cardio', 'Boxing', 'Mobility',
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    final state = context.read<TrainerDiscoveryCubit>().state;
-    if (state is TrainerDiscoveryLoaded) {
-      _locationController.text = state.location ?? '';
-      _selectedSort = state.sortBy;
-      _selectedSpecialty = state.specialty;
-      _minRating = state.minRating;
-    }
+        // Schedule button at bottom
+        Positioned(
+          left: 16,
+          right: 16,
+          bottom: 32,
+          child: SafeArea(
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isScheduling ? null : _schedule,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                child: _isScheduling
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text('Schedule Routine'),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
-  @override
-  void dispose() {
-    _locationController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 24,
-        right: 24,
-        top: 16,
-        bottom: MediaQuery.of(context).padding.bottom + 24,
+  Widget _buildRoutineInfo() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.mutedSurface,
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Drag handle
-          Center(
-            child: Container(
-              width: 40,
-              height: 5,
-              margin: const EdgeInsets.only(bottom: 20),
-              decoration: BoxDecoration(
-                color: AppColors.borderActive,
-                borderRadius: BorderRadius.circular(99),
-              ),
+          Text(
+            widget.program.name,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.foreground,
             ),
           ),
-          const Text('Sort By', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          DropdownButtonFormField<SortOption>(
-            initialValue: _selectedSort,
-            decoration: const InputDecoration(
-              isDense: true,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          const SizedBox(height: 4),
+          Text(
+            '${widget.program.templates.length} Sessions in sequence',
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.mutedText,
             ),
-            items: SortOption.values.map((opt) {
-              return DropdownMenuItem(
-                value: opt,
-                child: Text(_sortLabel(opt)),
-              );
-            }).toList(),
-            onChanged: (v) => setState(() => _selectedSort = v ?? SortOption.closest),
-          ),
-          const SizedBox(height: 20),
-          const Text('Location', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _locationController,
-            decoration: const InputDecoration(
-              hintText: 'Enter City or Region',
-              isDense: true,
-              prefixIcon: Icon(Icons.location_on_outlined, size: 18),
-            ),
-          ),
-          const SizedBox(height: 20),
-          const Text('Specialty', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 36,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: _specialties.map((s) {
-                final selected = _selectedSpecialty == s;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: GestureDetector(
-                    onTap: () => setState(() => _selectedSpecialty = selected ? null : s),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      decoration: BoxDecoration(
-                        color: selected ? AppColors.primary.withValues(alpha: 0.15) : AppColors.mutedSurface,
-                        borderRadius: BorderRadius.circular(99),
-                        border: Border.all(
-                          color: selected ? AppColors.primary : AppColors.borderMuted,
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          s,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: selected ? AppColors.primary : AppColors.foreground,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              const Text('Minimum Rating', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              const Spacer(),
-              Text(
-                _minRating.toStringAsFixed(1),
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primary),
-              ),
-            ],
-          ),
-          Slider(
-            value: _minRating,
-            min: 0,
-            max: 5,
-            divisions: 10,
-            onChanged: (v) => setState(() => _minRating = v),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () {
-                    setState(() {
-                      _locationController.clear();
-                      _selectedSort = SortOption.closest;
-                      _selectedSpecialty = null;
-                      _minRating = 0;
-                    });
-                  },
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.redAccent,
-                    side: const BorderSide(color: Colors.redAccent),
-                  ),
-                  child: const Text('Reset All'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 2,
-                child: ElevatedButton(
-                  onPressed: () {
-                    context.read<TrainerDiscoveryCubit>().applyFilters(
-                      location: _locationController.text.isEmpty ? null : _locationController.text,
-                      sortBy: _selectedSort,
-                      specialty: _selectedSpecialty,
-                      minRating: _minRating,
-                    );
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('Apply Filters'),
-                ),
-              ),
-            ],
           ),
         ],
       ),
     );
   }
 
-  String _sortLabel(SortOption opt) {
-    switch (opt) {
-      case SortOption.closest: return 'Closest';
-      case SortOption.highestRated: return 'Highest Rated';
-      case SortOption.newest: return 'Newest';
-      case SortOption.nameAsc: return 'Name (A-Z)';
-      case SortOption.nameDesc: return 'Name (Z-A)';
-      case SortOption.priceLowHigh: return 'Price: Low to High';
-      case SortOption.priceHighLow: return 'Price: High to Low';
-    }
-  }
-}
-
-// ─── TRAINER DISCOVERY CARD ─────────────────────────────────────
-
-class _TrainerDiscoveryCard extends StatelessWidget {
-  final dynamic trainer;
-  final VoidCallback? onTap;
-
-  const _TrainerDiscoveryCard({required this.trainer, this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final name = trainer.name ?? trainer.profile?.name ?? 'Trainer';
-    final specialties = trainer.profile?.certifications is List
-        ? List<String>.from(trainer.profile.certifications ?? [])
-        : <String>[];
-    final rating = trainer.profile?.averageRating;
-    final photoUrl = trainer.profile?.profilePhotoPath;
-    final locations = trainer.profile?.locations;
-    final location = locations != null && locations.isNotEmpty
-        ? (locations.first.address ?? locations.first.toString())
-        : null;
-    final reviewCount = trainer.stats?.reviewCount ?? 0;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
+  Widget _buildConfiguration() {
+    return Column(
+      children: [
+        // Start Date
+        Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.card.withValues(alpha: 0.6),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              width: 0.5,
-            ),
+            color: AppColors.mutedSurface,
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
             children: [
-              // Avatar
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  width: 80,
-                  height: 80,
-                  color: AppColors.mutedSurface,
-                  child: photoUrl != null
-                      ? Image.network(
-                          photoUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => const Icon(Icons.person_rounded, size: 36, color: AppColors.mutedText),
-                        )
-                      : const Icon(Icons.person_rounded, size: 36, color: AppColors.mutedText),
+              const Text(
+                'Start Date',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.foreground,
                 ),
               ),
-              const SizedBox(width: 16),
-              // Info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              const Spacer(),
+              GestureDetector(
+                onTap: _pickDate,
+                child: Text(
+                  DateFormat('MMM d, yyyy').format(_startDate),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Frequency
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.mutedSurface,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Frequency',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.foreground,
+                ),
+              ),
+              const SizedBox(height: 12),
+              SegmentedButton<String>(
+                segments: _frequencies
+                    .map((f) => ButtonSegment(value: f, label: Text(f)))
+                    .toList(),
+                selected: {_frequency},
+                onSelectionChanged: (v) =>
+                    setState(() => _frequency = v.first),
+                style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return AppColors.primary;
+                    }
+                    return Colors.transparent;
+                  }),
+                  foregroundColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return Colors.white;
+                    }
+                    return AppColors.foreground;
+                  }),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _frequency == 'Sequential'
+                    ? 'Workouts every other day (e.g. Mon, Wed, Fri, Sun...)'
+                    : 'Workouts every single day.',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.mutedText,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Duration (weeks)
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.mutedSurface,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              const Text(
+                'Duration',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.foreground,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '$_weeks Weeks',
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(width: 12),
+              SizedBox(
+                width: 100,
+                child: Row(
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.foreground,
-                            ),
-                          ),
-                        ),
-                        if (rating != null) ...[
-                          const SizedBox(width: 8),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.star_rounded, size: 14, color: Colors.amber),
-                              const SizedBox(width: 2),
-                              Text(
-                                rating.toStringAsFixed(1),
-                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ],
+                    IconButton(
+                      onPressed: _weeks > 1
+                          ? () => setState(() => _weeks--)
+                          : null,
+                      icon: const Icon(Icons.remove_circle_outline_rounded),
+                      color: AppColors.primary,
+                      iconSize: 28,
                     ),
-                    const SizedBox(height: 4),
-                    if (specialties.isNotEmpty)
-                      Text(
-                        specialties.join(', '),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.mutedText,
-                        ),
-                      ),
-                    if (location != null) ...[
-                      const SizedBox(height: 2),
-                      Row(
-                        children: [
-                          const Icon(Icons.location_on_outlined, size: 12, color: AppColors.mutedText),
-                          const SizedBox(width: 4),
-                          Text(
-                            location,
-                            style: const TextStyle(fontSize: 11, color: AppColors.mutedText),
-                          ),
-                        ],
-                      ),
-                    ],
-                    const SizedBox(height: 4),
-                    Text(
-                      '$reviewCount Reviews',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.primary,
-                      ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: _weeks < 12
+                          ? () => setState(() => _weeks++)
+                          : null,
+                      icon: const Icon(Icons.add_circle_outline_rounded),
+                      color: AppColors.primary,
+                      iconSize: 28,
                     ),
                   ],
                 ),
@@ -1832,1026 +2533,121 @@ class _TrainerDiscoveryCard extends StatelessWidget {
             ],
           ),
         ),
-      ),
+      ],
     );
   }
-}
 
-// ─── FILTER CHIP ────────────────────────────────────────────────
-
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final VoidCallback onRemove;
-
-  const _FilterChip({required this.label, required this.onRemove});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.only(left: 12, right: 4),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(99),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppColors.primary,
-            ),
-          ),
-          GestureDetector(
-            onTap: onRemove,
-            child: const Padding(
-              padding: EdgeInsets.all(4),
-              child: Icon(Icons.close_rounded, size: 14, color: AppColors.primary),
-            ),
-          ),
-        ],
-      ),
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _startDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-  }
-}
-
-// ─── EMPTY STATE ────────────────────────────────────────────────
-
-class _EmptyState extends StatelessWidget {
-  final TrainerDiscoveryLoaded state;
-
-  const _EmptyState({required this.state});
-
-  @override
-  Widget build(BuildContext context) {
-    String title;
-    String subtitle;
-
-    if (state.searchQuery.isNotEmpty) {
-      title = 'No results found for "${state.searchQuery}"';
-      subtitle = 'Try a different name or specialty';
-    } else if (state.location != null && state.location!.isNotEmpty) {
-      title = 'No specialists in ${state.location} yet';
-      subtitle = 'Try searching for "Online" or nearby areas';
-    } else if (state.hasActiveFilters) {
-      title = 'No specialists match your filters';
-      subtitle = 'Try clearing some filters';
-    } else {
-      title = 'Discovery is coming to life...';
-      subtitle = 'We\'re connecting you with the best professionals';
+    if (picked != null) {
+      setState(() => _startDate = picked);
     }
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.explore_outlined, size: 64, color: AppColors.mutedText),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: AppColors.foreground,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 14, color: AppColors.mutedText),
-            ),
-          ],
-        ),
-      ),
-    );
   }
-}
-      ]]>
-    </file>
-    <file path="lib/features/explore/presentation/widgets/trainer_spotlight_hero_card.dart">
-      <![CDATA[
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../../core/theme/app_theme.dart';
-import '../../../trainers/data/models/trainer_list_item_dto.dart';
+  Future<void> _schedule() async {
+    setState(() => _isScheduling = true);
 
-/// Featured Specialist hero card — dark gradient spotlight card.
-/// Matches iOS TrainerSpotlightHeroCard — ExploreComponents.swift lines 655-808.
-class TrainerSpotlightHeroCard extends StatelessWidget {
-  final TrainerListItemDto? trainer;
-
-  const TrainerSpotlightHeroCard({super.key, this.trainer});
-
-  @override
-  Widget build(BuildContext context) {
-    if (trainer == null) return const SizedBox.shrink();
-
-    final name = trainer!.name ?? trainer!.profile?.name ?? 'Trainer';
-    final specialties = trainer!.profile?.certifications ?? [];
-    final rating = trainer!.profile?.averageRating;
-    final bio = trainer!.profile?.bio;
-    final photoPath = trainer!.profile?.profilePhotoPath;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: GestureDetector(
-        onTap: trainer!.username != null
-            ? () => context.push('/trainer/${trainer!.username}')
-            : null,
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF141d42), Color(0xFF08081f)],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.12),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Spotlight badge + rating row
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
-                      ),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: const Text(
-                      'SPOTLIGHT SPECIALIST',
-                      style: TextStyle(
-                        fontSize: 8,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  if (rating != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.35),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.star_rounded, size: 12, color: Colors.amber),
-                          const SizedBox(width: 2),
-                          Text(
-                            rating.toStringAsFixed(1),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              // Profile image + info row
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Profile image with gradient ring
-                  Container(
-                    width: 68,
-                    height: 68,
-                    padding: const EdgeInsets.all(2),
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
-                      ),
-                    ),
-                    child: CircleAvatar(
-                      backgroundColor: AppColors.mutedSurface,
-                      backgroundImage: photoPath != null
-                          ? NetworkImage(photoPath)
-                          : null,
-                      child: photoPath == null
-                          ? const Icon(Icons.person_rounded, size: 30, color: AppColors.mutedText)
-                          : null,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  // Name + specialties
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          name,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          specialties.take(2).join(' • '),
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.white.withValues(alpha: 0.8),
-                          ),
-                        ),
-                        if (bio != null && bio.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            bio,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.white.withValues(alpha: 0.85),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              // View Profile CTA
-              Align(
-                alignment: Alignment.centerRight,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'View Profile',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(width: 4),
-                      Icon(Icons.arrow_forward_rounded, size: 14, color: Colors.white),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-      ]]>
-    </file>
-    <file path="lib/features/trainers/presentation/trainer_detail_screen.dart">
-      <![CDATA[
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
-
-import '../../../core/di/injection.dart';
-import '../../../core/theme/app_theme.dart';
-import '../cubit/trainer_detail_cubit.dart';
-import '../cubit/trainer_detail_state.dart';
-import '../data/models/trainer_detail_dto.dart';
-import '../data/models/trainer_package_dto.dart';
-import '../data/models/trainer_testimonial_dto.dart';
-import '../data/trainer_repository.dart';
-import 'widgets/about_section.dart';
-import 'widgets/connect_button.dart';
-import 'widgets/custom_program_request_sheet.dart';
-import 'widgets/package_card.dart';
-import 'widgets/photos_section.dart';
-import 'widgets/preview_carousel.dart';
-import 'widgets/review_card.dart';
-import 'widgets/schedule_section.dart';
-import 'widgets/tag_badge.dart';
-import 'widgets/trainer_profile_banner.dart';
-
-/// Full-screen trainer profile matching iOS PublicTrainerProfileView layout.
-///
-/// Layout (from iOS, lines 36-245):
-///   ZStack(alignment: .top)
-///     ScrollView (ignores top safe area)
-///       Banner (200pt) + Avatar overlay
-///       Identity Row (name, specialties, location, rating)
-///       Tag Badges Row (horizontal scroll)
-///       "Ask for Custom Plan" button
-///       About section (expandable bio)
-///       Packages section (horizontal scroll)
-///       Photos section (horizontal scroll)
-///       Reviews section (horizontal scroll)
-///       Schedule section (day selector + time slots)
-///     Dismiss button + Connect pill (top overlay)
-class TrainerDetailScreen extends StatelessWidget {
-  final String username;
-
-  const TrainerDetailScreen({super.key, required this.username});
-
-  @override
-  Widget build(BuildContext context) {
-    return RepositoryProvider.value(
-      value: getIt<TrainerRepository>(),
-      child: BlocProvider(
-        create: (context) {
-          final cubit = TrainerDetailCubit(
-            context.read<TrainerRepository>(),
-          );
-          cubit.load(username);
-          return cubit;
-        },
-        child: BlocConsumer<TrainerDetailCubit, TrainerDetailState>(
-          listener: (context, state) {
-            if (state is TrainerDetailLoaded && state.linkError != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.linkError!),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-              context.read<TrainerDetailCubit>().clearLinkError();
-            }
-          },
-          builder: (context, state) {
-            return switch (state) {
-              TrainerDetailInitial() || TrainerDetailLoading() =>
-                const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
-                ),
-              TrainerDetailLoaded(:final trainer) =>
-                _ProfileContent(
-                  trainer: trainer,
-                  username: username,
-                ),
-              TrainerDetailError(:final message) => Scaffold(
-                  body: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.error_outline, size: 48),
-                        const SizedBox(height: 16),
-                        Text(message),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () =>
-                              context.read<TrainerDetailCubit>().load(username),
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-            };
-          },
-        ),
-      ),
-    );
-  }
-}
-
-// ────────────────────────────────────────────
-// Main Profile Content (iOS-matching layout)
-// ────────────────────────────────────────────
-
-class _ProfileContent extends StatelessWidget {
-  final TrainerDetailDto trainer;
-  final String username;
-
-  const _ProfileContent({
-    required this.trainer,
-    required this.username,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cubit = context.read<TrainerDetailCubit>();
-    final name = trainer.name ?? trainer.username ?? 'Professional';
-    final specialties = trainer.specialties;
-    final location = trainer.locations.isNotEmpty
-        ? trainer.locations.first.address
-        : null;
-
-    return Scaffold(
-      body: Stack(
-        children: [
-          // Main scrollable content
-          SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── Banner + Avatar ──
-                TrainerProfileBanner(
-                  bannerImageUrl: trainer.bannerImagePath,
-                  avatarUrl: trainer.profilePhotoPath,
-                ),
-                const SizedBox(height: 36), // space for avatar offset
-
-                // ── Identity Row ──
-                _IdentityRow(
-                  name: name,
-                  specialties: specialties,
-                  location: location,
-                  rating: trainer.averageRating,
-                  reviewCount: trainer.reviewCount,
-                ),
-
-                // ── Tag Badges Row ──
-                _TagBadgesRow(
-                  rating: trainer.averageRating,
-                  reviewCount: trainer.reviewCount,
-                  specialties: specialties,
-                  location: location,
-                ),
-
-                // ── "Ask for Custom Plan" button ──
-                _CustomPlanButton(
-                  trainerName: name,
-                ),
-                const SizedBox(height: 8),
-
-                // ── Preview Carousel (images + videos) ──
-                BlocBuilder<TrainerDetailCubit, TrainerDetailState>(
-                  builder: (context, state) {
-                    if (state is! TrainerDetailLoaded ||
-                        state.previewMedia.isEmpty) {
-                      return const SizedBox.shrink();
-                    }
-                    return PreviewCarousel(media: state.previewMedia);
-                  },
-                ),
-
-                // ── About Section ──
-                AboutSection(
-                  aboutMe: trainer.aboutMe,
-                  philosophy: trainer.philosophy,
-                  methodology: trainer.methodology,
-                  branding: trainer.branding,
-                ),
-
-                // ── Packages Section ──
-                _PackagesSection(
-                  packages: trainer.packages,
-                  trainerName: name,
-                ),
-
-                // ── Photos Section ──
-                if (trainer.transformationPhotos.isNotEmpty)
-                  PhotosSection(photos: trainer.transformationPhotos),
-
-                // ── Reviews Section ──
-                _ReviewsSection(
-                  testimonials: trainer.testimonials,
-                  rating: trainer.averageRating,
-                  reviewCount: trainer.reviewCount,
-                ),
-
-                // ── Schedule Section ──
-                BlocBuilder<TrainerDetailCubit, TrainerDetailState>(
-                  builder: (context, state) {
-                    if (state is! TrainerDetailLoaded) {
-                      return const SizedBox.shrink();
-                    }
-                    return ScheduleSection(
-                      trainerId: trainer.id,
-                      trainerName: name,
-                      schedule: state.schedule,
-                      isLoading: state.isLoadingSchedule,
-                      onLoadSchedule: () {
-                        if (state.schedule == null && !state.isLoadingSchedule) {
-                          cubit.loadSchedule(username);
-                        }
-                      },
-                      onBookingSuccess: () =>
-                          context.read<TrainerDetailCubit>().refresh(username),
-                    );
-                  },
-                ),
-
-                const SizedBox(height: 100),
-              ],
-            ),
-          ),
-
-          // ── Top overlay: dismiss button + connect pill ──
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 8,
-            left: 16,
-            right: 16,
-            child: Row(
-              children: [
-                // Dismiss button
-                GestureDetector(
-                  onTap: () {
-                    final router = GoRouter.of(context);
-                    if (router.canPop()) {
-                      router.pop();
-                    } else {
-                      context.go('/explore');
-                    }
-                  },
-                  child: Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: AppColors.mutedSurface.withAlpha(200),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.chevron_left_rounded,
-                      size: 20,
-                      color: AppColors.foreground,
-                    ),
-                  ),
-                ),
-                const Spacer(),
-
-                // Connect pill
-                BlocBuilder<TrainerDetailCubit, TrainerDetailState>(
-                  builder: (context, state) {
-                    if (state is! TrainerDetailLoaded) {
-                      return const SizedBox.shrink();
-                    }
-                    return ConnectButton(
-                      isLinked: trainer.isLinked,
-                      isPending: state.linkRequestPending,
-                      isLoading: state.isLinking,
-                      onConnect: () => cubit.linkTrainer(username),
-                      onUnlink: () => cubit.unlinkTrainer(username),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ────────────────────────────────────────────
-// Identity Row
-// ────────────────────────────────────────────
-
-class _IdentityRow extends StatelessWidget {
-  final String name;
-  final List<String> specialties;
-  final String? location;
-  final double? rating;
-  final int reviewCount;
-
-  const _IdentityRow({
-    required this.name,
-    required this.specialties,
-    this.location,
-    this.rating,
-    required this.reviewCount,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(width: 1),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Name
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.foreground,
-                  ),
-                ),
-                const SizedBox(height: 2),
-
-                // Specialties
-                Text(
-                  specialties.isNotEmpty
-                      ? specialties.join(' • ')
-                      : 'Fitness Professional',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.mutedText,
-                  ),
-                ),
-                const SizedBox(height: 2),
-
-                // Location
-                if (location != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 1),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.location_on_outlined,
-                          size: 11,
-                          color: AppColors.mutedText,
-                        ),
-                        const SizedBox(width: 3),
-                        Text(
-                          location!,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: AppColors.mutedText,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                // Rating
-                if (rating != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.star_rounded,
-                          size: 12,
-                          color: Colors.orange,
-                        ),
-                        const SizedBox(width: 2),
-                        Text(
-                          rating!.toStringAsFixed(1),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        if (reviewCount > 0) ...[
-                          const SizedBox(width: 6),
-                          Text(
-                            '$reviewCount reviews',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: AppColors.mutedText,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ────────────────────────────────────────────
-// Tag Badges Row (horizontal scroll)
-// ────────────────────────────────────────────
-
-class _TagBadgesRow extends StatelessWidget {
-  final double? rating;
-  final int reviewCount;
-  final List<String> specialties;
-  final String? location;
-
-  const _TagBadgesRow({
-    this.rating,
-    required this.reviewCount,
-    required this.specialties,
-    this.location,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 36,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        children: [
-          if (rating != null)
-            TagBadge(
-              icon: Icons.star_rounded,
-              text: rating!.toStringAsFixed(1),
-              color: Colors.orange,
-            ),
-          if (reviewCount > 0)
-            TagBadge(
-              icon: Icons.person_rounded,
-              text: '$reviewCount Reviews',
-              color: AppColors.mutedText,
-            ),
-          ...specialties.take(3).map(
-                (s) => TagBadge(
-                  text: s,
-                  color: AppColors.primary,
-                ),
-              ),
-          if (location != null)
-            TagBadge(
-              icon: Icons.location_on_outlined,
-              text: location!,
-              color: const Color(0xFF22C55E),
-            ),
-        ].map((badge) => Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: badge,
-            )).toList(),
-      ),
-    );
-  }
-}
-
-// ────────────────────────────────────────────
-// "Ask for Custom Plan" Button
-// ────────────────────────────────────────────
-
-class _CustomPlanButton extends StatelessWidget {
-  final String trainerName;
-
-  const _CustomPlanButton({required this.trainerName});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: GestureDetector(
-        onTap: () => showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          backgroundColor: AppColors.background,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-          ),
-          builder: (_) => CustomProgramRequestSheet(
-            trainerName: trainerName,
-          ),
-        ),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withAlpha(25),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.auto_awesome_rounded,
-                size: 14,
-                color: AppColors.primary,
-              ),
-              SizedBox(width: 6),
-              Text(
-                'Ask for Custom Plan',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ────────────────────────────────────────────
-// Packages Section (horizontal scroll)
-// ────────────────────────────────────────────
-
-class _PackagesSection extends StatelessWidget {
-  final List<TrainerPackageDto> packages;
-  final String trainerName;
-
-  const _PackagesSection({
-    required this.packages,
-    required this.trainerName,
-  });
-
-  void _purchasePackage(BuildContext context, TrainerPackageDto pkg) async {
     try {
-      final repo = getIt<TrainerRepository>();
-      final url = await repo.createCheckoutSession(
-        type: 'PACKAGE_SALE',
-        id: pkg.id,
-      );
-      final uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      }
+      // Create device calendar events for each session.
+      // The backend does not have a program schedule endpoint — scheduling
+      // is done locally via device calendar (matching iOS Apple Calendar
+      // integration behavior from PlanSchedulerView).
+      await _addToDeviceCalendar();
+
+      if (!mounted) return;
+      setState(() {
+        _isScheduling = false;
+        _isSuccess = true;
+      });
     } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to start checkout: $e'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+      if (!mounted) return;
+      setState(() => _isScheduling = false);
+      _showError('An unexpected error occurred. Please try again.');
+    }
+  }
+
+  Future<void> _addToDeviceCalendar() async {
+    final sessions = widget.program.templates;
+    if (sessions.isEmpty) return;
+
+    final isDaily = _frequency == 'DAILY';
+    const sessionDuration = Duration(hours: 1);
+    int dayOffset = 0;
+
+    for (var i = 0; i < sessions.length; i++) {
+      final session = sessions[i];
+      final sessionDate = _calculateSessionDate(i, isDaily, dayOffset);
+      if (sessionDate == null) continue;
+
+      final start = DateTime(
+        sessionDate.year,
+        sessionDate.month,
+        sessionDate.day,
+        7,
+      );
+
+      dayOffset = isDaily
+          ? dayOffset + 1
+          : dayOffset + 2; // Sequential = every other day
+
+      final event = cal.Event(
+        title: session.name,
+        description: widget.program.name,
+        startDate: start,
+        endDate: start.add(sessionDuration),
+        location: 'ZIRO.FIT',
+      );
+
+      try {
+        await cal.Add2Calendar.addEvent2Cal(event);
+      } catch (_) {
+        // Device calendar integration failure is non-blocking.
       }
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _sectionDivider(),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-          child: Row(
-            children: [
-              const Text(
-                'Packages',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.foreground,
-                ),
-              ),
-              const Spacer(),
-            ],
-          ),
+  DateTime? _calculateSessionDate(
+    int index,
+    bool isDaily,
+    int dayOffset,
+  ) {
+    if (isDaily) {
+      return _startDate.add(Duration(days: index));
+    }
+    return _startDate.add(Duration(days: index * 2));
+  }
+
+  void _showError([String? message]) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.card,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
         ),
-        if (packages.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              'No packages available yet',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.mutedText,
-              ),
-            ),
-          )
-        else
-          SizedBox(
-            height: 210,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              itemCount: packages.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 14),
-              itemBuilder: (context, index) {
-                final pkg = packages[index];
-                return PackageCard(
-                  package: pkg,
-                  isRecommended: index == 0,
-                  onPurchase: () => _purchasePackage(context, pkg),
-                );
-              },
-            ),
-          ),
-        const SizedBox(height: 8),
-      ],
-    );
-  }
-
-  Widget _sectionDivider() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20),
-      child: Divider(),
-    );
-  }
-}
-
-// ────────────────────────────────────────────
-// Reviews Section (horizontal scroll)
-// ────────────────────────────────────────────
-
-class _ReviewsSection extends StatelessWidget {
-  final List<TrainerTestimonialDto> testimonials;
-  final double? rating;
-  final int reviewCount;
-
-  const _ReviewsSection({
-    required this.testimonials,
-    this.rating,
-    required this.reviewCount,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _sectionDivider(),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-          child: Row(
-            children: [
-              const Text(
-                'Reviews',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.foreground,
-                ),
-              ),
-              const Spacer(),
-              if (rating != null) ...[
-                const Icon(Icons.star_rounded, size: 14, color: Colors.orange),
-                const SizedBox(width: 2),
-                Text(
-                  rating!.toStringAsFixed(1),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.foreground,
-                  ),
-                ),
-                const SizedBox(width: 4),
-              ],
-              if (reviewCount > 0)
-                Text(
-                  '$reviewCount reviews',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.mutedText,
-                  ),
-                ),
-            ],
-          ),
+        title: const Text(
+          'Scheduling Failed',
+          style: TextStyle(color: AppColors.foreground),
         ),
-        if (testimonials.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              'No reviews yet',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.mutedText,
-              ),
-            ),
-          )
-        else
-          SizedBox(
-            height: 160,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              itemCount: testimonials.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
-              itemBuilder: (context, index) {
-                // testimonials are from TrainerDetailDto which has dynamic type
-                // due to freezed JSON parsing
-                final t = testimonials[index];
-                // The items are TrainerTestimonialDto objects
-                return ReviewCard(
-                  testimonial: t,
-                );
-              },
+        content: Text(
+          message ?? 'Could not schedule the routine. Please try again.',
+          style: const TextStyle(color: AppColors.mutedText),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text(
+              'OK',
+              style: TextStyle(color: AppColors.primary),
             ),
           ),
-        const SizedBox(height: 8),
-      ],
-    );
-  }
-
-  Widget _sectionDivider() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20),
-      child: Divider(),
+        ],
+      ),
     );
   }
 }
@@ -2860,6 +2656,8 @@ class _ReviewsSection extends StatelessWidget {
     <file path="TASKS.md">
       <![CDATA[
 - [x] Fix back button on trainer profile screen by using `context.push` instead of `context.go` for trainer details and adding fallback pop routing in TrainerDetailScreen.
+- [x] Fix navigation GoError crash on Check-In screen and other sub-sheets/sub-screens by switching from `context.go` to `context.push` and incorporating safe fallback routing on pop actions.
+- [x] Fix status bar overlap / header layout UI on HomeScreen and other screens utilizing custom floating headers by dynamically calculating and adding top safe area padding.
       ]]>
     </file>
   </modifications>

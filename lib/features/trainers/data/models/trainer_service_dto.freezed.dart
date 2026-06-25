@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TrainerServiceDto {
 
- String get id; String get title; String get description; String? get price; String? get currency; int? get duration;
+ String? get id; String? get title; String? get description;@JsonKey(fromJson: _parsePrice) String? get price; String? get currency; int? get duration;
 /// Create a copy of TrainerServiceDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $TrainerServiceDtoCopyWith<$Res>  {
   factory $TrainerServiceDtoCopyWith(TrainerServiceDto value, $Res Function(TrainerServiceDto) _then) = _$TrainerServiceDtoCopyWithImpl;
 @useResult
 $Res call({
- String id, String title, String description, String? price, String? currency, int? duration
+ String? id, String? title, String? description,@JsonKey(fromJson: _parsePrice) String? price, String? currency, int? duration
 });
 
 
@@ -65,12 +65,12 @@ class _$TrainerServiceDtoCopyWithImpl<$Res>
 
 /// Create a copy of TrainerServiceDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? description = null,Object? price = freezed,Object? currency = freezed,Object? duration = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? title = freezed,Object? description = freezed,Object? price = freezed,Object? currency = freezed,Object? duration = freezed,}) {
   return _then(_self.copyWith(
-id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
-as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
-as String,price: freezed == price ? _self.price : price // ignore: cast_nullable_to_non_nullable
+id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as String?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
+as String?,price: freezed == price ? _self.price : price // ignore: cast_nullable_to_non_nullable
 as String?,currency: freezed == currency ? _self.currency : currency // ignore: cast_nullable_to_non_nullable
 as String?,duration: freezed == duration ? _self.duration : duration // ignore: cast_nullable_to_non_nullable
 as int?,
@@ -158,7 +158,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String title,  String description,  String? price,  String? currency,  int? duration)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? id,  String? title,  String? description, @JsonKey(fromJson: _parsePrice)  String? price,  String? currency,  int? duration)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TrainerServiceDto() when $default != null:
 return $default(_that.id,_that.title,_that.description,_that.price,_that.currency,_that.duration);case _:
@@ -179,7 +179,7 @@ return $default(_that.id,_that.title,_that.description,_that.price,_that.currenc
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String title,  String description,  String? price,  String? currency,  int? duration)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? id,  String? title,  String? description, @JsonKey(fromJson: _parsePrice)  String? price,  String? currency,  int? duration)  $default,) {final _that = this;
 switch (_that) {
 case _TrainerServiceDto():
 return $default(_that.id,_that.title,_that.description,_that.price,_that.currency,_that.duration);case _:
@@ -199,7 +199,7 @@ return $default(_that.id,_that.title,_that.description,_that.price,_that.currenc
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String title,  String description,  String? price,  String? currency,  int? duration)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? id,  String? title,  String? description, @JsonKey(fromJson: _parsePrice)  String? price,  String? currency,  int? duration)?  $default,) {final _that = this;
 switch (_that) {
 case _TrainerServiceDto() when $default != null:
 return $default(_that.id,_that.title,_that.description,_that.price,_that.currency,_that.duration);case _:
@@ -214,13 +214,13 @@ return $default(_that.id,_that.title,_that.description,_that.price,_that.currenc
 @JsonSerializable()
 
 class _TrainerServiceDto implements TrainerServiceDto {
-  const _TrainerServiceDto({required this.id, required this.title, required this.description, this.price, this.currency, this.duration});
+  const _TrainerServiceDto({this.id, this.title, this.description, @JsonKey(fromJson: _parsePrice) this.price, this.currency, this.duration});
   factory _TrainerServiceDto.fromJson(Map<String, dynamic> json) => _$TrainerServiceDtoFromJson(json);
 
-@override final  String id;
-@override final  String title;
-@override final  String description;
-@override final  String? price;
+@override final  String? id;
+@override final  String? title;
+@override final  String? description;
+@override@JsonKey(fromJson: _parsePrice) final  String? price;
 @override final  String? currency;
 @override final  int? duration;
 
@@ -257,7 +257,7 @@ abstract mixin class _$TrainerServiceDtoCopyWith<$Res> implements $TrainerServic
   factory _$TrainerServiceDtoCopyWith(_TrainerServiceDto value, $Res Function(_TrainerServiceDto) _then) = __$TrainerServiceDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String title, String description, String? price, String? currency, int? duration
+ String? id, String? title, String? description,@JsonKey(fromJson: _parsePrice) String? price, String? currency, int? duration
 });
 
 
@@ -274,12 +274,12 @@ class __$TrainerServiceDtoCopyWithImpl<$Res>
 
 /// Create a copy of TrainerServiceDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? description = null,Object? price = freezed,Object? currency = freezed,Object? duration = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = freezed,Object? title = freezed,Object? description = freezed,Object? price = freezed,Object? currency = freezed,Object? duration = freezed,}) {
   return _then(_TrainerServiceDto(
-id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
-as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
-as String,price: freezed == price ? _self.price : price // ignore: cast_nullable_to_non_nullable
+id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as String?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
+as String?,price: freezed == price ? _self.price : price // ignore: cast_nullable_to_non_nullable
 as String?,currency: freezed == currency ? _self.currency : currency // ignore: cast_nullable_to_non_nullable
 as String?,duration: freezed == duration ? _self.duration : duration // ignore: cast_nullable_to_non_nullable
 as int?,

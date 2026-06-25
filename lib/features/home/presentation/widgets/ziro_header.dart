@@ -28,9 +28,10 @@ class ZiroHeader extends StatelessWidget {
       AuthAuthenticated(:final user) => user.profilePhotoPath,
       _ => null,
     };
+    final topPadding = MediaQuery.of(context).padding.top;
 
     return Container(
-      padding: const EdgeInsets.only(left: 16, right: 12, top: 8, bottom: 8),
+      padding: EdgeInsets.only(left: 16, right: 12, top: topPadding + 8, bottom: 8),
       decoration: BoxDecoration(
         color: AppColors.background.withValues(alpha: 0.75),
       ),
@@ -77,7 +78,7 @@ class ZiroHeader extends StatelessWidget {
               ),
               // Bell icon
               GestureDetector(
-                onTap: () => context.go('/home/notifications'),
+                onTap: () => context.push('/home/notifications'),
                 child: Padding(
                   padding: const EdgeInsets.all(4),
                   child: Stack(
@@ -113,3 +114,4 @@ class ZiroHeader extends StatelessWidget {
     );
   }
 }
+      

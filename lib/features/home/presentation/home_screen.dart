@@ -216,6 +216,7 @@ class _DashboardContent extends StatelessWidget {
     final sessions = dashboard.clientData.workoutSessions;
     final upcomingSessions = dashboard.upcomingClientSessions;
     final streak = _computeStreak(sessions);
+    final topPadding = MediaQuery.of(context).padding.top;
 
     // Check for pending link requests via NotificationsCubit
     final notifCubit = context.watch<NotificationsCubit>();
@@ -226,10 +227,10 @@ class _DashboardContent extends StatelessWidget {
       color: AppColors.primary,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(
+        padding: EdgeInsets.only(
           left: 16,
           right: 16,
-          top: 56,  // space for floating header
+          top: topPadding + 60,  // space for floating header and status bar
           bottom: 100, // space for tab bar
         ),
         children: [
@@ -264,7 +265,7 @@ class _DashboardContent extends StatelessWidget {
             const SizedBox(height: 24),
 
           // ── 5. Nutrition & Habits Link ──
-          _NutritionHabitsCard(onTap: () => context.go('/daily-targets')),
+          _NutritionHabitsCard(onTap: () => context.push('/daily-targets')),
 
           const SizedBox(height: 24),
 
@@ -283,7 +284,7 @@ class _DashboardContent extends StatelessWidget {
             CheckInBanner(
               isComplete: _isCheckInComplete,
               onTapCheckIn: () {
-                context.go('/home/check-in');
+                context.push('/home/check-in');
               },
               hasTrainer: trainer != null,
             ),
@@ -302,8 +303,8 @@ class _DashboardContent extends StatelessWidget {
           // ── 9. Daily Targets Section ──
           DailyTargetsSection(
             isEnabled: true,
-            onTapSetTarget: () => context.go('/daily-targets'),
-            onTapAddTarget: () => context.go('/daily-targets'),
+            onTapSetTarget: () => context.push('/daily-targets'),
+            onTapAddTarget: () => context.push('/daily-targets'),
           ),
 
           const SizedBox(height: 24),
@@ -406,7 +407,7 @@ class _ActiveProgramCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        context.go('/home/program-detail', extra: program);
+        context.push('/home/program-detail', extra: program);
       },
       child: Container(
         padding: const EdgeInsets.all(20),
@@ -468,3 +469,4 @@ class _ActiveProgramCard extends StatelessWidget {
     );
   }
 }
+      

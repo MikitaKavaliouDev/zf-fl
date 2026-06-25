@@ -54,7 +54,11 @@ class _DailyTargetsScreenState extends State<DailyTargetsScreen> {
                 color: AppColors.foreground),
             onPressed: () {
               final router = GoRouter.of(context);
-              if (router.canPop()) router.pop();
+              if (router.canPop()) {
+                router.pop();
+              } else {
+                context.go('/');
+              }
             },
           ),
           title: const Text(
@@ -558,3 +562,4 @@ class _EmptyState extends StatelessWidget {
     );
   }
 }
+      

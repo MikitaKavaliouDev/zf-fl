@@ -51,7 +51,14 @@ class _CheckInScreenState extends State<CheckInScreen> {
                 CheckInSuccessWidget(
                   onDone: () {
                     context.read<CheckInCubit>().reset();
-                    if (context.mounted) context.pop();
+                    if (context.mounted) {
+                      final router = GoRouter.of(context);
+                      if (router.canPop()) {
+                        router.pop();
+                      } else {
+                        context.go('/');
+                      }
+                    }
                   },
                 ),
               CheckInError(:final message) => _ErrorView(
@@ -76,7 +83,14 @@ class _CheckInScreenState extends State<CheckInScreen> {
           totalSteps: 4,
           onClose: () {
             context.read<CheckInCubit>().reset();
-            if (context.mounted) context.pop();
+            if (context.mounted) {
+              final router = GoRouter.of(context);
+              if (router.canPop()) {
+                router.pop();
+              } else {
+                context.go('/');
+              }
+            }
           },
         ),
 
@@ -317,6 +331,7 @@ class _SubmittingView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          Spacer(),
           CircularProgressIndicator(
             strokeWidth: 3,
             color: AppColors.primary,
@@ -329,6 +344,7 @@ class _SubmittingView extends StatelessWidget {
               color: AppColors.mutedText,
             ),
           ),
+          Spacer(),
         ],
       ),
     );
@@ -379,3 +395,4 @@ class _ErrorView extends StatelessWidget {
     );
   }
 }
+      

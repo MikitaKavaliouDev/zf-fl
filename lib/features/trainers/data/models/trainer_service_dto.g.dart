@@ -8,10 +8,10 @@ part of 'trainer_service_dto.dart';
 
 _TrainerServiceDto _$TrainerServiceDtoFromJson(Map<String, dynamic> json) =>
     _TrainerServiceDto(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      description: json['description'] as String,
-      price: json['price'] as String?,
+      id: json['id'] as String?,
+      title: json['title'] as String?,
+      description: json['description'] as String?,
+      price: _parsePrice(json['price']),
       currency: json['currency'] as String?,
       duration: (json['duration'] as num?)?.toInt(),
     );
