@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 import 'dart:math';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -50,6 +51,20 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
       }
     }
 
+    // Rest finished toast trigger
+    bool showRestFinishedToast = current.showRestFinishedToast;
+    if (current.restRemaining != null && current.restRemaining! > 0 && restRemaining == null) {
+      // Rest just finished this tick (transitioned from >0 to null)
+      showRestFinishedToast = true;
+      // Auto-reset after 3 seconds
+      Future.delayed(const Duration(seconds: 3), () {
+        final s = state;
+        if (s is WorkoutSessionActive) {
+          emit(s.copyWith(showRestFinishedToast: false));
+        }
+      });
+    }
+
     // Compute restElapsed from restStartedAt
     Duration newRestElapsed = current.restElapsed;
     if (current.restStartedAt != null) {
@@ -63,6 +78,7 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
       restElapsed: newRestElapsed,
       restRemaining: restRemaining,
       showLongSessionWarning: showWarning,
+      showRestFinishedToast: showRestFinishedToast,
     ));
   }
 
@@ -73,9 +89,10 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
     String? templateId,
     String? clientPackageId,
   }) async {
-    // Don't start if already active
+    // Don't start if already active — emit conflict state
     if (state is WorkoutSessionActive) {
-      emit(const WorkoutSessionState.error('A workout is already in progress. Finish or cancel it first.'));
+      final currentState = state as WorkoutSessionActive;
+      emit(WorkoutSessionState.conflict(existingSessionId: currentState.session.id));
       return;
     }
     emit(const WorkoutSessionState.loading());
@@ -93,6 +110,7 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
         startTime: DateTime.now(),
       ));
       _startTimer();
+      developer.log('workout_started | exerciseCount=${result.logs.length}', name: 'analytics');
     } catch (e) {
       emit(const WorkoutSessionState.error('Failed to start session.'));
     }
@@ -116,6 +134,24 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
       }
     } catch (e) {
       emit(const WorkoutSessionState.error('Failed to load session.'));
+    }
+  }
+
+  /// Resolve a session conflict by either starting fresh or continuing existing.
+  Future<void> resolveConflict({required bool startNew}) async {
+    if (startNew) {
+      // Cancel existing, then start fresh
+      final current = state;
+      if (current is WorkoutSessionConflict) {
+        try {
+          await _repository.cancelSession(current.existingSessionId);
+        } catch (_) {}
+      }
+      emit(const WorkoutSessionState.initial());
+      // Don't auto-restart — user must tap "Start Workout" again
+    } else {
+      // Continue existing — load the current session
+      await loadCurrent();
     }
   }
 
@@ -188,6 +224,7 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
     required int reps,
     double? weight,
     int? rpe,
+    String? tempo,
     int? order,
     String? supersetKey,
     int? orderInSuperset,
@@ -197,14 +234,15 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
     if (current is! WorkoutSessionActive) return;
 
     // Optimistic update: apply the new set immediately.
-      final optimisticLog = ExerciseLogDto(
-        id: logId ?? 'opt_${DateTime.now().microsecondsSinceEpoch}',
-        clientId: current.session.clientId,
-        exerciseId: exerciseId,
-        reps: reps,
-        weight: weight,
-        rpe: rpe,
-        isCompleted: isCompleted ?? true,
+    final optimisticLog = ExerciseLogDto(
+      id: logId ?? 'opt_${DateTime.now().microsecondsSinceEpoch}',
+      clientId: current.session.clientId,
+      exerciseId: exerciseId,
+      reps: reps,
+      weight: weight,
+      rpe: rpe,
+      tempo: tempo,
+      isCompleted: isCompleted ?? true,
       order: order,
       supersetKey: supersetKey,
       orderInSuperset: orderInSuperset,
@@ -228,6 +266,7 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
         reps: reps,
         weight: weight,
         rpe: rpe,
+        tempo: tempo,
         order: order,
         supersetKey: supersetKey,
         orderInSuperset: orderInSuperset,
@@ -245,8 +284,13 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
       // Check for PR records
       if (response.newRecords != null && response.newRecords!.isNotEmpty) {
         final latest2 = state as WorkoutSessionActive;
-        emit(latest2.copyWith(newPrRecord: true));
-        // Auto-reset after 3 seconds
+        final newRecords = response.newRecords!.cast<Map<String, dynamic>>();
+        final accumulated = [...latest2.sessionNewRecords, ...newRecords];
+        emit(latest2.copyWith(
+          newPrRecord: true,
+          sessionNewRecords: accumulated,
+        ));
+        // Auto-reset PR flag after 3s (but keep accumulated records)
         Future.delayed(const Duration(seconds: 3), () {
           final s = state;
           if (s is WorkoutSessionActive) {
@@ -277,11 +321,15 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
         notes: notes,
         completeUnfinished: completeUnfinished,
       );
+      final sessionNewRecords = current.sessionNewRecords;
       emit(WorkoutSessionState.completed(
         session: result.session,
         totalDuration: current.elapsed,
         logs: result.logs,
+        newRecords: sessionNewRecords,
+        showPrToast: sessionNewRecords.isNotEmpty,
       ));
+      developer.log('workout_completed | duration=${current.elapsed.inMinutes}min exerciseCount=${current.logs.length}', name: 'analytics');
     } catch (e) {
       emit(const WorkoutSessionState.error('Failed to finish session.'));
     }

@@ -87,6 +87,21 @@ class WorkoutSessionApiService {
     }
 
     data['session'] = session;
+
+    // Normalize nested exercise objects: inject id from exerciseId
+    // when the backend returns a partial exercise without id.
+    if (rawLogs != null) {
+      for (final l in rawLogs) {
+        final log = l as Map<String, dynamic>;
+        if (log['exercise'] is Map<String, dynamic>) {
+          final exercise = log['exercise'] as Map<String, dynamic>;
+          if (exercise['id'] == null && log['exerciseId'] != null) {
+            exercise['id'] = log['exerciseId'];
+          }
+        }
+      }
+    }
+
     return data;
   }
 
@@ -98,6 +113,7 @@ class WorkoutSessionApiService {
     required int reps,
     double? weight,
     int? rpe,
+    String? tempo,
     int? order,
     String? supersetKey,
     int? orderInSuperset,
@@ -112,6 +128,7 @@ class WorkoutSessionApiService {
         'reps': reps,
         'weight': ?weight,
         'rpe': ?rpe,
+        'tempo': ?tempo,
         'order': ?order,
         'supersetKey': ?supersetKey,
         'orderInSuperset': ?orderInSuperset,
@@ -157,6 +174,29 @@ class WorkoutSessionApiService {
       },
     );
     final data = response.data['data'] as Map<String, dynamic>;
+
+    // Normalize: the backend sometimes returns partial exercise objects
+    // (e.g. `{ "name": "..." }` without `id`). Inject `id` from the
+    // parent log's `exerciseId` so ExerciseDto.fromJson doesn't crash.
+    final sessions = data['sessions'] as List<dynamic>?;
+    if (sessions != null) {
+      for (final s in sessions) {
+        final session = s as Map<String, dynamic>;
+        final logs = session['exerciseLogs'] as List<dynamic>?;
+        if (logs != null) {
+          for (final l in logs) {
+            final log = l as Map<String, dynamic>;
+            if (log['exercise'] is Map<String, dynamic>) {
+              final exercise = log['exercise'] as Map<String, dynamic>;
+              if (exercise['id'] == null && log['exerciseId'] != null) {
+                exercise['id'] = log['exerciseId'];
+              }
+            }
+          }
+        }
+      }
+    }
+
     return SessionHistoryResponse.fromJson(data);
   }
 

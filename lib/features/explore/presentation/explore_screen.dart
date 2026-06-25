@@ -230,6 +230,37 @@ class _ExploreContent extends StatelessWidget {
     }
 
     return [
+      // Events header row with See All
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Row(
+            children: [
+              const Text(
+                'Events',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.foreground,
+                ),
+              ),
+              const Spacer(),
+              GestureDetector(
+                onTap: () => context.push('/explore/events'),
+                child: const Text(
+                  'See All',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+
       // Featured Events Carousel
       if (state.content.featuredEvents.isNotEmpty)
         SliverToBoxAdapter(

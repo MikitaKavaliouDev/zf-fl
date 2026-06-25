@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/theme/app_theme.dart';
 
@@ -66,6 +68,7 @@ class RestTimerSheet extends StatefulWidget {
 class _RestTimerSheetState extends State<RestTimerSheet> {
   int _selectedMinutes = 2;
   int _selectedSeconds = 0;
+  List<int> _savedTimers = [];
 
   late final FixedExtentScrollController _minuteController;
   late final FixedExtentScrollController _secondController;
@@ -73,8 +76,9 @@ class _RestTimerSheetState extends State<RestTimerSheet> {
   @override
   void initState() {
     super.initState();
-_minuteController = FixedExtentScrollController(initialItem: 2);
-     _secondController = FixedExtentScrollController();
+    _minuteController = FixedExtentScrollController(initialItem: 2);
+    _secondController = FixedExtentScrollController();
+    _loadSavedTimers();
   }
 
   @override
@@ -94,6 +98,35 @@ _minuteController = FixedExtentScrollController(initialItem: 2);
     _Preset(label: '3:00', seconds: 180),
     _Preset(label: '5:00', seconds: 300),
   ];
+
+  // ── Saved Timer Persistence ──────────────────────────────────────────
+
+  Future<void> _loadSavedTimers() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('custom_rest_timers');
+    if (raw != null && mounted) {
+      final list = (jsonDecode(raw) as List).cast<int>();
+      setState(() => _savedTimers = list);
+    }
+  }
+
+  Future<void> _saveTimer(int seconds) async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('custom_rest_timers');
+    List<int> timers = [];
+    if (raw != null) {
+      timers = (jsonDecode(raw) as List).cast<int>();
+    }
+    timers.remove(seconds);
+    timers.insert(0, seconds);
+    if (timers.length > 10) {
+      timers = timers.sublist(0, 10);
+    }
+    await prefs.setString('custom_rest_timers', jsonEncode(timers));
+    if (mounted) {
+      setState(() => _savedTimers = timers);
+    }
+  }
 
   // ── Build ────────────────────────────────────────────────────────────
 
@@ -183,6 +216,11 @@ _minuteController = FixedExtentScrollController(initialItem: 2);
 
                 const SizedBox(height: 24),
 
+                // Saved Presets
+                _buildSavedPresets(),
+
+                if (_savedTimers.isNotEmpty) const SizedBox(height: 24),
+
                 // Custom Duration
                 _buildCustomDurationSection(),
 
@@ -226,7 +264,53 @@ _minuteController = FixedExtentScrollController(initialItem: 2);
                 child: _PresetButton(
                   label: p.label,
                   onTap: () {
+                    _saveTimer(p.seconds);
                     widget.onStartTimer(p.seconds);
+                    widget.onDismiss();
+                  },
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSavedPresets() {
+    if (_savedTimers.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'SAVED',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: AppColors.mutedText,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: _savedTimers.map((seconds) {
+              final label = seconds >= 60
+                  ? '${seconds ~/ 60}:${(seconds.remainder(60)).toString().padLeft(2, '0')}'
+                  : '0:${seconds.toString().padLeft(2, '0')}';
+              return SizedBox(
+                width: (MediaQuery.of(context).size.width - 40 - 24) / 3,
+                child: _PresetButton(
+                  label: label,
+                  onTap: () {
+                    _saveTimer(seconds);
+                    widget.onStartTimer(seconds);
                     widget.onDismiss();
                   },
                 ),
@@ -375,6 +459,7 @@ _minuteController = FixedExtentScrollController(initialItem: 2);
           onPressed: () {
             final total = (_selectedMinutes * 60) + _selectedSeconds;
             if (total > 0) {
+              _saveTimer(total);
               widget.onStartTimer(total);
               widget.onDismiss();
             }

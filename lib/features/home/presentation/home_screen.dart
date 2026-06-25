@@ -1,22 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../notifications/cubit/notifications_cubit.dart';
 import '../cubit/home_cubit.dart';
 import '../cubit/home_state.dart';
 import '../cubit/program_cubit.dart';
 import '../data/models/active_program_response.dart';
 import '../data/models/client_dashboard_response.dart';
-import '../data/models/client_dashboard_session.dart';
+import '../data/models/client_recent_session.dart';
 import 'widgets/check_in_banner.dart';
 import 'widgets/coach_card.dart';
 import 'widgets/credit_status_widget.dart';
+import 'widgets/daily_targets_section.dart';
+import 'widgets/invitation_hero_card.dart';
 import 'widgets/need_coach_banner.dart';
 import 'widgets/no_routine_placeholder.dart';
 import 'widgets/quick_actions_row.dart';
 import 'widgets/recent_history_section.dart';
+import 'widgets/streak_motivation_card.dart';
+import 'widgets/upcoming_sessions_carousel.dart';
 import 'widgets/ziro_header.dart';
 
 /// Main client-facing dashboard after login.
@@ -130,6 +134,19 @@ class _ErrorView extends StatelessWidget {
 }
 
 /// Scrollable dashboard content with all section widgets.
+///
+/// Order matches iOS PersonalHomeView:
+/// 1. Coach Card / Need Coach Banner
+/// 2. Credit Status
+/// 3. Streak Motivation Card
+/// 4. Active Program / No Routine Placeholder
+/// 5. Nutrition & Habits Link
+/// 6. Invitation Hero Card
+/// 7. Check-in Banner
+/// 8. Upcoming Sessions Carousel
+/// 9. Daily Targets Section
+/// 10. Quick Actions Row
+/// 11. Recent History Section
 class _DashboardContent extends StatelessWidget {
   final ClientDashboardResponse dashboard;
   final ActiveProgramResponse? activeProgram;
@@ -149,12 +166,60 @@ class _DashboardContent extends StatelessWidget {
 
   bool get _hasCheckInBanner => dashboard.lastCheckIn != null;
 
+  /// Compute consecutive-day workout streak from completed sessions.
+  static int _computeStreak(List<ClientRecentSession> sessions) {
+    if (sessions.isEmpty) return 0;
+
+    // Collect unique dates from completed sessions
+    final uniqueDates = <DateTime>{};
+    for (final session in sessions) {
+      if (session.status == 'completed') {
+        final day = DateTime(
+          session.startTime.year,
+          session.startTime.month,
+          session.startTime.day,
+        );
+        uniqueDates.add(day);
+      }
+    }
+
+    if (uniqueDates.isEmpty) return 0;
+
+    final sortedDates = uniqueDates.toList()
+      ..sort((a, b) => b.compareTo(a));
+
+    final today = DateTime.now();
+    final todayDate = DateTime(today.year, today.month, today.day);
+    final mostRecent = sortedDates.first;
+
+    // Streak must include today or yesterday
+    if (mostRecent.difference(todayDate).inDays > 1) return 0;
+
+    // Count consecutive days backwards
+    int streak = 1;
+    for (int i = 1; i < sortedDates.length; i++) {
+      final diff = sortedDates[i - 1].difference(sortedDates[i]).inDays;
+      if (diff == 1) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+
+    return streak;
+  }
+
   @override
   Widget build(BuildContext context) {
     final trainer = dashboard.clientData.trainer;
     final remainingCredits = dashboard.clientData.remainingCredits;
     final sessions = dashboard.clientData.workoutSessions;
     final upcomingSessions = dashboard.upcomingClientSessions;
+    final streak = _computeStreak(sessions);
+
+    // Check for pending link requests via NotificationsCubit
+    final notifCubit = context.watch<NotificationsCubit>();
+    final pendingRequest = notifCubit.pendingLinkRequest;
 
     return RefreshIndicator(
       onRefresh: () => context.read<HomeCubit>().refresh(),
@@ -164,11 +229,11 @@ class _DashboardContent extends StatelessWidget {
         padding: const EdgeInsets.only(
           left: 16,
           right: 16,
-          top: 56, // space for floating header
+          top: 56,  // space for floating header
           bottom: 100, // space for tab bar
         ),
         children: [
-          // 1. Coach Card or Need Coach Banner
+          // ── 1. Coach Card or Need Coach Banner ──
           if (trainer != null)
             CoachCard(trainer: trainer)
           else
@@ -176,14 +241,20 @@ class _DashboardContent extends StatelessWidget {
 
           const SizedBox(height: 24),
 
-          // 2. Credit Status (only when linked to a trainer)
+          // ── 2. Credit Status (only when linked to a trainer) ──
           if (trainer != null && remainingCredits != null)
             CreditStatusWidget(remainingCredits: remainingCredits),
 
           if (trainer != null && remainingCredits != null)
             const SizedBox(height: 24),
 
-          // 3. Active Program or No Routine Placeholder
+          // ── 3. Streak Motivation Card (if streak > 0) ──
+          if (streak > 0)
+            StreakMotivationCard(streak: streak),
+
+          if (streak > 0) const SizedBox(height: 24),
+
+          // ── 4. Active Program or No Routine Placeholder ──
           if (activeProgram != null)
             _ActiveProgramCard(program: activeProgram!)
           else if (trainer != null)
@@ -192,31 +263,57 @@ class _DashboardContent extends StatelessWidget {
           if (activeProgram != null || (trainer != null))
             const SizedBox(height: 24),
 
-          // 4. Check-in Banner
+          // ── 5. Nutrition & Habits Link ──
+          _NutritionHabitsCard(onTap: () => context.go('/daily-targets')),
+
+          const SizedBox(height: 24),
+
+          // ── 6. Invitation Hero Card (if pending request) ──
+          if (pendingRequest != null)
+            InvitationHeroCard(
+              message: pendingRequest.message,
+              onAccept: () => notifCubit.acceptRequest(pendingRequest.id),
+              onDecline: () => notifCubit.declineRequest(pendingRequest.id),
+            ),
+
+          if (pendingRequest != null) const SizedBox(height: 24),
+
+          // ── 7. Check-in Banner ──
           if (_hasCheckInBanner)
             CheckInBanner(
               isComplete: _isCheckInComplete,
               onTapCheckIn: () {
-                // Check-in wizard — navigate to workout for now
-                context.go('/workout');
+                context.go('/home/check-in');
               },
               hasTrainer: trainer != null,
             ),
 
           if (_hasCheckInBanner) const SizedBox(height: 24),
 
-          // 5. Upcoming Sessions
+          // ── 8. Upcoming Sessions Carousel ──
           if (upcomingSessions.isNotEmpty)
-            _UpcomingSessionsSection(sessions: upcomingSessions),
+            UpcomingSessionsCarousel(
+              sessions: upcomingSessions,
+              onSessionTap: (_) => context.go('/workout'),
+            ),
 
           if (upcomingSessions.isNotEmpty) const SizedBox(height: 24),
 
-          // 6. Quick Actions
+          // ── 9. Daily Targets Section ──
+          DailyTargetsSection(
+            isEnabled: true,
+            onTapSetTarget: () => context.go('/daily-targets'),
+            onTapAddTarget: () => context.go('/daily-targets'),
+          ),
+
+          const SizedBox(height: 24),
+
+          // ── 10. Quick Actions ──
           const QuickActionsRow(),
 
           const SizedBox(height: 24),
 
-          // 7. Recent History
+          // ── 11. Recent History ──
           RecentHistorySection(sessions: sessions),
         ],
       ),
@@ -224,142 +321,71 @@ class _DashboardContent extends StatelessWidget {
   }
 }
 
-/// Horizontal scrollable list of upcoming sessions.
+/// Card linking to Nutrition & Habits screen.
 ///
-/// Matches iOS Upcoming Sessions — PersonalHomeView.swift lines 716-775.
-class _UpcomingSessionsSection extends StatelessWidget {
-  final List<ClientDashboardSession> sessions;
+/// Matches iOS green fork.knife card — PersonalHomeView.
+class _NutritionHabitsCard extends StatelessWidget {
+  final VoidCallback onTap;
 
-  const _UpcomingSessionsSection({required this.sessions});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Padding(
-          padding: EdgeInsets.only(bottom: 12),
-          child: Text(
-            'Upcoming',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppColors.foreground,
-            ),
-          ),
-        ),
-        SizedBox(
-          height: 140,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: sessions.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 12),
-            itemBuilder: (context, index) {
-              final session = sessions[index];
-              return _UpcomingSessionCard(session: session);
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// Single upcoming session card.
-class _UpcomingSessionCard extends StatelessWidget {
-  final ClientDashboardSession session;
-
-  const _UpcomingSessionCard({required this.session});
+  const _NutritionHabitsCard({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final day = DateFormat('d').format(session.date);
-    final month = DateFormat('MMM').format(session.date);
-    final color =
-        session.isTrainerAssigned == true
-            ? const Color(0xFF8B5CF6)
-            : AppColors.primary;
-
     return GestureDetector(
-      onTap: () {
-        // Navigate to session detail — go to workout home for now
-        context.go('/workout');
-      },
+      onTap: onTap,
       child: Container(
-        width: 160,
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: color,
+          color: AppColors.mutedSurface,
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            // Date badge + icon row
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    '$day $month',
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                Icon(
-                  session.isTrainerAssigned == true
-                      ? Icons.star_rounded
-                      : Icons.calendar_today_rounded,
-                  size: 16,
-                  color: Colors.white,
-                ),
-              ],
-            ),
-            // Coach assigned label
-            if (session.isTrainerAssigned == true)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(
-                  'Coach Assigned',
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white.withValues(alpha: 0.9),
-                  ),
-                ),
+            // Green circle with fork.knife icon
+            Container(
+              width: 50,
+              height: 50,
+              decoration: const BoxDecoration(
+                color: Color(0xFF22C55E),
+                shape: BoxShape.circle,
               ),
-            const Spacer(),
-            // Title
-            Text(
-              session.title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
+              child: const Icon(
+                Icons.restaurant_rounded,
+                size: 24,
                 color: Colors.white,
               ),
             ),
-            const SizedBox(height: 4),
-            // Duration
-            Text(
-              '${session.duration} min',
-              style: TextStyle(
-                fontSize: 11,
-                color: Colors.white.withValues(alpha: 0.85),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'NUTRITION & HABITS',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.mutedText,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  const Text(
+                    'View Nutrition Plan & Habits',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.foreground,
+                    ),
+                  ),
+                ],
               ),
+            ),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: AppColors.mutedText,
             ),
           ],
         ),

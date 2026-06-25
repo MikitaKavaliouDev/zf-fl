@@ -125,12 +125,12 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<WorkoutSessionDto> sessions,  String? nextCursor,  bool hasMore,  bool isLoadingMore,  bool isRefreshing)?  loaded,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<WorkoutSessionDto> sessions,  String? nextCursor,  bool hasMore,  bool isLoadingMore,  bool isRefreshing,  String searchQuery,  DateTime? selectedDate)?  loaded,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case WorkoutHistoryInitial() when initial != null:
 return initial();case WorkoutHistoryLoading() when loading != null:
 return loading();case WorkoutHistoryLoaded() when loaded != null:
-return loaded(_that.sessions,_that.nextCursor,_that.hasMore,_that.isLoadingMore,_that.isRefreshing);case WorkoutHistoryError() when error != null:
+return loaded(_that.sessions,_that.nextCursor,_that.hasMore,_that.isLoadingMore,_that.isRefreshing,_that.searchQuery,_that.selectedDate);case WorkoutHistoryError() when error != null:
 return error(_that.message);case _:
   return orElse();
 
@@ -149,12 +149,12 @@ return error(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<WorkoutSessionDto> sessions,  String? nextCursor,  bool hasMore,  bool isLoadingMore,  bool isRefreshing)  loaded,required TResult Function( String message)  error,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<WorkoutSessionDto> sessions,  String? nextCursor,  bool hasMore,  bool isLoadingMore,  bool isRefreshing,  String searchQuery,  DateTime? selectedDate)  loaded,required TResult Function( String message)  error,}) {final _that = this;
 switch (_that) {
 case WorkoutHistoryInitial():
 return initial();case WorkoutHistoryLoading():
 return loading();case WorkoutHistoryLoaded():
-return loaded(_that.sessions,_that.nextCursor,_that.hasMore,_that.isLoadingMore,_that.isRefreshing);case WorkoutHistoryError():
+return loaded(_that.sessions,_that.nextCursor,_that.hasMore,_that.isLoadingMore,_that.isRefreshing,_that.searchQuery,_that.selectedDate);case WorkoutHistoryError():
 return error(_that.message);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -169,12 +169,12 @@ return error(_that.message);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<WorkoutSessionDto> sessions,  String? nextCursor,  bool hasMore,  bool isLoadingMore,  bool isRefreshing)?  loaded,TResult? Function( String message)?  error,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<WorkoutSessionDto> sessions,  String? nextCursor,  bool hasMore,  bool isLoadingMore,  bool isRefreshing,  String searchQuery,  DateTime? selectedDate)?  loaded,TResult? Function( String message)?  error,}) {final _that = this;
 switch (_that) {
 case WorkoutHistoryInitial() when initial != null:
 return initial();case WorkoutHistoryLoading() when loading != null:
 return loading();case WorkoutHistoryLoaded() when loaded != null:
-return loaded(_that.sessions,_that.nextCursor,_that.hasMore,_that.isLoadingMore,_that.isRefreshing);case WorkoutHistoryError() when error != null:
+return loaded(_that.sessions,_that.nextCursor,_that.hasMore,_that.isLoadingMore,_that.isRefreshing,_that.searchQuery,_that.selectedDate);case WorkoutHistoryError() when error != null:
 return error(_that.message);case _:
   return null;
 
@@ -251,7 +251,7 @@ String toString() {
 
 
 class WorkoutHistoryLoaded implements WorkoutHistoryState {
-  const WorkoutHistoryLoaded({required final  List<WorkoutSessionDto> sessions, this.nextCursor, this.hasMore = false, this.isLoadingMore = false, this.isRefreshing = false}): _sessions = sessions;
+  const WorkoutHistoryLoaded({required final  List<WorkoutSessionDto> sessions, this.nextCursor, this.hasMore = false, this.isLoadingMore = false, this.isRefreshing = false, this.searchQuery = '', this.selectedDate}): _sessions = sessions;
   
 
  final  List<WorkoutSessionDto> _sessions;
@@ -265,6 +265,8 @@ class WorkoutHistoryLoaded implements WorkoutHistoryState {
 @JsonKey() final  bool hasMore;
 @JsonKey() final  bool isLoadingMore;
 @JsonKey() final  bool isRefreshing;
+@JsonKey() final  String searchQuery;
+ final  DateTime? selectedDate;
 
 /// Create a copy of WorkoutHistoryState
 /// with the given fields replaced by the non-null parameter values.
@@ -276,16 +278,16 @@ $WorkoutHistoryLoadedCopyWith<WorkoutHistoryLoaded> get copyWith => _$WorkoutHis
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WorkoutHistoryLoaded&&const DeepCollectionEquality().equals(other._sessions, _sessions)&&(identical(other.nextCursor, nextCursor) || other.nextCursor == nextCursor)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.isLoadingMore, isLoadingMore) || other.isLoadingMore == isLoadingMore)&&(identical(other.isRefreshing, isRefreshing) || other.isRefreshing == isRefreshing));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WorkoutHistoryLoaded&&const DeepCollectionEquality().equals(other._sessions, _sessions)&&(identical(other.nextCursor, nextCursor) || other.nextCursor == nextCursor)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.isLoadingMore, isLoadingMore) || other.isLoadingMore == isLoadingMore)&&(identical(other.isRefreshing, isRefreshing) || other.isRefreshing == isRefreshing)&&(identical(other.searchQuery, searchQuery) || other.searchQuery == searchQuery)&&(identical(other.selectedDate, selectedDate) || other.selectedDate == selectedDate));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_sessions),nextCursor,hasMore,isLoadingMore,isRefreshing);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_sessions),nextCursor,hasMore,isLoadingMore,isRefreshing,searchQuery,selectedDate);
 
 @override
 String toString() {
-  return 'WorkoutHistoryState.loaded(sessions: $sessions, nextCursor: $nextCursor, hasMore: $hasMore, isLoadingMore: $isLoadingMore, isRefreshing: $isRefreshing)';
+  return 'WorkoutHistoryState.loaded(sessions: $sessions, nextCursor: $nextCursor, hasMore: $hasMore, isLoadingMore: $isLoadingMore, isRefreshing: $isRefreshing, searchQuery: $searchQuery, selectedDate: $selectedDate)';
 }
 
 
@@ -296,7 +298,7 @@ abstract mixin class $WorkoutHistoryLoadedCopyWith<$Res> implements $WorkoutHist
   factory $WorkoutHistoryLoadedCopyWith(WorkoutHistoryLoaded value, $Res Function(WorkoutHistoryLoaded) _then) = _$WorkoutHistoryLoadedCopyWithImpl;
 @useResult
 $Res call({
- List<WorkoutSessionDto> sessions, String? nextCursor, bool hasMore, bool isLoadingMore, bool isRefreshing
+ List<WorkoutSessionDto> sessions, String? nextCursor, bool hasMore, bool isLoadingMore, bool isRefreshing, String searchQuery, DateTime? selectedDate
 });
 
 
@@ -313,14 +315,16 @@ class _$WorkoutHistoryLoadedCopyWithImpl<$Res>
 
 /// Create a copy of WorkoutHistoryState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? sessions = null,Object? nextCursor = freezed,Object? hasMore = null,Object? isLoadingMore = null,Object? isRefreshing = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? sessions = null,Object? nextCursor = freezed,Object? hasMore = null,Object? isLoadingMore = null,Object? isRefreshing = null,Object? searchQuery = null,Object? selectedDate = freezed,}) {
   return _then(WorkoutHistoryLoaded(
 sessions: null == sessions ? _self._sessions : sessions // ignore: cast_nullable_to_non_nullable
 as List<WorkoutSessionDto>,nextCursor: freezed == nextCursor ? _self.nextCursor : nextCursor // ignore: cast_nullable_to_non_nullable
 as String?,hasMore: null == hasMore ? _self.hasMore : hasMore // ignore: cast_nullable_to_non_nullable
 as bool,isLoadingMore: null == isLoadingMore ? _self.isLoadingMore : isLoadingMore // ignore: cast_nullable_to_non_nullable
 as bool,isRefreshing: null == isRefreshing ? _self.isRefreshing : isRefreshing // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,searchQuery: null == searchQuery ? _self.searchQuery : searchQuery // ignore: cast_nullable_to_non_nullable
+as String,selectedDate: freezed == selectedDate ? _self.selectedDate : selectedDate // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 

@@ -72,6 +72,27 @@ class WorkoutHistoryCubit extends Cubit<WorkoutHistoryState> {
     }
   }
 
+  /// Set a search query to filter sessions locally by name/notes/exercise.
+  void setSearchQuery(String query) {
+    final current = state;
+    if (current is WorkoutHistoryLoaded) {
+      emit(current.copyWith(searchQuery: query));
+    }
+  }
+
+  /// Filter sessions to a specific date.
+  void setSelectedDate(DateTime? date) {
+    final current = state;
+    if (current is WorkoutHistoryLoaded) {
+      emit(current.copyWith(selectedDate: date));
+    }
+  }
+
+  /// Clear the date filter.
+  void clearSelectedDate() {
+    setSelectedDate(null);
+  }
+
   Future<void> deleteSession(String sessionId) async {
     // For now, just remove from the local list.
     // Backend delete endpoint for completed sessions is not available yet.

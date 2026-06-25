@@ -6,12 +6,17 @@ import '../../../../core/theme/app_theme.dart';
 ///
 /// Currently shows an empty state with a prompt to set a daily target.
 /// The [isEnabled] prop controls whether the section is active.
+/// [onTapSetTarget] and [onTapAddTarget] are wired from the parent for navigation.
 class DailyTargetsSection extends StatelessWidget {
   final bool isEnabled;
+  final VoidCallback? onTapSetTarget;
+  final VoidCallback? onTapAddTarget;
 
   const DailyTargetsSection({
     super.key,
     required this.isEnabled,
+    this.onTapSetTarget,
+    this.onTapAddTarget,
   });
 
   @override
@@ -34,9 +39,7 @@ class DailyTargetsSection extends StatelessWidget {
                 ),
               ),
               IconButton(
-                onPressed: () {
-                  // TODO: wire up add daily target flow
-                },
+                onPressed: onTapAddTarget,
                 icon: const Icon(
                   Icons.add_circle_outline,
                   color: AppColors.primary,
@@ -73,9 +76,7 @@ class DailyTargetsSection extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               TextButton(
-                onPressed: () {
-                  // TODO: wire up set daily target flow
-                },
+                onPressed: onTapSetTarget,
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.primary,
                   padding: const EdgeInsets.symmetric(

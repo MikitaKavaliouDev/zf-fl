@@ -13,6 +13,8 @@ sealed class WorkoutHistoryState with _$WorkoutHistoryState {
     @Default(false) bool hasMore,
     @Default(false) bool isLoadingMore,
     @Default(false) bool isRefreshing,
+    @Default('') String searchQuery,
+    DateTime? selectedDate,
   }) = WorkoutHistoryLoaded;
   const factory WorkoutHistoryState.error(String message) = WorkoutHistoryError;
 }

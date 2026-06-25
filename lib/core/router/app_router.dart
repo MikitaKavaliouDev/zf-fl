@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/cubit/auth_cubit.dart';
@@ -9,12 +10,14 @@ import '../../features/auth/presentation/email_verification_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/onboarding_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
+import '../../features/check_in/cubit/check_in_cubit.dart';
+import '../../features/check_in/presentation/check_in_screen.dart';
 import '../../features/explore/presentation/event_detail_screen.dart';
+import '../../features/explore/presentation/events_list_screen.dart';
 import '../../features/explore/presentation/explore_screen.dart';
 import '../../features/explore/presentation/trainer_discovery_screen.dart';
 import '../../features/home/data/models/active_program_response.dart';
 import '../../features/home/data/models/program_dto.dart';
-import '../../features/trainers/data/models/template_dto.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/home/presentation/program_detail_screen.dart';
 import '../../features/home/presentation/routine_builder_screen.dart';
@@ -22,12 +25,22 @@ import '../../features/home/presentation/routine_scheduler_screen.dart';
 import '../../features/home/presentation/template_detail_screen.dart';
 import '../../features/home/presentation/templates_library_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
+import '../../features/analytics/presentation/analytics_screen.dart';
+import '../../features/check_in/presentation/check_in_detail_screen.dart';
+import '../../features/check_in/presentation/check_in_history_screen.dart';
+import '../../features/daily_targets/presentation/daily_targets_screen.dart';
+import '../../features/fitness_goals/presentation/fitness_goals_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
+import '../../features/sharing/presentation/sharing_screen.dart';
+import '../../features/profile/presentation/settings_screens/contact_support_screen.dart';
+import '../../features/trainers/data/models/template_dto.dart';
 import '../../features/trainers/presentation/completed_session_detail_screen.dart';
 import '../../features/trainers/presentation/trainer_detail_screen.dart';
 import '../../features/trainers/presentation/trainer_map_screen.dart';
 import '../../features/trainers/presentation/workout_history_screen.dart';
 import '../../features/trainers/presentation/workout_session_screen.dart';
+import '../../features/trainers/presentation/exercise_detail_screen.dart';
+import '../di/injection.dart';
 import '../theme/app_theme.dart';
 
 /// Listenable that forwards bloc state changes to GoRouter for refresh.
@@ -122,24 +135,49 @@ GoRouter createAppRouter(AuthCubit authCubit) {
           success: false,
         ),
       ),
-      ShellRoute(
-        builder: (_, _, child) => _MainShell(child: child),
-        routes: [
-          GoRoute(
-            path: '/',
-            builder: (_, _) => const HomeScreen(),
+      StatefulShellRoute.indexedStack(
+        builder: (_, _, navigationShell) =>
+            _MainShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/',
+                builder: (_, _) => const HomeScreen(),
+              ),
+            ],
           ),
-          GoRoute(
-            path: '/workout',
-            builder: (_, _) => const WorkoutSessionScreen(),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/workout',
+                builder: (_, _) => const WorkoutHistoryScreen(),
+              ),
+            ],
           ),
-          GoRoute(
-            path: '/explore',
-            builder: (_, _) => const ExploreScreen(),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/explore',
+                builder: (_, _) => const ExploreScreen(),
+              ),
+            ],
           ),
-          GoRoute(
-            path: '/profile',
-            builder: (_, _) => const ProfileScreen(),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/profile',
+                builder: (_, _) => const ProfileScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/analytics',
+                builder: (_, _) => const AnalyticsScreen(),
+              ),
+            ],
           ),
         ],
       ),
@@ -210,6 +248,26 @@ GoRouter createAppRouter(AuthCubit authCubit) {
           },
         ),
       ),
+      // Events list (full-screen, no bottom nav — matches iOS EventsListView)
+      GoRoute(
+        path: '/explore/events',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const EventsListViewScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 1),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutCubic,
+              )),
+              child: child,
+            );
+          },
+        ),
+      ),
       // Trainer detail (full-screen, no bottom nav)
       GoRoute(
         path: '/trainer/:username',
@@ -217,6 +275,26 @@ GoRouter createAppRouter(AuthCubit authCubit) {
           final username = state.pathParameters['username'] ?? '';
           return TrainerDetailScreen(username: username);
         },
+      ),
+      // Workout session (full-screen overlay, no bottom nav — matches iOS modal presentation)
+      GoRoute(
+        path: '/workout/session',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const WorkoutSessionScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 1),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutCubic,
+              )),
+              child: child,
+            );
+          },
+        ),
       ),
       // Workout history routes (full-screen, no bottom nav)
       GoRoute(
@@ -229,12 +307,38 @@ GoRouter createAppRouter(AuthCubit authCubit) {
           sessionId: state.pathParameters['id'] ?? '',
         ),
       ),
+      // Exercise detail (full-screen overlay, slide up from bottom)
+      GoRoute(
+        path: '/workout/exercise/:id',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: ExerciseDetailScreen(
+            exerciseId: state.pathParameters['id'] ?? '',
+            exerciseName: state.extra is String ? state.extra as String : '',
+          ),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 1),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutCubic,
+              )),
+              child: child,
+            );
+          },
+        ),
+      ),
       // Home sub-routes (full-screen, no bottom nav)
       GoRoute(
         path: '/home/check-in',
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
-          child: const _PlaceholderScreen(title: 'Check-in'),
+          child: BlocProvider(
+            create: (_) => getIt<CheckInCubit>(),
+            child: const CheckInScreen(),
+          ),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return SlideTransition(
               position: Tween<Offset>(
@@ -382,6 +486,33 @@ GoRouter createAppRouter(AuthCubit authCubit) {
           },
         ),
       ),
+      // ── Wave 4: Settings sub-screens ──
+      GoRoute(
+        path: '/fitness-goals',
+        builder: (_, _) => const FitnessGoalsScreen(),
+      ),
+      GoRoute(
+        path: '/daily-targets',
+        builder: (_, _) => const DailyTargetsScreen(),
+      ),
+      GoRoute(
+        path: '/sharing',
+        builder: (_, _) => const SharingScreen(),
+      ),
+      GoRoute(
+        path: '/check-in-history',
+        builder: (_, _) => const CheckInHistoryScreen(),
+      ),
+      GoRoute(
+        path: '/check-in-detail/:id',
+        builder: (_, state) => CheckInDetailScreen(
+          checkInId: state.pathParameters['id'] ?? '',
+        ),
+      ),
+      GoRoute(
+        path: '/contact-support',
+        builder: (_, _) => const ContactSupportScreen(),
+      ),
     ],
   );
 }
@@ -389,31 +520,16 @@ GoRouter createAppRouter(AuthCubit authCubit) {
 // ── Shell with bottom navigation ──
 
 class _MainShell extends StatelessWidget {
-  final Widget child;
-  const _MainShell({required this.child});
-
-  int _currentIndex(String location) {
-    if (location.startsWith('/workout')) return 1;
-    if (location.startsWith('/explore')) return 2;
-    if (location.startsWith('/profile')) return 3;
-    return 0;
-  }
+  final StatefulNavigationShell navigationShell;
+  const _MainShell({required this.navigationShell});
 
   @override
   Widget build(BuildContext context) {
-    final location = GoRouterState.of(context).matchedLocation;
     return Scaffold(
-      body: child,
+      body: navigationShell,
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex(location),
-        onTap: (i) {
-          switch (i) {
-            case 0: context.go('/');
-            case 1: context.go('/workout');
-            case 2: context.go('/explore');
-            case 3: context.go('/profile');
-          }
-        },
+        currentIndex: navigationShell.currentIndex,
+        onTap: (i) => navigationShell.goBranch(i, initialLocation: i == navigationShell.currentIndex),
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.mutedText,
         items: const [
@@ -436,6 +552,11 @@ class _MainShell extends StatelessWidget {
             icon: Icon(Icons.person_outlined),
             activeIcon: Icon(Icons.person_rounded),
             label: 'Profile',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bar_chart_outlined),
+            activeIcon: Icon(Icons.bar_chart_rounded),
+            label: 'Analytics',
           ),
         ],
       ),
@@ -513,19 +634,6 @@ class _PackageResultScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _PlaceholderScreen extends StatelessWidget {
-  final String title;
-  const _PlaceholderScreen({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: const Center(child: Text('Coming soon')),
     );
   }
 }

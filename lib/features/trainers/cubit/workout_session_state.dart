@@ -13,6 +13,9 @@ sealed class WorkoutSessionState with _$WorkoutSessionState {
   /// Loading session data
   const factory WorkoutSessionState.loading() = WorkoutSessionLoading;
 
+  /// Conflict: another session already active
+  const factory WorkoutSessionState.conflict({required String existingSessionId}) = WorkoutSessionConflict;
+
   /// Active workout session in progress.
   /// Contains the session details and exercise logs.
   const factory WorkoutSessionState.active({
@@ -26,6 +29,8 @@ sealed class WorkoutSessionState with _$WorkoutSessionState {
     int? restDuration,
     int? restRemaining,
     @Default(false) bool showLongSessionWarning,
+    @Default(false) bool showRestFinishedToast,
+    @Default(<Map<String, dynamic>>[]) List<Map<String, dynamic>> sessionNewRecords,
     @Default(false) bool newPrRecord,
   }) = WorkoutSessionActive;
 
@@ -34,6 +39,8 @@ sealed class WorkoutSessionState with _$WorkoutSessionState {
     required WorkoutSessionDto session,
     required Duration totalDuration,
     @Default(<ExerciseLogDto>[]) List<ExerciseLogDto> logs,
+    @Default(<Map<String, dynamic>>[]) List<Map<String, dynamic>> newRecords,
+    @Default(false) bool showPrToast,
   }) = WorkoutSessionCompleted;
 
   /// Error state

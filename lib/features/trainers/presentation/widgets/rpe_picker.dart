@@ -7,7 +7,7 @@ import '../../../../core/theme/app_theme.dart';
 /// Presents a grid of 10 buttons in 2 rows of 5 with descriptive labels.
 /// A selected value is highlighted with primary color.
 ///
-/// Usage:
+/// Usage (dialog mode):
 /// ```dart
 /// showDialog(
 ///   context: context,
@@ -20,6 +20,14 @@ import '../../../../core/theme/app_theme.dart';
 ///   ),
 /// );
 /// ```
+///
+/// Usage (inline mode):
+/// ```dart
+/// RpePicker.inline(
+///   currentRpe: currentRpe,
+///   onSelected: (rpe) { cubit.logSet(rpe: rpe); },
+/// )
+/// ```
 class RpePicker extends StatefulWidget {
   /// Pre-selected RPE value, or null for no selection.
   final int? currentRpe;
@@ -27,15 +35,36 @@ class RpePicker extends StatefulWidget {
   /// Called with the selected RPE value (1–10) or `null` when cleared.
   final void Function(int? rpe) onSelected;
 
+  final _RpePickerMode _mode;
+
+  /// Full dialog overlay with grid, labels, and Clear/Confirm buttons.
   const RpePicker({
     super.key,
     this.currentRpe,
     required this.onSelected,
-  });
+  }) : _mode = _RpePickerMode.dialog;
+
+  /// Compact inline horizontal bar with immediate selection (no confirm step).
+  ///
+  /// Renders as a Row of small circle buttons without overlay or action buttons.
+  factory RpePicker.inline({
+    int? currentRpe,
+    required void Function(int? rpe) onSelected,
+  }) {
+    return RpePicker._inline(currentRpe: currentRpe, onSelected: onSelected);
+  }
+
+  const RpePicker._inline({
+    super.key,
+    this.currentRpe,
+    required this.onSelected,
+  }) : _mode = _RpePickerMode.inline;
 
   @override
   State<RpePicker> createState() => _RpePickerState();
 }
+
+enum _RpePickerMode { dialog, inline }
 
 class _RpePickerState extends State<RpePicker> {
   int? _selected;
@@ -62,6 +91,15 @@ class _RpePickerState extends State<RpePicker> {
 
   @override
   Widget build(BuildContext context) {
+    switch (widget._mode) {
+      case _RpePickerMode.inline:
+        return _buildInline();
+      case _RpePickerMode.dialog:
+        return _buildDialog();
+    }
+  }
+
+  Widget _buildDialog() {
     return Stack(
       children: [
         // Semi-transparent overlay (tap to dismiss)
@@ -160,6 +198,45 @@ class _RpePickerState extends State<RpePicker> {
           ),
         ),
       ],
+    );
+  }
+
+  /// Compact inline horizontal bar — no overlay, no buttons, immediate select.
+  Widget _buildInline() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: List.generate(10, (i) {
+          final value = i + 1;
+          final isSelected = _selected == value;
+          return GestureDetector(
+            onTap: () {
+              setState(() => _selected = value);
+              widget.onSelected(value);
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: isSelected ? AppColors.primary : AppColors.mutedSurface,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  '$value',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: isSelected ? Colors.white : AppColors.foreground,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
     );
   }
 

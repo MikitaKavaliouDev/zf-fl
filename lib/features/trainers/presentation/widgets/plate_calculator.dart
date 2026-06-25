@@ -1,19 +1,59 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 
-/// Shows a bottom sheet with barbell plate configuration for the given weight.
+/// Shows barbell plate configuration for the given weight.
 ///
 /// Standard plates: 25kg, 20kg, 15kg, 10kg, 5kg, 2.5kg, 1.25kg
 /// Barbell weight: 20kg (default)
+///
+/// Usage (bottom sheet mode):
+/// ```dart
+/// showModalBottomSheet(
+///   context: context,
+///   builder: (_) => PlateCalculator(
+///     targetWeight: weight,
+///     barbellWeight: 20,
+///   ),
+/// );
+/// ```
+///
+/// Usage (inline mode):
+/// ```dart
+/// PlateCalculator.inline(
+///   targetWeight: weight,
+///   barbellWeight: 20,
+/// )
+/// ```
 class PlateCalculator extends StatelessWidget {
   final double targetWeight;
   final double barbellWeight;
+  final _PlateCalculatorMode _mode;
 
+  /// Full bottom sheet with handle, title, and Done button.
   const PlateCalculator({
     super.key,
     required this.targetWeight,
     this.barbellWeight = 20,
-  });
+  }) : _mode = _PlateCalculatorMode.sheet;
+
+  /// Compact inline card without drag handle, title, or Done button.
+  ///
+  /// Renders as a small card with muted background, per-side text, and plate chips.
+  factory PlateCalculator.inline({
+    required double targetWeight,
+    double barbellWeight = 20,
+  }) {
+    return PlateCalculator._inline(
+      targetWeight: targetWeight,
+      barbellWeight: barbellWeight,
+    );
+  }
+
+  const PlateCalculator._inline({
+    super.key,
+    required this.targetWeight,
+    this.barbellWeight = 20,
+  }) : _mode = _PlateCalculatorMode.inline;
 
   static const _availablePlates = [25.0, 20.0, 15.0, 10.0, 5.0, 2.5, 1.25];
 
@@ -39,6 +79,63 @@ class PlateCalculator extends StatelessWidget {
     final plates = calculatePlates();
     final perSide = (targetWeight - barbellWeight) / 2;
 
+    switch (_mode) {
+      case _PlateCalculatorMode.inline:
+        return _buildInline(context, plates, perSide);
+      case _PlateCalculatorMode.sheet:
+        return _buildSheet(context, plates, perSide);
+    }
+  }
+
+  Widget _buildInline(BuildContext context, List<double> plates, double perSide) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.mutedSurface,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Per side: ${perSide.toStringAsFixed(1)} kg',
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.foreground,
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (plates.isEmpty)
+            const Text(
+              'Weight is less than barbell weight',
+              style: TextStyle(fontSize: 12, color: AppColors.mutedText),
+            )
+          else
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: plates.map((plate) {
+                return Chip(
+                  label: Text(
+                    '${plate.toStringAsFixed(1)} kg',
+                    style: const TextStyle(fontSize: 11),
+                  ),
+                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                  side: BorderSide.none,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: VisualDensity.compact,
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
+                );
+              }).toList(),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSheet(BuildContext context, List<double> plates, double perSide) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: const BoxDecoration(
@@ -110,3 +207,5 @@ class PlateCalculator extends StatelessWidget {
     );
   }
 }
+
+enum _PlateCalculatorMode { sheet, inline }

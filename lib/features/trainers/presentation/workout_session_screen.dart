@@ -17,12 +17,20 @@ import 'widgets/rpe_picker.dart';
 import 'widgets/save_as_template_dialog.dart';
 import 'widgets/template_picker_dialog.dart';
 import 'widgets/workout_numeric_keyboard.dart';
+import 'package:flutter/services.dart';
+import 'widgets/coach_note_card.dart';
+import 'widgets/focus_metric_selector.dart';
+import 'widgets/plate_calculator.dart';
+import 'widgets/youtube_player_widget.dart';
+import 'exercise_detail_screen.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Focus / input system types (local to this screen)
 // ─────────────────────────────────────────────────────────────────────────────
 
 enum _FieldType { weight, reps }
+
+enum _InputOverlay { none, plateCalculator, rpePicker }
 
 class _FocusTarget {
   final String exerciseId;
@@ -56,7 +64,10 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
   // ── Input system state ───────────────────────────────────────────────
   _FocusTarget? _focusTarget;
   String _activeInputText = '';
+  _InputOverlay _overlayMode = _InputOverlay.none;
   bool _dismissedLongWarning = false;
+  bool _isMinimized = false;
+  double _dragOffset = 0;
 
   @override
   void initState() {
@@ -118,6 +129,9 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
               ),
             );
           }
+          if (state is WorkoutSessionActive && state.showRestFinishedToast) {
+            HapticFeedback.mediumImpact();
+          }
           // Reset long warning dismissal on session end
           if (state is! WorkoutSessionActive) {
             setState(() => _dismissedLongWarning = false);
@@ -137,12 +151,17 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
               :final restElapsed,
               :final restRemaining,
               :final showLongSessionWarning,
+              :final showRestFinishedToast,
+              :final sessionNewRecords,
             ) =>
               _buildActive(
                 context, elapsed, isPaused, logs, restStartedAt, restElapsed, restRemaining,
+                showRestFinishedToast, sessionNewRecords,
               ),
-            WorkoutSessionCompleted(:final totalDuration, :final logs) =>
-              _buildCompleted(context, totalDuration, logs),
+            WorkoutSessionCompleted(:final totalDuration, :final logs, :final newRecords) =>
+              _buildCompleted(context, totalDuration, logs, newRecords),
+            WorkoutSessionConflict(:final existingSessionId) =>
+              _buildConflict(context, existingSessionId),
             WorkoutSessionError(:final message) => _buildError(context, message),
           };
         },
@@ -208,6 +227,8 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
     DateTime? restStartedAt,
     Duration restElapsed,
     int? restRemaining,
+    bool showRestFinishedToast,
+    List<Map<String, dynamic>> sessionNewRecords,
   ) {
     // Group logs by exerciseId.
     final grouped = <String, List<ExerciseLogDto>>{};
@@ -226,8 +247,23 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
     return Stack(
       children: [
         // Main content
-        Column(
-          children: [
+        GestureDetector(
+          onVerticalDragUpdate: (details) {
+            if (details.delta.dy > 0) {
+              setState(() => _dragOffset += details.delta.dy);
+            }
+          },
+          onVerticalDragEnd: (details) {
+            if (_dragOffset > 120) {
+              _handleInputDismiss();
+              context.read<WorkoutSessionCubit>().cancelSession();
+            }
+            setState(() => _dragOffset = 0);
+          },
+          child: Transform.translate(
+            offset: Offset(0, _dragOffset),
+            child: Column(
+              children: [
             // Timer Bar (session timer + optional rest timer)
             Container(
               margin: const EdgeInsets.all(16),
@@ -305,39 +341,48 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
                         restRemaining ?? restElapsed.inSeconds,
                         (context.read<WorkoutSessionCubit>().state as WorkoutSessionActive).restDuration ?? 120,
                       ),
-                      child: Row(
+                      child: Column(
                         children: [
-                          const Icon(Icons.timer_outlined,
-                              size: 14, color: Colors.orange),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              restRemaining != null
-                                  ? _formatCountdown(restRemaining)
-                                  : _formatDuration(restElapsed),
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.orange,
+                          // Progress bar
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: Container(
+                              height: 6,
+                              width: double.infinity,
+                              color: AppColors.mutedSurface,
+                              child: FractionallySizedBox(
+                                alignment: Alignment.centerLeft,
+                                widthFactor: (restRemaining != null && (context.read<WorkoutSessionCubit>().state as WorkoutSessionActive).restDuration != null && (context.read<WorkoutSessionCubit>().state as WorkoutSessionActive).restDuration! > 0)
+                                    ? restRemaining! / (context.read<WorkoutSessionCubit>().state as WorkoutSessionActive).restDuration!
+                                    : 0,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                          const SizedBox(width: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: Colors.orange.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(99),
-                            ),
-                            child: const Text(
-                              'OPEN',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.orange,
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              const Icon(Icons.timer_outlined, size: 14, color: Colors.orange),
+                              const SizedBox(width: 6),
+                              Text(
+                                restRemaining != null ? _formatCountdown(restRemaining) : _formatDuration(restElapsed),
+                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.orange),
                               ),
-                            ),
+                              const Spacer(),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(99),
+                                ),
+                                child: const Text('OPEN', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.orange)),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -376,6 +421,29 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
               ),
             ),
 
+            // Rest finished toast
+            if (showRestFinishedToast)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1C1C1E),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.check_circle_rounded, color: Colors.green, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Rest Finished!',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
             // Exercise list
             Expanded(
               child: grouped.isEmpty
@@ -401,11 +469,18 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
                             .firstWhere((l) => l.exercise?.muscleGroup != null,
                                 orElse: () => exLogs.first)
                             .exercise?.muscleGroup;
+                        final supersetKey = exLogs.firstWhere((l) => l.supersetKey != null, orElse: () => exLogs.first).supersetKey;
+                        final firstEx = exLogs.firstWhere((l) => l.exercise != null, orElse: () => exLogs.first).exercise;
+                        final coachNotes = exLogs.firstWhere((l) => l.notes != null, orElse: () => exLogs.first).notes;
+                        final coachVideoUrl = firstEx?.videoUrl;
                         return _ExerciseCard(
                           exerciseName: name,
                           muscleGroup: muscleGroup,
                           exerciseId: entry.key,
                           logs: exLogs,
+                          supersetKey: supersetKey,
+                          coachNotes: coachNotes,
+                          coachVideoUrl: coachVideoUrl,
                           focusTarget: _focusTarget,
                           activeInputText: _activeInputText,
                           onTapWeight: (logIndex) => _triggerInput(
@@ -481,6 +556,8 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
             ),
           ],
         ),
+        ),
+        ),
 
         // Keyboard overlay
         if (showKeyboard)
@@ -492,18 +569,90 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
               elevation: 8,
               child: SafeArea(
                 top: false,
-                child: WorkoutNumericKeyboard(
-                  isWeight: _focusTarget!.isWeight,
-                  text: _activeInputText,
-                  onTextChanged: (v) => setState(() => _activeInputText = v),
-                  onNext: _handleInputNext,
-                  onDismiss: _handleInputDismiss,
-                  // Plate calc / RPE not implemented yet
-                ),
+                child: _overlayMode == _InputOverlay.none
+                    ? WorkoutNumericKeyboard(
+                        isWeight: _focusTarget!.isWeight,
+                        text: _activeInputText,
+                        onTextChanged: (v) => setState(() => _activeInputText = v),
+                        onNext: _handleInputNext,
+                        onDismiss: _handleInputDismiss,
+                        onAction: () {
+                          setState(() {
+                            _overlayMode = _focusTarget!.isWeight
+                                ? _InputOverlay.plateCalculator
+                                : _InputOverlay.rpePicker;
+                          });
+                        },
+                      )
+                    : _buildOverlayContent(),
               ),
             ),
           ),
       ],
+    );
+  }
+
+  Widget _buildOverlayContent() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Align(
+            alignment: Alignment.topRight,
+            child: TextButton.icon(
+              onPressed: () => setState(() => _overlayMode = _InputOverlay.none),
+              icon: const Icon(Icons.keyboard_rounded, size: 16),
+              label: const Text('Keyboard'),
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (_overlayMode == _InputOverlay.plateCalculator)
+            PlateCalculator.inline(
+              targetWeight: double.tryParse(_activeInputText.replaceAll(',', '.')) ?? 0,
+            )
+          else
+            RpePicker.inline(
+              currentRpe: _getCurrentRpe(),
+              onSelected: (rpe) {
+                _applyRpe(rpe);
+                setState(() => _overlayMode = _InputOverlay.none);
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  int? _getCurrentRpe() {
+    if (_focusTarget == null) return null;
+    final cubit = context.read<WorkoutSessionCubit>();
+    final state = cubit.state;
+    if (state is! WorkoutSessionActive) return null;
+    final exLogs = state.logs.where((l) => l.exerciseId == _focusTarget!.exerciseId).toList();
+    if (_focusTarget!.setIndex >= exLogs.length) return null;
+    return exLogs[_focusTarget!.setIndex].rpe;
+  }
+
+  void _applyRpe(int? rpe) {
+    if (_focusTarget == null || rpe == null) return;
+    final cubit = context.read<WorkoutSessionCubit>();
+    final state = cubit.state;
+    if (state is! WorkoutSessionActive) return;
+    final exLogs = state.logs.where((l) => l.exerciseId == _focusTarget!.exerciseId).toList();
+    if (_focusTarget!.setIndex >= exLogs.length) return;
+    final log = exLogs[_focusTarget!.setIndex];
+    cubit.logSet(
+      logId: log.id,
+      exerciseId: _focusTarget!.exerciseId,
+      reps: log.reps ?? 0,
+      weight: log.weight,
+      isCompleted: log.isCompleted,
+      rpe: rpe,
     );
   }
 
@@ -546,6 +695,7 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
     BuildContext context,
     Duration totalDuration,
     List<ExerciseLogDto> logs,
+    List<Map<String, dynamic>> newRecords,
   ) {
     // Group logs by exercise to show per-exercise summary.
     final summary = <String, _ExerciseSummary>{};
@@ -625,6 +775,37 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
             const SizedBox(height: 24),
           ],
 
+          if (newRecords.isNotEmpty) ...[
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [Colors.orange, Colors.red]),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                children: [
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.emoji_events_rounded, color: Colors.white, size: 24),
+                      SizedBox(width: 8),
+                      Text('New Records!', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  ...newRecords.take(3).map((r) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: Text(
+                      '${r['recordType'] ?? 'PR'}: ${r['newRecord']}',
+                      style: const TextStyle(color: Colors.white, fontSize: 13),
+                    ),
+                  )),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
@@ -670,6 +851,56 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
               onPressed: () =>
                   context.read<WorkoutSessionCubit>().loadCurrent(),
               child: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildConflict(BuildContext context, String existingSessionId) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.warning_amber_rounded,
+              size: 64,
+              color: AppColors.primary,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Active Session Found',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'You already have an active workout session (ID: ${existingSessionId.length > 8 ? existingSessionId.substring(0, 8) : existingSessionId}…). '
+              'Would you like to resume it or start fresh?',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 15, color: AppColors.mutedText),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () =>
+                  context.read<WorkoutSessionCubit>().resolveConflict(startNew: false),
+              icon: const Icon(Icons.play_arrow_rounded),
+              label: const Text('Resume Existing'),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(200, 48),
+              ),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () =>
+                  context.read<WorkoutSessionCubit>().resolveConflict(startNew: true),
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Start Fresh'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(200, 48),
+              ),
             ),
           ],
         ),
@@ -819,6 +1050,7 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
     required int setIndex,
     required ExerciseLogDto log,
   }) {
+    HapticFeedback.mediumImpact();
     final cubit = context.read<WorkoutSessionCubit>();
 
     // If this set's field is focused, sync the active text first.
@@ -886,6 +1118,7 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
   // ── Dialogs ───────────────────────────────────────────────────────────
 
   void _confirmFinish(BuildContext context) {
+    HapticFeedback.mediumImpact();
     // Dismiss keyboard first if active.
     if (_focusTarget != null) {
       _handleInputDismiss();
@@ -908,6 +1141,7 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
   }
 
   void _confirmCancel(BuildContext context) {
+    HapticFeedback.mediumImpact();
     // Dismiss keyboard first if active.
     if (_focusTarget != null) {
       _handleInputDismiss();
@@ -1110,6 +1344,9 @@ class _ExerciseCard extends StatelessWidget {
   final String? muscleGroup;
   final String exerciseId;
   final List<ExerciseLogDto> logs;
+  final String? supersetKey;
+  final String? coachNotes;
+  final String? coachVideoUrl;
   final _FocusTarget? focusTarget;
   final String activeInputText;
   final void Function(int logIndex) onTapWeight;
@@ -1123,6 +1360,9 @@ class _ExerciseCard extends StatelessWidget {
     this.muscleGroup,
     required this.exerciseId,
     required this.logs,
+    this.supersetKey,
+    this.coachNotes,
+    this.coachVideoUrl,
     this.focusTarget,
     required this.activeInputText,
     required this.onTapWeight,
@@ -1134,30 +1374,73 @@ class _ExerciseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasTempoData = logs.any((l) => l.tempo != null);
+    final hasCoachContent = coachNotes != null || coachVideoUrl != null;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderMuted),
+        border: Border.all(
+          color: supersetKey != null
+              ? Colors.blue.withValues(alpha: 0.4)
+              : AppColors.borderMuted,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Superset badge
+          if (supersetKey != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              color: Colors.blue.withValues(alpha: 0.06),
+              child: Row(
+                children: [
+                  const Icon(Icons.link_rounded, size: 14, color: Colors.blue),
+                  const SizedBox(width: 6),
+                  const Text(
+                    'SUPERSET',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blue),
+                  ),
+                ],
+              ),
+            ),
           // Header
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            padding: EdgeInsets.fromLTRB(16, supersetKey != null ? 8 : 16, 16, 8),
             child: Row(
               children: [
                 Expanded(
-                  child: Text(
-                    exerciseName,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.foreground,
-                    ),
-                  ),
+                  child: hasCoachContent
+                      ? GestureDetector(
+                          onTap: () => _showCoachNotes(context),
+                          child: Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  exerciseName,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.foreground,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              const Icon(Icons.info_outline, size: 16, color: AppColors.primary),
+                            ],
+                          ),
+                        )
+                      : Text(
+                          exerciseName,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.foreground,
+                          ),
+                        ),
                 ),
                 if (muscleGroup != null)
                   Container(
@@ -1181,9 +1464,21 @@ class _ExerciseCard extends StatelessWidget {
                   onSelected: (value) {
                     if (value == 'remove') {
                       onRemove();
+                    } else if (value == 'details') {
+                      context.push('/workout/exercise/$exerciseId', extra: exerciseName);
                     }
                   },
                   itemBuilder: (_) => [
+                    const PopupMenuItem(
+                      value: 'details',
+                      child: Row(
+                        children: [
+                          Icon(Icons.info_outline, size: 18, color: AppColors.primary),
+                          SizedBox(width: 8),
+                          Text('Details'),
+                        ],
+                      ),
+                    ),
                     const PopupMenuItem(
                       value: 'remove',
                       child: Row(
@@ -1204,7 +1499,7 @@ class _ExerciseCard extends StatelessWidget {
           ),
 
           // Table header
-          _buildTableHeader(),
+          _buildTableHeader(hasTempoData),
 
           // Set rows
           ...logs.asMap().entries.map((entry) {
@@ -1223,6 +1518,7 @@ class _ExerciseCard extends StatelessWidget {
               weight: log.weight,
               reps: log.reps,
               rpe: log.rpe,
+              tempo: log.tempo,
               isCompleted: log.isCompleted,
               isWeightFocused: isWeightFocused,
               isRepsFocused: isRepsFocused,
@@ -1231,6 +1527,7 @@ class _ExerciseCard extends StatelessWidget {
               onTapReps: () => onTapReps(i),
               onComplete: () => onComplete(i),
               onTapRpe: () => _onTapRpe(context, exerciseId, log),
+              onTapTempo: hasTempoData ? () => _onTapTempo(context, exerciseId, log) : null,
             );
           }),
 
@@ -1261,14 +1558,14 @@ class _ExerciseCard extends StatelessWidget {
     );
   }
 
-  Widget _buildTableHeader() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+  Widget _buildTableHeader(bool hasTempoData) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Row(
         children: [
-          SizedBox(width: 28), // set number column
-          SizedBox(width: 12),
-          Expanded(
+          const SizedBox(width: 28), // set number column
+          const SizedBox(width: 12),
+          const Expanded(
             child: Text(
               'WEIGHT',
               style: TextStyle(
@@ -1278,7 +1575,8 @@ class _ExerciseCard extends StatelessWidget {
               ),
             ),
           ),
-          Expanded(
+          const SizedBox(width: 4),
+          const Expanded(
             child: Text(
               'REPS',
               style: TextStyle(
@@ -1288,8 +1586,86 @@ class _ExerciseCard extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(width: 36), // checkbox column
+          if (hasTempoData) ...[
+            const SizedBox(width: 4),
+            const Expanded(
+              child: Text(
+                'TEMPO',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.mutedText,
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
+          ],
+          const SizedBox(width: 36), // checkbox column
         ],
+      ),
+    );
+  }
+
+  void _onTapTempo(BuildContext context, String exerciseId, ExerciseLogDto log) {
+    // Show a dialog or sheet for editing tempo
+    final controller = TextEditingController(text: log.tempo ?? '');
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Tempo'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            hintText: 'e.g. 3-0-1-0',
+            labelText: 'Tempo',
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              final tempo = controller.text.trim();
+              if (context.mounted) {
+                final cubit = context.read<WorkoutSessionCubit>();
+                cubit.logSet(
+                  logId: log.id,
+                  exerciseId: exerciseId,
+                  reps: log.reps ?? 0,
+                  weight: log.weight,
+                  isCompleted: log.isCompleted,
+                  rpe: log.rpe,
+                  tempo: tempo.isEmpty ? null : tempo,
+                );
+              }
+              Navigator.of(context).pop();
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+  }
+
+  void _showCoachNotes(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        child: CoachNoteCard(
+          trainerName: 'Coach',
+          notes: coachNotes ?? 'Watch the video for form guidance.',
+          videoUrl: coachVideoUrl,
+          onPlayVideo: coachVideoUrl != null
+              ? () => showYouTubeVideo(context, coachVideoUrl!)
+              : null,
+        ),
       ),
     );
   }
@@ -1326,6 +1702,7 @@ class _SetRow extends StatelessWidget {
   final double? weight;
   final int? reps;
   final int? rpe;
+  final String? tempo;
   final bool isCompleted;
   final bool isWeightFocused;
   final bool isRepsFocused;
@@ -1334,6 +1711,7 @@ class _SetRow extends StatelessWidget {
   final VoidCallback onTapReps;
   final VoidCallback onComplete;
   final VoidCallback onTapRpe;
+  final VoidCallback? onTapTempo;
 
   const _SetRow({
     super.key,
@@ -1341,6 +1719,7 @@ class _SetRow extends StatelessWidget {
     this.weight,
     this.reps,
     this.rpe,
+    this.tempo,
     this.isCompleted = false,
     this.isWeightFocused = false,
     this.isRepsFocused = false,
@@ -1349,6 +1728,7 @@ class _SetRow extends StatelessWidget {
     required this.onTapReps,
     required this.onComplete,
     required this.onTapRpe,
+    this.onTapTempo,
   });
 
   @override
@@ -1387,6 +1767,31 @@ class _SetRow extends StatelessWidget {
               onTap: onTapReps,
             ),
           ),
+
+          // Tempo column (conditional)
+          if (onTapTempo != null) ...[
+            const SizedBox(width: 4),
+            GestureDetector(
+              onTap: onTapTempo,
+              child: Container(
+                width: 40,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: rpe != null ? AppColors.primary.withValues(alpha: 0.1) : AppColors.mutedSurface,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  tempo ?? '--',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: tempo != null ? Colors.orange : AppColors.mutedText,
+                  ),
+                ),
+              ),
+            ),
+          ],
 
           const SizedBox(width: 4),
 

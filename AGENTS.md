@@ -390,11 +390,73 @@ Before implementing any feature:
 Before marking any feature complete, verify:
 - [ ] All widgets render with real data (not mock/placeholder)
 - [ ] All API endpoints called from the feature exist and return correct shapes
+- [ ] **Programmatic API verification completed** — see Rule 7
 - [ ] All error states are handled (loading, error, empty, success)
 - [ ] All navigation flows work end-to-end
 - [ ] `dart analyze` passes with zero errors
 - [ ] `flutter test` passes (all tests, not just your new ones)
 - [ ] No dead code, no print() statements, no commented-out code
+
+#### Rule 7: Programmatic API Contract Verification (MANDATORY)
+**Verbal claims are not sufficient.** An LLM agent that says "the feature is implemented" or "the bug is fixed" MUST prove it by querying the live backend and comparing actual responses against Flutter DTOs.
+
+**When verification is required:**
+- Every feature delivery that involves API integration (before marking "complete")
+- Every bug fix that involves API response parsing (before marking "fixed")
+- Every model/endpoint contract change (before claiming "migrated")
+
+**Verification protocol:**
+```
+Step 1: Ensure backend is running
+  → cd V:\zirofit-next && npm run dev
+  → Confirm port 3321 is listening
+
+Step 2: Authenticate
+  → POST /api/auth/login { email, password }
+  → Extract accessToken from response
+
+Step 3: Query every endpoint the feature touches
+  → For each endpoint (GET/POST/PUT/DELETE):
+    → Call it with the auth token
+    → Capture the raw JSON response
+    → Compare every field against the Flutter DTO:
+      - Does the field exist in both? (no extra, no missing)
+      - Does the nullability match? (required vs optional)
+      - Does the type match? (String, int, double, List, nested object)
+      - Does the response envelope match? ({ data: ... } wrapper)
+
+Step 4: Report discrepancies
+  → Log every mismatch: field name, expected type, actual type/value
+  → If mismatches found: FIX THE FLUTTER DTO, do not modify backend
+  → Re-verify after fixing
+```
+
+**Credentials for verification (from `prisma/seed.ts`):**
+- **Primary test client** (linked to trainer Ada, has active program, sessions, measurements):
+  ```
+  Email:    client.ada@ziro.fit
+  Password: password123
+  ```
+- **Unlinked test client** (no trainer, for standalone flows):
+  ```
+  Email:    client.unlinked@ziro.fit
+  Password: password123
+  ```
+- **Trainer account** (for trainer-facing endpoints):
+  ```
+  Email:    ada@ziro.fit
+  Password: password123
+  ```
+All accounts use the same password `password123` (set by `ensureAuthUser()` in seed.ts).
+Verify credentials are still valid by calling `/api/auth/me` after login.
+
+**Tooling:**
+- Use `curl` via bash for quick endpoint verification
+- Use a Dart integration test (`test/api_contract_test.dart`) for repeatable verification
+- Store the verification script in `scripts/verify-api-contracts.sh`
+
+**Pass Criteria:**
+All fields present and matching in type/nullability. Zero discrepancies between live backend response and Flutter model. If the backend returns a field the Flutter model doesn't have → add it. If the model has a field the backend doesn't return → verify it's optional with a default.
 
 ---
 
