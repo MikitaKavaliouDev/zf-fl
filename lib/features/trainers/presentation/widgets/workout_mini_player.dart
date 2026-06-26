@@ -207,7 +207,6 @@ class _WorkoutMiniPlayerState extends State<WorkoutMiniPlayer> {
   }
 
   void _maximize(BuildContext context, WorkoutSessionCubit cubit) {
-    cubit.maximize();
     context.push('/workout/session');
   }
 
@@ -299,3 +298,4 @@ class _RingPainter extends CustomPainter {
   bool shouldRepaint(_RingPainter oldDelegate) =>
       oldDelegate.progress != progress;
 }
+      

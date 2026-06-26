@@ -132,7 +132,7 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
   }
 
   /// Load the current live session if one exists.
-  Future<void> loadCurrent() async {
+  Future<void> loadCurrent({bool isMinimized = true}) async {
     emit(const WorkoutSessionState.loading());
     try {
       final result = await _repository.getLiveSession();
@@ -146,7 +146,7 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
           logs: result.logs,
           elapsed: Duration.zero,
           startTime: serverStartTime,
-          isMinimized: true,
+          isMinimized: isMinimized,
         ));
         _startTimer();
         developer.log(
@@ -178,7 +178,7 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
       // Don't auto-restart — user must tap "Start Workout" again
     } else {
       // Continue existing — load the current session
-      await loadCurrent();
+      await loadCurrent(isMinimized: false);
     }
   }
 
@@ -526,3 +526,4 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
     );
   }
 }
+      
