@@ -32,15 +32,19 @@ import '../../features/check_in/presentation/check_in_history_screen.dart';
 import '../../features/daily_targets/presentation/daily_targets_screen.dart';
 import '../../features/fitness_goals/presentation/fitness_goals_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
+import '../../features/profile/presentation/settings_screens/profile_config_screen.dart';
 import '../../features/sharing/presentation/sharing_screen.dart';
 import '../../features/profile/presentation/settings_screens/contact_support_screen.dart';
 import '../../features/trainers/data/models/template_dto.dart';
 import '../../features/trainers/presentation/completed_session_detail_screen.dart';
 import '../../features/trainers/presentation/trainer_detail_screen.dart';
+import '../../features/trainers/cubit/workout_session_cubit.dart';
+import '../../features/trainers/cubit/workout_session_state.dart';
+import '../../features/trainers/presentation/exercise_detail_screen.dart';
 import '../../features/trainers/presentation/trainer_map_screen.dart';
+import '../../features/trainers/presentation/widgets/workout_mini_player.dart';
 import '../../features/trainers/presentation/workout_history_screen.dart';
 import '../../features/trainers/presentation/workout_session_screen.dart';
-import '../../features/trainers/presentation/exercise_detail_screen.dart';
 import '../di/injection.dart';
 import '../theme/app_theme.dart';
 
@@ -514,6 +518,25 @@ GoRouter createAppRouter(AuthCubit authCubit) {
         ),
       ),
       GoRoute(
+        path: '/profile/config',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const ProfileConfigScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 1),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutCubic,
+              )),
+              child: child,
+            );
+          },
+        ),
+      ),
+      GoRoute(
         path: '/contact-support',
         builder: (_, _) => const ContactSupportScreen(),
       ),
@@ -521,7 +544,7 @@ GoRouter createAppRouter(AuthCubit authCubit) {
   );
 }
 
-// ── Shell with bottom navigation ──
+// ── Shell with bottom navigation + mini player overlay ──
 
 class _MainShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
@@ -530,7 +553,38 @@ class _MainShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: navigationShell,
+      body: Stack(
+        children: [
+          navigationShell,
+          // Mini player overlay — shown when a workout session is active and minimized.
+          // Positioned above bottom nav (matches iOS: 90pt above tab bar).
+          // Uses buildWhen to only rebuild on minimize/maximize transitions,
+          // not on every timer tick.
+          BlocBuilder<WorkoutSessionCubit, WorkoutSessionState>(
+            buildWhen: (previous, current) {
+              final prevMinimized = previous is WorkoutSessionActive && previous.isMinimized;
+              final currMinimized = current is WorkoutSessionActive && current.isMinimized;
+              return prevMinimized != currMinimized;
+            },
+            builder: (context, state) {
+              if (state is WorkoutSessionActive && state.isMinimized) {
+                return Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      bottom: MediaQuery.of(context).padding.bottom + 8,
+                    ),
+                    child: const WorkoutMiniPlayer(),
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: navigationShell.currentIndex,
         onTap: (i) => navigationShell.goBranch(i, initialLocation: i == navigationShell.currentIndex),

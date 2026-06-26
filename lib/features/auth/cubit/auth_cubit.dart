@@ -135,6 +135,18 @@ class AuthCubit extends Cubit<AuthState> {
     emit(const AuthState.unauthenticated());
   }
 
+  /// Refresh user data from server without showing loading state.
+  Future<void> refreshUser() async {
+    try {
+      final user = await _repository.getCurrentUser();
+      if (user != null) {
+        _routeByUserState(user);
+      }
+    } catch (e, s) {
+      developer.log('refreshUser failed', name: 'auth', error: e, stackTrace: s);
+    }
+  }
+
   void clearError() {
     // Go back to unauthenticated — the caller was either login or register.
     emit(const AuthState.unauthenticated());

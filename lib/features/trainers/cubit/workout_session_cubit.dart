@@ -103,11 +103,14 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
         templateId: templateId,
         clientPackageId: clientPackageId,
       );
+      // Use the server's authoritative startTime so the timer
+      // stays accurate even across app restarts or clock drift.
+      final serverStartTime = DateTime.parse(result.session.startTime);
       emit(WorkoutSessionState.active(
         session: result.session,
         logs: result.logs,
         elapsed: Duration.zero,
-        startTime: DateTime.now(),
+        startTime: serverStartTime,
       ));
       _startTimer();
       developer.log('workout_started | exerciseCount=${result.logs.length}', name: 'analytics');
@@ -122,11 +125,16 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
     try {
       final result = await _repository.getLiveSession();
       if (result.session != null) {
+        // Auto-minimize when resuming from cold start so the user
+        // isn't thrown into a full-screen workout unexpectedly.
+        // Use the server's startTime for accurate elapsed calculation.
+        final serverStartTime = DateTime.parse(result.session!.startTime);
         emit(WorkoutSessionState.active(
           session: result.session!,
           logs: result.logs,
           elapsed: Duration.zero,
-          startTime: DateTime.now(),
+          startTime: serverStartTime,
+          isMinimized: true,
         ));
         _startTimer();
       } else {
@@ -379,6 +387,21 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
   /// Skip the rest timer early.
   Future<void> skipRest() async {
     await endRest();
+  }
+
+  /// Minimize the active session to the mini-player overlay.
+  /// The session stays active but the full-screen view is dismissed.
+  void minimize() {
+    final current = state;
+    if (current is! WorkoutSessionActive) return;
+    emit(current.copyWith(isMinimized: true));
+  }
+
+  /// Maximize the mini-player back to the full workout session view.
+  void maximize() {
+    final current = state;
+    if (current is! WorkoutSessionActive) return;
+    emit(current.copyWith(isMinimized: false));
   }
 
   /// Cancel the active workout session.

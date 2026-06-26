@@ -78,6 +78,8 @@ import 'package:ziro_fit/features/notifications/data/repositories/notification_r
 import 'package:ziro_fit/features/notifications/data/services/notification_realtime_service.dart'
     as _i115;
 import 'package:ziro_fit/features/profile/cubit/more_cubit.dart' as _i19;
+import 'package:ziro_fit/features/profile/cubit/profile_config_cubit.dart'
+    as _i851;
 import 'package:ziro_fit/features/profile/data/profile_api_service.dart'
     as _i768;
 import 'package:ziro_fit/features/sharing/cubit/sharing_cubit.dart' as _i28;
@@ -281,6 +283,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i19.MoreCubit>(
       () =>
           _i19.MoreCubit(gh<_i768.ProfileApiService>(), gh<_i514.AuthCubit>()),
+    );
+    gh.factory<_i851.ProfileConfigCubit>(
+      () => _i851.ProfileConfigCubit(
+        gh<_i768.ProfileApiService>(),
+        gh<_i514.AuthCubit>(),
+      ),
     );
     gh.singleton<_i796.SyncCubit>(
       () => _i796.SyncCubit(

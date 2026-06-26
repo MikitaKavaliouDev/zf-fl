@@ -23,6 +23,7 @@ sealed class WorkoutSessionState with _$WorkoutSessionState {
     @Default(<ExerciseLogDto>[]) List<ExerciseLogDto> logs,
     required Duration elapsed,
     @Default(false) bool isPaused,
+    @Default(false) bool isMinimized,
     DateTime? restStartedAt,
     @Default(Duration.zero) Duration restElapsed,
     DateTime? startTime,

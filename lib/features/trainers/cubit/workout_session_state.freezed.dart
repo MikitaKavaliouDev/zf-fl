@@ -131,13 +131,13 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( String existingSessionId)?  conflict,TResult Function( WorkoutSessionDto session,  List<ExerciseLogDto> logs,  Duration elapsed,  bool isPaused,  DateTime? restStartedAt,  Duration restElapsed,  DateTime? startTime,  int? restDuration,  int? restRemaining,  bool showLongSessionWarning,  bool showRestFinishedToast,  List<Map<String, dynamic>> sessionNewRecords,  bool newPrRecord)?  active,TResult Function( WorkoutSessionDto session,  Duration totalDuration,  List<ExerciseLogDto> logs,  List<Map<String, dynamic>> newRecords,  bool showPrToast)?  completed,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( String existingSessionId)?  conflict,TResult Function( WorkoutSessionDto session,  List<ExerciseLogDto> logs,  Duration elapsed,  bool isPaused,  bool isMinimized,  DateTime? restStartedAt,  Duration restElapsed,  DateTime? startTime,  int? restDuration,  int? restRemaining,  bool showLongSessionWarning,  bool showRestFinishedToast,  List<Map<String, dynamic>> sessionNewRecords,  bool newPrRecord)?  active,TResult Function( WorkoutSessionDto session,  Duration totalDuration,  List<ExerciseLogDto> logs,  List<Map<String, dynamic>> newRecords,  bool showPrToast)?  completed,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case WorkoutSessionInitial() when initial != null:
 return initial();case WorkoutSessionLoading() when loading != null:
 return loading();case WorkoutSessionConflict() when conflict != null:
 return conflict(_that.existingSessionId);case WorkoutSessionActive() when active != null:
-return active(_that.session,_that.logs,_that.elapsed,_that.isPaused,_that.restStartedAt,_that.restElapsed,_that.startTime,_that.restDuration,_that.restRemaining,_that.showLongSessionWarning,_that.showRestFinishedToast,_that.sessionNewRecords,_that.newPrRecord);case WorkoutSessionCompleted() when completed != null:
+return active(_that.session,_that.logs,_that.elapsed,_that.isPaused,_that.isMinimized,_that.restStartedAt,_that.restElapsed,_that.startTime,_that.restDuration,_that.restRemaining,_that.showLongSessionWarning,_that.showRestFinishedToast,_that.sessionNewRecords,_that.newPrRecord);case WorkoutSessionCompleted() when completed != null:
 return completed(_that.session,_that.totalDuration,_that.logs,_that.newRecords,_that.showPrToast);case WorkoutSessionError() when error != null:
 return error(_that.message);case _:
   return orElse();
@@ -157,13 +157,13 @@ return error(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( String existingSessionId)  conflict,required TResult Function( WorkoutSessionDto session,  List<ExerciseLogDto> logs,  Duration elapsed,  bool isPaused,  DateTime? restStartedAt,  Duration restElapsed,  DateTime? startTime,  int? restDuration,  int? restRemaining,  bool showLongSessionWarning,  bool showRestFinishedToast,  List<Map<String, dynamic>> sessionNewRecords,  bool newPrRecord)  active,required TResult Function( WorkoutSessionDto session,  Duration totalDuration,  List<ExerciseLogDto> logs,  List<Map<String, dynamic>> newRecords,  bool showPrToast)  completed,required TResult Function( String message)  error,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( String existingSessionId)  conflict,required TResult Function( WorkoutSessionDto session,  List<ExerciseLogDto> logs,  Duration elapsed,  bool isPaused,  bool isMinimized,  DateTime? restStartedAt,  Duration restElapsed,  DateTime? startTime,  int? restDuration,  int? restRemaining,  bool showLongSessionWarning,  bool showRestFinishedToast,  List<Map<String, dynamic>> sessionNewRecords,  bool newPrRecord)  active,required TResult Function( WorkoutSessionDto session,  Duration totalDuration,  List<ExerciseLogDto> logs,  List<Map<String, dynamic>> newRecords,  bool showPrToast)  completed,required TResult Function( String message)  error,}) {final _that = this;
 switch (_that) {
 case WorkoutSessionInitial():
 return initial();case WorkoutSessionLoading():
 return loading();case WorkoutSessionConflict():
 return conflict(_that.existingSessionId);case WorkoutSessionActive():
-return active(_that.session,_that.logs,_that.elapsed,_that.isPaused,_that.restStartedAt,_that.restElapsed,_that.startTime,_that.restDuration,_that.restRemaining,_that.showLongSessionWarning,_that.showRestFinishedToast,_that.sessionNewRecords,_that.newPrRecord);case WorkoutSessionCompleted():
+return active(_that.session,_that.logs,_that.elapsed,_that.isPaused,_that.isMinimized,_that.restStartedAt,_that.restElapsed,_that.startTime,_that.restDuration,_that.restRemaining,_that.showLongSessionWarning,_that.showRestFinishedToast,_that.sessionNewRecords,_that.newPrRecord);case WorkoutSessionCompleted():
 return completed(_that.session,_that.totalDuration,_that.logs,_that.newRecords,_that.showPrToast);case WorkoutSessionError():
 return error(_that.message);}
 }
@@ -179,13 +179,13 @@ return error(_that.message);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( String existingSessionId)?  conflict,TResult? Function( WorkoutSessionDto session,  List<ExerciseLogDto> logs,  Duration elapsed,  bool isPaused,  DateTime? restStartedAt,  Duration restElapsed,  DateTime? startTime,  int? restDuration,  int? restRemaining,  bool showLongSessionWarning,  bool showRestFinishedToast,  List<Map<String, dynamic>> sessionNewRecords,  bool newPrRecord)?  active,TResult? Function( WorkoutSessionDto session,  Duration totalDuration,  List<ExerciseLogDto> logs,  List<Map<String, dynamic>> newRecords,  bool showPrToast)?  completed,TResult? Function( String message)?  error,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( String existingSessionId)?  conflict,TResult? Function( WorkoutSessionDto session,  List<ExerciseLogDto> logs,  Duration elapsed,  bool isPaused,  bool isMinimized,  DateTime? restStartedAt,  Duration restElapsed,  DateTime? startTime,  int? restDuration,  int? restRemaining,  bool showLongSessionWarning,  bool showRestFinishedToast,  List<Map<String, dynamic>> sessionNewRecords,  bool newPrRecord)?  active,TResult? Function( WorkoutSessionDto session,  Duration totalDuration,  List<ExerciseLogDto> logs,  List<Map<String, dynamic>> newRecords,  bool showPrToast)?  completed,TResult? Function( String message)?  error,}) {final _that = this;
 switch (_that) {
 case WorkoutSessionInitial() when initial != null:
 return initial();case WorkoutSessionLoading() when loading != null:
 return loading();case WorkoutSessionConflict() when conflict != null:
 return conflict(_that.existingSessionId);case WorkoutSessionActive() when active != null:
-return active(_that.session,_that.logs,_that.elapsed,_that.isPaused,_that.restStartedAt,_that.restElapsed,_that.startTime,_that.restDuration,_that.restRemaining,_that.showLongSessionWarning,_that.showRestFinishedToast,_that.sessionNewRecords,_that.newPrRecord);case WorkoutSessionCompleted() when completed != null:
+return active(_that.session,_that.logs,_that.elapsed,_that.isPaused,_that.isMinimized,_that.restStartedAt,_that.restElapsed,_that.startTime,_that.restDuration,_that.restRemaining,_that.showLongSessionWarning,_that.showRestFinishedToast,_that.sessionNewRecords,_that.newPrRecord);case WorkoutSessionCompleted() when completed != null:
 return completed(_that.session,_that.totalDuration,_that.logs,_that.newRecords,_that.showPrToast);case WorkoutSessionError() when error != null:
 return error(_that.message);case _:
   return null;
@@ -329,7 +329,7 @@ as String,
 
 
 class WorkoutSessionActive implements WorkoutSessionState {
-  const WorkoutSessionActive({required this.session, final  List<ExerciseLogDto> logs = const <ExerciseLogDto>[], required this.elapsed, this.isPaused = false, this.restStartedAt, this.restElapsed = Duration.zero, this.startTime, this.restDuration, this.restRemaining, this.showLongSessionWarning = false, this.showRestFinishedToast = false, final  List<Map<String, dynamic>> sessionNewRecords = const <Map<String, dynamic>>[], this.newPrRecord = false}): _logs = logs,_sessionNewRecords = sessionNewRecords;
+  const WorkoutSessionActive({required this.session, final  List<ExerciseLogDto> logs = const <ExerciseLogDto>[], required this.elapsed, this.isPaused = false, this.isMinimized = false, this.restStartedAt, this.restElapsed = Duration.zero, this.startTime, this.restDuration, this.restRemaining, this.showLongSessionWarning = false, this.showRestFinishedToast = false, final  List<Map<String, dynamic>> sessionNewRecords = const <Map<String, dynamic>>[], this.newPrRecord = false}): _logs = logs,_sessionNewRecords = sessionNewRecords;
   
 
  final  WorkoutSessionDto session;
@@ -342,6 +342,7 @@ class WorkoutSessionActive implements WorkoutSessionState {
 
  final  Duration elapsed;
 @JsonKey() final  bool isPaused;
+@JsonKey() final  bool isMinimized;
  final  DateTime? restStartedAt;
 @JsonKey() final  Duration restElapsed;
  final  DateTime? startTime;
@@ -368,16 +369,16 @@ $WorkoutSessionActiveCopyWith<WorkoutSessionActive> get copyWith => _$WorkoutSes
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WorkoutSessionActive&&(identical(other.session, session) || other.session == session)&&const DeepCollectionEquality().equals(other._logs, _logs)&&(identical(other.elapsed, elapsed) || other.elapsed == elapsed)&&(identical(other.isPaused, isPaused) || other.isPaused == isPaused)&&(identical(other.restStartedAt, restStartedAt) || other.restStartedAt == restStartedAt)&&(identical(other.restElapsed, restElapsed) || other.restElapsed == restElapsed)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.restDuration, restDuration) || other.restDuration == restDuration)&&(identical(other.restRemaining, restRemaining) || other.restRemaining == restRemaining)&&(identical(other.showLongSessionWarning, showLongSessionWarning) || other.showLongSessionWarning == showLongSessionWarning)&&(identical(other.showRestFinishedToast, showRestFinishedToast) || other.showRestFinishedToast == showRestFinishedToast)&&const DeepCollectionEquality().equals(other._sessionNewRecords, _sessionNewRecords)&&(identical(other.newPrRecord, newPrRecord) || other.newPrRecord == newPrRecord));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WorkoutSessionActive&&(identical(other.session, session) || other.session == session)&&const DeepCollectionEquality().equals(other._logs, _logs)&&(identical(other.elapsed, elapsed) || other.elapsed == elapsed)&&(identical(other.isPaused, isPaused) || other.isPaused == isPaused)&&(identical(other.isMinimized, isMinimized) || other.isMinimized == isMinimized)&&(identical(other.restStartedAt, restStartedAt) || other.restStartedAt == restStartedAt)&&(identical(other.restElapsed, restElapsed) || other.restElapsed == restElapsed)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.restDuration, restDuration) || other.restDuration == restDuration)&&(identical(other.restRemaining, restRemaining) || other.restRemaining == restRemaining)&&(identical(other.showLongSessionWarning, showLongSessionWarning) || other.showLongSessionWarning == showLongSessionWarning)&&(identical(other.showRestFinishedToast, showRestFinishedToast) || other.showRestFinishedToast == showRestFinishedToast)&&const DeepCollectionEquality().equals(other._sessionNewRecords, _sessionNewRecords)&&(identical(other.newPrRecord, newPrRecord) || other.newPrRecord == newPrRecord));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,session,const DeepCollectionEquality().hash(_logs),elapsed,isPaused,restStartedAt,restElapsed,startTime,restDuration,restRemaining,showLongSessionWarning,showRestFinishedToast,const DeepCollectionEquality().hash(_sessionNewRecords),newPrRecord);
+int get hashCode => Object.hash(runtimeType,session,const DeepCollectionEquality().hash(_logs),elapsed,isPaused,isMinimized,restStartedAt,restElapsed,startTime,restDuration,restRemaining,showLongSessionWarning,showRestFinishedToast,const DeepCollectionEquality().hash(_sessionNewRecords),newPrRecord);
 
 @override
 String toString() {
-  return 'WorkoutSessionState.active(session: $session, logs: $logs, elapsed: $elapsed, isPaused: $isPaused, restStartedAt: $restStartedAt, restElapsed: $restElapsed, startTime: $startTime, restDuration: $restDuration, restRemaining: $restRemaining, showLongSessionWarning: $showLongSessionWarning, showRestFinishedToast: $showRestFinishedToast, sessionNewRecords: $sessionNewRecords, newPrRecord: $newPrRecord)';
+  return 'WorkoutSessionState.active(session: $session, logs: $logs, elapsed: $elapsed, isPaused: $isPaused, isMinimized: $isMinimized, restStartedAt: $restStartedAt, restElapsed: $restElapsed, startTime: $startTime, restDuration: $restDuration, restRemaining: $restRemaining, showLongSessionWarning: $showLongSessionWarning, showRestFinishedToast: $showRestFinishedToast, sessionNewRecords: $sessionNewRecords, newPrRecord: $newPrRecord)';
 }
 
 
@@ -388,7 +389,7 @@ abstract mixin class $WorkoutSessionActiveCopyWith<$Res> implements $WorkoutSess
   factory $WorkoutSessionActiveCopyWith(WorkoutSessionActive value, $Res Function(WorkoutSessionActive) _then) = _$WorkoutSessionActiveCopyWithImpl;
 @useResult
 $Res call({
- WorkoutSessionDto session, List<ExerciseLogDto> logs, Duration elapsed, bool isPaused, DateTime? restStartedAt, Duration restElapsed, DateTime? startTime, int? restDuration, int? restRemaining, bool showLongSessionWarning, bool showRestFinishedToast, List<Map<String, dynamic>> sessionNewRecords, bool newPrRecord
+ WorkoutSessionDto session, List<ExerciseLogDto> logs, Duration elapsed, bool isPaused, bool isMinimized, DateTime? restStartedAt, Duration restElapsed, DateTime? startTime, int? restDuration, int? restRemaining, bool showLongSessionWarning, bool showRestFinishedToast, List<Map<String, dynamic>> sessionNewRecords, bool newPrRecord
 });
 
 
@@ -405,12 +406,13 @@ class _$WorkoutSessionActiveCopyWithImpl<$Res>
 
 /// Create a copy of WorkoutSessionState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? session = null,Object? logs = null,Object? elapsed = null,Object? isPaused = null,Object? restStartedAt = freezed,Object? restElapsed = null,Object? startTime = freezed,Object? restDuration = freezed,Object? restRemaining = freezed,Object? showLongSessionWarning = null,Object? showRestFinishedToast = null,Object? sessionNewRecords = null,Object? newPrRecord = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? session = null,Object? logs = null,Object? elapsed = null,Object? isPaused = null,Object? isMinimized = null,Object? restStartedAt = freezed,Object? restElapsed = null,Object? startTime = freezed,Object? restDuration = freezed,Object? restRemaining = freezed,Object? showLongSessionWarning = null,Object? showRestFinishedToast = null,Object? sessionNewRecords = null,Object? newPrRecord = null,}) {
   return _then(WorkoutSessionActive(
 session: null == session ? _self.session : session // ignore: cast_nullable_to_non_nullable
 as WorkoutSessionDto,logs: null == logs ? _self._logs : logs // ignore: cast_nullable_to_non_nullable
 as List<ExerciseLogDto>,elapsed: null == elapsed ? _self.elapsed : elapsed // ignore: cast_nullable_to_non_nullable
 as Duration,isPaused: null == isPaused ? _self.isPaused : isPaused // ignore: cast_nullable_to_non_nullable
+as bool,isMinimized: null == isMinimized ? _self.isMinimized : isMinimized // ignore: cast_nullable_to_non_nullable
 as bool,restStartedAt: freezed == restStartedAt ? _self.restStartedAt : restStartedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,restElapsed: null == restElapsed ? _self.restElapsed : restElapsed // ignore: cast_nullable_to_non_nullable
 as Duration,startTime: freezed == startTime ? _self.startTime : startTime // ignore: cast_nullable_to_non_nullable

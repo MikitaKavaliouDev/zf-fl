@@ -137,6 +137,10 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
           if (state is WorkoutSessionActive && state.showRestFinishedToast) {
             HapticFeedback.mediumImpact();
           }
+          // Auto-pop when minimized (e.g. by drag gesture → cubit.minimize())
+          if (state is WorkoutSessionActive && state.isMinimized) {
+            context.pop();
+          }
           // Reset long warning dismissal on session end
           if (state is! WorkoutSessionActive) {
             setState(() => _dismissedLongWarning = false);
@@ -260,7 +264,8 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
           onVerticalDragEnd: (details) {
             if (_dragOffset > 120) {
               _handleInputDismiss();
-              context.read<WorkoutSessionCubit>().cancelSession();
+              context.read<WorkoutSessionCubit>().minimize();
+              // The BlocConsumer listener will auto-pop when isMinimized=true
             }
             setState(() => _dragOffset = 0);
           },
