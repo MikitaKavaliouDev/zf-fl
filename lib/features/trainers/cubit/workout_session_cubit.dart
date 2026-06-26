@@ -282,10 +282,17 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
     final exerciseName =
         existingForExercise.firstOrNull?.exercise?.name ?? exerciseId;
 
+    // Safely look up the previous completion status of this set log.
+    final existingLog = current.logs.where((l) => l.id == logId).firstOrNull;
+    final currentIsCompleted = existingLog?.isCompleted ?? false;
+
+    // Use explicitly passed status or fall back to the existing completion status of this set.
+    final resolvedIsCompleted = isCompleted ?? currentIsCompleted;
+
     developer.log(
       'logSet | exercise=$exerciseName($exerciseId) '
       '| reps=$reps | weight=${weight ?? "—"} | rpe=${rpe ?? "—"} '
-      '| order=$order | isCompleted=${isCompleted ?? true} '
+      '| order=$order | isCompleted=$resolvedIsCompleted '
       '| setId=${logId ?? "new"}',
       name: 'workout',
     );
@@ -299,7 +306,7 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
       weight: weight,
       rpe: rpe,
       tempo: tempo,
-      isCompleted: isCompleted ?? true,
+      isCompleted: resolvedIsCompleted,
       order: order,
       supersetKey: supersetKey,
       orderInSuperset: orderInSuperset,
@@ -327,15 +334,19 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
         order: order,
         supersetKey: supersetKey,
         orderInSuperset: orderInSuperset,
-        isCompleted: isCompleted ?? true,
+        isCompleted: resolvedIsCompleted,
       );
       // Use the LATEST active state (not `current`) to avoid overwriting
       // fields set after the optimistic emit (e.g. restStartedAt).
       final latest = state as WorkoutSessionActive;
       final reconciledLogs = [...latest.logs];
-      // Replace the optimistic entry (temp ID) with the server-confirmed one.
-      reconciledLogs.removeWhere((l) => l.id == optimisticLog.id);
-      reconciledLogs.add(response.log);
+      // Replace the optimistic entry (temp ID) with the server-confirmed one at the exact same index.
+      final indexToReplace = reconciledLogs.indexWhere((l) => l.id == optimisticLog.id || l.id == response.log.id);
+      if (indexToReplace >= 0) {
+        reconciledLogs[indexToReplace] = response.log;
+      } else {
+        reconciledLogs.add(response.log);
+      }
       emit(latest.copyWith(logs: reconciledLogs));
       developer.log(
         'logSet_reconciled | exercise=$exerciseName($exerciseId) '
@@ -524,6 +535,22 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
       'resume | elapsed=${current.elapsed.inSeconds}s',
       name: 'workout',
     );
+  }
+
+  /// Clear the new PR record state.
+  void clearNewPrRecord() {
+    final current = state;
+    if (current is WorkoutSessionActive && current.newPrRecord) {
+      emit(current.copyWith(newPrRecord: false));
+    }
+  }
+
+  /// Clear the rest finished toast.
+  void clearRestFinishedToast() {
+    final current = state;
+    if (current is WorkoutSessionActive && current.showRestFinishedToast) {
+      emit(current.copyWith(showRestFinishedToast: false));
+    }
   }
 }
       

@@ -56,6 +56,10 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
   bool _dismissedLongWarning = false;
   double _dragOffset = 0;
 
+  // Local state tracking to prevent duplicate triggers from periodic timer ticks
+  bool _lastShowRestFinishedToast = false;
+  bool _lastNewPrRecord = false;
+
   @override
   void initState() {
     super.initState();
@@ -82,6 +86,7 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
   Widget build(BuildContext context) {
     final cubit = context.watch<WorkoutSessionCubit>();
     final isSessionActive = cubit.state is WorkoutSessionActive;
+    final showKeyboard = _focusTarget != null;
 
     return PopScope(
       canPop: !isSessionActive,
@@ -116,6 +121,7 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
                 _buildActive(
                   context, elapsed, isPaused, logs, restStartedAt, restElapsed,
                   restRemaining, showRestFinishedToast, sessionNewRecords,
+                  showKeyboard,
                 ),
               WorkoutSessionCompleted(:final totalDuration, :final logs, :final newRecords) =>
                 WorkoutCompletedView(
@@ -180,30 +186,44 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
       ));
       context.go('/');
     }
-    if (state is WorkoutSessionActive && state.newPrRecord) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Row(
-            children: [
-              Icon(Icons.emoji_events_rounded, color: Colors.amber, size: 20),
-              SizedBox(width: 8),
-              Text('🏆 New Personal Record!'),
-            ],
+    if (state is WorkoutSessionActive) {
+      if (state.newPrRecord && !_lastNewPrRecord) {
+        _lastNewPrRecord = true;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.emoji_events_rounded, color: Colors.amber, size: 20),
+                SizedBox(width: 8),
+                Text('🏆 New Personal Record!'),
+              ],
+            ),
+            backgroundColor: Colors.green.shade700,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
           ),
-          backgroundColor: Colors.green.shade700,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 3),
-        ),
-      );
-    }
-    if (state is WorkoutSessionActive && state.showRestFinishedToast) {
-      HapticFeedback.mediumImpact();
-    }
-    if (state is WorkoutSessionActive && state.isMinimized) {
-      context.pop();
+        );
+      } else if (!state.newPrRecord) {
+        _lastNewPrRecord = false;
+      }
+
+      if (state.showRestFinishedToast && !_lastShowRestFinishedToast) {
+        _lastShowRestFinishedToast = true;
+        HapticFeedback.mediumImpact();
+      } else if (!state.showRestFinishedToast) {
+        _lastShowRestFinishedToast = false;
+      }
+
+      if (state.isMinimized) {
+        context.pop();
+      }
     }
     if (state is! WorkoutSessionActive) {
-      setState(() => _dismissedLongWarning = false);
+      setState(() {
+        _dismissedLongWarning = false;
+        _lastNewPrRecord = false;
+        _lastShowRestFinishedToast = false;
+      });
     }
   }
 
@@ -219,6 +239,7 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
     int? restRemaining,
     bool showRestFinishedToast,
     List<Map<String, dynamic>> sessionNewRecords,
+    bool showKeyboard,
   ) {
     final grouped = <String, List<ExerciseLogDto>>{};
     final exerciseNames = <String, String>{};
@@ -230,7 +251,6 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
       }
     }
 
-    final showKeyboard = _focusTarget != null;
     final isResting = restStartedAt != null;
 
     return Stack(
@@ -278,12 +298,12 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
                 // Rest finished toast
                 if (showRestFinishedToast) _buildRestFinishedToast(),
 
-                // Exercise list
+                // Exercise list with dynamic bottom padding when keyboard is open
                 Expanded(
                   child: grouped.isEmpty
                       ? _buildEmptyExercises(context)
                       : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          padding: EdgeInsets.fromLTRB(16, 0, 16, showKeyboard ? 280 : 16),
                           itemCount: grouped.entries.length + 1,
                           itemBuilder: (context, index) {
                             if (index == grouped.entries.length) {
@@ -901,7 +921,7 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
       context: context,
       builder: (_) => const SaveAsTemplateDialog(),
     );
-    if (name != null && context.mounted) {
+    if (name != null && name.isNotEmpty && mounted) {
       context.read<WorkoutSessionCubit>().saveSessionAsTemplate(name);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -912,6 +932,30 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
         );
       }
     }
+  }
+
+  void _onTapRpe(
+      BuildContext context, String exerciseId, ExerciseLogDto log) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => RpePicker(
+        currentRpe: log.rpe,
+        onSelected: (rpe) {
+          if (context.mounted) {
+            final cubit = context.read<WorkoutSessionCubit>();
+            cubit.logSet(
+              logId: log.id,
+              exerciseId: exerciseId,
+              reps: log.reps ?? 0,
+              weight: log.weight,
+              isCompleted: log.isCompleted,
+              rpe: rpe,
+            );
+          }
+          Navigator.of(dialogContext).pop();
+        },
+      ),
+    );
   }
 
   void _showRestTimerSheet(

@@ -1,3 +1,2 @@
-- [x] Fix minimized workout unminimize/maximize navigation issue.
-- [x] Intercept back navigation / gestures in unminimized workout screen to correctly minimize rather than disappearing.
+- [x] Fix RPE (Rate of Perceived Exertion) modal dialog dismissal and submission issue.
       

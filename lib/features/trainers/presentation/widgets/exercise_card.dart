@@ -359,7 +359,7 @@ class ExerciseCard extends StatelessWidget {
       BuildContext context, String exerciseId, ExerciseLogDto log) {
     showDialog(
       context: context,
-      builder: (_) => RpePicker(
+      builder: (dialogContext) => RpePicker(
         currentRpe: log.rpe,
         onSelected: (rpe) {
           if (context.mounted) {
@@ -373,6 +373,7 @@ class ExerciseCard extends StatelessWidget {
               rpe: rpe,
             );
           }
+          Navigator.of(dialogContext).pop();
         },
       ),
     );
@@ -400,3 +401,4 @@ class FocusTarget {
 
 /// Type of field in a set row.
 enum FieldType { weight, reps }
+      

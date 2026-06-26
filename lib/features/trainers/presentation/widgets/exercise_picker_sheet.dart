@@ -174,7 +174,7 @@ class _ExercisePickerSheetState extends State<ExercisePickerSheet> {
       initialChildSize: 0.7,
       minChildSize: 0.5,
       maxChildSize: 0.9,
-      builder: (context, scrollController) {
+      builder: (sheetContext, scrollController) {
         return Container(
           decoration: const BoxDecoration(
             color: AppColors.background,
@@ -200,7 +200,7 @@ class _ExercisePickerSheetState extends State<ExercisePickerSheet> {
                             controller: scrollController,
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             itemCount: _filtered.length,
-                            itemBuilder: (context, index) {
+                            itemBuilder: (itemContext, index) {
                               final exercise = _filtered[index];
                               final isSelected =
                                   _selectedIds.contains(exercise.id);
@@ -338,6 +338,7 @@ class _ExerciseRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 4),
@@ -468,11 +469,12 @@ class _SelectionIndicator extends StatelessWidget {
         border: Border.all(
           color: isSelected ? AppColors.primary : AppColors.borderMuted,
           width: 2,
+          ),
         ),
-      ),
-      child: isSelected
-          ? const Icon(Icons.check, size: 14, color: Colors.white)
-          : null,
-    );
+        child: isSelected
+            ? const Icon(Icons.check, size: 14, color: Colors.white)
+            : null,
+      );
+    }
   }
-}
+      

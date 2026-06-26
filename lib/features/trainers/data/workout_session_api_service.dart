@@ -82,6 +82,9 @@ class WorkoutSessionApiService {
         final log = Map<String, dynamic>.from(e as Map<String, dynamic>);
         log['clientId'] = log['clientId'] ?? clientId;
         log['workoutSessionId'] = log['workoutSessionId'] ?? sessionId;
+        if (log['completed'] != null) {
+          log['isCompleted'] = log['completed'];
+        }
         return log;
       }).toList();
     }
@@ -93,6 +96,9 @@ class WorkoutSessionApiService {
     if (rawLogs != null) {
       for (final l in rawLogs) {
         final log = l as Map<String, dynamic>;
+        if (log['completed'] != null) {
+          log['isCompleted'] = log['completed'];
+        }
         if (log['exercise'] is Map<String, dynamic>) {
           final exercise = log['exercise'] as Map<String, dynamic>;
           if (exercise['id'] == null && log['exerciseId'] != null) {
@@ -136,10 +142,17 @@ class WorkoutSessionApiService {
       },
     );
     final data = response.data['data'] as Map<String, dynamic>;
+    if (data['log'] != null) {
+      final logMap = Map<String, dynamic>.from(data['log'] as Map<String, dynamic>);
+      if (logMap['completed'] != null) {
+        logMap['isCompleted'] = logMap['completed'];
+      }
+      data['log'] = logMap;
+    }
     return LogExerciseResponse.fromJson(data);
   }
 
-  /// Finish a workout session. Returns the updated session data.
+  /// Finish a workout session. Returns the updated session and its logs.
   Future<LiveSessionResponse> finishSession({
     required String workoutSessionId,
     String? notes,
@@ -186,6 +199,9 @@ class WorkoutSessionApiService {
         if (logs != null) {
           for (final l in logs) {
             final log = l as Map<String, dynamic>;
+            if (log['completed'] != null) {
+              log['isCompleted'] = log['completed'];
+            }
             if (log['exercise'] is Map<String, dynamic>) {
               final exercise = log['exercise'] as Map<String, dynamic>;
               if (exercise['id'] == null && log['exerciseId'] != null) {
@@ -277,3 +293,4 @@ class WorkoutSessionApiService {
     );
   }
 }
+      

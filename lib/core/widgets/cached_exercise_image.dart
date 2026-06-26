@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
+import '../network/image_url_helper.dart';
 import '../theme/app_theme.dart';
 
 /// Reusable widget for displaying exercise media (GIFs, images, YouTube thumbnails).
@@ -55,7 +56,11 @@ class CachedExerciseImage extends StatelessWidget {
   });
 
   /// Resolve the best available URL — imageUrl takes priority.
-  String? get _effectiveUrl => imageUrl ?? videoUrl;
+  String? get _effectiveUrl {
+    final raw = imageUrl ?? videoUrl;
+    if (raw == null || raw.isEmpty) return null;
+    return resolveImageUrl(raw);
+  }
 
   /// Detect YouTube URLs (matching iOS pattern).
   static bool isYouTubeUrl(String url) {
@@ -169,7 +174,6 @@ class CachedExerciseImage extends StatelessWidget {
         color: AppColors.mutedSurface,
         borderRadius: BorderRadius.circular(borderRadius),
       ),
-      clipBehavior: Clip.antiAlias,
       child: CachedNetworkImage(
         imageUrl: url,
         fit: fit,
@@ -217,3 +221,4 @@ class CachedExerciseImage extends StatelessWidget {
     return null;
   }
 }
+      
