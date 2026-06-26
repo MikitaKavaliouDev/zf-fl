@@ -22,6 +22,7 @@ import 'tables/packages_table.dart';
 import 'tables/profiles_table.dart';
 import 'tables/programs_table.dart';
 import 'tables/services_table.dart';
+import 'tables/analytics_cache_table.dart';
 import 'tables/sync_metadata.dart';
 import 'tables/testimonials_table.dart';
 import 'tables/trainer_profiles_table.dart';
@@ -32,6 +33,7 @@ part 'app_database.g.dart';
 
 @DriftDatabase(
   tables: [
+    AnalyticsCache,
     SyncMetadata,
     ClientsTable,
     ProfilesTable,
@@ -60,7 +62,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(QueryExecutor executor) : super(executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration {
@@ -71,6 +73,9 @@ class AppDatabase extends _$AppDatabase {
       onUpgrade: (m, from, to) async {
         if (from < 2) {
           await m.addColumn(workoutTemplates, workoutTemplates.exercisesJson);
+        }
+        if (from < 3) {
+          await m.createTable(analyticsCache);
         }
       },
     );

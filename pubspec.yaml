@@ -44,6 +44,9 @@ dependencies:
   # Connectivity
   connectivity_plus: ^7.1.1
 
+  # TanStack Query for Flutter (automatic caching, stale-while-revalidate)
+  tanquery_flutter: ^0.8.0
+
   # Supabase (realtime subscriptions)
   supabase_flutter: ^2.0.0
 

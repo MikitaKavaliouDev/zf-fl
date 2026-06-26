@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
@@ -9,6 +10,49 @@ class VolumeChartWidget extends StatelessWidget {
   final List<VolumeDataPoint> data;
 
   const VolumeChartWidget({super.key, required this.data});
+
+  Map<String, double> _calculateNiceRange(double minY, double maxY, {bool forceZeroStart = false}) {
+    double minVal = forceZeroStart ? 0 : minY;
+    double maxVal = maxY;
+
+    double range = maxVal - minVal;
+    if (range <= 0) {
+      range = 10;
+    }
+
+    final rawInterval = range / 4;
+    final log10 = rawInterval > 0 ? (math.log(rawInterval) / math.ln10).floor() : 0;
+    final magnitude = math.pow(10, log10).toDouble();
+    final residual = magnitude > 0 ? rawInterval / magnitude : 1.0;
+
+    double cleanInterval;
+    if (residual < 1.5) {
+      cleanInterval = 1.0 * magnitude;
+    } else if (residual < 3.0) {
+      cleanInterval = 2.0 * magnitude;
+    } else if (residual < 7.0) {
+      cleanInterval = 5.0 * magnitude;
+    } else {
+      cleanInterval = 10.0 * magnitude;
+    }
+
+    if (cleanInterval <= 0) {
+      cleanInterval = 1.0;
+    }
+
+    double chartMinY = forceZeroStart ? 0 : (minVal / cleanInterval).floor() * cleanInterval;
+    double chartMaxY = (maxVal / cleanInterval).ceil() * cleanInterval;
+
+    if (chartMinY == chartMaxY) {
+      chartMaxY += cleanInterval;
+    }
+
+    return {
+      'minY': chartMinY,
+      'maxY': chartMaxY,
+      'interval': cleanInterval,
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,19 +70,23 @@ class VolumeChartWidget extends StatelessWidget {
 
     final maxY =
         data.fold<double>(0, (max, d) => d.volume > max ? d.volume : max);
+    final range = _calculateNiceRange(0, maxY, forceZeroStart: true);
+    final interval = range['interval']!;
+    final chartMaxY = range['maxY']!;
 
     return SizedBox(
       height: 180,
       child: BarChart(
         BarChartData(
           alignment: BarChartAlignment.spaceAround,
-          maxY: maxY * 1.2,
+          maxY: chartMaxY,
           barTouchData: BarTouchData(
             touchTooltipData: BarTouchTooltipData(
               getTooltipItem: (group, groupIndex, rod, rodIndex) {
                 final point = data[group.x];
+                final datePart = point.date.contains('T') ? point.date.split('T')[0] : point.date;
                 return BarTooltipItem(
-                  '${point.date}\n${rod.toY.toStringAsFixed(0)} kg',
+                  '$datePart\n${rod.toY.toStringAsFixed(0)} kg',
                   const TextStyle(color: Colors.white, fontSize: 12),
                 );
               },
@@ -67,13 +115,14 @@ class VolumeChartWidget extends StatelessWidget {
                   }
                   return const SizedBox.shrink();
                 },
-                interval: 1,
+                interval: (data.length / 5).ceilToDouble().clamp(1, double.infinity),
               ),
             ),
             leftTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
                 reservedSize: 40,
+                interval: interval,
                 getTitlesWidget: (value, meta) {
                   return Text(
                     value.toStringAsFixed(0),
@@ -93,9 +142,9 @@ class VolumeChartWidget extends StatelessWidget {
           gridData: FlGridData(
             show: true,
             drawVerticalLine: false,
-            horizontalInterval: (maxY / 4).clamp(1, double.infinity),
+            horizontalInterval: interval,
             getDrawingHorizontalLine: (value) {
-              return FlLine(
+              return const FlLine(
                 color: AppColors.borderMuted,
                 strokeWidth: 1,
               );
@@ -110,13 +159,13 @@ class VolumeChartWidget extends StatelessWidget {
               barRods: [
                 BarChartRodData(
                   toY: d.volume,
-                  color: const Color(0xFF7B2FBE).withValues(alpha: 0.8),
+                  color: const Color(0xFF7B2FBE).withOpacity(0.8),
                   gradient: LinearGradient(
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
                     colors: [
-                      const Color(0xFF7B2FBE).withValues(alpha: 0.4),
-                      const Color(0xFF7B2FBE).withValues(alpha: 0.9),
+                      const Color(0xFF7B2FBE).withOpacity(0.4),
+                      const Color(0xFF7B2FBE).withOpacity(0.9),
                     ],
                   ),
                   width: 12,
@@ -132,10 +181,13 @@ class VolumeChartWidget extends StatelessWidget {
   }
 
   String _shortDate(String isoDate) {
-    final parts = isoDate.split('-');
+    final datePart = isoDate.contains('T') ? isoDate.split('T')[0] : isoDate;
+    final cleanDatePart = datePart.contains(' ') ? datePart.split(' ')[0] : datePart;
+    final parts = cleanDatePart.split('-');
     if (parts.length >= 3) {
       return '${parts[1]}/${parts[2]}';
     }
     return isoDate;
   }
 }
+      

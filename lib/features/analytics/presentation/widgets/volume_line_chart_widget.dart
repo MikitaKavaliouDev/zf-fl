@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
@@ -9,6 +10,49 @@ class VolumeLineChartWidget extends StatelessWidget {
   final List<VolumeDataPoint> data;
 
   const VolumeLineChartWidget({super.key, required this.data});
+
+  Map<String, double> _calculateNiceRange(double minY, double maxY, {bool forceZeroStart = false}) {
+    double minVal = forceZeroStart ? 0 : minY;
+    double maxVal = maxY;
+
+    double range = maxVal - minVal;
+    if (range <= 0) {
+      range = 10;
+    }
+
+    final rawInterval = range / 4;
+    final log10 = rawInterval > 0 ? (math.log(rawInterval) / math.ln10).floor() : 0;
+    final magnitude = math.pow(10, log10).toDouble();
+    final residual = magnitude > 0 ? rawInterval / magnitude : 1.0;
+
+    double cleanInterval;
+    if (residual < 1.5) {
+      cleanInterval = 1.0 * magnitude;
+    } else if (residual < 3.0) {
+      cleanInterval = 2.0 * magnitude;
+    } else if (residual < 7.0) {
+      cleanInterval = 5.0 * magnitude;
+    } else {
+      cleanInterval = 10.0 * magnitude;
+    }
+
+    if (cleanInterval <= 0) {
+      cleanInterval = 1.0;
+    }
+
+    double chartMinY = forceZeroStart ? 0 : (minVal / cleanInterval).floor() * cleanInterval;
+    double chartMaxY = (maxVal / cleanInterval).ceil() * cleanInterval;
+
+    if (chartMinY == chartMaxY) {
+      chartMaxY += cleanInterval;
+    }
+
+    return {
+      'minY': chartMinY,
+      'maxY': chartMaxY,
+      'interval': cleanInterval,
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +70,11 @@ class VolumeLineChartWidget extends StatelessWidget {
 
     final maxY =
         data.fold<double>(0, (max, d) => d.volume > max ? d.volume : max);
+    final range = _calculateNiceRange(0, maxY, forceZeroStart: true);
+    final interval = range['interval']!;
+    final chartMinY = range['minY']!;
+    final chartMaxY = range['maxY']!;
+
     final spots = data.asMap().entries.map((entry) {
       return FlSpot(entry.key.toDouble(), entry.value.volume);
     }).toList();
@@ -34,6 +83,8 @@ class VolumeLineChartWidget extends StatelessWidget {
       height: 180,
       child: LineChart(
         LineChartData(
+          minY: chartMinY,
+          maxY: chartMaxY,
           lineBarsData: [
             LineChartBarData(
               spots: spots,
@@ -57,8 +108,8 @@ class VolumeLineChartWidget extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    const Color(0xFF7B2FBE).withValues(alpha: 0.3),
-                    const Color(0xFF7B2FBE).withValues(alpha: 0.05),
+                    const Color(0xFF7B2FBE).withOpacity(0.3),
+                    const Color(0xFF7B2FBE).withOpacity(0.05),
                   ],
                 ),
               ),
@@ -96,6 +147,7 @@ class VolumeLineChartWidget extends StatelessWidget {
               sideTitles: SideTitles(
                 showTitles: true,
                 reservedSize: 40,
+                interval: interval,
                 getTitlesWidget: (value, meta) {
                   return Text(
                     value.toStringAsFixed(0),
@@ -115,9 +167,9 @@ class VolumeLineChartWidget extends StatelessWidget {
           gridData: FlGridData(
             show: true,
             drawVerticalLine: false,
-            horizontalInterval: (maxY / 4).clamp(1, double.infinity),
+            horizontalInterval: interval,
             getDrawingHorizontalLine: (value) {
-              return FlLine(
+              return const FlLine(
                 color: AppColors.borderMuted,
                 strokeWidth: 1,
               );
@@ -143,10 +195,13 @@ class VolumeLineChartWidget extends StatelessWidget {
   }
 
   String _shortDate(String isoDate) {
-    final parts = isoDate.split('-');
+    final datePart = isoDate.contains('T') ? isoDate.split('T')[0] : isoDate;
+    final cleanDatePart = datePart.contains(' ') ? datePart.split(' ')[0] : datePart;
+    final parts = cleanDatePart.split('-');
     if (parts.length >= 3) {
       return '${parts[1]}/${parts[2]}';
     }
     return isoDate;
   }
 }
+      

@@ -1557,6 +1557,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.15.0"
+  tanquery:
+    dependency: transitive
+    description:
+      name: tanquery
+      sha256: "5282c9bdc51fd8cb2f980337362f86ecb99b7e782fbbdfbe0befe313d6ed018d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.8.0"
+  tanquery_flutter:
+    dependency: "direct main"
+    description:
+      name: tanquery_flutter
+      sha256: d4d701357c2ea2a8c41f268a162b2a938404d5b36e45f42e426ffeeb7dbd7502
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.8.0"
   term_glyph:
     dependency: transitive
     description:

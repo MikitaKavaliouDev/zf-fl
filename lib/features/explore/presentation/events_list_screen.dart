@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tanquery_flutter/tanquery_flutter.dart';
 
+import '../../../core/di/injection.dart';
 import '../../../core/theme/app_theme.dart';
-import '../cubit/explore_cubit.dart';
-import '../cubit/explore_state.dart';
+import '../data/explore_api_service.dart';
 import '../data/models/explore_event_dto.dart';
-import 'widgets/explore_event_row.dart';
+import '../data/models/paginated_events.dart';
 import 'widgets/explore_empty_events_view.dart';
+import 'widgets/explore_event_row.dart';
 
 /// Full-screen events list — matches iOS EventsListView sheet behavior.
 ///
@@ -15,6 +16,8 @@ import 'widgets/explore_empty_events_view.dart';
 /// pull-to-refresh. Each event navigates to /explore/event/:id.
 class EventsListViewScreen extends StatelessWidget {
   const EventsListViewScreen({super.key});
+
+  ExploreApiService get _api => getIt<ExploreApiService>();
 
   @override
   Widget build(BuildContext context) {
@@ -31,61 +34,68 @@ class EventsListViewScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: BlocBuilder<ExploreCubit, ExploreState>(
+      body: QueryBuilder<PaginatedEvents>(
+        queryKey: QueryKey(['explore', 'events', 'list']),
+        queryFn: () => _api.getEvents(limit: 50),
+        staleTime: const Duration(minutes: 5),
+        placeholderData: PaginatedEvents(events: [], hasMore: false, page: 1, limit: 50),
         builder: (context, state) {
-          if (state is ExploreStateInitial || state is ExploreStateLoading) {
+          if (state.isLoading && !state.isFetched) {
             return const Center(
               child: CircularProgressIndicator(color: AppColors.primary),
             );
-          } else if (state is ExploreStateError) {
-            return _ErrorView(
-              message: state.message,
-              onRetry: () => context.read<ExploreCubit>().loadContent(),
-            );
-          } else if (state is ExploreStateLoaded) {
-            return _EventsListContent(state: state);
           }
-          return const SizedBox.shrink();
-        },
-      ),
-    );
-  }
-}
+          if (state.isError && !state.isFetched) {
+            return _ErrorView(
+              message: state.error?.toString() ?? 'Failed to load events.',
+              onRetry: () => DartQuery.of(context).refetchQueries(
+                queryKey: QueryKey(['explore', 'events', 'list']),
+              ),
+            );
+          }
+          final events = state.data?.events ?? <ExploreEventDto>[];
+          if (events.isEmpty) {
+            return ExploreEmptyEventsView(
+              onNotifyMe: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Notifications will be available soon.')),
+                );
+              },
+            );
+          }
 
-class _EventsListContent extends StatelessWidget {
-  final ExploreStateLoaded state;
+          // Group by date
+          final now = DateTime.now();
+          final upcoming = events.where((e) => e.startTime.isAfter(now)).toList();
+          final Map<String, List<ExploreEventDto>> grouped = {};
+          final List<DateTime> sortedDates = [];
+          for (final event in upcoming) {
+            final key = _dateKey(event.startTime);
+            grouped.putIfAbsent(key, () => []).add(event);
+            if (!sortedDates.any((d) => _dateKey(d) == key)) {
+              sortedDates.add(DateTime(
+                event.startTime.year,
+                event.startTime.month,
+                event.startTime.day,
+              ));
+            }
+          }
+          sortedDates.sort();
 
-  const _EventsListContent({required this.state});
-
-  @override
-  Widget build(BuildContext context) {
-    final events = state.content.upcomingEvents;
-    final sortedDates = state.content.sortedEventDates;
-    final grouped = state.content.groupedEvents;
-
-    if (events.isEmpty) {
-      return ExploreEmptyEventsView(
-        onNotifyMe: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Notifications will be available soon.')),
-          );
-        },
-      );
-    }
-
-    return RefreshIndicator(
-      onRefresh: () => context.read<ExploreCubit>().refresh(),
-      child: ListView.builder(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        itemCount: sortedDates.length,
-        itemBuilder: (context, index) {
-          final date = sortedDates[index];
-          final key = _dateKey(date);
-          final dayEvents = grouped[key] ?? [];
-
-          return _DateSection(
-            date: date,
-            events: dayEvents,
+          return RefreshIndicator(
+            onRefresh: () => DartQuery.of(context).refetchQueries(
+              queryKey: QueryKey(['explore', 'events', 'list']),
+            ),
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              itemCount: sortedDates.length,
+              itemBuilder: (context, index) {
+                final date = sortedDates[index];
+                final key = _dateKey(date);
+                final dayEvents = grouped[key] ?? [];
+                return _DateSection(date: date, events: dayEvents);
+              },
+            ),
           );
         },
       ),
@@ -100,10 +110,7 @@ class _DateSection extends StatelessWidget {
   final DateTime date;
   final List<ExploreEventDto> events;
 
-  const _DateSection({
-    required this.date,
-    required this.events,
-  });
+  const _DateSection({required this.date, required this.events});
 
   @override
   Widget build(BuildContext context) {
@@ -145,10 +152,10 @@ class _DateSection extends StatelessWidget {
     if (dateOnly == today.add(const Duration(days: 1))) return 'Tomorrow';
     const months = [
       '', 'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'July', 'August', 'September', 'October', 'November', 'December',
     ];
     const weekdays = [
-      'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+      'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
     ];
     return '${weekdays[dt.weekday - 1]}, ${months[dt.month]} ${dt.day}';
   }

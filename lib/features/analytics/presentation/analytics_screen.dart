@@ -56,7 +56,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               AnalyticsLoading() => const _LoadingView(),
               AnalyticsError(:final message) => _ErrorView(
                   message: message,
-                  onRetry: () => context.read<AnalyticsCubit>().loadData(),
+                  onRetry: () => context.read<AnalyticsCubit>().loadData(forceRefresh: true),
                 ),
               AnalyticsLoaded() => _LoadedView(state: state),
             };
@@ -270,36 +270,36 @@ class _GlassHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       decoration: BoxDecoration(
-        color: AppColors.background.withValues(alpha: 0.9),
+        color: AppColors.background.withOpacity(0.9),
         border: const Border(
           bottom: BorderSide(color: AppColors.borderMuted),
         ),
       ),
-child: Row(
-            children: [
-              const Text(
-                'Analytics',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.foreground,
-                ),
-              ),
-              const Spacer(),
-              IconButton(
-                icon: const Icon(Icons.edit_note_rounded, size: 22),
-                onPressed: onOpenMeasurements,
-                color: AppColors.foreground,
-                tooltip: 'Measurements',
-              ),
-              IconButton(
-                icon: const Icon(Icons.grid_view_rounded, size: 22),
-                onPressed: onManageWidgets,
-                color: AppColors.foreground,
-                tooltip: 'Manage widgets',
-              ),
-            ],
+      child: Row(
+        children: [
+          const Text(
+            'Analytics',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: AppColors.foreground,
+            ),
           ),
+          const Spacer(),
+          IconButton(
+            icon: const Icon(Icons.edit_note_rounded, size: 22),
+            onPressed: onOpenMeasurements,
+            color: AppColors.foreground,
+            tooltip: 'Measurements',
+          ),
+          IconButton(
+            icon: const Icon(Icons.grid_view_rounded, size: 22),
+            onPressed: onManageWidgets,
+            color: AppColors.foreground,
+            tooltip: 'Manage widgets',
+          ),
+        ],
+      ),
     );
   }
 }
@@ -430,12 +430,12 @@ class _StreakRow extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.primary.withValues(alpha: 0.1),
-            AppColors.primary.withValues(alpha: 0.05),
+            AppColors.primary.withOpacity(0.1),
+            AppColors.primary.withOpacity(0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
       ),
       child: Row(
         children: [
@@ -543,6 +543,13 @@ class _MetricCard extends StatelessWidget {
         ? Icons.arrow_upward_rounded
         : (trend < 0 ? Icons.arrow_downward_rounded : Icons.remove_rounded);
 
+    final String trendText;
+    if (trend == 0.0) {
+      trendText = 'Flat';
+    } else {
+      trendText = '${isPositive ? '+' : ''}${trend.toStringAsFixed(1)}%';
+    }
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -602,7 +609,7 @@ class _MetricCard extends StatelessWidget {
               Icon(trendIcon, size: 14, color: trendColor),
               const SizedBox(width: 2),
               Text(
-                '${trend.abs().toStringAsFixed(1)}%',
+                trendText,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -714,3 +721,4 @@ class _ErrorView extends StatelessWidget {
     );
   }
 }
+      

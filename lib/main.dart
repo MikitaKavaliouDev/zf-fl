@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tanquery_flutter/tanquery_flutter.dart';
 
 import 'core/di/injection.dart' as di;
 import 'core/logging/state_logger.dart';
@@ -11,8 +12,6 @@ import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/cubit/auth_cubit.dart';
 import 'features/auth/cubit/auth_state.dart';
-import 'features/explore/cubit/explore_cubit.dart';
-import 'features/explore/cubit/trainer_discovery_cubit.dart';
 import 'features/home/cubit/home_cubit.dart';
 import 'features/home/cubit/program_cubit.dart';
 import 'features/notifications/cubit/notifications_cubit.dart';
@@ -59,9 +58,8 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
   late final ProgramCubit _programCubit;
   late final TrainerListCubit _trainerListCubit;
   late final WorkoutSessionCubit _workoutSessionCubit;
-  late final ExploreCubit _exploreCubit;
-  late final TrainerDiscoveryCubit _trainerDiscoveryCubit;
   late final NotificationsCubit _notificationsCubit;
+  late final QueryClient _queryClient;
   late final GoRouter _router;
   StreamSubscription<AuthState>? _authSubscription;
 
@@ -73,9 +71,9 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
     _programCubit = di.getIt<ProgramCubit>();
     _trainerListCubit = di.getIt<TrainerListCubit>();
     _workoutSessionCubit = di.getIt<WorkoutSessionCubit>();
-    _exploreCubit = di.getIt<ExploreCubit>();
-    _trainerDiscoveryCubit = di.getIt<TrainerDiscoveryCubit>();
     _notificationsCubit = di.getIt<NotificationsCubit>();
+    _queryClient = QueryClient();
+    _queryClient.mount();
     _router = createAppRouter(_authCubit);
     // Check auth status on first frame.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -100,9 +98,8 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
     _programCubit.close();
     _trainerListCubit.close();
     _workoutSessionCubit.close();
-    _exploreCubit.close();
-    _trainerDiscoveryCubit.close();
     _notificationsCubit.close();
+    _queryClient.unmount();
     super.dispose();
   }
 
@@ -115,17 +112,18 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
         BlocProvider.value(value: _programCubit),
         BlocProvider.value(value: _trainerListCubit),
         BlocProvider.value(value: _workoutSessionCubit),
-        BlocProvider.value(value: _exploreCubit),
-        BlocProvider.value(value: _trainerDiscoveryCubit),
         BlocProvider.value(value: _notificationsCubit),
       ],
-      child: MaterialApp.router(
+      child: DartQueryProvider(
+        client: _queryClient,
+        child: MaterialApp.router(
         title: 'ZIRO.FIT',
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.lightTheme,
         themeMode: ThemeMode.light,
         debugShowCheckedModeBanner: false,
         routerConfig: _router,
+      ),
       ),
     );
   }

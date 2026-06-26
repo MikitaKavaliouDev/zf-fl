@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
-import '../../cubit/explore_state.dart';
+
+/// Which section of the explore tab is visible.
+enum ExploreSection { trainers, events }
 
 /// Telegram-style capsule segmented tab: Trainers | Events.
 /// Matches iOS ExploreSlidingSegment — ExploreComponents.swift lines 1062-1103.

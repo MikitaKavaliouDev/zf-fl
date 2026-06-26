@@ -1,7 +1,12 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../data/measurements_repository.dart';
+import '../../data/models/measurement_dto.dart';
 import 'models/measurement_type.dart';
 
 /// Bottom sheet for adding a new measurement value.
@@ -20,12 +25,17 @@ class _AddMeasurementSheetState extends State<AddMeasurementSheet> {
   final _valueController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
   bool _isSaving = false;
+  final _repository = getIt<MeasurementsRepository>();
 
   @override
   void dispose() {
     _valueController.dispose();
     super.dispose();
   }
+
+  /// Whether this measurement type can be saved via the client measurements API.
+  bool get _isSupported =>
+      widget.type.id == 'weight' || widget.type.id == 'body_fat';
 
   @override
   Widget build(BuildContext context) {
@@ -200,17 +210,56 @@ class _AddMeasurementSheetState extends State<AddMeasurementSheet> {
     );
   }
 
-  void _saveMeasurement() {
+  Future<void> _saveMeasurement() async {
     final value = double.tryParse(_valueController.text);
     if (value == null) return;
 
+    if (!_isSupported) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('This measurement type is not yet supported.')),
+        );
+      }
+      return;
+    }
+
     setState(() => _isSaving = true);
 
-    // Simulate saving - pop after brief delay
-    Future.delayed(const Duration(milliseconds: 500), () {
+    try {
+      final measurementDate =
+          '${_selectedDate.year.toString().padLeft(4, '0')}-'
+          '${_selectedDate.month.toString().padLeft(2, '0')}-'
+          '${_selectedDate.day.toString().padLeft(2, '0')}';
+
+      final request = CreateMeasurementRequest(
+        weightKg: widget.type.id == 'weight' ? value : null,
+        bodyFatPercentage: widget.type.id == 'body_fat' ? value : null,
+        measurementDate: measurementDate,
+      );
+
+      await _repository.createMeasurement(request);
+
+      developer.log(
+        'Measurement saved: ${widget.type.id}=$value',
+        name: 'measurements',
+      );
+
       if (mounted) {
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(true);
       }
-    });
+    } catch (e, stack) {
+      developer.log(
+        'Failed to save measurement: $e',
+        name: 'measurements',
+        error: e,
+        stackTrace: stack,
+      );
+      setState(() => _isSaving = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to save measurement. Please try again.')),
+        );
+      }
+    }
   }
 }

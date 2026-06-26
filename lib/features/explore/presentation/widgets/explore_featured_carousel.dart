@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_theme.dart';
-import '../../cubit/explore_cubit.dart';
-import '../../cubit/explore_state.dart';
 import '../../data/models/explore_event_dto.dart';
 import 'explore_event_card.dart';
 
@@ -33,9 +30,7 @@ class ExploreFeaturedCarousel extends StatelessWidget {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: context.watch<ExploreCubit>().state is ExploreStateLoaded
-                  ? AppColors.foreground
-                  : AppColors.foreground,
+              color: AppColors.foreground,
             ),
           ),
         ),

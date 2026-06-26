@@ -55,7 +55,7 @@ class MuscleDonutChartWidget extends StatelessWidget {
                   value: pct * 100,
                   color: _chartColors[i % _chartColors.length],
                   radius: 30,
-                  title: '${(pct * 100).toStringAsFixed(0)}%',
+                  title: pct >= 0.05 ? '${(pct * 100).toStringAsFixed(0)}%' : '',
                   titleStyle: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
@@ -66,37 +66,48 @@ class MuscleDonutChartWidget extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 16,
-          runSpacing: 8,
-          children: data.asMap().entries.map((entry) {
-            final i = entry.key;
-            final d = entry.value;
+        const SizedBox(height: 16),
+        // Beautiful, structured 2-column legend grid
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 4.5,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 16,
+          ),
+          itemCount: data.length,
+          itemBuilder: (context, index) {
+            final d = data[index];
+            final color = _chartColors[index % _chartColors.length];
             return Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
                   width: 10,
                   height: 10,
                   decoration: BoxDecoration(
-                    color: _chartColors[i % _chartColors.length],
+                    color: color,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                const SizedBox(width: 6),
-                Text(
-                  '${d.muscle} (${d.count})',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.foreground,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '${d.muscle} (${d.count})',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.foreground,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
               ],
             );
-          }).toList(),
+          },
         ),
       ],
     );
   }
 }
+      
