@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/cached_exercise_image.dart';
 import '../../../notifications/presentation/widgets/ziro_sheet_header.dart';
 import '../../data/models/exercise_dto.dart';
 
@@ -356,6 +357,17 @@ class _ExerciseRow extends StatelessWidget {
             _SelectionIndicator(
               isSelected: isSelected,
               mode: mode,
+            ),
+            const SizedBox(width: 10),
+
+            // Thumbnail — matches iOS ExerciseRow (44×44, rounded)
+            CachedExerciseImage(
+              imageUrl: exercise.imageUrl,
+              videoUrl: exercise.videoUrl,
+              height: 44,
+              width: 44,
+              borderRadius: 8,
+              compact: true,
             ),
             const SizedBox(width: 12),
 

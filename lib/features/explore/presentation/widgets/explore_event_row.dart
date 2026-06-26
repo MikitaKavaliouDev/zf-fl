@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
@@ -26,16 +27,16 @@ class ExploreEventRow extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Date widget or image
-            if (event.imageUrl != null && event.imageUrl!.isNotEmpty)
+              if (event.imageUrl != null && event.imageUrl!.isNotEmpty)
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: SizedBox(
                   width: 88,
                   height: 88,
-                  child: Image.network(
-                    event.imageUrl!,
+                  child: CachedNetworkImage(
+                    imageUrl: event.imageUrl!,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => _DateWidget(event: event),
+                    errorWidget: (_, _, _) => _DateWidget(event: event),
                   ),
                 ),
               )

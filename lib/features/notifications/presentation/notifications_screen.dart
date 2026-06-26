@@ -103,10 +103,12 @@ class _NotificationList extends StatelessWidget {
         itemCount: notifications.length,
         itemBuilder: (context, index) {
           final notification = notifications[index];
-          return NotificationRow(
-            notification: notification,
-            cubit: cubit,
-            currentMode: 'client',
+          return RepaintBoundary(
+            child: NotificationRow(
+              notification: notification,
+              cubit: cubit,
+              currentMode: 'client',
+            ),
           );
         },
       ),

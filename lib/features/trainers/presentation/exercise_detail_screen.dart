@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/di/injection.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/cached_exercise_image.dart';
 import '../data/models/exercise_dto.dart';
 import '../data/models/exercise_log_dto.dart';
 import '../data/models/workout_session_dto.dart';
@@ -292,11 +293,31 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
 
   Widget _buildAboutTab() {
     final exercise = _exercise!;
+    final mediaUrl = exercise.imageUrl ?? exercise.videoUrl;
+    final isYT = mediaUrl != null && CachedExerciseImage.isYouTubeUrl(mediaUrl);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Media section — matches iOS AboutView
+          // Full-width GIF/image/YouTube display with 1.2 aspect ratio
+          CachedExerciseImage(
+            imageUrl: exercise.imageUrl,
+            videoUrl: exercise.videoUrl,
+            width: double.infinity,
+            height: 260,
+            borderRadius: 16,
+            fit: BoxFit.contain,
+            compact: false,
+            showYouTubeOverlay: true,
+            onTap: isYT && widget.onPlayVideo != null
+                ? () => widget.onPlayVideo!(mediaUrl)
+                : null,
+          ),
+          const SizedBox(height: 20),
+
           // Name
           Text(
             exercise.name,
@@ -308,52 +329,101 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
           ),
           const SizedBox(height: 12),
 
-          // Badge row
+          // Info capsules (Target + Equipment — like iOS InfoCapsule)
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: 12,
+            runSpacing: 12,
             children: [
               if (exercise.muscleGroup != null)
-                _buildInfoBadge(exercise.muscleGroup!),
+                _buildInfoCapsule(
+                  title: 'Target',
+                  value: exercise.muscleGroup!,
+                  icon: Icons.fitness_center_rounded,
+                ),
               if (exercise.equipment != null)
-                _buildInfoBadge(exercise.equipment!),
+                _buildInfoCapsule(
+                  title: 'Equipment',
+                  value: exercise.equipment!,
+                  icon: Icons.settings_rounded,
+                ),
               if (exercise.category != null)
                 _buildInfoBadge(exercise.category!),
             ],
           ),
+          const SizedBox(height: 24),
+
+          // Divider
+          const Divider(color: AppColors.borderMuted),
           const SizedBox(height: 16),
 
-          // Video thumbnail
-          if (exercise.videoUrl != null) ...[
-            GestureDetector(
-              onTap: () => widget.onPlayVideo?.call(exercise.videoUrl),
-              child: Container(
-                height: 180,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF2C2C2E),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Center(
-                  child: Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.9),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.play_arrow_rounded,
-                      color: Colors.white,
-                      size: 32,
-                    ),
-                  ),
+          // Instructions section
+          const Text(
+            'Instructions',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.foreground,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            exercise.description?.isNotEmpty == true
+                ? exercise.description!
+                : 'No specific instructions provided for this exercise.',
+            style: TextStyle(
+              fontSize: 14,
+              height: 1.5,
+              color: exercise.description?.isNotEmpty == true
+                  ? AppColors.foreground
+                  : AppColors.mutedText,
+              fontStyle: exercise.description?.isNotEmpty == true
+                  ? FontStyle.normal
+                  : FontStyle.italic,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoCapsule({
+    required String title,
+    required String value,
+    required IconData icon,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+      decoration: BoxDecoration(
+        color: AppColors.mutedSurface,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title.toUpperCase(),
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: AppColors.mutedText,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 14, color: AppColors.foreground),
+              const SizedBox(width: 6),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.foreground,
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-          ],
-
+            ],
+          ),
         ],
       ),
     );

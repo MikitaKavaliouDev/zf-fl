@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tanquery_flutter/tanquery_flutter.dart';
@@ -297,11 +298,13 @@ class _TrainerDiscoveryScreenState extends State<TrainerDiscoveryScreen> {
                 );
               }
               final trainer = allTrainers[index];
-              return _TrainerDiscoveryCard(
-                trainer: trainer,
-                onTap: trainer.username != null
-                    ? () => context.push('/trainer/${trainer.username}')
-                    : null,
+              return RepaintBoundary(
+                child: _TrainerDiscoveryCard(
+                  trainer: trainer,
+                  onTap: trainer.username != null
+                      ? () => context.push('/trainer/${trainer.username}')
+                      : null,
+                ),
               );
             },
             childCount: allTrainers.length + (state.isFetching ? 1 : 0),
@@ -380,15 +383,17 @@ class _TrainerDiscoveryScreenState extends State<TrainerDiscoveryScreen> {
                 );
               }
               final event = allEvents[index];
-              return Padding(
-                padding: EdgeInsets.only(
-                  left: 16,
-                  right: 16,
-                  bottom: index == allEvents.length - 1 ? 0 : 12,
-                ),
-                child: ExploreEventRow(
-                  event: event,
-                  onTap: () => context.push('/explore/event/${event.id}'),
+              return RepaintBoundary(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    left: 16,
+                    right: 16,
+                    bottom: index == allEvents.length - 1 ? 0 : 12,
+                  ),
+                  child: ExploreEventRow(
+                    event: event,
+                    onTap: () => context.push('/explore/event/${event.id}'),
+                  ),
                 ),
               );
             },
@@ -865,10 +870,10 @@ class _TrainerDiscoveryCard extends StatelessWidget {
                   height: 80,
                   color: AppColors.mutedSurface,
                   child: photoUrl != null
-                      ? Image.network(
-                          photoUrl,
+                      ? CachedNetworkImage(
+                          imageUrl: photoUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => const Icon(Icons.person_rounded, size: 36, color: AppColors.mutedText),
+                          errorWidget: (_, _, _) => const Icon(Icons.person_rounded, size: 36, color: AppColors.mutedText),
                         )
                       : const Icon(Icons.person_rounded, size: 36, color: AppColors.mutedText),
                 ),

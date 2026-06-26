@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:ziro_fit/features/explore/cubit/explore_map_state.dart';
 import 'package:ziro_fit/features/explore/data/models/explore_event_dto.dart';
@@ -180,10 +181,10 @@ class ClusterListView extends StatelessWidget {
   Widget _buildTrainerAvatar(TrainerListItemDto trainer) {
     final photoPath = trainer.profile?.profilePhotoPath;
     if (photoPath != null && photoPath.isNotEmpty) {
-      return Image.network(
-        photoPath,
+      return CachedNetworkImage(
+        imageUrl: photoPath,
         fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => _avatarPlaceholder(),
+        errorWidget: (_, _, _) => _avatarPlaceholder(),
       );
     }
     return _avatarPlaceholder();
@@ -198,10 +199,10 @@ class ClusterListView extends StatelessWidget {
 
   Widget _buildEventImage(ExploreEventDto event) {
     if (event.imageUrl != null && event.imageUrl!.isNotEmpty) {
-      return Image.network(
-        event.imageUrl!,
+      return CachedNetworkImage(
+        imageUrl: event.imageUrl!,
         fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => _eventPlaceholder(),
+        errorWidget: (_, _, _) => _eventPlaceholder(),
       );
     }
     return _eventPlaceholder();

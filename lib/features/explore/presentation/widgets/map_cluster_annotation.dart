@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:ziro_fit/features/explore/cubit/explore_map_state.dart';
 
@@ -100,24 +101,24 @@ class ClusterAnnotation extends StatelessWidget {
           trainer: (trainer) {
             final avatarUrl = trainer.profile?.profilePhotoPath;
             if (avatarUrl != null && avatarUrl.isNotEmpty) {
-              return Image.network(
-                avatarUrl,
+              return CachedNetworkImage(
+                imageUrl: avatarUrl,
                 width: innerSize,
                 height: innerSize,
                 fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => _placeholderIcon(innerSize),
+                errorWidget: (_, _, _) => _placeholderIcon(innerSize),
               );
             }
             return _placeholderIcon(innerSize);
           },
           event: (event) {
             if (event.imageUrl != null && event.imageUrl!.isNotEmpty) {
-              return Image.network(
-                event.imageUrl!,
+              return CachedNetworkImage(
+                imageUrl: event.imageUrl!,
                 width: innerSize,
                 height: innerSize,
                 fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => _eventPlaceholder(innerSize),
+                errorWidget: (_, _, _) => _eventPlaceholder(innerSize),
               );
             }
             return _eventPlaceholder(innerSize);

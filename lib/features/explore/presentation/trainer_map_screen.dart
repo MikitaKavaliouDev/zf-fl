@@ -298,17 +298,19 @@ class _TrainerMapScreenState extends State<TrainerMapScreen> {
         point: latlong.LatLng(cluster.latitude, cluster.longitude),
         width: 80,
         height: 80,
-        child: cluster.items.length == 1
-            ? SingleItemAnnotation(
-                item: cluster.items.first,
-                isSelected: isSelected,
-                onTap: () => _cubit.selectCluster(cluster.id),
-              )
-            : ClusterAnnotation(
-                cluster: cluster,
-                isSelected: isSelected,
-                onTap: () => _cubit.selectCluster(cluster.id),
-              ),
+        child: RepaintBoundary(
+          child: cluster.items.length == 1
+              ? SingleItemAnnotation(
+                  item: cluster.items.first,
+                  isSelected: isSelected,
+                  onTap: () => _cubit.selectCluster(cluster.id),
+                )
+              : ClusterAnnotation(
+                  cluster: cluster,
+                  isSelected: isSelected,
+                  onTap: () => _cubit.selectCluster(cluster.id),
+                ),
+        ),
       );
     }).toList();
   }

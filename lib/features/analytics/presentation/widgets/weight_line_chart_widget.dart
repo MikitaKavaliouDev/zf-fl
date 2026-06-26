@@ -112,8 +112,8 @@ class WeightLineChartWidget extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    const Color(0xFF7B2FBE).withOpacity(0.3),
-                    const Color(0xFF7B2FBE).withOpacity(0.05),
+                    const Color(0xFF7B2FBE).withValues(alpha: 0.3),
+                    const Color(0xFF7B2FBE).withValues(alpha: 0.05),
                   ],
                 ),
               ),

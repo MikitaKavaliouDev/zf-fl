@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -150,13 +151,13 @@ class _YouTubePlayerSheet extends StatelessWidget {
                       const SizedBox(height: 8),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          'https://img.youtube.com/vi/$videoId/hqdefault.jpg',
-                          height: 120,
-                          width: 200,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => const SizedBox.shrink(),
-                        ),
+                      child: CachedNetworkImage(
+                        imageUrl: 'https://img.youtube.com/vi/$videoId/hqdefault.jpg',
+                        height: 120,
+                        width: 200,
+                        fit: BoxFit.cover,
+                        errorWidget: (_, _, _) => const SizedBox.shrink(),
+                      ),
                       ),
                     ],
                   ],

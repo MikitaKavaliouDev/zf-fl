@@ -93,7 +93,7 @@ class EventsListViewScreen extends StatelessWidget {
                 final date = sortedDates[index];
                 final key = _dateKey(date);
                 final dayEvents = grouped[key] ?? [];
-                return _DateSection(date: date, events: dayEvents);
+                return RepaintBoundary(child: _DateSection(date: date, events: dayEvents));
               },
             ),
           );

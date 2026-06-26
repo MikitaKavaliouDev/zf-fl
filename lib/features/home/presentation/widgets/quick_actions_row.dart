@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../trainers/cubit/workout_session_cubit.dart';
 
 /// Quick actions row — two side-by-side cards for Quick Start and Templates.
 ///
@@ -30,7 +32,10 @@ class QuickActionsRow extends StatelessWidget {
           children: [
             Expanded(
               child: _QuickActionCard(
-                onTap: () => context.go('/workout'),
+                onTap: () {
+                  context.read<WorkoutSessionCubit>().start();
+                  context.push('/workout/session');
+                },
                 icon: Icons.bolt_rounded,
                 label: 'Quick Start',
                 color: AppColors.primary,

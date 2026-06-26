@@ -11,6 +11,8 @@ abstract class ExerciseDto with _$ExerciseDto {
     String? muscleGroup,
     String? equipment,
     String? category,
+    String? description,
+    String? imageUrl,
     String? videoUrl,
     int? recommendedRestSeconds,
     @Default(false) bool isUnilateral,

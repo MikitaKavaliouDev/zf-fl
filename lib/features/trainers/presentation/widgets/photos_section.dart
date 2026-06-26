@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
@@ -88,14 +89,11 @@ class _PhotoCard extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             if (imageUrl.isNotEmpty)
-              Image.network(
-                imageUrl,
+              CachedNetworkImage(
+                imageUrl: imageUrl,
                 fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => _placeholder,
-                loadingBuilder: (_, child, progress) {
-                  if (progress == null) return child;
-                  return _placeholder;
-                },
+                errorWidget: (_, _, _) => _placeholder,
+                progressIndicatorBuilder: (_, __, ___) => _placeholder,
               )
             else
               _placeholder,

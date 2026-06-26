@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -47,7 +48,7 @@ class ZiroHeader extends StatelessWidget {
                   radius: 16,
                   backgroundColor: AppColors.primary,
                   backgroundImage:
-                      avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                      avatarUrl != null ? CachedNetworkImageProvider(avatarUrl) : null,
                   child: avatarUrl == null
                       ? Text(
                           userName.isNotEmpty

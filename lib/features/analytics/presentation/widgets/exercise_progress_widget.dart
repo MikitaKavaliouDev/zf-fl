@@ -70,7 +70,7 @@ class _ExerciseProgressWidgetState extends State<ExerciseProgressWidget> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.08),
+            color: AppColors.primary.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(8),
           ),
           child: DropdownButtonHideUnderline(
@@ -220,8 +220,8 @@ class _ExerciseLineChart extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  AppColors.primary.withOpacity(0.25),
-                  AppColors.primary.withOpacity(0.02),
+                  AppColors.primary.withValues(alpha: 0.25),
+                  AppColors.primary.withValues(alpha: 0.02),
                 ],
               ),
             ),

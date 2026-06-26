@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
@@ -25,14 +26,11 @@ class TrainerProfileBanner extends StatelessWidget {
           height: 200,
           width: double.infinity,
           child: bannerImageUrl != null
-              ? Image.network(
-                  bannerImageUrl!,
+              ? CachedNetworkImage(
+                  imageUrl: bannerImageUrl!,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => _gradientBanner,
-                  loadingBuilder: (_, child, progress) {
-                    if (progress == null) return child;
-                    return _gradientBanner;
-                  },
+                  errorWidget: (_, _, _) => _gradientBanner,
+                  progressIndicatorBuilder: (_, __, ___) => _gradientBanner,
                 )
               : _gradientBanner,
         ),
@@ -53,20 +51,17 @@ class TrainerProfileBanner extends StatelessWidget {
             ),
             child: ClipOval(
               child: avatarUrl != null
-                  ? Image.network(
-                      avatarUrl!,
+                  ? CachedNetworkImage(
+                      imageUrl: avatarUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => const Icon(
+                      errorWidget: (_, _, _) => const Icon(
                         Icons.person_rounded,
                         size: 32,
                         color: AppColors.mutedText,
                       ),
-                      loadingBuilder: (_, child, progress) {
-                        if (progress == null) return child;
-                        return const Center(
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        );
-                      },
+                      progressIndicatorBuilder: (_, __, ___) => const Center(
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
                     )
                   : const Icon(
                       Icons.person_rounded,

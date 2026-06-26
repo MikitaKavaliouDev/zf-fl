@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -188,10 +189,10 @@ class _MoreScreenBodyState extends State<_MoreScreenBody> {
                 child: hasPhoto
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(30),
-                        child: Image.network(
-                          photoUrl!,
+                        child: CachedNetworkImage(
+                          imageUrl: photoUrl!,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => _buildInitialsCircle(initials),
+                          errorWidget: (_, _, _) => _buildInitialsCircle(initials),
                         ),
                       )
                     : _buildInitialsCircle(initials),

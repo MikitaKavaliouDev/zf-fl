@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:ziro_fit/features/trainers/data/models/trainer_list_item_dto.dart';
 
@@ -109,10 +110,10 @@ class TrainerMapCard extends StatelessWidget {
   Widget _buildAvatar() {
     final photoPath = trainer.profile?.profilePhotoPath;
     if (photoPath != null && photoPath.isNotEmpty) {
-      return Image.network(
-        photoPath,
+      return CachedNetworkImage(
+        imageUrl: photoPath,
         fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => _placeholder(),
+        errorWidget: (_, _, _) => _placeholder(),
       );
     }
     return _placeholder();

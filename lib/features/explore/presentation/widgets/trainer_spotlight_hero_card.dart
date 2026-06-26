@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -114,7 +115,7 @@ class TrainerSpotlightHeroCard extends StatelessWidget {
                     child: CircleAvatar(
                       backgroundColor: AppColors.mutedSurface,
                       backgroundImage: photoPath != null
-                          ? NetworkImage(photoPath)
+                          ? CachedNetworkImageProvider(photoPath)
                           : null,
                       child: photoPath == null
                           ? const Icon(Icons.person_rounded, size: 30, color: AppColors.mutedText)

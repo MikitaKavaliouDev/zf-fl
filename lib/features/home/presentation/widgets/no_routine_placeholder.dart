@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../trainers/cubit/workout_session_cubit.dart';
 
 /// Placeholder shown when a client has a trainer but no active routine.
 ///
@@ -58,7 +60,10 @@ class NoRoutinePlaceholder extends StatelessWidget {
             children: [
               Expanded(
                 child: _ActionButton(
-                  onTap: () => context.go('/workout'),
+                  onTap: () {
+                    context.read<WorkoutSessionCubit>().start();
+                    context.push('/workout/session');
+                  },
                   label: 'Quick Start',
                   icon: Icons.bolt_rounded,
                   color: AppColors.primary,

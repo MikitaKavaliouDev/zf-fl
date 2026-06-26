@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
@@ -89,16 +90,16 @@ class CityPickerSheet extends StatelessWidget {
               type: MaterialType.transparency,
               child: ListTile(
                 leading: city.imageUrl != null
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          city.imageUrl!,
-                          width: 38,
-                          height: 38,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => _CityIcon(city: city),
-                        ),
-                      )
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: CachedNetworkImage(
+                              imageUrl: city.imageUrl!,
+                              width: 38,
+                              height: 38,
+                              fit: BoxFit.cover,
+                              errorWidget: (_, _, _) => _CityIcon(city: city),
+                            ),
+                          )
                     : _CityIcon(city: city),
                 title: Text(
                   city.name,

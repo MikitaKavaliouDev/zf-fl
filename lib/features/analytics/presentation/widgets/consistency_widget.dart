@@ -28,7 +28,7 @@ class ConsistencyWidget extends StatelessWidget {
                       width: constraints.maxWidth,
                       height: 12,
                       decoration: BoxDecoration(
-                        color: _purple.withOpacity(0.1),
+                        color: _purple.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(99),
                       ),
                     ),

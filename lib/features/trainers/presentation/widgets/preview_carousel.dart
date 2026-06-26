@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
@@ -114,16 +115,13 @@ class _MediaCard extends StatelessWidget {
             children: [
               // Image / thumbnail
               if (media.url.isNotEmpty)
-                Image.network(
-                  media.url,
+                CachedNetworkImage(
+                  imageUrl: media.url,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => _placeholder(),
-                  loadingBuilder: (_, child, progress) {
-                    if (progress == null) return child;
-                    return _placeholder(
-                      child: const Center(child: CircularProgressIndicator()),
-                    );
-                  },
+                  errorWidget: (_, _, _) => _placeholder(),
+                  progressIndicatorBuilder: (_, __, ___) => _placeholder(
+                    child: const Center(child: CircularProgressIndicator()),
+                  ),
                 )
               else
                 _placeholder(),

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -204,14 +205,13 @@ class _ProfileImage extends StatelessWidget {
         width: 80,
         height: 80,
         child: url.isNotEmpty
-            ? Image.network(
-                url,
+            ? CachedNetworkImage(
+                imageUrl: url,
                 fit: BoxFit.cover,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  final total = loadingProgress.expectedTotalBytes;
+                progressIndicatorBuilder: (context, url, downloadProgress) {
+                  final total = downloadProgress.totalSize;
                   final progress = total != null
-                      ? loadingProgress.cumulativeBytesLoaded / total
+                      ? downloadProgress.downloaded / total
                       : null;
                   return _Placeholder(
                     child: Center(
@@ -223,7 +223,7 @@ class _ProfileImage extends StatelessWidget {
                     ),
                   );
                 },
-                errorBuilder: (context, error, stackTrace) =>
+                errorWidget: (context, url, error) =>
                     const _Placeholder(
                   child: Icon(Icons.person_rounded, size: 36),
                 ),

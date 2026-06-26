@@ -137,7 +137,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
               ),
             );
           }
-          return TrainerCard(trainer: trainers[index]);
+          return RepaintBoundary(child: TrainerCard(trainer: trainers[index]));
         },
       ),
     );

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:ziro_fit/features/explore/data/models/explore_event_dto.dart';
@@ -105,10 +106,10 @@ class EventMapCard extends StatelessWidget {
 
   Widget _buildImage() {
     if (event.imageUrl != null && event.imageUrl!.isNotEmpty) {
-      return Image.network(
-        event.imageUrl!,
+      return CachedNetworkImage(
+        imageUrl: event.imageUrl!,
         fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => _placeholder(),
+        errorWidget: (_, _, _) => _placeholder(),
       );
     }
     return _placeholder();

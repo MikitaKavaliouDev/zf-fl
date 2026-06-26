@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -350,12 +351,12 @@ class _CheckInDetailScreenState extends State<CheckInDetailScreen> {
                   borderRadius: BorderRadius.circular(12),
                   child: GestureDetector(
                     onTap: () => _showPhotoFullscreen(context, photo),
-                    child: Image.network(
-                      photo.imageUrl,
+                    child: CachedNetworkImage(
+                      imageUrl: photo.imageUrl,
                       width: 100,
                       height: 120,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => Container(
+                      errorWidget: (_, _, _) => Container(
                         width: 100,
                         height: 120,
                         color: AppColors.mutedSurface,
@@ -364,23 +365,20 @@ class _CheckInDetailScreenState extends State<CheckInDetailScreen> {
                           color: AppColors.mutedText,
                         ),
                       ),
-                      loadingBuilder: (_, child, progress) {
-                        if (progress == null) return child;
-                        return Container(
-                          width: 100,
-                          height: 120,
-                          color: AppColors.mutedSurface,
-                          child: const Center(
-                            child: SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
+                      progressIndicatorBuilder: (_, __, ___) => Container(
+                        width: 100,
+                        height: 120,
+                        color: AppColors.mutedSurface,
+                        child: const Center(
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
                             ),
                           ),
-                        );
-                      },
+                        ),
+                      ),
                     ),
                   ),
                 );
@@ -406,7 +404,7 @@ class _CheckInDetailScreenState extends State<CheckInDetailScreen> {
             radius: 20,
             backgroundColor: AppColors.primary.withValues(alpha: 0.1),
             backgroundImage: reviewer.photoUrl != null
-                ? NetworkImage(reviewer.photoUrl!)
+                ? CachedNetworkImageProvider(reviewer.photoUrl!)
                 : null,
             child: reviewer.photoUrl == null
                 ? Text(
@@ -482,10 +480,10 @@ class _CheckInDetailScreenState extends State<CheckInDetailScreen> {
           children: [
             InteractiveViewer(
               child: Center(
-                child: Image.network(
-                  photo.imageUrl,
+                child: CachedNetworkImage(
+                  imageUrl: photo.imageUrl,
                   fit: BoxFit.contain,
-                  errorBuilder: (_, _, _) => const Icon(
+                  errorWidget: (_, _, _) => const Icon(
                     Icons.broken_image_rounded,
                     color: Colors.white54,
                     size: 48,

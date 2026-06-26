@@ -4375,6 +4375,17 @@ class $ExercisesTableTable extends ExercisesTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _imageUrlMeta = const VerificationMeta(
+    'imageUrl',
+  );
+  @override
+  late final GeneratedColumn<String> imageUrl = GeneratedColumn<String>(
+    'image_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _videoUrlMeta = const VerificationMeta(
     'videoUrl',
   );
@@ -4475,6 +4486,7 @@ class $ExercisesTableTable extends ExercisesTable
     equipment,
     category,
     description,
+    imageUrl,
     videoUrl,
     createdById,
     recommendedRestSeconds,
@@ -4535,6 +4547,12 @@ class $ExercisesTableTable extends ExercisesTable
           data['description']!,
           _descriptionMeta,
         ),
+      );
+    }
+    if (data.containsKey('image_url')) {
+      context.handle(
+        _imageUrlMeta,
+        imageUrl.isAcceptableOrUnknown(data['image_url']!, _imageUrlMeta),
       );
     }
     if (data.containsKey('video_url')) {
@@ -4631,6 +4649,10 @@ class $ExercisesTableTable extends ExercisesTable
         DriftSqlType.string,
         data['${effectivePrefix}description'],
       ),
+      imageUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}image_url'],
+      ),
       videoUrl: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}video_url'],
@@ -4679,6 +4701,7 @@ class ExerciseEntity extends DataClass implements Insertable<ExerciseEntity> {
   final String? equipment;
   final String? category;
   final String? description;
+  final String? imageUrl;
   final String? videoUrl;
   final String? createdById;
   final int? recommendedRestSeconds;
@@ -4694,6 +4717,7 @@ class ExerciseEntity extends DataClass implements Insertable<ExerciseEntity> {
     this.equipment,
     this.category,
     this.description,
+    this.imageUrl,
     this.videoUrl,
     this.createdById,
     this.recommendedRestSeconds,
@@ -4719,6 +4743,9 @@ class ExerciseEntity extends DataClass implements Insertable<ExerciseEntity> {
     }
     if (!nullToAbsent || description != null) {
       map['description'] = Variable<String>(description);
+    }
+    if (!nullToAbsent || imageUrl != null) {
+      map['image_url'] = Variable<String>(imageUrl);
     }
     if (!nullToAbsent || videoUrl != null) {
       map['video_url'] = Variable<String>(videoUrl);
@@ -4755,6 +4782,9 @@ class ExerciseEntity extends DataClass implements Insertable<ExerciseEntity> {
       description: description == null && nullToAbsent
           ? const Value.absent()
           : Value(description),
+      imageUrl: imageUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imageUrl),
       videoUrl: videoUrl == null && nullToAbsent
           ? const Value.absent()
           : Value(videoUrl),
@@ -4786,6 +4816,7 @@ class ExerciseEntity extends DataClass implements Insertable<ExerciseEntity> {
       equipment: serializer.fromJson<String?>(json['equipment']),
       category: serializer.fromJson<String?>(json['category']),
       description: serializer.fromJson<String?>(json['description']),
+      imageUrl: serializer.fromJson<String?>(json['imageUrl']),
       videoUrl: serializer.fromJson<String?>(json['videoUrl']),
       createdById: serializer.fromJson<String?>(json['createdById']),
       recommendedRestSeconds: serializer.fromJson<int?>(
@@ -4808,6 +4839,7 @@ class ExerciseEntity extends DataClass implements Insertable<ExerciseEntity> {
       'equipment': serializer.toJson<String?>(equipment),
       'category': serializer.toJson<String?>(category),
       'description': serializer.toJson<String?>(description),
+      'imageUrl': serializer.toJson<String?>(imageUrl),
       'videoUrl': serializer.toJson<String?>(videoUrl),
       'createdById': serializer.toJson<String?>(createdById),
       'recommendedRestSeconds': serializer.toJson<int?>(recommendedRestSeconds),
@@ -4826,6 +4858,7 @@ class ExerciseEntity extends DataClass implements Insertable<ExerciseEntity> {
     Value<String?> equipment = const Value.absent(),
     Value<String?> category = const Value.absent(),
     Value<String?> description = const Value.absent(),
+    Value<String?> imageUrl = const Value.absent(),
     Value<String?> videoUrl = const Value.absent(),
     Value<String?> createdById = const Value.absent(),
     Value<int?> recommendedRestSeconds = const Value.absent(),
@@ -4841,6 +4874,7 @@ class ExerciseEntity extends DataClass implements Insertable<ExerciseEntity> {
     equipment: equipment.present ? equipment.value : this.equipment,
     category: category.present ? category.value : this.category,
     description: description.present ? description.value : this.description,
+    imageUrl: imageUrl.present ? imageUrl.value : this.imageUrl,
     videoUrl: videoUrl.present ? videoUrl.value : this.videoUrl,
     createdById: createdById.present ? createdById.value : this.createdById,
     recommendedRestSeconds: recommendedRestSeconds.present
@@ -4864,6 +4898,7 @@ class ExerciseEntity extends DataClass implements Insertable<ExerciseEntity> {
       description: data.description.present
           ? data.description.value
           : this.description,
+      imageUrl: data.imageUrl.present ? data.imageUrl.value : this.imageUrl,
       videoUrl: data.videoUrl.present ? data.videoUrl.value : this.videoUrl,
       createdById: data.createdById.present
           ? data.createdById.value
@@ -4892,6 +4927,7 @@ class ExerciseEntity extends DataClass implements Insertable<ExerciseEntity> {
           ..write('equipment: $equipment, ')
           ..write('category: $category, ')
           ..write('description: $description, ')
+          ..write('imageUrl: $imageUrl, ')
           ..write('videoUrl: $videoUrl, ')
           ..write('createdById: $createdById, ')
           ..write('recommendedRestSeconds: $recommendedRestSeconds, ')
@@ -4912,6 +4948,7 @@ class ExerciseEntity extends DataClass implements Insertable<ExerciseEntity> {
     equipment,
     category,
     description,
+    imageUrl,
     videoUrl,
     createdById,
     recommendedRestSeconds,
@@ -4931,6 +4968,7 @@ class ExerciseEntity extends DataClass implements Insertable<ExerciseEntity> {
           other.equipment == this.equipment &&
           other.category == this.category &&
           other.description == this.description &&
+          other.imageUrl == this.imageUrl &&
           other.videoUrl == this.videoUrl &&
           other.createdById == this.createdById &&
           other.recommendedRestSeconds == this.recommendedRestSeconds &&
@@ -4948,6 +4986,7 @@ class ExercisesTableCompanion extends UpdateCompanion<ExerciseEntity> {
   final Value<String?> equipment;
   final Value<String?> category;
   final Value<String?> description;
+  final Value<String?> imageUrl;
   final Value<String?> videoUrl;
   final Value<String?> createdById;
   final Value<int?> recommendedRestSeconds;
@@ -4964,6 +5003,7 @@ class ExercisesTableCompanion extends UpdateCompanion<ExerciseEntity> {
     this.equipment = const Value.absent(),
     this.category = const Value.absent(),
     this.description = const Value.absent(),
+    this.imageUrl = const Value.absent(),
     this.videoUrl = const Value.absent(),
     this.createdById = const Value.absent(),
     this.recommendedRestSeconds = const Value.absent(),
@@ -4981,6 +5021,7 @@ class ExercisesTableCompanion extends UpdateCompanion<ExerciseEntity> {
     this.equipment = const Value.absent(),
     this.category = const Value.absent(),
     this.description = const Value.absent(),
+    this.imageUrl = const Value.absent(),
     this.videoUrl = const Value.absent(),
     this.createdById = const Value.absent(),
     this.recommendedRestSeconds = const Value.absent(),
@@ -5000,6 +5041,7 @@ class ExercisesTableCompanion extends UpdateCompanion<ExerciseEntity> {
     Expression<String>? equipment,
     Expression<String>? category,
     Expression<String>? description,
+    Expression<String>? imageUrl,
     Expression<String>? videoUrl,
     Expression<String>? createdById,
     Expression<int>? recommendedRestSeconds,
@@ -5017,6 +5059,7 @@ class ExercisesTableCompanion extends UpdateCompanion<ExerciseEntity> {
       if (equipment != null) 'equipment': equipment,
       if (category != null) 'category': category,
       if (description != null) 'description': description,
+      if (imageUrl != null) 'image_url': imageUrl,
       if (videoUrl != null) 'video_url': videoUrl,
       if (createdById != null) 'created_by_id': createdById,
       if (recommendedRestSeconds != null)
@@ -5037,6 +5080,7 @@ class ExercisesTableCompanion extends UpdateCompanion<ExerciseEntity> {
     Value<String?>? equipment,
     Value<String?>? category,
     Value<String?>? description,
+    Value<String?>? imageUrl,
     Value<String?>? videoUrl,
     Value<String?>? createdById,
     Value<int?>? recommendedRestSeconds,
@@ -5054,6 +5098,7 @@ class ExercisesTableCompanion extends UpdateCompanion<ExerciseEntity> {
       equipment: equipment ?? this.equipment,
       category: category ?? this.category,
       description: description ?? this.description,
+      imageUrl: imageUrl ?? this.imageUrl,
       videoUrl: videoUrl ?? this.videoUrl,
       createdById: createdById ?? this.createdById,
       recommendedRestSeconds:
@@ -5087,6 +5132,9 @@ class ExercisesTableCompanion extends UpdateCompanion<ExerciseEntity> {
     }
     if (description.present) {
       map['description'] = Variable<String>(description.value);
+    }
+    if (imageUrl.present) {
+      map['image_url'] = Variable<String>(imageUrl.value);
     }
     if (videoUrl.present) {
       map['video_url'] = Variable<String>(videoUrl.value);
@@ -5129,6 +5177,7 @@ class ExercisesTableCompanion extends UpdateCompanion<ExerciseEntity> {
           ..write('equipment: $equipment, ')
           ..write('category: $category, ')
           ..write('description: $description, ')
+          ..write('imageUrl: $imageUrl, ')
           ..write('videoUrl: $videoUrl, ')
           ..write('createdById: $createdById, ')
           ..write('recommendedRestSeconds: $recommendedRestSeconds, ')
@@ -16920,6 +16969,7 @@ typedef $$ExercisesTableTableCreateCompanionBuilder =
       Value<String?> equipment,
       Value<String?> category,
       Value<String?> description,
+      Value<String?> imageUrl,
       Value<String?> videoUrl,
       Value<String?> createdById,
       Value<int?> recommendedRestSeconds,
@@ -16938,6 +16988,7 @@ typedef $$ExercisesTableTableUpdateCompanionBuilder =
       Value<String?> equipment,
       Value<String?> category,
       Value<String?> description,
+      Value<String?> imageUrl,
       Value<String?> videoUrl,
       Value<String?> createdById,
       Value<int?> recommendedRestSeconds,
@@ -16985,6 +17036,11 @@ class $$ExercisesTableTableFilterComposer
 
   ColumnFilters<String> get description => $composableBuilder(
     column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get imageUrl => $composableBuilder(
+    column: $table.imageUrl,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -17068,6 +17124,11 @@ class $$ExercisesTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get imageUrl => $composableBuilder(
+    column: $table.imageUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get videoUrl => $composableBuilder(
     column: $table.videoUrl,
     builder: (column) => ColumnOrderings(column),
@@ -17139,6 +17200,9 @@ class $$ExercisesTableTableAnnotationComposer
     column: $table.description,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get imageUrl =>
+      $composableBuilder(column: $table.imageUrl, builder: (column) => column);
 
   GeneratedColumn<String> get videoUrl =>
       $composableBuilder(column: $table.videoUrl, builder: (column) => column);
@@ -17212,6 +17276,7 @@ class $$ExercisesTableTableTableManager
                 Value<String?> equipment = const Value.absent(),
                 Value<String?> category = const Value.absent(),
                 Value<String?> description = const Value.absent(),
+                Value<String?> imageUrl = const Value.absent(),
                 Value<String?> videoUrl = const Value.absent(),
                 Value<String?> createdById = const Value.absent(),
                 Value<int?> recommendedRestSeconds = const Value.absent(),
@@ -17228,6 +17293,7 @@ class $$ExercisesTableTableTableManager
                 equipment: equipment,
                 category: category,
                 description: description,
+                imageUrl: imageUrl,
                 videoUrl: videoUrl,
                 createdById: createdById,
                 recommendedRestSeconds: recommendedRestSeconds,
@@ -17246,6 +17312,7 @@ class $$ExercisesTableTableTableManager
                 Value<String?> equipment = const Value.absent(),
                 Value<String?> category = const Value.absent(),
                 Value<String?> description = const Value.absent(),
+                Value<String?> imageUrl = const Value.absent(),
                 Value<String?> videoUrl = const Value.absent(),
                 Value<String?> createdById = const Value.absent(),
                 Value<int?> recommendedRestSeconds = const Value.absent(),
@@ -17262,6 +17329,7 @@ class $$ExercisesTableTableTableManager
                 equipment: equipment,
                 category: category,
                 description: description,
+                imageUrl: imageUrl,
                 videoUrl: videoUrl,
                 createdById: createdById,
                 recommendedRestSeconds: recommendedRestSeconds,

@@ -11,6 +11,7 @@ class ExercisesTable extends Table {
   TextColumn get equipment => text().nullable()();
   TextColumn get category => text().nullable()();
   TextColumn get description => text().nullable()();
+  TextColumn get imageUrl => text().nullable()();
   TextColumn get videoUrl => text().nullable()();
   TextColumn get createdById => text().nullable()();
   IntColumn get recommendedRestSeconds => integer().nullable()();

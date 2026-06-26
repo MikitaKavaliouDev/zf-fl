@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -65,10 +66,10 @@ class ExploreTrainerCard extends StatelessWidget {
                     height: 144,
                     color: AppColors.mutedSurface,
                     child: _photoPath != null
-                        ? Image.network(
-                            _photoPath!,
+                        ? CachedNetworkImage(
+                            imageUrl: _photoPath!,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => const Icon(
+                            errorWidget: (_, _, _) => const Icon(
                               Icons.person_rounded,
                               size: 48,
                               color: AppColors.mutedText,

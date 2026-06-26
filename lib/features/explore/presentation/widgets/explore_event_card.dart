@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
@@ -38,14 +39,11 @@ class FeaturedEventCard extends StatelessWidget {
             children: [
               // Background image
               if (event.imageUrl != null && event.imageUrl!.isNotEmpty)
-                Image.network(
-                  event.imageUrl!,
+                CachedNetworkImage(
+                  imageUrl: event.imageUrl!,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => _PlaceholderContent(event: event),
-                  loadingBuilder: (context, child, progress) {
-                    if (progress == null) return child;
-                    return _PlaceholderContent(event: event);
-                  },
+                  errorWidget: (_, _, _) => _PlaceholderContent(event: event),
+                  progressIndicatorBuilder: (_, __, ___) => _PlaceholderContent(event: event),
                 )
               else
                 _PlaceholderContent(event: event),
