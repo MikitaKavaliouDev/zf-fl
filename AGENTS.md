@@ -13,7 +13,7 @@ See the **Current Codebase State** section below for detailed per-feature invent
 
 This instruction file (`AGENTS.md`) is auto-loaded via `opencode.json` — agents do **not** need to be told to read it.
 
-## Current Codebase State (2026-06-25)
+## Current Codebase State (2026-06-26)
 
 ### Feature Inventory
 
@@ -91,11 +91,17 @@ This instruction file (`AGENTS.md`) is auto-loaded via `opencode.json` — agent
 | API Services | `TrainerApiService` (detail, packages, testimonials, link/unlink), `WorkoutSessionApiService` (CRUD, exercises, logs, templates), `BookingApiService` (create booking) |
 | Repositories | `TrainerRepository`, `WorkoutSessionRepository`, `BookingRepository` |
 | Screens | `TrainerDetailScreen` (719 lines — full App Store-style profile), `WorkoutSessionScreen`, `WorkoutHistoryScreen`, `CompletedSessionDetailScreen`, `TrainerMapScreen`, `TrainerListScreen`, `ExerciseDetailScreen` (847 lines — chart, history, progression) |
-| Widgets (23) | `ExercisePickerSheet`, `TrainerCard`, `RestTimerSheet`, `PlateCalculator`, `RpePicker`, `WorkoutNumericKeyboard`, `FinishWorkoutDialog`, `CancelWorkoutDialog`, `SaveAsTemplateDialog`, `TemplatePickerDialog`, `SearchBar`, `TrainerProfileBanner`, `ConnectButton`, `TagBadge`, `AboutSection`, `PackageCard`, `PhotosSection`, `ReviewCard`, `ScheduleSection`, `PreviewCarousel`, `CustomProgramRequestSheet`, `CoachNoteCard`, `FocusMetricSelector`, `YouTubePlayerWidget` |
+| Widgets (24) | `ExercisePickerSheet`, `TrainerCard`, `RestTimerSheet`, `PlateCalculator`, `RpePicker`, `WorkoutNumericKeyboard`, `FinishWorkoutDialog`, `CancelWorkoutDialog`, `SaveAsTemplateDialog`, `TemplatePickerDialog`, `SearchBar`, `TrainerProfileBanner`, `ConnectButton`, `TagBadge`, `AboutSection`, `PackageCard`, `PhotosSection`, `ReviewCard`, `ScheduleSection`, `PreviewCarousel`, `CustomProgramRequestSheet`, `CoachNoteCard`, `FocusMetricSelector`, `YouTubePlayerWidget`, `WorkoutMiniPlayer` |
 | Models (11) | `TrainerListItemDto`, `TrainerDetailDto`, `TrainerPackageDto`, `TrainerLocation`, `PromotedTrainerDto`, `WorkoutSessionDto`, `WorkoutSessionResponse`, `ExerciseDto`, `ExerciseLogDto`, `TemplateDto`, `TrainerBenefitDto`, `TrainerExternalLinkDto`, `TrainerSocialLinkDto`, `TrainerTestimonialDto`, `TrainerTransformationPhotoDto`, `TrainerScheduleDto`, `TrainerPreviewMediaDto`, `TrainerServiceDto`, `BookingResponseDto` |
 | Domain | `WorkoutStreakUtil` — weekly count, current streak, longest streak |
 | Tests | `trainer_detail_cubit_test.dart`, `trainer_list_cubit_test.dart` |
 | Docs | `docs/trainer-profile-analysis.md` — full iOS `PublicTrainerProfileView` replication reference, backend API contracts (aggregated profile, packages, testimonials, photos, schedule), gap analysis, data model mapping |
+
+**Workout Session — Key Behaviors:**
+- **Minimize/Maximize**: Drag down on full-screen session → `minimize()` sets `isMinimized=true` → `_MainShell` stack overlay renders `WorkoutMiniPlayer` 90pt above bottom nav (iOS parity). Tap mini player to maximize back to full screen.
+- **Timer sync**: `start()` and `loadCurrent()` use `DateTime.parse(result.session.startTime)` from the API's server timestamp. `_tick()` computes elapsed as `DateTime.now().difference(startTime)` — accurate across restarts, no drift.
+- **Cold-start resume**: `_ZiroFitAppState` calls `_workoutSessionCubit.loadCurrent()` on `AuthAuthenticated` (same phase as notifications). If a live session exists, the cubit emits `active(isMinimized: true, startTime: serverStartTime)` — the mini player appears immediately with a synced timer, matching iOS `WorkoutManager.checkForActiveSession()`.
+- **Console logging**: 21 `developer.log` calls in the cubit (`name: 'workout'`) covering `logSet` (optimistic + reconciled), `startRest`/`endRest`/`adjustRest`, `addExercises`/`removeExercise`, `cancelSession`, `pause`/`resume`, `minimize`/`maximize`, `loadCurrent`, `rest_finished`, `start`/`finish`. 7 calls in `workout_session_screen.dart` covering keyboard navigation (`nav_focus`, `nav_next`, `nav_dismiss`), set completion, and set addition.
 
 #### Home (`lib/features/home/`) — ✅ Fully Implemented
 | Layer | Files |
@@ -140,6 +146,16 @@ This instruction file (`AGENTS.md`) is auto-loaded via `opencode.json` — agent
 | Repository | `SyncRepository` — orchestrates pull/push against local Drift DB |
 | Tests | `sync_cubit_test.dart` |
 
+#### Nutrition & Habits (`lib/features/nutrition_habits/`) — ✅ Fully Implemented
+| Layer | Files |
+|---|---|
+| Cubit | `NutritionHabitsCubit` with sealed `NutritionHabitsState` (initial, loading, loaded with plan+habits, error) — loads nutrition plan + habits in parallel, optimistic habit toggle with local log merge, pull-to-refresh |
+| API Service | `NutritionHabitsApiService` — `GET /api/client/nutrition`, `GET /api/client/habits`, `POST /api/client/habits/{habitId}/log` |
+| Repository | `NutritionHabitsRepository` |
+| Screen | `NutritionHabitsScreen` — nutrition plan detail with macro progress bars (cal/protein/carbs/fats), section blocks (meal notes, foods to eat/avoid, meal timing, hydration, supplements, habit notes), today's habit checklist with circle checkboxes + frequency badges |
+| Models (3) | `NutritionPlanDto` (title, calories, protein, carbs, fats, mealNotes, foodsToEat, foodsToAvoid, mealTiming, hydration, supplements, isActive), `DailyHabitDto` (title, description, frequency DAILY/WEEKLY, logs), `HabitLogDto` (date, isCompleted, note) |
+| Integration | Home dashboard `_NutritionHabitsCard` navigates to `/nutrition-habits` (was incorrectly pointing to `/daily-targets`) |
+
 ### Onboarding (`lib/features/onboarding/`) — ✅ Fully Implemented
 | Layer | Files |
 |---|---|
@@ -149,10 +165,10 @@ This instruction file (`AGENTS.md`) is auto-loaded via `opencode.json` — agent
 
 | Module | Files | Status |
 |---|---|---|
-| **Router** | `app_router.dart` — GoRouter v17.3.0 with `ShellRoute` (4 tabs), full-screen sub-routes for detail/discovery/map, auth redirect guard, Stripe deep link handling, analytics/check-in/daily-targets/fitness-goals/sharing routes | ✅ |
+| **Router** | `app_router.dart` — GoRouter v17.3.0 with `ShellRoute` (4 tabs), full-screen sub-routes for detail/discovery/map, auth redirect guard, Stripe deep link handling, analytics/check-in/daily-targets/fitness-goals/sharing routes; `_MainShell` uses `BlocBuilder<WorkoutSessionCubit>` to overlay `WorkoutMiniPlayer` via `Stack` when session is minimized | ✅ |
 | **Routing tables** | Auth: `/login`, `/register`, `/verify-email`, `/onboarding` | ✅ |
 | | Shell (bottom nav): `/` (Home), `/workout` (Session), `/explore`, `/profile` | ✅ |
-| | Full-screen: `/trainer/:username`, `/explore/discovery`, `/explore/map`, `/explore/event/:id`, `/workout/history`, `/workout/history/:id`, `/home/notifications`, `/home/program-detail`, `/home/templates-library`, `/home/routine-builder`, `/home/routine-scheduler`, `/home/create-template`, `/home/template-detail`, `/analytics`, `/check-in`, `/check-in/history`, `/check-in/:id`, `/daily-targets`, `/fitness-goals`, `/sharing`, `/onboarding/educational` | ✅ |
+| | Full-screen: `/trainer/:username`, `/explore/discovery`, `/explore/map`, `/explore/event/:id`, `/workout/history`, `/workout/history/:id`, `/home/notifications`, `/home/program-detail`, `/home/templates-library`, `/home/routine-builder`, `/home/routine-scheduler`, `/home/create-template`, `/home/template-detail`, `/analytics`, `/check-in`, `/check-in/history`, `/check-in/:id`, `/daily-targets`, `/fitness-goals`, `/sharing`, `/nutrition-habits`, `/onboarding/educational` | ✅ |
 | | Deep links: `/stripe-return`, `/packages/:id/success`, `/packages/:id/cancel` | ✅ |
 | **DI** | `get_it` + `injectable` — `initDependencies()` in main, auto-generated `injection.config.dart` | ✅ |
 | **Networking** | `Dio` with `ApiLoggerInterceptor` (structured logging) + `AuthInterceptor` (JWT auto-refresh on 401) | ✅ |
@@ -209,7 +225,6 @@ This instruction file (`AGENTS.md`) is auto-loaded via `opencode.json` — agent
 - **Offline sync** — architecture is in place (Drift tables, sync cubit, pull/push endpoints) but hasn't been end-to-end tested
 - **Stripe checkout** — deep link routes exist, the actual Stripe payment sheet integration in Flutter is not wired
 - **Plate calculator** — widget exists (`plate_calculator.dart`) but isn't integrated into workout flow
-- **Exercise picker — multi-select for template creation** — shared `ExercisePickerSheet` supports both single (workout) and multi-select (template) modes
 
 ### Recently Resolved
 
@@ -229,6 +244,18 @@ This instruction file (`AGENTS.md`) is auto-loaded via `opencode.json` — agent
 
 - **Notification realtime service** — Supabase Realtime subscription for live notification updates with automatic polling fallback. Handles insert/update/delete events and connection state changes.
 
+- **Workout session — minimize/maximize overlay** — Ported iOS `WorkoutMiniPlayer` to Flutter: drag-down gesture on full-screen session triggers `minimize()` which sets `isMinimized=true`; `_MainShell` stack overlay renders `WorkoutMiniPlayer` 90pt above bottom nav. Tap to maximize. Full UI parity with iOS `ContentView` ZStack pattern.
+
+- **Workout timer — backend `startTime` sync** — Removed `DateTime.now()` from `start()` and `loadCurrent()`; now parses server's `DateTime.parse(result.session.startTime)` as authoritative reference. `_tick()` computes elapsed as `DateTime.now().difference(serverStartTime)` — timer stays accurate across restarts and cold starts.
+
+- **Workout session — full console logging** — 21 `developer.log` calls (`name: 'workout'`) across all cubit state transitions (`logSet` optimistic + reconciled, rest timer, add/remove exercise, pause/resume, minimize/maximize, cancel, start/finish). 7 screen-level logs for keyboard navigation (`nav_focus`, `nav_next`, `nav_dismiss`, `_completeSet`, `_addSet`).
+
+- **Workout session — cold-start active session check** — `main.dart` `_authSubscription` now calls `_workoutSessionCubit.loadCurrent()` on `AuthAuthenticated` (same phase as notifications). If a live session exists server-side, the mini player appears immediately with synced timer, matching iOS `WorkoutManager.checkForActiveSession()`. No more stale timers or manual navigation needed.
+
+- **Nutrition & Habits — dedicated screen** — The `_NutritionHabitsCard` on the home dashboard was incorrectly pointing to `/daily-targets`. Implemented a full `NutritionHabitsScreen` matching the iOS spec from `ios-nutrition-habits-handoff.md`: nutrition plan detail with macro progress bars (calories/protein/carbs/fats), section blocks for meal notes/foods to eat/foods to avoid/meal timing/hydration/supplements/habit notes, and today's habit checklist with circle checkboxes and frequency badges. Backed by `NutritionHabitsCubit` which loads plan + habits in parallel and supports optimistic habit toggle via `POST /api/client/habits/{habitId}/log`. See `docs/ios-nutrition-habits-handoff.md` for the iOS reference spec.
+
+- **Nutrition & Habits** (`V:\Ziro-Fit\ios-nutrition-habits-handoff.md`) — iOS spec for nutrition plan detail view (macro bars, meal notes, foods, hydration, supplements) and habit checklist with toggle. Flutter implementation matches the spec exactly. See `docs/ios-nutrition-habits-handoff.md`.
+
 ## iOS Reference App
 
 The iOS version of ZIRO.FIT is at **`V:\Ziro-Fit`** (Swift/SwiftUI).
@@ -243,6 +270,10 @@ Key reference files:
 - Program detail: `Ziro Fit/Views/ZiroMe/MyProgramDetailView.swift` — active program with progress and template list
 - Workout templates: `Ziro Fit/Views/ZiroMe/WorkoutTemplatesView.swift` — template library with search
 - Trainer profile (public): `Ziro Fit/Views/ZiroMe/PublicTrainerProfileView.swift` — App Store-style profile with banner, tabs (About/Packages/Photos/Reviews/Schedule), connect states, custom program request. See `docs/trainer-profile-analysis.md`.
+- **WorkoutManager** (`Ziro Fit/Managers/WorkoutManager.swift`) — Singleton manager: `init()` runs parallel `checkForActiveSession()` + `syncLibrary()`; `resumeSession()` sets `isMinimized=true` and starts timer synced to server `startTime`; two-phase recovery (primary: active session endpoint, fallback: calendar events). Timer uses `WorkoutTimer` object with `startTime: Date` computing `Date().timeIntervalSince(startTime)` every tick.
+- **ContentView** (`Ziro Fit/ContentView.swift`) — Root view: creates `@StateObject workoutManager`, overlays `WorkoutMiniPlayer` when `isSessionActive && isMinimized`, hosts conflict alert.
+- **WorkoutMiniPlayer** (`Ziro Fit/Views/Components/WorkoutMiniPlayer.swift`) — Minimized overlay: displays `timer.formattedTime`, pause/play toggle, maximize button, swipe-up-to-maximize gesture, positioned 90pt above tab bar.
+- **Ziro_FitApp** (`Ziro Fit/Ziro_FitApp.swift`) — App entry point: passes `workoutManager` as `.environmentObject` to `MainTabView` via `ContentView`.
 
 ## NO PLACEHOLDERS — Full API Integration (STRICT RULE)
 

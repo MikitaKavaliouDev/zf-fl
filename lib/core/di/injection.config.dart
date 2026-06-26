@@ -77,6 +77,12 @@ import 'package:ziro_fit/features/notifications/data/repositories/notification_r
     as _i329;
 import 'package:ziro_fit/features/notifications/data/services/notification_realtime_service.dart'
     as _i115;
+import 'package:ziro_fit/features/nutrition_habits/cubit/nutrition_habits_cubit.dart'
+    as _i560;
+import 'package:ziro_fit/features/nutrition_habits/data/nutrition_habits_api_service.dart'
+    as _i416;
+import 'package:ziro_fit/features/nutrition_habits/data/nutrition_habits_repository.dart'
+    as _i982;
 import 'package:ziro_fit/features/profile/cubit/more_cubit.dart' as _i19;
 import 'package:ziro_fit/features/profile/cubit/profile_config_cubit.dart'
     as _i851;
@@ -181,6 +187,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i781.NotificationApiService>(
       () => _i781.NotificationApiService(gh<_i361.Dio>()),
     );
+    gh.factory<_i416.NutritionHabitsApiService>(
+      () => _i416.NutritionHabitsApiService(gh<_i361.Dio>()),
+    );
     gh.factory<_i768.ProfileApiService>(
       () => _i768.ProfileApiService(gh<_i361.Dio>()),
     );
@@ -241,6 +250,11 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i377.ExploreMapCubit(
         gh<_i549.ExploreApiService>(),
         gh<_i467.LocationService>(),
+      ),
+    );
+    gh.singleton<_i982.NutritionHabitsRepository>(
+      () => _i982.NutritionHabitsRepository(
+        gh<_i416.NutritionHabitsApiService>(),
       ),
     );
     gh.singleton<_i1063.TrainerRepository>(
@@ -313,6 +327,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i875.ProgramRepository>(),
         gh<_i783.LocalTemplateRepository>(),
       ),
+    );
+    gh.factory<_i560.NutritionHabitsCubit>(
+      () => _i560.NutritionHabitsCubit(gh<_i982.NutritionHabitsRepository>()),
     );
     gh.factory<_i13.HomeCubit>(
       () => _i13.HomeCubit(gh<_i516.HomeRepository>()),

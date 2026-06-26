@@ -83,6 +83,10 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
     _authSubscription = _authCubit.stream.listen((state) {
       if (state is AuthAuthenticated) {
         _notificationsCubit.fetchNotifications();
+        // Cold-start: check if there's an active workout session.
+        // If yes, the cubit auto-minimizes so the mini-player overlay
+        // appears on the home screen with a synced timer — matching iOS.
+        _workoutSessionCubit.loadCurrent();
         _authSubscription?.cancel();
       } else if (state is AuthUnauthenticated) {
         _authSubscription?.cancel();

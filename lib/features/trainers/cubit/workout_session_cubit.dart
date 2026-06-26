@@ -56,6 +56,10 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
     if (current.restRemaining != null && current.restRemaining! > 0 && restRemaining == null) {
       // Rest just finished this tick (transitioned from >0 to null)
       showRestFinishedToast = true;
+      developer.log(
+        'rest_finished | elapsed=${elapsed.inSeconds}s',
+        name: 'workout',
+      );
       // Auto-reset after 3 seconds
       Future.delayed(const Duration(seconds: 3), () {
         final s = state;
@@ -92,6 +96,10 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
     // Don't start if already active — emit conflict state
     if (state is WorkoutSessionActive) {
       final currentState = state as WorkoutSessionActive;
+      developer.log(
+        'start_conflict | existingSessionId=${currentState.session.id}',
+        name: 'workout',
+      );
       emit(WorkoutSessionState.conflict(existingSessionId: currentState.session.id));
       return;
     }
@@ -114,6 +122,10 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
       ));
       _startTimer();
       developer.log('workout_started | exerciseCount=${result.logs.length}', name: 'analytics');
+      developer.log(
+        'start | sessionId=${result.session.id} | exerciseCount=${result.logs.length} | serverStartTime=${result.session.startTime}',
+        name: 'workout',
+      );
     } catch (e) {
       emit(const WorkoutSessionState.error('Failed to start session.'));
     }
@@ -137,8 +149,15 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
           isMinimized: true,
         ));
         _startTimer();
+        developer.log(
+          'loadCurrent | sessionId=${result.session!.id} '
+          '| logCount=${result.logs.length} '
+          '| serverStartTime=${result.session!.startTime}',
+          name: 'workout',
+        );
       } else {
         emit(const WorkoutSessionState.initial());
+        developer.log('loadCurrent | no active session', name: 'workout');
       }
     } catch (e) {
       emit(const WorkoutSessionState.error('Failed to load session.'));
@@ -201,6 +220,13 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
         exerciseIds: exerciseIds,
       );
       emit(current.copyWith(logs: [...current.logs, ...newLogs]));
+      final names = newLogs
+          .map((l) => l.exercise?.name ?? l.exerciseId)
+          .join(', ');
+      developer.log(
+        'addExercises | count=${newLogs.length} | exercises=[$names]',
+        name: 'workout',
+      );
     } catch (e) {
       emit(const WorkoutSessionState.error('Failed to add exercises.'));
     }
@@ -215,9 +241,17 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
         sessionId: current.session.id,
         exerciseId: exerciseId,
       );
+      final removedName = current.logs
+          .where((l) => l.exerciseId == exerciseId)
+          .firstOrNull
+          ?.exercise?.name ?? exerciseId;
       emit(current.copyWith(
         logs: current.logs.where((l) => l.exerciseId != exerciseId).toList(),
       ));
+      developer.log(
+        'removeExercise | exercise=$removedName($exerciseId)',
+        name: 'workout',
+      );
     } catch (e) {
       emit(const WorkoutSessionState.error('Failed to remove exercise.'));
     }
@@ -240,6 +274,21 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
   }) async {
     final current = state;
     if (current is! WorkoutSessionActive) return;
+
+    // Resolve exercise name from existing logs for readable logging.
+    final existingForExercise = current.logs
+        .where((l) => l.exerciseId == exerciseId)
+        .toList();
+    final exerciseName =
+        existingForExercise.firstOrNull?.exercise?.name ?? exerciseId;
+
+    developer.log(
+      'logSet | exercise=$exerciseName($exerciseId) '
+      '| reps=$reps | weight=${weight ?? "—"} | rpe=${rpe ?? "—"} '
+      '| order=$order | isCompleted=${isCompleted ?? true} '
+      '| setId=${logId ?? "new"}',
+      name: 'workout',
+    );
 
     // Optimistic update: apply the new set immediately.
     final optimisticLog = ExerciseLogDto(
@@ -288,6 +337,12 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
       reconciledLogs.removeWhere((l) => l.id == optimisticLog.id);
       reconciledLogs.add(response.log);
       emit(latest.copyWith(logs: reconciledLogs));
+      developer.log(
+        'logSet_reconciled | exercise=$exerciseName($exerciseId) '
+        '| logId=${response.log.id} | reps=${response.log.reps} '
+        '| weight=${response.log.weight} | rpe=${response.log.rpe}',
+        name: 'workout',
+      );
 
       // Check for PR records
       if (response.newRecords != null && response.newRecords!.isNotEmpty) {
@@ -338,6 +393,9 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
         showPrToast: sessionNewRecords.isNotEmpty,
       ));
       developer.log('workout_completed | duration=${current.elapsed.inMinutes}min exerciseCount=${current.logs.length}', name: 'analytics');
+      developer.log(
+        'finish | sessionId=${result.session.id} | duration=${current.elapsed.inSeconds}s | exerciseCount=${result.logs.length} | newRecords=${sessionNewRecords.length} | notes=${notes ?? "—"}', name: 'workout',
+      );
     } catch (e) {
       emit(const WorkoutSessionState.error('Failed to finish session.'));
     }
@@ -353,6 +411,10 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
       restDuration: duration,
       restRemaining: duration,
     ));
+    developer.log(
+      'startRest | duration=${duration ?? "default"}s | elapsed=${current.elapsed.inSeconds}s',
+      name: 'workout',
+    );
     try {
       await _repository.startRest(current.session.id);
     } catch (_) {}
@@ -362,12 +424,17 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
   Future<void> endRest() async {
     final current = state;
     if (current is! WorkoutSessionActive) return;
+    final wasRemaining = current.restRemaining;
     emit(current.copyWith(
       restStartedAt: null,
       restElapsed: Duration.zero,
       restRemaining: null,
       restDuration: null,
     ));
+    developer.log(
+      'endRest | remaining=${wasRemaining ?? "—"}s | elapsed=${current.elapsed.inSeconds}s',
+      name: 'workout',
+    );
     try {
       await _repository.endRest(current.session.id);
     } catch (_) {}
@@ -382,10 +449,15 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
       restRemaining: newRemaining,
       restDuration: max(current.restDuration ?? 0, newRemaining),
     ));
+    developer.log(
+      'adjustRest | delta=$delta | newRemaining=${newRemaining}s',
+      name: 'workout',
+    );
   }
 
   /// Skip the rest timer early.
   Future<void> skipRest() async {
+    developer.log('skipRest', name: 'workout');
     await endRest();
   }
 
@@ -395,6 +467,10 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
     final current = state;
     if (current is! WorkoutSessionActive) return;
     emit(current.copyWith(isMinimized: true));
+    developer.log(
+      'minimize | elapsed=${current.elapsed.inSeconds}s',
+      name: 'workout',
+    );
   }
 
   /// Maximize the mini-player back to the full workout session view.
@@ -402,6 +478,10 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
     final current = state;
     if (current is! WorkoutSessionActive) return;
     emit(current.copyWith(isMinimized: false));
+    developer.log(
+      'maximize | elapsed=${current.elapsed.inSeconds}s',
+      name: 'workout',
+    );
   }
 
   /// Cancel the active workout session.
@@ -412,6 +492,11 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
       _timer?.cancel();
       await _repository.cancelSession(current.session.id);
       emit(const WorkoutSessionState.initial());
+      developer.log(
+        'cancelSession | sessionId=${current.session.id} '
+        '| duration=${current.elapsed.inSeconds}s',
+        name: 'workout',
+      );
     } catch (e) {
       emit(const WorkoutSessionState.error('Failed to cancel session.'));
     }
@@ -423,6 +508,10 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
     if (current is! WorkoutSessionActive) return;
     _timer?.cancel();
     emit(current.copyWith(isPaused: true));
+    developer.log(
+      'pause | elapsed=${current.elapsed.inSeconds}s | restRemaining=${current.restRemaining ?? "—"}',
+      name: 'workout',
+    );
   }
 
   /// Resume the timer.
@@ -431,5 +520,9 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
     if (current is! WorkoutSessionActive) return;
     emit(current.copyWith(isPaused: false));
     _startTimer();
+    developer.log(
+      'resume | elapsed=${current.elapsed.inSeconds}s',
+      name: 'workout',
+    );
   }
 }

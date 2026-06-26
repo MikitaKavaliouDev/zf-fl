@@ -31,6 +31,8 @@ import '../../features/check_in/presentation/check_in_detail_screen.dart';
 import '../../features/check_in/presentation/check_in_history_screen.dart';
 import '../../features/daily_targets/presentation/daily_targets_screen.dart';
 import '../../features/fitness_goals/presentation/fitness_goals_screen.dart';
+import '../../features/nutrition_habits/cubit/nutrition_habits_cubit.dart';
+import '../../features/nutrition_habits/presentation/nutrition_habits_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/profile/presentation/settings_screens/profile_config_screen.dart';
 import '../../features/sharing/presentation/sharing_screen.dart';
@@ -539,6 +541,29 @@ GoRouter createAppRouter(AuthCubit authCubit) {
       GoRoute(
         path: '/contact-support',
         builder: (_, _) => const ContactSupportScreen(),
+      ),
+      // Nutrition & Habits (slide-up sheet, matches iOS)
+      GoRoute(
+        path: '/nutrition-habits',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: BlocProvider(
+            create: (_) => getIt<NutritionHabitsCubit>(),
+            child: const NutritionHabitsScreen(),
+          ),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 1),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutCubic,
+              )),
+              child: child,
+            );
+          },
+        ),
       ),
     ],
   );

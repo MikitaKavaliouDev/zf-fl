@@ -265,7 +265,7 @@ class _DashboardContent extends StatelessWidget {
             const SizedBox(height: 24),
 
           // ── 5. Nutrition & Habits Link ──
-          _NutritionHabitsCard(onTap: () => context.push('/daily-targets')),
+          _NutritionHabitsCard(onTap: () => context.push('/nutrition-habits')),
 
           const SizedBox(height: 24),
 

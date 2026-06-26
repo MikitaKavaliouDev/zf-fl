@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -939,6 +941,11 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
       // Pre-populate from existing value or reset to empty.
       _activeInputText = _formatValue(currentValue);
     });
+    developer.log(
+      'nav_focus | exercise=$exerciseId | set=$setIndex | field=${fieldType.name} '
+      '| value=${_activeInputText.isNotEmpty ? _activeInputText : "empty"}',
+      name: 'workout',
+    );
   }
 
   /// Sync the active input text to the cubit via a logSet call.
@@ -1000,8 +1007,16 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
         .where((l) => l.exerciseId == exerciseId)
         .toList();
 
+    final exerciseName = setIndex < exLogs.length
+        ? exLogs[setIndex].exercise?.name ?? exerciseId
+        : exerciseId;
+
     if (_focusTarget!.isWeight) {
       // Move to reps for the same set
+      developer.log(
+        'nav_next | exercise=$exerciseName | set=$setIndex | field=weight→reps',
+        name: 'workout',
+      );
       _setFocusDelayed(
         exerciseId: exerciseId,
         setIndex: setIndex,
@@ -1014,6 +1029,11 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
       // Move to next set's weight, or dismiss
       final nextIndex = setIndex + 1;
       if (nextIndex < exLogs.length) {
+        final nextName = exLogs[nextIndex].exercise?.name ?? exerciseId;
+        developer.log(
+          'nav_next | exercise=$exerciseName→$nextName | set=$setIndex→$nextIndex | field=reps→weight',
+          name: 'workout',
+        );
         _setFocusDelayed(
           exerciseId: exerciseId,
           setIndex: nextIndex,
@@ -1022,6 +1042,10 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
         );
       } else {
         // No more sets — dismiss keyboard
+        developer.log(
+          'nav_next_dismiss | exercise=$exerciseName | set=$setIndex | lastSet=reps→done',
+          name: 'workout',
+        );
         _handleInputDismiss();
       }
     }
@@ -1047,6 +1071,12 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
   /// Dismiss the keyboard.
   void _handleInputDismiss() {
     _syncActiveInput();
+    if (_focusTarget != null) {
+      developer.log(
+        'nav_dismiss | exercise=${_focusTarget!.exerciseId} | set=${_focusTarget!.setIndex} | field=${_focusTarget!.isWeight ? "weight" : "reps"}',
+        name: 'workout',
+      );
+    }
     setState(() {
       _focusTarget = null;
       _activeInputText = '';
@@ -1081,6 +1111,11 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
     }
 
     final becomingCompleted = !log.isCompleted;
+    developer.log(
+      '_completeSet | exercise=${log.exercise?.name ?? exerciseId} | set=$setIndex '
+      '| reps=$reps | weight=${weight ?? "—"} | completed=$becomingCompleted',
+      name: 'workout',
+    );
     cubit.logSet(
       logId: log.id,
       exerciseId: exerciseId,
@@ -1107,6 +1142,7 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
 
   /// Add a new empty set for an exercise.
   void _addSet(String exerciseId) {
+    developer.log('_addSet | exerciseId=$exerciseId', name: 'workout');
     context.read<WorkoutSessionCubit>().logSet(
       exerciseId: exerciseId,
       reps: 0,
