@@ -292,27 +292,28 @@ class _DurationPicker extends StatelessWidget {
       ('forever', 'Forever'),
     ];
 
-    return Column(
-      children: List.generate(options.length, (index) {
-        final option = options[index];
-        final isLast = index == options.length - 1;
-        final isSelected = duration == option.$1;
+    return RadioGroup<String>(
+      groupValue: duration,
+      onChanged: (value) {
+        if (value != null) onChanged(value);
+      },
+      child: Column(
+        children: List.generate(options.length, (index) {
+          final option = options[index];
+          final isLast = index == options.length - 1;
+          final isSelected = duration == option.$1;
 
-        return Column(
-          children: [
-            InkWell(
-              onTap: () => onChanged(option.$1),
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                child: Row(
+          return Column(
+            children: [
+              InkWell(
+                onTap: () => onChanged(option.$1),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  child: Row(
                   children: [
                     Radio<String>(
                       value: option.$1,
-                      groupValue: duration,
-                      onChanged: (v) {
-                        if (v != null) onChanged(v);
-                      },
                       activeColor: AppColors.primary,
                     ),
                     const SizedBox(width: 8),
@@ -351,6 +352,7 @@ class _DurationPicker extends StatelessWidget {
           ],
         );
       }),
+      ),
     );
   }
 }

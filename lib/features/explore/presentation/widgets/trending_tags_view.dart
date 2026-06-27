@@ -60,7 +60,7 @@ border: Border.all(
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.auto_awesome_rounded,
                         size: 12,
                         color: AppColors.primary,

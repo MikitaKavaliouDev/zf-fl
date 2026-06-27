@@ -40,7 +40,7 @@ class ExploreEmptyEventsView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Text(
+            const Text(
               'Check back later for new workshops, challenges, and community events in your area.',
               textAlign: TextAlign.center,
               style: TextStyle(

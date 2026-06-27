@@ -107,7 +107,7 @@ class _WorkoutMiniPlayerState extends State<WorkoutMiniPlayer> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
+                        const Text(
                           'My Session',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

@@ -101,6 +101,7 @@ import 'package:ziro_fit/features/sharing/data/sharing_repository.dart'
 import 'package:ziro_fit/features/sync/cubit/sync_cubit.dart' as _i796;
 import 'package:ziro_fit/features/sync/data/sync_api_service.dart' as _i93;
 import 'package:ziro_fit/features/sync/data/sync_repository.dart' as _i813;
+import 'package:ziro_fit/features/sync/workout_realtime_service.dart' as _i197;
 import 'package:ziro_fit/features/trainers/cubit/trainer_list_cubit.dart'
     as _i329;
 import 'package:ziro_fit/features/trainers/cubit/workout_history_cubit.dart'
@@ -119,6 +120,12 @@ import 'package:ziro_fit/features/trainers/data/workout_session_api_service.dart
     as _i662;
 import 'package:ziro_fit/features/trainers/data/workout_session_repository.dart'
     as _i459;
+import 'package:ziro_fit/features/voice_coach/cubit/voice_coach_cubit.dart'
+    as _i305;
+import 'package:ziro_fit/features/voice_coach/data/services/voice_coach_service.dart'
+    as _i232;
+import 'package:ziro_fit/features/voice_coach/data/services/voice_settings_api_service.dart'
+    as _i315;
 
 extension GetItInjectableX on _i174.GetIt {
   // initializes the registration of main-scope dependencies inside of GetIt
@@ -139,6 +146,10 @@ extension GetItInjectableX on _i174.GetIt {
     gh.singleton<_i115.NotificationRealtimeService>(
       () => _i115.NotificationRealtimeService(),
     );
+    gh.lazySingleton<_i197.WorkoutRealtimeService>(
+      () => _i197.WorkoutRealtimeService(),
+    );
+    gh.lazySingleton<_i232.VoiceCoachService>(() => _i232.VoiceCoachService());
     gh.singleton<_i124.ConnectivityService>(
       () => _i124.ConnectivityService(connectivity: gh<_i895.Connectivity>()),
       dispose: (i) => i.dispose(),
@@ -148,6 +159,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.singleton<_i783.LocalTemplateRepository>(
       () => _i783.LocalTemplateRepository(gh<_i365.AppDatabase>()),
+    );
+    gh.factory<_i305.VoiceCoachCubit>(
+      () => _i305.VoiceCoachCubit(
+        gh<_i232.VoiceCoachService>(),
+        gh<_i197.WorkoutRealtimeService>(),
+      ),
     );
     gh.singleton<_i680.AuthInterceptor>(
       () => _i680.AuthInterceptor(gh<_i601.TokenStorage>()),
@@ -209,6 +226,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i662.WorkoutSessionApiService>(
       () => _i662.WorkoutSessionApiService(gh<_i361.Dio>()),
+    );
+    gh.factory<_i315.VoiceSettingsApiService>(
+      () => _i315.VoiceSettingsApiService(gh<_i361.Dio>()),
     );
     gh.singleton<_i1035.FitnessGoalsRepository>(
       () => _i1035.FitnessGoalsRepository(gh<_i1029.FitnessGoalsApiService>()),

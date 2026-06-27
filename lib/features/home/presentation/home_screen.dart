@@ -357,12 +357,12 @@ class _NutritionHabitsCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 16),
-            Expanded(
+            const Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
+                  Text(
                     'NUTRITION & HABITS',
                     style: TextStyle(
                       fontSize: 10,
@@ -371,8 +371,8 @@ class _NutritionHabitsCard extends StatelessWidget {
                       letterSpacing: 0.5,
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  const Text(
+                  SizedBox(height: 2),
+                  Text(
                     'View Nutrition Plan & Habits',
                     style: TextStyle(
                       fontSize: 16,

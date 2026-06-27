@@ -1,7 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../data/models/nutrition_plan_dto.dart';
 import '../data/models/daily_habit_dto.dart';
+import '../data/models/nutrition_plan_dto.dart';
 
 part 'nutrition_habits_state.freezed.dart';
 

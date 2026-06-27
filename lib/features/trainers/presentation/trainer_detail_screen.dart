@@ -10,6 +10,7 @@ import '../data/models/trainer_detail_dto.dart';
 import '../data/models/trainer_package_dto.dart';
 import '../data/models/trainer_testimonial_dto.dart';
 import '../data/trainer_repository.dart';
+import '../../../core/di/injection.dart';
 import 'widgets/about_section.dart';
 import 'widgets/connect_button.dart';
 import 'widgets/custom_program_request_sheet.dart';
@@ -46,7 +47,7 @@ class TrainerDetailScreen extends StatelessWidget {
     return BlocProvider<TrainerDetailCubit>(
       create: (context) {
         final cubit = TrainerDetailCubit(
-          context.read<TrainerRepository>(),
+          getIt<TrainerRepository>(),
         );
         cubit.load(username);
         return cubit;
@@ -533,7 +534,7 @@ class _PackagesSection extends StatelessWidget {
 
   void _purchasePackage(BuildContext context, TrainerPackageDto pkg) async {
     try {
-      final repo = context.read<TrainerRepository>();
+      final repo = getIt<TrainerRepository>();
       final url = await repo.createCheckoutSession(
         type: 'PACKAGE_SALE',
         id: pkg.id,
@@ -572,7 +573,7 @@ class _PackagesSection extends StatelessWidget {
                   color: AppColors.foreground,
                 ),
               ),
-              const Spacer(),
+              Spacer(),
             ],
           ),
         ),
@@ -594,7 +595,7 @@ class _PackagesSection extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 20),
               itemCount: packages.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 14),
+              separatorBuilder: (_, _) => const SizedBox(width: 14),
               itemBuilder: (context, index) {
                 final pkg = packages[index];
                 return PackageCard(
@@ -694,7 +695,7 @@ class _ReviewsSection extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 20),
               itemCount: testimonials.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              separatorBuilder: (_, _) => const SizedBox(width: 12),
               itemBuilder: (context, index) {
                 // testimonials are from TrainerDetailDto which has dynamic type
                 // due to freezed JSON parsing

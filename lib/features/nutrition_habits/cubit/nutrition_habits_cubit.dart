@@ -4,10 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:intl/intl.dart';
 
-import '../data/nutrition_habits_repository.dart';
 import '../data/models/daily_habit_dto.dart';
-import '../data/models/habit_log_dto.dart';
 import '../data/models/nutrition_plan_dto.dart';
+import '../data/nutrition_habits_repository.dart';
 import 'nutrition_habits_state.dart';
 
 @injectable

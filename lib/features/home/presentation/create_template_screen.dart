@@ -27,7 +27,7 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
   late final TextEditingController _nameController;
   late final TextEditingController _descriptionController;
   final List<_TemplateExerciseEntry> _exercises = [];
-  bool _isSaving = false;
+  final bool _isSaving = false;
 
   @override
   void initState() {
@@ -223,9 +223,8 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
           child: ReorderableListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: _exercises.length,
-            onReorder: (oldIndex, newIndex) {
+            onReorderItem: (oldIndex, newIndex) {
               setState(() {
-                if (newIndex > oldIndex) newIndex--;
                 final item = _exercises.removeAt(oldIndex);
                 _exercises.insert(newIndex, item);
                 // Update order values
@@ -341,7 +340,7 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
     final allExercises =
         await context.read<ProgramCubit>().fetchExerciseLibrary();
     if (allExercises.isEmpty) {
-      if (!context.mounted) return;
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Could not load exercise library.'),
@@ -351,7 +350,7 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
       return;
     }
 
-    if (!context.mounted) return;
+    if (!mounted) return;
 
     showModalBottomSheet(
       context: context,
@@ -359,7 +358,6 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
       backgroundColor: Colors.transparent,
       builder: (_) => ExercisePickerSheet.multiple(
         exercises: allExercises,
-        isLoading: false,
         onExercisesSelected: (selected) {
           setState(() {
             for (final exercise in selected) {

@@ -42,7 +42,7 @@ class _AddMeasurementSheetState extends State<AddMeasurementSheet> {
       initialChildSize: 0.5,
       minChildSize: 0.3,
       maxChildSize: 0.7,
-      expand: false,
+
       builder: (context, scrollController) {
         return Container(
           decoration: const BoxDecoration(
@@ -121,7 +121,7 @@ class _AddMeasurementSheetState extends State<AddMeasurementSheet> {
               const SizedBox(height: 8),
               TextField(
                 controller: _valueController,
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
                 ],
@@ -129,7 +129,7 @@ class _AddMeasurementSheetState extends State<AddMeasurementSheet> {
                   hintText: 'Value',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: AppColors.borderActive),
+                    borderSide: const BorderSide(color: AppColors.borderActive),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -160,7 +160,7 @@ class _AddMeasurementSheetState extends State<AddMeasurementSheet> {
                     labelText: 'Date',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: AppColors.borderActive),
+                      borderSide: const BorderSide(color: AppColors.borderActive),
                     ),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,

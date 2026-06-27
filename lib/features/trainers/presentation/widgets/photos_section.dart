@@ -35,7 +35,7 @@ class PhotosSection extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 20),
               itemCount: photos.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
+              separatorBuilder: (_, _) => const SizedBox(width: 10),
               itemBuilder: (context, index) {
                 final photo = photos[index];
                 return _PhotoCard(photo: photo);
@@ -93,7 +93,7 @@ class _PhotoCard extends StatelessWidget {
                 imageUrl: imageUrl,
                 fit: BoxFit.cover,
                 errorWidget: (_, _, _) => _placeholder,
-                progressIndicatorBuilder: (_, __, ___) => _placeholder,
+                progressIndicatorBuilder: (_, _, _) => _placeholder,
               )
             else
               _placeholder,

@@ -3,14 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-import '../cubit/workout_session_cubit.dart';
-import '../cubit/workout_session_state.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/cached_exercise_image.dart';
 import '../../../core/widgets/error_widget.dart';
+import '../cubit/workout_session_cubit.dart';
+import '../cubit/workout_session_state.dart';
 import '../data/models/exercise_dto.dart';
 import '../data/models/exercise_log_dto.dart';
 import '../data/models/workout_session_dto.dart';
+
 
 class ExerciseDetailScreen extends StatelessWidget {
   final String exerciseId;
@@ -122,7 +123,6 @@ class ExerciseDetailScreen extends StatelessWidget {
             height: 260,
             borderRadius: 16,
             fit: BoxFit.contain,
-            compact: false,
             showYouTubeOverlay: true,
             onTap: isYT && onPlayVideo != null
                 ? () => onPlayVideo!(mediaUrl)

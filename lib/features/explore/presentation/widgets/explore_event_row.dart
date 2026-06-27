@@ -100,7 +100,7 @@ class ExploreEventRow extends StatelessWidget {
                   // Time + price
                   Row(
                     children: [
-                      Icon(Icons.access_time_rounded, size: 11, color: AppColors.mutedText),
+                      const Icon(Icons.access_time_rounded, size: 11, color: AppColors.mutedText),
                       const SizedBox(width: 4),
                       Text(
                         _formatTime(event.startTime),
@@ -128,7 +128,7 @@ class ExploreEventRow extends StatelessWidget {
                   // Location
                   Row(
                     children: [
-                      Icon(Icons.location_on_outlined, size: 11, color: AppColors.mutedText),
+                      const Icon(Icons.location_on_outlined, size: 11, color: AppColors.mutedText),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(

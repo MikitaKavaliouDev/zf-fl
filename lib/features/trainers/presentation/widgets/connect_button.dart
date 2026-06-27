@@ -52,9 +52,9 @@ class ConnectButton extends StatelessWidget {
           color: AppColors.borderMuted,
           borderRadius: BorderRadius.circular(99),
         ),
-        child: Text(
+        child: const Text(
           'Pending',
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
             color: AppColors.mutedText,

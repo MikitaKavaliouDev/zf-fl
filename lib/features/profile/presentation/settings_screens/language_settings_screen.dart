@@ -117,14 +117,14 @@ class _LanguageSettingsScreenState extends State<LanguageSettingsScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
               children: [
-                Text(
-                  language.name,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.foreground,
+                  Text(
+                    language.name,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.foreground,
+                    ),
                   ),
-                ),
                 const Spacer(),
                 if (isSelected)
                   const Icon(

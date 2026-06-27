@@ -365,10 +365,7 @@ class _ExerciseRow extends StatelessWidget {
             CachedExerciseImage(
               imageUrl: exercise.imageUrl,
               videoUrl: exercise.videoUrl,
-              height: 44,
               width: 44,
-              borderRadius: 8,
-              compact: true,
             ),
             const SizedBox(width: 12),
 

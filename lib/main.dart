@@ -17,6 +17,7 @@ import 'features/home/cubit/program_cubit.dart';
 import 'features/notifications/cubit/notifications_cubit.dart';
 import 'features/trainers/cubit/trainer_list_cubit.dart';
 import 'features/trainers/cubit/workout_session_cubit.dart';
+import 'features/voice_coach/cubit/voice_coach_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,11 +25,7 @@ void main() async {
   // Initialize local notifications plugin.
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-  const iosSettings = DarwinInitializationSettings(
-    requestAlertPermission: true,
-    requestBadgePermission: true,
-    requestSoundPermission: true,
-  );
+  const iosSettings = DarwinInitializationSettings();
   await flutterLocalNotificationsPlugin.initialize(
     const InitializationSettings(android: androidSettings, iOS: iosSettings),
   );
@@ -59,6 +56,7 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
   late final TrainerListCubit _trainerListCubit;
   late final WorkoutSessionCubit _workoutSessionCubit;
   late final NotificationsCubit _notificationsCubit;
+  late final VoiceCoachCubit _voiceCoachCubit;
   late final QueryClient _queryClient;
   late final GoRouter _router;
   StreamSubscription<AuthState>? _authSubscription;
@@ -72,6 +70,7 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
     _trainerListCubit = di.getIt<TrainerListCubit>();
     _workoutSessionCubit = di.getIt<WorkoutSessionCubit>();
     _notificationsCubit = di.getIt<NotificationsCubit>();
+    _voiceCoachCubit = di.getIt<VoiceCoachCubit>();
     _queryClient = QueryClient();
     _queryClient.mount();
     _router = createAppRouter(_authCubit);
@@ -87,6 +86,8 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
         // If yes, the cubit auto-minimizes so the mini-player overlay
         // appears on the home screen with a synced timer — matching iOS.
         _workoutSessionCubit.loadCurrent();
+        // Configure Voice Coach with the authenticated user ID.
+        _voiceCoachCubit.configure(userId: state.user.id);
         _authSubscription?.cancel();
       } else if (state is AuthUnauthenticated) {
         _authSubscription?.cancel();
@@ -103,6 +104,7 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
     _trainerListCubit.close();
     _workoutSessionCubit.close();
     _notificationsCubit.close();
+    _voiceCoachCubit.close();
     _queryClient.unmount();
     super.dispose();
   }
@@ -117,6 +119,7 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
         BlocProvider.value(value: _trainerListCubit),
         BlocProvider.value(value: _workoutSessionCubit),
         BlocProvider.value(value: _notificationsCubit),
+        BlocProvider.value(value: _voiceCoachCubit),
       ],
       child: DartQueryProvider(
         client: _queryClient,

@@ -6,9 +6,9 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../cubit/nutrition_habits_cubit.dart';
 import '../cubit/nutrition_habits_state.dart';
-import '../data/models/nutrition_plan_dto.dart';
 import '../data/models/daily_habit_dto.dart';
 import '../data/models/habit_log_dto.dart';
+import '../data/models/nutrition_plan_dto.dart';
 
 /// Nutrition plan + habit tracking screen.
 ///
@@ -479,9 +479,9 @@ class _HabitRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
     final todayLog = habit.logs.firstWhere(
-      (log) => log.date == today,
+      (log) => DateFormat('yyyy-MM-dd').format(log.date) == todayStr,
       orElse: () => HabitLogDto(
         id: '',
         habitId: habit.id,

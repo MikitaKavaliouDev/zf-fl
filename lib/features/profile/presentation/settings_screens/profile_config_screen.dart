@@ -102,7 +102,9 @@ class _ProfileConfigScreenState extends State<ProfileConfigScreen> {
         phone: phone.isNotEmpty ? phone : null,
         weightUnit: _weightUnit,
       );
+      if (!mounted) return;
       await context.read<ProfileConfigCubit>().saveTextContent(bio);
+      if (!mounted) return;
       context.read<ProfileConfigCubit>().emitSaveSuccess('Profile updated successfully!');
     } catch (e) {
       _showError('Failed to save profile. Please try again.');
@@ -124,6 +126,7 @@ class _ProfileConfigScreenState extends State<ProfileConfigScreen> {
     try {
       final filePath = await context.read<ProfileConfigCubit>().pickImage();
       if (filePath == null) return;
+      if (!mounted) return;
       await context.read<ProfileConfigCubit>().uploadAvatar(filePath);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -314,11 +317,11 @@ class _ProfileConfigScreenState extends State<ProfileConfigScreen> {
             ),
           ),
           const SizedBox(width: 16),
-          Expanded(
+          const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Profile Photo',
                   style: TextStyle(
                     fontSize: 16,
@@ -326,8 +329,8 @@ class _ProfileConfigScreenState extends State<ProfileConfigScreen> {
                     color: AppColors.foreground,
                   ),
                 ),
-                const SizedBox(height: 4),
-                const Text(
+                SizedBox(height: 4),
+                Text(
                   'Tap to change. JPG, PNG, WebP or GIF. Max 5MB.',
                   style: TextStyle(
                     fontSize: 12,
@@ -404,15 +407,15 @@ class _ProfileConfigScreenState extends State<ProfileConfigScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
+        const Row(
           children: [
-            const Icon(
+            Icon(
               Icons.monitor_weight_outlined,
               size: 18,
               color: AppColors.mutedText,
             ),
-            const SizedBox(width: 8),
-            const Text(
+            SizedBox(width: 8),
+            Text(
               'Preferred Weight Unit',
               style: TextStyle(
                 fontSize: 14,
@@ -533,11 +536,11 @@ class _ProfileConfigScreenState extends State<ProfileConfigScreen> {
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: AppColors.borderMuted),
+                borderSide: const BorderSide(color: AppColors.borderMuted),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: AppColors.borderMuted),
+                borderSide: const BorderSide(color: AppColors.borderMuted),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -604,11 +607,11 @@ class _ProfileConfigScreenState extends State<ProfileConfigScreen> {
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.borderMuted),
+              borderSide: const BorderSide(color: AppColors.borderMuted),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.borderMuted),
+              borderSide: const BorderSide(color: AppColors.borderMuted),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),

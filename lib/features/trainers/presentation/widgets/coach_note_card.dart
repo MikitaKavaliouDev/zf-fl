@@ -84,7 +84,7 @@ class CoachNoteCard extends StatelessWidget {
                   color: const Color(0xFF2C2C2E),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Center(
+                child: const Center(
                   child: Icon(
                     Icons.play_circle_fill_rounded,
                     size: 48,

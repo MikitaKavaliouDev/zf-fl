@@ -54,6 +54,9 @@ dependencies:
   freezed_annotation: ^3.1.0
   json_annotation: ^4.12.0
 
+  # Annotations (VisibleForTesting, etc.)
+  meta: ^1.16.0
+
   # Routing
   go_router: ^17.3.0
 
@@ -69,6 +72,12 @@ dependencies:
   image_picker: ^1.1.2
   shared_preferences: ^2.3.4
   cached_network_image: ^3.4.1
+
+  # ElevenLabs Conversational AI Agent
+  elevenlabs_agents: ^0.6.1
+
+  # Microphone permission
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:

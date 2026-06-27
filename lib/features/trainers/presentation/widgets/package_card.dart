@@ -113,7 +113,7 @@ class PackageCard extends StatelessWidget {
                     color: AppColors.primary,
                     borderRadius: BorderRadius.circular(99),
                   ),
-                  child: Text(
+                  child: const Text(
                     'Buy',
                     style: const TextStyle(
                       fontSize: 13,

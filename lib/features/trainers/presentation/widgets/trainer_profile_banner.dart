@@ -30,7 +30,7 @@ class TrainerProfileBanner extends StatelessWidget {
                   imageUrl: bannerImageUrl!,
                   fit: BoxFit.cover,
                   errorWidget: (_, _, _) => _gradientBanner,
-                  progressIndicatorBuilder: (_, __, ___) => _gradientBanner,
+                  progressIndicatorBuilder: (_, _, _) => _gradientBanner,
                 )
               : _gradientBanner,
         ),
@@ -59,7 +59,7 @@ class TrainerProfileBanner extends StatelessWidget {
                         size: 32,
                         color: AppColors.mutedText,
                       ),
-                      progressIndicatorBuilder: (_, __, ___) => const Center(
+                      progressIndicatorBuilder: (_, _, _) => const Center(
                         child: CircularProgressIndicator(strokeWidth: 2),
                       ),
                     )

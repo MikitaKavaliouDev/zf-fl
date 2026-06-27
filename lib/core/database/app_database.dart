@@ -9,6 +9,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
+import 'tables/analytics_cache_table.dart';
 import 'tables/bookings_table.dart';
 import 'tables/calendar_events_table.dart';
 import 'tables/client_assessments_table.dart';
@@ -22,7 +23,6 @@ import 'tables/packages_table.dart';
 import 'tables/profiles_table.dart';
 import 'tables/programs_table.dart';
 import 'tables/services_table.dart';
-import 'tables/analytics_cache_table.dart';
 import 'tables/sync_metadata.dart';
 import 'tables/testimonials_table.dart';
 import 'tables/trainer_profiles_table.dart';
@@ -59,7 +59,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @visibleForTesting
-  AppDatabase.forTesting(QueryExecutor executor) : super(executor);
+  AppDatabase.forTesting(super.executor);
 
   @override
   int get schemaVersion => 3;

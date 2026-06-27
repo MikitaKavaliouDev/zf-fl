@@ -1,13 +1,12 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:latlong2/latlong.dart' as latlong;
-
 import 'package:ziro_fit/core/location/location_service.dart';
+import 'package:ziro_fit/core/models/trainer_list_item_dto.dart';
 import 'package:ziro_fit/features/explore/cubit/explore_map_state.dart';
 import 'package:ziro_fit/features/explore/data/explore_api_service.dart';
 import 'package:ziro_fit/features/explore/data/models/explore_event_dto.dart';
 import 'package:ziro_fit/features/explore/data/models/paginated_events.dart';
-import 'package:ziro_fit/core/models/trainer_list_item_dto.dart';
 
 /// Manages map state: trainers + events loading, clustering, filtering, search.
 ///

@@ -15,6 +15,7 @@ class StaggeredSlotList extends StatelessWidget {
   final ValueChanged<String> onTap;
 
   const StaggeredSlotList({
+    super.key,
     required this.slots,
     required this.selectedSlot,
     required this.animation,

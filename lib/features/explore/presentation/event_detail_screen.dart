@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tanquery_flutter/tanquery_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../cubit/event_detail_cubit.dart';
@@ -22,7 +21,7 @@ class EventDetailScreen extends StatefulWidget {
 class _EventDetailScreenState extends State<EventDetailScreen> {
   bool _enrolled = false;
   bool _enrolling = false;
-  late final EventDetailCubit _cubit;
+  late EventDetailCubit _cubit;
 
   @override
   void didChangeDependencies() {
@@ -288,7 +287,7 @@ class _EventDetailContent extends StatelessWidget {
             padding: EdgeInsets.fromLTRB(
               20, 16, 20, MediaQuery.of(context).padding.bottom + 16,
             ),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppColors.background,
               border: Border(
                 top: BorderSide(color: AppColors.borderMuted, width: 0.5),

@@ -69,7 +69,7 @@ class _ScheduleSectionState extends State<ScheduleSection>
   @override
   void initState() {
     super.initState();
-    _currentMonth = DateTime(DateTime.now().year, DateTime.now().month, 1);
+    _currentMonth = DateTime(DateTime.now().year, DateTime.now().month);
     _staggerCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
@@ -119,7 +119,7 @@ class _ScheduleSectionState extends State<ScheduleSection>
     setState(() {
       _monthNavDirection = -1;
       _currentMonth =
-          DateTime(_currentMonth.year, _currentMonth.month - 1, 1);
+          DateTime(_currentMonth.year, _currentMonth.month - 1);
       _selectedDate = null;
       _selectedTimeSlot = null;
     });
@@ -129,7 +129,7 @@ class _ScheduleSectionState extends State<ScheduleSection>
     setState(() {
       _monthNavDirection = 1;
       _currentMonth =
-          DateTime(_currentMonth.year, _currentMonth.month + 1, 1);
+          DateTime(_currentMonth.year, _currentMonth.month + 1);
       _selectedDate = null;
       _selectedTimeSlot = null;
     });
@@ -314,9 +314,9 @@ class _ScheduleSectionState extends State<ScheduleSection>
   Widget _buildMonthNav() {
     final monthLabel = DateFormat('MMMM yyyy').format(_currentMonth);
     final now = DateTime.now();
-    final firstOfMonth = DateTime(_currentMonth.year, _currentMonth.month, 1);
+    final firstOfMonth = DateTime(_currentMonth.year, _currentMonth.month);
     final canGoBack =
-        firstOfMonth.isAfter(DateTime(now.year, now.month, 1));
+        firstOfMonth.isAfter(DateTime(now.year, now.month));
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -438,7 +438,7 @@ class _ScheduleSectionState extends State<ScheduleSection>
     final daysInMonth =
         DateTime(_currentMonth.year, _currentMonth.month + 1, 0).day;
     final firstWeekday =
-        DateTime(_currentMonth.year, _currentMonth.month, 1).weekday;
+        DateTime(_currentMonth.year, _currentMonth.month).weekday;
 
     return Column(
       key: key,

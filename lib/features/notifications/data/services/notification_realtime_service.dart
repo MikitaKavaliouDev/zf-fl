@@ -120,16 +120,7 @@ class NotificationRealtimeService {
     try {
       _unsubscribeChannel();
 
-      final channel = _supabase.channel(
-        'notifications:$userId',
-        opts: const RealtimeChannelConfig(
-          ack: false,
-          self: false,
-          key: '',
-          enabled: false,
-          private: false,
-        ),
-      );
+      final channel = _supabase.channel('notifications:$userId');
 
       // Listen for INSERT events
       channel.onPostgresChanges(
@@ -319,7 +310,7 @@ class NotificationRealtimeService {
 
     // Emit a connection-changed event to signal the cubit to do a full
     // re-fetch via the REST API. This avoids double-fetching.
-    _emitConnectionChanged(false, error: null);
+    _emitConnectionChanged(false);
   }
 
   // ─── Helpers ───────────────────────────────────────────────────

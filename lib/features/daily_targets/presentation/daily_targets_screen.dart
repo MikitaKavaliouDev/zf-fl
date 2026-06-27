@@ -3,30 +3,45 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/di/injection.dart';
 import '../../../core/theme/app_theme.dart';
 import '../cubit/daily_targets_cubit.dart';
 import '../cubit/daily_targets_state.dart';
 import '../data/models/daily_target_dto.dart';
 
-class DailyTargetsScreen extends StatefulWidget {
+class DailyTargetsScreen extends StatelessWidget {
   final DateTime? initialDate;
 
   const DailyTargetsScreen({super.key, this.initialDate});
 
   @override
-  State<DailyTargetsScreen> createState() => _DailyTargetsScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => getIt<DailyTargetsCubit>()..loadTargets(date: _initialParam(initialDate)),
+      child: _DailyTargetsBody(initialDate: initialDate),
+    );
+  }
+
+  static String _initialParam(DateTime? date) =>
+      DateFormat('yyyy-MM-dd').format(date ?? DateTime.now());
 }
 
-class _DailyTargetsScreenState extends State<DailyTargetsScreen> {
+class _DailyTargetsBody extends StatefulWidget {
+  final DateTime? initialDate;
+
+  const _DailyTargetsBody({this.initialDate});
+
+  @override
+  State<_DailyTargetsBody> createState() => _DailyTargetsBodyState();
+}
+
+class _DailyTargetsBodyState extends State<_DailyTargetsBody> {
   late DateTime _selectedDate;
 
   @override
   void initState() {
     super.initState();
     _selectedDate = widget.initialDate ?? DateTime.now();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<DailyTargetsCubit>().loadTargets(date: _dateParam);
-    });
   }
 
   String get _dateParam =>

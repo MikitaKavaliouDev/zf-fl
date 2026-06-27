@@ -41,7 +41,6 @@ class WidgetTypeEntry {
 final Map<String, WidgetTypeEntry> widgetRegistry = {
   'workoutsPerWeek': WidgetTypeEntry(
     title: 'Workouts Per Week',
-    subtitle: null,
     icon: Icons.bar_chart_rounded,
     builder: (a, _) => VolumeChartWidget(data: a.volumeHistory),
     detailChartBuilder: (a, _) => _detailCard(
@@ -128,14 +127,12 @@ final Map<String, WidgetTypeEntry> widgetRegistry = {
   ),
   'goal': WidgetTypeEntry(
     title: 'Fitness Goal',
-    subtitle: null,
     icon: Icons.track_changes_rounded,
     hasDetail: false,
-    builder: (_, __) => const GoalsWidget(),
+    builder: (_, _) => const GoalsWidget(),
   ),
   'insights': WidgetTypeEntry(
     title: 'Personal Insights',
-    subtitle: null,
     icon: Icons.auto_awesome_rounded,
     builder: (a, _) => InsightsWidget(volumeHistory: a.volumeHistory),
     detailChartBuilder: (a, _) => _detailCard(
@@ -148,7 +145,7 @@ final Map<String, WidgetTypeEntry> widgetRegistry = {
     subtitle: 'Training load analysis',
     icon: Icons.favorite_border_rounded,
     hasDetail: false,
-    builder: (_, __) => const RecoveryWidget(),
+    builder: (_, _) => const RecoveryWidget(),
   ),
 };
 

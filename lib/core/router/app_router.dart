@@ -13,6 +13,7 @@ import '../../features/auth/presentation/register_screen.dart';
 import '../../features/check_in/cubit/check_in_cubit.dart';
 import '../../features/check_in/presentation/check_in_screen.dart';
 import '../../features/explore/cubit/event_detail_cubit.dart';
+import '../../features/explore/cubit/explore_map_cubit.dart';
 import '../../features/explore/cubit/trainer_discovery_cubit.dart';
 import '../../features/explore/presentation/event_detail_screen.dart';
 import '../../features/explore/presentation/events_list_screen.dart';
@@ -227,7 +228,10 @@ GoRouter createAppRouter(AuthCubit authCubit) {
         path: '/explore/map',
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
-          child: const TrainerMapScreen(),
+          child: BlocProvider<ExploreMapCubit>(
+            create: (_) => getIt<ExploreMapCubit>(),
+            child: const TrainerMapScreen(),
+          ),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return SlideTransition(
               position: Tween<Offset>(

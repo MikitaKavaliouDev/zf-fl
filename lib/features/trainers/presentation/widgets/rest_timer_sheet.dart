@@ -171,7 +171,7 @@ class _RestTimerSheetState extends State<RestTimerSheet> {
               child: Container(
                 width: 32,
                 height: 32,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: AppColors.mutedSurface,
                   shape: BoxShape.circle,
                 ),

@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 class TapScale extends StatefulWidget {
   final Widget child;
 
-  const TapScale({required this.child});
+  const TapScale({super.key, required this.child});
 
   @override
   State<TapScale> createState() => _TapScaleState();
@@ -69,6 +69,7 @@ class SelectionSpring extends StatefulWidget {
   final Widget child;
 
   const SelectionSpring({
+    super.key,
     required this.isSelected,
     required this.child,
   });

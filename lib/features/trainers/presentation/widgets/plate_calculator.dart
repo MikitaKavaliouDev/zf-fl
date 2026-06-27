@@ -125,7 +125,7 @@ class PlateCalculator extends StatelessWidget {
                   side: BorderSide.none,
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   visualDensity: VisualDensity.compact,
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
                 );
               }).toList(),
             ),

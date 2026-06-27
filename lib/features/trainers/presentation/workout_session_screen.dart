@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/events/event_bus.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../sync/workout_realtime_service.dart';
 import '../cubit/workout_session_cubit.dart';
 import '../cubit/workout_session_state.dart';
 import '../data/models/exercise_dto.dart';
@@ -60,24 +62,67 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
   bool _lastShowRestFinishedToast = false;
   bool _lastNewPrRecord = false;
 
+  // ElevenLabs AI Coach Realtime subscription
+  StreamSubscription<AIWorkoutEvent>? _aiEventSub;
+
   @override
   void initState() {
     super.initState();
     final cubit = context.read<WorkoutSessionCubit>();
     if (cubit.state is WorkoutSessionActive) {
-      // If the session is already active in memory, schedule a post-frame callback
-      // to cleanly maximize/restore the session view on load.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         cubit.maximize();
       });
     } else {
       cubit.loadCurrent(isMinimized: false);
     }
+
+    // Listen for AI coach events from Supabase Realtime
+    // (subscription lifecycle managed by VoiceCoachCubit)
+    _aiEventSub = getIt<WorkoutRealtimeService>().events.listen((event) {
+      if (!mounted) return;
+      _handleAIEvent(event, cubit);
+    });
   }
 
   @override
   void dispose() {
+    _aiEventSub?.cancel();
+    _aiEventSub = null;
     super.dispose();
+  }
+
+  /// Handle AI coach realtime events and update the workout session cubit.
+  void _handleAIEvent(AIWorkoutEvent event, WorkoutSessionCubit cubit) {
+    switch (event) {
+      case AISessionStarted(:final sessionId):
+        developer.log(
+          '[AIEvent] Session started: $sessionId',
+          name: 'workout',
+        );
+        cubit.loadCurrent(isMinimized: false);
+
+      case AIExerciseAdded(:final sessionId, :final exerciseId):
+        developer.log(
+          '[AIEvent] Exercise added: $exerciseId to $sessionId',
+          name: 'workout',
+        );
+        cubit.loadCurrent(isMinimized: false);
+
+      case AISetLogged(:final exerciseId, :final reps, :final weight):
+        developer.log(
+          '[AIEvent] Set logged: $reps x ${weight}kg for $exerciseId',
+          name: 'workout',
+        );
+        cubit.loadCurrent(isMinimized: false);
+
+      case AIRestStarted(:final durationSeconds):
+        developer.log(
+          '[AIEvent] Rest started: ${durationSeconds}s',
+          name: 'workout',
+        );
+        cubit.startRest(duration: durationSeconds);
+    }
   }
 
   // ── Build ─────────────────────────────────────────────────────────────
@@ -976,30 +1021,6 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
         );
       }
     }
-  }
-
-  void _onTapRpe(
-      BuildContext context, String exerciseId, ExerciseLogDto log) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => RpePicker(
-        currentRpe: log.rpe,
-        onSelected: (rpe) {
-          if (context.mounted) {
-            final cubit = context.read<WorkoutSessionCubit>();
-            cubit.logSet(
-              logId: log.id,
-              exerciseId: exerciseId,
-              reps: log.reps ?? 0,
-              weight: log.weight,
-              isCompleted: log.isCompleted,
-              rpe: rpe,
-            );
-          }
-          Navigator.of(dialogContext).pop();
-        },
-      ),
-    );
   }
 
   void _showRestTimerSheet(

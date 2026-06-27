@@ -43,7 +43,7 @@ class FeaturedEventCard extends StatelessWidget {
                   imageUrl: event.imageUrl!,
                   fit: BoxFit.cover,
                   errorWidget: (_, _, _) => _PlaceholderContent(event: event),
-                  progressIndicatorBuilder: (_, __, ___) => _PlaceholderContent(event: event),
+                  progressIndicatorBuilder: (_, _, _) => _PlaceholderContent(event: event),
                 )
               else
                 _PlaceholderContent(event: event),

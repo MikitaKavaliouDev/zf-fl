@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/widgets/error_widget.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../notifications/presentation/widgets/ziro_sheet_header.dart';
-import '../../../../core/widgets/error_widget.dart';
 import '../../trainers/data/models/template_dto.dart';
 import '../cubit/program_cubit.dart';
 import '../cubit/program_state.dart';

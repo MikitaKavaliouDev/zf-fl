@@ -40,7 +40,7 @@ class EventsListViewScreen extends StatelessWidget {
             queryKey: QueryKey(['explore', 'events', 'list']),
             queryFn: () => ctx.read<ExploreCubit>().getEvents(limit: 50),
             staleTime: const Duration(minutes: 5),
-            placeholderData: PaginatedEvents(events: [], hasMore: false, page: 1, limit: 50),
+            placeholderData: const PaginatedEvents(hasMore: false, page: 1, limit: 50),
             builder: (context, state) {
               if (state.isLoading && !state.isFetched) {
                 return const Center(

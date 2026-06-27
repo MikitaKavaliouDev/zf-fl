@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../../../core/theme/app_theme.dart';
-
 /// Custom numeric keyboard overlay for logging exercise set values.
 ///
 /// Features a standard numeric pad plus custom action buttons:

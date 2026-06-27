@@ -134,8 +134,8 @@ class _ExerciseLineChart extends StatelessWidget {
   const _ExerciseLineChart({required this.data});
 
   Map<String, double> _calculateNiceRange(double minY, double maxY, {bool forceZeroStart = false}) {
-    double minVal = forceZeroStart ? 0 : minY;
-    double maxVal = maxY;
+    final double minVal = forceZeroStart ? 0 : minY;
+    final double maxVal = maxY;
 
     double range = maxVal - minVal;
     if (range <= 0) {
@@ -162,7 +162,7 @@ class _ExerciseLineChart extends StatelessWidget {
       cleanInterval = 1.0;
     }
 
-    double chartMinY = forceZeroStart ? 0 : (minVal / cleanInterval).floor() * cleanInterval;
+    final double chartMinY = forceZeroStart ? 0 : (minVal / cleanInterval).floor() * cleanInterval;
     double chartMaxY = (maxVal / cleanInterval).ceil() * cleanInterval;
 
     if (chartMinY == chartMaxY) {
@@ -184,7 +184,7 @@ class _ExerciseLineChart extends StatelessWidget {
       double.infinity,
       (min, d) => d.value < min ? d.value : min,
     );
-    final range = _calculateNiceRange(minY, maxY, forceZeroStart: false);
+    final range = _calculateNiceRange(minY, maxY);
     final interval = range['interval']!;
     final chartMinY = range['minY']!;
     final chartMaxY = range['maxY']!;
@@ -203,19 +203,16 @@ class _ExerciseLineChart extends StatelessWidget {
             isCurved: true,
             preventCurveOverShooting: true,
             color: AppColors.primary,
-            barWidth: 2,
             dotData: FlDotData(
               show: data.length <= 20,
               getDotPainter: (spot, percent, barData, index) {
                 return FlDotCirclePainter(
                   radius: 3,
                   color: AppColors.primary,
-                  strokeWidth: 0,
                 );
               },
             ),
             belowBarData: BarAreaData(
-              show: true,
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -228,7 +225,6 @@ class _ExerciseLineChart extends StatelessWidget {
           ),
         ],
         titlesData: FlTitlesData(
-          show: true,
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
@@ -263,11 +259,10 @@ class _ExerciseLineChart extends StatelessWidget {
               },
             ),
           ),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(),
+          rightTitles: const AxisTitles(),
         ),
         gridData: FlGridData(
-          show: true,
           drawVerticalLine: false,
           horizontalInterval: interval,
           getDrawingHorizontalLine: (value) {

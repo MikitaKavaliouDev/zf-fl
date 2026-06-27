@@ -22,7 +22,7 @@ class CrossPainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
 
     canvas.drawLine(
-      Offset(4, 4),
+      const Offset(4, 4),
       Offset(size.width - 4, size.height - 4),
       paint,
     );
@@ -53,6 +53,7 @@ class DayCell extends StatelessWidget {
   final VoidCallback onTap;
 
   const DayCell({
+    super.key,
     required this.day,
     required this.date,
     required this.slotCount,
@@ -126,10 +127,9 @@ class DayCell extends StatelessWidget {
                 if (isDisabled)
                   Positioned.fill(
                     child: CustomPaint(
-                      painter: CrossPainter(
-                        color: AppColors.mutedText.withAlpha(60),
-                        strokeWidth: 1.5,
-                      ),
+                        painter: CrossPainter(
+                          color: AppColors.mutedText.withAlpha(60),
+                        ),
                     ),
                   ),
               ],

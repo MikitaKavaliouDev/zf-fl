@@ -67,7 +67,7 @@ class _TrainerDiscoveryScreenState extends State<TrainerDiscoveryScreen> {
   int _trainerPage = 1;
   int _eventPage = 1;
 
-  late final TrainerDiscoveryCubit _trainerCubit;
+  late TrainerDiscoveryCubit _trainerCubit;
   bool _initialized = false;
 
   @override
@@ -180,12 +180,12 @@ class _TrainerDiscoveryScreenState extends State<TrainerDiscoveryScreen> {
                     if (_location != null && _location!.isNotEmpty)
                       _FilterChip(
                         label: _location!,
-                        onRemove: () => _applyFilters(location: null),
+                        onRemove: () => _applyFilters(),
                       ),
                     if (_specialty != null)
                       _FilterChip(
                         label: _specialty!,
-                        onRemove: () => _applyFilters(specialty: null),
+                        onRemove: () => _applyFilters(),
                       ),
                     if (_minRating > 0)
                       _FilterChip(
@@ -228,17 +228,16 @@ class _TrainerDiscoveryScreenState extends State<TrainerDiscoveryScreen> {
     ]);
 
     return InfiniteQueryBuilder<TrainerListResponse, int>(
+      initialPageParam: 1,
       queryKey: trainerKey,
       queryFn: (page) => _trainerCubit.searchTrainers(
         page: page,
-        pageSize: 15,
         query: _searchQuery.isEmpty ? null : _searchQuery,
         location: _location,
         sortBy: _sortBy.apiKey,
         specialties: _specialty,
         minRating: _minRating > 0 ? _minRating : null,
       ),
-      initialPageParam: 1,
       getNextPageParam: (lastPage, allPages, lastParam, allParams) {
         return lastPage.trainers.length >= 15 ? lastParam + 1 : null;
       },
@@ -326,13 +325,12 @@ class _TrainerDiscoveryScreenState extends State<TrainerDiscoveryScreen> {
     ]);
 
     return InfiniteQueryBuilder<PaginatedEvents, int>(
+      initialPageParam: 1,
       queryKey: eventKey,
       queryFn: (page) => _trainerCubit.getEvents(
         page: page,
-        limit: 20,
         search: _searchQuery.isEmpty ? null : _searchQuery,
       ),
-      initialPageParam: 1,
       getNextPageParam: (lastPage, allPages, lastParam, allParams) {
         return lastPage.hasMore ? lastParam + 1 : null;
       },
@@ -355,14 +353,14 @@ class _TrainerDiscoveryScreenState extends State<TrainerDiscoveryScreen> {
             [];
 
         if (allEvents.isEmpty && !state.isFetching) {
-          return SliverToBoxAdapter(
+          return const SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(32),
+              padding: EdgeInsets.all(32),
               child: Column(
                 children: [
-                  const Icon(Icons.event_busy_rounded, size: 48, color: AppColors.mutedText),
-                  const SizedBox(height: 12),
-                  const Text(
+                  Icon(Icons.event_busy_rounded, size: 48, color: AppColors.mutedText),
+                  SizedBox(height: 12),
+                  Text(
                     'No events found',
                     style: TextStyle(fontSize: 14, color: AppColors.mutedText),
                   ),
@@ -460,7 +458,7 @@ class _DiscoveryHeader extends StatelessWidget {
         right: 16,
         bottom: 16,
       ),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.background,
         border: Border(
           bottom: BorderSide(color: AppColors.borderMuted, width: 0.5),
@@ -492,7 +490,7 @@ class _DiscoveryHeader extends StatelessWidget {
                   child: Container(
                     width: 32,
                     height: 32,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: AppColors.mutedSurface,
                       shape: BoxShape.circle,
                     ),
@@ -687,7 +685,7 @@ class _FilterSheetContentState extends State<_FilterSheetContent> {
           const Text('Sort By', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           DropdownButtonFormField<SortOption>(
-            value: _selectedSort,
+            initialValue: _selectedSort,
             decoration: const InputDecoration(
               isDense: true,
               contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -762,7 +760,6 @@ class _FilterSheetContentState extends State<_FilterSheetContent> {
           ),
           Slider(
             value: _minRating,
-            min: 0,
             max: 5,
             divisions: 10,
             onChanged: (v) => setState(() => _minRating = v),

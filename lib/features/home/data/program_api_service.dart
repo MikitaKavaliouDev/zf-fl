@@ -84,7 +84,7 @@ class ProgramApiService {
     final data = <String, dynamic>{
       'name': name,
       'programId': programId,
-      if (description != null) 'description': description,
+      'description': ?description,
       if (exercises != null && exercises.isNotEmpty) 'exercises': exercises,
     };
     final response = await _dio.post(
@@ -112,11 +112,11 @@ class ProgramApiService {
       '/api/client/programs/templates/$templateId/exercises',
       data: {
         'exerciseId': exerciseId,
-        if (targetReps != null) 'targetReps': targetReps,
-        if (targetSets != null) 'targetSets': targetSets,
-        if (durationSeconds != null) 'durationSeconds': durationSeconds,
-        if (notes != null) 'notes': notes,
-        if (order != null) 'order': order,
+        'targetReps': ?targetReps,
+        'targetSets': ?targetSets,
+        'durationSeconds': ?durationSeconds,
+        'notes': ?notes,
+        'order': ?order,
       },
     );
     final data = response.data['data'] as Map<String, dynamic>;

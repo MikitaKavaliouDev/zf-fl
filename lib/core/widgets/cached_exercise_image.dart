@@ -177,14 +177,14 @@ class CachedExerciseImage extends StatelessWidget {
       child: CachedNetworkImage(
         imageUrl: url,
         fit: fit,
-        placeholder: (_, __) => const Center(
+        placeholder: (_, _) => const Center(
           child: SizedBox(
             width: 16,
             height: 16,
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
         ),
-        errorWidget: (_, __, ___) => _buildFallback(),
+        errorWidget: (_, _, _) => _buildFallback(),
       ),
     );
 

@@ -22,7 +22,7 @@ class RoutineSchedulerScreen extends StatefulWidget {
   const RoutineSchedulerScreen({super.key, required this.program});
 
   @override
-  _RoutineSchedulerScreenState createState() => _RoutineSchedulerScreenState();
+  State<RoutineSchedulerScreen> createState() => _RoutineSchedulerScreenState();
 }
 
 class _RoutineSchedulerScreenState extends State<RoutineSchedulerScreen> {

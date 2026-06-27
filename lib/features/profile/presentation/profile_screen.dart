@@ -538,9 +538,9 @@ class _MoreScreenBodyState extends State<_MoreScreenBody> {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
+          const Text(
             'Version 1.0.0 (1)',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
               color: AppColors.mutedText,
             ),

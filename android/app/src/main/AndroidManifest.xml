@@ -2,6 +2,10 @@
     <!-- Required for add_2_calendar package (device calendar integration) -->
     <uses-permission android:name="android.permission.READ_CALENDAR" />
     <uses-permission android:name="android.permission.WRITE_CALENDAR" />
+    <!-- ElevenLabs Conversational AI Agent (Voice Coach) -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <application
         android:label="ziro_fit"
         android:name="${applicationName}"

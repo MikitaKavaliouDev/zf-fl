@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tanquery_flutter/tanquery_flutter.dart';
+import 'package:ziro_fit/core/models/trainer_list_item_dto.dart';
 
 import '../../../core/di/injection.dart' as di;
 import '../../../core/theme/app_theme.dart';
-import 'package:ziro_fit/core/models/trainer_list_item_dto.dart';
 import '../cubit/explore_cubit.dart';
 import '../data/models/explore_category.dart';
 import '../data/models/explore_city.dart';
@@ -51,47 +51,52 @@ class _ExploreScreenState extends State<ExploreScreen> {
       create: (_) => di.getIt<ExploreCubit>(),
       child: Scaffold(
         backgroundColor: AppColors.background,
-        body: RefreshIndicator(
-        onRefresh: _refresh,
-        child: CustomScrollView(
-          slivers: [
-            // Top spacer for floating header
-            SliverToBoxAdapter(
-              child: SizedBox(height: MediaQuery.of(context).padding.top + 80),
-            ),
+        body: Stack(
+          children: [
+            RefreshIndicator(
+              onRefresh: _refresh,
+              child: CustomScrollView(
+                slivers: [
+                  // Top spacer for floating header
+                  SliverToBoxAdapter(
+                    child: SizedBox(height: MediaQuery.of(context).padding.top + 80),
+                  ),
 
-            // Floating city header
-            SliverToBoxAdapter(
+                  // Sliding segment
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+                      child: ExploreSlidingSegment(
+                        selectedSection: _selectedSection,
+                        onChanged: (section) => setState(() => _selectedSection = section),
+                      ),
+                    ),
+                  ),
+
+                  // Content based on selected section
+                  if (_selectedSection == ExploreSection.trainers)
+                    ..._buildTrainersTab()
+                  else
+                    ..._buildEventsTab(),
+
+                  // Bottom padding
+                  SliverToBoxAdapter(
+                    child: SizedBox(height: MediaQuery.of(context).padding.bottom + 110),
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
               child: _CityHeaderSection(
                 selectedCity: _selectedCity,
                 onCitySelected: (city) => setState(() => _selectedCity = city),
               ),
             ),
-
-            // Sliding segment
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
-                child: ExploreSlidingSegment(
-                  selectedSection: _selectedSection,
-                  onChanged: (section) => setState(() => _selectedSection = section),
-                ),
-              ),
-            ),
-
-            // Content based on selected section
-            if (_selectedSection == ExploreSection.trainers)
-              ..._buildTrainersTab()
-            else
-              ..._buildEventsTab(),
-
-            // Bottom padding
-            SliverToBoxAdapter(
-              child: SizedBox(height: MediaQuery.of(context).padding.bottom + 110),
-            ),
           ],
         ),
-      ),
       ),
     );
   }
@@ -141,12 +146,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
         cityId: _selectedCity?.id,
         lat: _selectedCity?.latitude,
         lng: _selectedCity?.longitude,
-        source: null,
       ),
 
       // 5. Ziro Recommends — from promoted trainers
-      _RecommendedSection(
-        key: const ValueKey('recommended'),
+      const _RecommendedSection(
+        key: ValueKey('recommended'),
       ),
 
       // 6. Map Spotlight
@@ -154,7 +158,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
         child: Padding(
           padding: const EdgeInsets.only(bottom: 24),
           child: MapSpotlightPreviewCard(
-            onlineCoachCount: 0,
             onTap: () => context.push('/explore/map'),
           ),
         ),
@@ -223,103 +226,98 @@ class _CityHeaderContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      top: 0,
-      left: 0,
-      right: 0,
-      child: Container(
-        padding: EdgeInsets.only(
-          top: MediaQuery.of(context).padding.top + 8,
-          left: 16,
-          right: 16,
-          bottom: 12,
+    return Container(
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 8,
+        left: 16,
+        right: 16,
+        bottom: 12,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.background.withValues(alpha: 0.85),
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(24),
+          bottomRight: Radius.circular(24),
         ),
-        decoration: BoxDecoration(
-          color: AppColors.background.withValues(alpha: 0.85),
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(24),
-            bottomRight: Radius.circular(24),
-          ),
-          border: Border(
-            bottom: BorderSide(color: AppColors.borderMuted, width: 0.5),
-          ),
+        border: const Border(
+          bottom: BorderSide(color: AppColors.borderMuted, width: 0.5),
         ),
-        child: Row(
-          children: [
-            // City selector
-            Expanded(
-              child: GestureDetector(
-                onTap: () => _showCityPicker(context),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: selectedCity == null
-                            ? AppColors.primary.withValues(alpha: 0.12)
-                            : Colors.red.withValues(alpha: 0.12),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        selectedCity == null
-                            ? Icons.my_location_rounded
-                            : Icons.location_on_rounded,
-                        size: 18,
-                        color: selectedCity == null
-                            ? AppColors.primary
-                            : Colors.redAccent,
-                      ),
+      ),
+      child: Row(
+        children: [
+          // City selector
+          Expanded(
+            child: GestureDetector(
+              onTap: () => _showCityPicker(context),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: selectedCity == null
+                          ? AppColors.primary.withValues(alpha: 0.12)
+                          : Colors.red.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            selectedCity?.name ?? 'SF',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: -0.4,
-                              color: AppColors.foreground,
-                            ),
-                          ),
-                          Text(
-                            selectedCity != null ? 'Active Region' : 'Current Location',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.mutedText,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Icon(
-                      Icons.keyboard_arrow_down_rounded,
+                    child: Icon(
+                      selectedCity == null
+                          ? Icons.my_location_rounded
+                          : Icons.location_on_rounded,
                       size: 18,
-                      color: AppColors.mutedText,
+                      color: selectedCity == null
+                          ? AppColors.primary
+                          : Colors.redAccent,
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          selectedCity?.name ?? 'SF',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: -0.4,
+                            color: AppColors.foreground,
+                          ),
+                        ),
+                        Text(
+                          selectedCity != null ? 'Active Region' : 'Current Location',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.mutedText,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    size: 18,
+                    color: AppColors.mutedText,
+                  ),
+                ],
               ),
             ),
-            const SizedBox(width: 8),
-            _HeaderButton(
-              icon: Icons.search_rounded,
-              onTap: () => context.push('/explore/discovery'),
-            ),
-            const SizedBox(width: 8),
-            _HeaderButton(
-              icon: Icons.map_outlined,
-              onTap: () => context.push('/explore/map'),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(width: 8),
+          _HeaderButton(
+            icon: Icons.search_rounded,
+            onTap: () => context.push('/explore/discovery'),
+          ),
+          const SizedBox(width: 8),
+          _HeaderButton(
+            icon: Icons.map_outlined,
+            onTap: () => context.push('/explore/map'),
+          ),
+        ],
       ),
     );
   }
@@ -353,7 +351,7 @@ class _HeaderButton extends StatelessWidget {
       child: Container(
         width: 38,
         height: 38,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: AppColors.mutedSurface,
           shape: BoxShape.circle,
         ),
@@ -590,14 +588,12 @@ class _EventsSection extends StatelessWidget {
       queryKey: QueryKey(['explore', 'events', 'main', cityId ?? '']),
       queryFn: () => context.read<ExploreCubit>().getEvents(limit: 20, lat: lat, lon: lng),
       staleTime: const Duration(minutes: 5),
-      placeholderData: PaginatedEvents(events: [], hasMore: false, page: 1, limit: 20),
+      placeholderData: const PaginatedEvents(hasMore: false, page: 1, limit: 20),
       builder: (context, state) {
         final events = state.data?.events ?? <ExploreEventDto>[];
         if (events.isEmpty && state.isSuccess) {
           return const SliverToBoxAdapter(
-            child: ExploreEmptyEventsView(
-              onNotifyMe: null,
-            ),
+            child: ExploreEmptyEventsView(),
           );
         }
 
@@ -725,3 +721,4 @@ class _EventsSection extends StatelessWidget {
   String _dateKey(DateTime dt) =>
       '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
 }
+      

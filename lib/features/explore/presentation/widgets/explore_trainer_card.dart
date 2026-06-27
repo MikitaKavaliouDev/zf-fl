@@ -1,9 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ziro_fit/core/models/trainer_list_item_dto.dart';
 
 import '../../../../core/theme/app_theme.dart';
-import 'package:ziro_fit/core/models/trainer_list_item_dto.dart';
 
 /// Horizontal scroll trainer card used in "Near You", "Featured", "Recommends" sections.
 /// Matches iOS ExploreTrainerCard — ExploreComponents.swift lines 541-652.

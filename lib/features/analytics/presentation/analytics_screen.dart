@@ -5,22 +5,12 @@ import '../../../core/theme/app_theme.dart';
 import '../cubit/analytics_cubit.dart';
 import '../cubit/analytics_state.dart';
 import '../data/models/analytics_response_dto.dart';
+import '../domain/widget_registry.dart';
 import 'manage_widgets_sheet.dart';
 import 'measurements/measurements_sheet.dart';
-import 'widgets/consistency_widget.dart';
-import 'widgets/exercise_progress_widget.dart';
-import 'widgets/goals_widget.dart';
-import 'widgets/heatmap_widget.dart';
-import 'widgets/insights_widget.dart';
-import 'widgets/muscle_donut_chart_widget.dart';
-import 'widgets/prs_list_widget.dart';
-import 'widgets/recovery_widget.dart';
-import 'widgets/volume_chart_widget.dart';
-import 'widgets/volume_line_chart_widget.dart';
-import 'widgets/weight_line_chart_widget.dart';
-import 'widgets/widget_container.dart';
 import 'widget_detail_view.dart';
-import '../domain/widget_registry.dart';
+import 'widgets/exercise_progress_widget.dart';
+import 'widgets/widget_container.dart';
 
 /// Main analytics tab screen.
 ///

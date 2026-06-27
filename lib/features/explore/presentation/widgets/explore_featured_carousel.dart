@@ -23,8 +23,8 @@ class ExploreFeaturedCarousel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 16, bottom: 12),
+        const Padding(
+          padding: EdgeInsets.only(left: 16, bottom: 12),
           child: Text(
             'Featured Events',
             style: TextStyle(

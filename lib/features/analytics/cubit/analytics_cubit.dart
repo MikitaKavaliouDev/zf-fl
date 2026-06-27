@@ -62,7 +62,7 @@ class AnalyticsCubit extends Cubit<AnalyticsState> {
   Future<void> loadData({bool forceRefresh = false}) async {
     if (forceRefresh) {
       emit(const AnalyticsState.loading());
-      await _refreshFromApi(fallbackToCache: false);
+      await _refreshFromApi();
       return;
     }
 
@@ -190,7 +190,7 @@ class AnalyticsCubit extends Cubit<AnalyticsState> {
         _repository.getProgress(),
         _repository.getWidgetConfig(),
       ]);
-      var analytics = results[0] as AnalyticsResponseDto;
+      final analytics = results[0] as AnalyticsResponseDto;
       final progress = results[1] as ProgressResponseDto;
       var widgets = results[2] as WidgetConfigDto;
 
@@ -475,7 +475,6 @@ class AnalyticsCubit extends Cubit<AnalyticsState> {
         WidgetConfigItem(
           id: 'default_${defaultTypes[i]}',
           type: defaultTypes[i],
-          isVisible: true,
           order: i,
         ),
       for (int i = 0; i < availableTypes.length; i++)

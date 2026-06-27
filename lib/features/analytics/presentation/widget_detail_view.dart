@@ -30,9 +30,9 @@ class WidgetDetailView extends StatelessWidget {
             // Sheet-style header
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppColors.background,
-                border: const Border(
+                border: Border(
                   bottom: BorderSide(color: AppColors.borderMuted),
                 ),
               ),

@@ -185,10 +185,10 @@ class _GoalSettingSheetState extends State<GoalSettingSheet> {
                 ),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
-                  value: _selectedExercise,
+                  initialValue: _selectedExercise,
                   decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                    border: const OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
                       borderSide: BorderSide(color: AppColors.borderActive),
                     ),
                     contentPadding: const EdgeInsets.symmetric(
@@ -222,7 +222,7 @@ class _GoalSettingSheetState extends State<GoalSettingSheet> {
                   hintText: 'Enter target',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: AppColors.borderActive),
+                    borderSide: const BorderSide(color: AppColors.borderActive),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,

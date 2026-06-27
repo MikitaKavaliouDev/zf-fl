@@ -138,7 +138,7 @@ class ManageWidgetsSheet extends StatelessWidget {
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: active.length,
-                            onReorder: (oldIndex, newIndex) {
+                            onReorderItem: (oldIndex, newIndex) {
                               final cubit = context.read<AnalyticsCubit>();
                               final s = cubit.state;
                               if (s is AnalyticsLoaded) {
@@ -277,7 +277,6 @@ class _ActiveWidgetItem extends StatelessWidget {
               child: CupertinoSwitch(
                 value: true,
                 onChanged: (_) => onToggle(),
-                activeColor: const Color(0xFF34C759),
               ),
             ),
           ),

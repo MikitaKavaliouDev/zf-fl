@@ -1,9 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
-import 'models/nutrition_plan_dto.dart';
 import 'models/daily_habit_dto.dart';
 import 'models/habit_log_dto.dart';
+import 'models/nutrition_plan_dto.dart';
 
 @injectable
 class NutritionHabitsApiService {
@@ -40,7 +40,7 @@ class NutritionHabitsApiService {
       data: {
         'date': date,
         'isCompleted': isCompleted,
-        if (note != null) 'note': note,
+        ?'note': note,
       },
     );
     final data = response.data['data']['log'] as Map<String, dynamic>;

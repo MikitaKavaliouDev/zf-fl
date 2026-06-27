@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../voice_coach/presentation/widgets/voice_coach_compact_button.dart';
 
 /// Bottom control bar for the active workout session.
 ///
-/// Shows Pause/Resume and Finish buttons. Fades out when
-/// the custom numeric keyboard is active.
+/// Shows Voice Coach, Pause/Resume, and Finish buttons.
+/// Fades out when the custom numeric keyboard is active.
+/// Matches iOS [WorkoutSessionControls] layout.
 class WorkoutBottomControls extends StatelessWidget {
   const WorkoutBottomControls({
     super.key,
@@ -37,6 +39,10 @@ class WorkoutBottomControls extends StatelessWidget {
                 top: false,
                 child: Row(
                   children: [
+                    // ElevenLabs Voice Coach compact button
+                    const VoiceCoachCompactButton(),
+                    const SizedBox(width: 12),
+                    // Pause / Resume
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: onPauseResume,
@@ -49,6 +55,7 @@ class WorkoutBottomControls extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 12),
+                    // Finish
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: onFinish,

@@ -119,7 +119,7 @@ class _MediaCard extends StatelessWidget {
                   imageUrl: media.url,
                   fit: BoxFit.cover,
                   errorWidget: (_, _, _) => _placeholder(),
-                  progressIndicatorBuilder: (_, __, ___) => _placeholder(
+                  progressIndicatorBuilder: (_, _, _) => _placeholder(
                     child: const Center(child: CircularProgressIndicator()),
                   ),
                 )
@@ -132,11 +132,11 @@ class _MediaCard extends StatelessWidget {
                   child: Container(
                     width: 48,
                     height: 48,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: Colors.black38,
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.play_arrow_rounded,
                       color: Colors.white,
                       size: 28,

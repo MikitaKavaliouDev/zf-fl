@@ -167,7 +167,7 @@ class _TemplateDetailScreenState extends State<TemplateDetailScreen> {
   Future<void> _showExercisePicker() async {
     final allExercises = await context.read<TemplateDetailCubit>().fetchExerciseLibrary();
     if (allExercises.isEmpty) {
-      if (!context.mounted) return;
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Could not load exercise library.'),
@@ -177,7 +177,7 @@ class _TemplateDetailScreenState extends State<TemplateDetailScreen> {
       return;
     }
 
-    if (!context.mounted) return;
+    if (!mounted) return;
 
     showModalBottomSheet(
       context: context,
@@ -185,7 +185,6 @@ class _TemplateDetailScreenState extends State<TemplateDetailScreen> {
       backgroundColor: Colors.transparent,
       builder: (_) => ExercisePickerSheet.multiple(
         exercises: allExercises,
-        isLoading: false,
         onExercisesSelected: (selected) {
           for (final exercise in selected) {
             context.read<TemplateDetailCubit>().addExercise(exercise);
