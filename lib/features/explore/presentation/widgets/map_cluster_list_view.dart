@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:ziro_fit/features/explore/cubit/explore_map_state.dart';
 import 'package:ziro_fit/features/explore/data/models/explore_event_dto.dart';
-import 'package:ziro_fit/features/trainers/data/models/trainer_list_item_dto.dart';
+import 'package:ziro_fit/core/models/trainer_list_item_dto.dart';
 
 class ClusterListView extends StatelessWidget {
   final List<MapItem> items;

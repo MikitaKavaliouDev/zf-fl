@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tanquery_flutter/tanquery_flutter.dart';
 
-import '../../../core/di/injection.dart';
+import '../../../core/di/injection.dart' as di;
 import '../../../core/theme/app_theme.dart';
-import '../../trainers/data/models/trainer_list_item_dto.dart';
-import '../data/explore_api_service.dart';
+import 'package:ziro_fit/core/models/trainer_list_item_dto.dart';
+import '../cubit/explore_cubit.dart';
 import '../data/models/explore_category.dart';
 import '../data/models/explore_city.dart';
 import '../data/models/explore_event_dto.dart';
@@ -46,9 +47,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: RefreshIndicator(
+    return BlocProvider<ExploreCubit>(
+      create: (_) => di.getIt<ExploreCubit>(),
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: RefreshIndicator(
         onRefresh: _refresh,
         child: CustomScrollView(
           slivers: [
@@ -88,6 +91,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -187,13 +191,11 @@ class _CityHeaderSection extends StatelessWidget {
     required this.onCitySelected,
   });
 
-  ExploreApiService get _api => getIt<ExploreApiService>();
-
   @override
   Widget build(BuildContext context) {
     return QueryBuilder<ExploreMetadata>(
       queryKey: QueryKey(['explore', 'metadata']),
-      queryFn: () => _api.getMetadata(),
+      queryFn: () => context.read<ExploreCubit>().getMetadata(),
       staleTime: const Duration(minutes: 30),
       builder: (context, state) {
         final cities = state.data?.cities ?? <ExploreCity>[];
@@ -369,13 +371,11 @@ class _SpotlightSection extends StatelessWidget {
 
   const _SpotlightSection({this.cityId, this.lat, this.lng, super.key});
 
-  ExploreApiService get _api => getIt<ExploreApiService>();
-
   @override
   Widget build(BuildContext context) {
     return QueryBuilder<FeaturedContent>(
       queryKey: QueryKey(['explore', 'featured', cityId ?? '']),
-      queryFn: () => _api.getFeaturedContent(cityId: cityId, lat: lat, lng: lng),
+      queryFn: () => context.read<ExploreCubit>().getFeaturedContent(cityId: cityId, lat: lat, lng: lng),
       staleTime: const Duration(minutes: 5),
       builder: (context, state) {
         if (!state.isSuccess || state.data == null) {
@@ -418,13 +418,11 @@ class _CategorySection extends StatelessWidget {
     super.key,
   });
 
-  ExploreApiService get _api => getIt<ExploreApiService>();
-
   @override
   Widget build(BuildContext context) {
     return QueryBuilder<ExploreMetadata>(
       queryKey: QueryKey(['explore', 'metadata']),
-      queryFn: () => _api.getMetadata(),
+      queryFn: () => context.read<ExploreCubit>().getMetadata(),
       staleTime: const Duration(minutes: 30),
       builder: (context, state) {
         final categories = state.data?.categories ?? <ExploreCategory>[];
@@ -463,13 +461,11 @@ class _TrainerSectionWidget extends StatelessWidget {
     super.key,
   });
 
-  ExploreApiService get _api => getIt<ExploreApiService>();
-
   @override
   Widget build(BuildContext context) {
     return QueryBuilder<FeaturedContent>(
       queryKey: QueryKey(['explore', 'featured', cityId ?? '']),
-      queryFn: () => _api.getFeaturedContent(cityId: cityId, lat: lat, lng: lng),
+      queryFn: () => context.read<ExploreCubit>().getFeaturedContent(cityId: cityId, lat: lat, lng: lng),
       staleTime: const Duration(minutes: 5),
       builder: (context, state) {
         if (!state.isSuccess || state.data == null) {
@@ -495,13 +491,11 @@ class _TrainerSectionWidget extends StatelessWidget {
 class _RecommendedSection extends StatelessWidget {
   const _RecommendedSection({super.key});
 
-  ExploreApiService get _api => getIt<ExploreApiService>();
-
   @override
   Widget build(BuildContext context) {
     return QueryBuilder<List<FeaturedTrainerDto>>(
       queryKey: QueryKey(['explore', 'promoted', 'ZIRO_RECOMMENDED']),
-      queryFn: () => _api.getPromotedTrainers(category: 'ZIRO_RECOMMENDED'),
+      queryFn: () => context.read<ExploreCubit>().getPromotedTrainers(category: 'ZIRO_RECOMMENDED'),
       staleTime: const Duration(minutes: 5),
       builder: (context, state) {
         if (!state.isSuccess || state.data == null || state.data!.isEmpty) {
@@ -590,13 +584,11 @@ class _EventsSection extends StatelessWidget {
 
   const _EventsSection({this.cityId, this.lat, this.lng, super.key});
 
-  ExploreApiService get _api => getIt<ExploreApiService>();
-
   @override
   Widget build(BuildContext context) {
     return QueryBuilder<PaginatedEvents>(
       queryKey: QueryKey(['explore', 'events', 'main', cityId ?? '']),
-      queryFn: () => _api.getEvents(limit: 20, lat: lat, lon: lng),
+      queryFn: () => context.read<ExploreCubit>().getEvents(limit: 20, lat: lat, lon: lng),
       staleTime: const Duration(minutes: 5),
       placeholderData: PaginatedEvents(events: [], hasMore: false, page: 1, limit: 20),
       builder: (context, state) {

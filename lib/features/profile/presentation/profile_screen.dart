@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/widgets/error_widget.dart';
 
 import '../../../core/di/injection.dart';
 import '../../../core/theme/app_theme.dart';
@@ -68,34 +69,9 @@ class _MoreScreenBodyState extends State<_MoreScreenBody> {
   }
 
   Widget _buildError(BuildContext context, String message) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.error_outline_rounded,
-              size: 48,
-              color: AppColors.mutedText,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.mutedText,
-              ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () => context.read<MoreCubit>().refresh(),
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      ),
+    return ZiroErrorWidget(
+      message: message,
+      onRetry: () => context.read<MoreCubit>().refresh(),
     );
   }
 

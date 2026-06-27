@@ -22,13 +22,24 @@ class AnalyticsRepository {
   Future<WidgetConfigDto> updateWidgetConfig(WidgetConfigDto config) =>
       _api.updateWidgetConfig(config);
 
-  /// Fetch per-exercise stats history.
-  Future<Map<String, dynamic>> getExerciseStats({
+  /// Fetch per-exercise stats history, parsed into [DataPoint] list.
+  Future<List<DataPoint>> getExerciseStats({
     required String exerciseId,
     String metric = 'e1rm',
-  }) =>
-      _exerciseStatsApi.getExerciseStats(
-        exerciseId: exerciseId,
-        metric: metric,
+  }) async {
+    final raw = await _exerciseStatsApi.getExerciseStats(
+      exerciseId: exerciseId,
+      metric: metric,
+    );
+    final points = (raw['points'] ?? raw['dataPoints'] ?? raw['data'])
+        as List<dynamic>?;
+    if (points == null) return [];
+    return points.map((p) {
+      if (p is Map<String, dynamic>) return DataPoint.fromJson(p);
+      return DataPoint(
+        date: (p['date'] ?? '').toString(),
+        value: (p['value'] ?? 0.0).toDouble(),
       );
+    }).toList();
+  }
 }

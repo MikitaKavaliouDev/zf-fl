@@ -36,6 +36,7 @@ sealed class TrainerDetailState with _$TrainerDetailState {
     @Default(false) bool isUnlinking,
     @Default(false) bool linkRequestPending,
     String? linkError,
+    String? checkoutError,
   }) = TrainerDetailLoaded;
 
   /// Error state with retry capability.

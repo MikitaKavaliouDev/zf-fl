@@ -55,13 +55,16 @@ extension WorkoutSessionStatePatterns on WorkoutSessionState {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( WorkoutSessionInitial value)?  initial,TResult Function( WorkoutSessionLoading value)?  loading,TResult Function( WorkoutSessionConflict value)?  conflict,TResult Function( WorkoutSessionActive value)?  active,TResult Function( WorkoutSessionCompleted value)?  completed,TResult Function( WorkoutSessionError value)?  error,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( WorkoutSessionInitial value)?  initial,TResult Function( WorkoutSessionLoading value)?  loading,TResult Function( WorkoutSessionConflict value)?  conflict,TResult Function( WorkoutSessionExerciseDetailLoading value)?  exerciseDetailLoading,TResult Function( WorkoutSessionExerciseDetailLoaded value)?  exerciseDetailLoaded,TResult Function( WorkoutSessionExerciseDetailError value)?  exerciseDetailError,TResult Function( WorkoutSessionActive value)?  active,TResult Function( WorkoutSessionCompleted value)?  completed,TResult Function( WorkoutSessionError value)?  error,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case WorkoutSessionInitial() when initial != null:
 return initial(_that);case WorkoutSessionLoading() when loading != null:
 return loading(_that);case WorkoutSessionConflict() when conflict != null:
-return conflict(_that);case WorkoutSessionActive() when active != null:
+return conflict(_that);case WorkoutSessionExerciseDetailLoading() when exerciseDetailLoading != null:
+return exerciseDetailLoading(_that);case WorkoutSessionExerciseDetailLoaded() when exerciseDetailLoaded != null:
+return exerciseDetailLoaded(_that);case WorkoutSessionExerciseDetailError() when exerciseDetailError != null:
+return exerciseDetailError(_that);case WorkoutSessionActive() when active != null:
 return active(_that);case WorkoutSessionCompleted() when completed != null:
 return completed(_that);case WorkoutSessionError() when error != null:
 return error(_that);case _:
@@ -82,13 +85,16 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( WorkoutSessionInitial value)  initial,required TResult Function( WorkoutSessionLoading value)  loading,required TResult Function( WorkoutSessionConflict value)  conflict,required TResult Function( WorkoutSessionActive value)  active,required TResult Function( WorkoutSessionCompleted value)  completed,required TResult Function( WorkoutSessionError value)  error,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( WorkoutSessionInitial value)  initial,required TResult Function( WorkoutSessionLoading value)  loading,required TResult Function( WorkoutSessionConflict value)  conflict,required TResult Function( WorkoutSessionExerciseDetailLoading value)  exerciseDetailLoading,required TResult Function( WorkoutSessionExerciseDetailLoaded value)  exerciseDetailLoaded,required TResult Function( WorkoutSessionExerciseDetailError value)  exerciseDetailError,required TResult Function( WorkoutSessionActive value)  active,required TResult Function( WorkoutSessionCompleted value)  completed,required TResult Function( WorkoutSessionError value)  error,}){
 final _that = this;
 switch (_that) {
 case WorkoutSessionInitial():
 return initial(_that);case WorkoutSessionLoading():
 return loading(_that);case WorkoutSessionConflict():
-return conflict(_that);case WorkoutSessionActive():
+return conflict(_that);case WorkoutSessionExerciseDetailLoading():
+return exerciseDetailLoading(_that);case WorkoutSessionExerciseDetailLoaded():
+return exerciseDetailLoaded(_that);case WorkoutSessionExerciseDetailError():
+return exerciseDetailError(_that);case WorkoutSessionActive():
 return active(_that);case WorkoutSessionCompleted():
 return completed(_that);case WorkoutSessionError():
 return error(_that);}
@@ -105,13 +111,16 @@ return error(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( WorkoutSessionInitial value)?  initial,TResult? Function( WorkoutSessionLoading value)?  loading,TResult? Function( WorkoutSessionConflict value)?  conflict,TResult? Function( WorkoutSessionActive value)?  active,TResult? Function( WorkoutSessionCompleted value)?  completed,TResult? Function( WorkoutSessionError value)?  error,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( WorkoutSessionInitial value)?  initial,TResult? Function( WorkoutSessionLoading value)?  loading,TResult? Function( WorkoutSessionConflict value)?  conflict,TResult? Function( WorkoutSessionExerciseDetailLoading value)?  exerciseDetailLoading,TResult? Function( WorkoutSessionExerciseDetailLoaded value)?  exerciseDetailLoaded,TResult? Function( WorkoutSessionExerciseDetailError value)?  exerciseDetailError,TResult? Function( WorkoutSessionActive value)?  active,TResult? Function( WorkoutSessionCompleted value)?  completed,TResult? Function( WorkoutSessionError value)?  error,}){
 final _that = this;
 switch (_that) {
 case WorkoutSessionInitial() when initial != null:
 return initial(_that);case WorkoutSessionLoading() when loading != null:
 return loading(_that);case WorkoutSessionConflict() when conflict != null:
-return conflict(_that);case WorkoutSessionActive() when active != null:
+return conflict(_that);case WorkoutSessionExerciseDetailLoading() when exerciseDetailLoading != null:
+return exerciseDetailLoading(_that);case WorkoutSessionExerciseDetailLoaded() when exerciseDetailLoaded != null:
+return exerciseDetailLoaded(_that);case WorkoutSessionExerciseDetailError() when exerciseDetailError != null:
+return exerciseDetailError(_that);case WorkoutSessionActive() when active != null:
 return active(_that);case WorkoutSessionCompleted() when completed != null:
 return completed(_that);case WorkoutSessionError() when error != null:
 return error(_that);case _:
@@ -131,12 +140,15 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( String existingSessionId)?  conflict,TResult Function( WorkoutSessionDto session,  List<ExerciseLogDto> logs,  Duration elapsed,  bool isPaused,  bool isMinimized,  DateTime? restStartedAt,  Duration restElapsed,  DateTime? startTime,  int? restDuration,  int? restRemaining,  bool showLongSessionWarning,  bool showRestFinishedToast,  List<Map<String, dynamic>> sessionNewRecords,  bool newPrRecord)?  active,TResult Function( WorkoutSessionDto session,  Duration totalDuration,  List<ExerciseLogDto> logs,  List<Map<String, dynamic>> newRecords,  bool showPrToast)?  completed,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( String existingSessionId)?  conflict,TResult Function()?  exerciseDetailLoading,TResult Function( ExerciseDto exercise,  List<WorkoutSessionDto> sessions)?  exerciseDetailLoaded,TResult Function( String message)?  exerciseDetailError,TResult Function( WorkoutSessionDto session,  List<ExerciseLogDto> logs,  Duration elapsed,  bool isPaused,  bool isMinimized,  DateTime? restStartedAt,  Duration restElapsed,  DateTime? startTime,  int? restDuration,  int? restRemaining,  bool showLongSessionWarning,  bool showRestFinishedToast,  List<Map<String, dynamic>> sessionNewRecords,  bool newPrRecord)?  active,TResult Function( WorkoutSessionDto session,  Duration totalDuration,  List<ExerciseLogDto> logs,  List<Map<String, dynamic>> newRecords,  bool showPrToast)?  completed,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case WorkoutSessionInitial() when initial != null:
 return initial();case WorkoutSessionLoading() when loading != null:
 return loading();case WorkoutSessionConflict() when conflict != null:
-return conflict(_that.existingSessionId);case WorkoutSessionActive() when active != null:
+return conflict(_that.existingSessionId);case WorkoutSessionExerciseDetailLoading() when exerciseDetailLoading != null:
+return exerciseDetailLoading();case WorkoutSessionExerciseDetailLoaded() when exerciseDetailLoaded != null:
+return exerciseDetailLoaded(_that.exercise,_that.sessions);case WorkoutSessionExerciseDetailError() when exerciseDetailError != null:
+return exerciseDetailError(_that.message);case WorkoutSessionActive() when active != null:
 return active(_that.session,_that.logs,_that.elapsed,_that.isPaused,_that.isMinimized,_that.restStartedAt,_that.restElapsed,_that.startTime,_that.restDuration,_that.restRemaining,_that.showLongSessionWarning,_that.showRestFinishedToast,_that.sessionNewRecords,_that.newPrRecord);case WorkoutSessionCompleted() when completed != null:
 return completed(_that.session,_that.totalDuration,_that.logs,_that.newRecords,_that.showPrToast);case WorkoutSessionError() when error != null:
 return error(_that.message);case _:
@@ -157,12 +169,15 @@ return error(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( String existingSessionId)  conflict,required TResult Function( WorkoutSessionDto session,  List<ExerciseLogDto> logs,  Duration elapsed,  bool isPaused,  bool isMinimized,  DateTime? restStartedAt,  Duration restElapsed,  DateTime? startTime,  int? restDuration,  int? restRemaining,  bool showLongSessionWarning,  bool showRestFinishedToast,  List<Map<String, dynamic>> sessionNewRecords,  bool newPrRecord)  active,required TResult Function( WorkoutSessionDto session,  Duration totalDuration,  List<ExerciseLogDto> logs,  List<Map<String, dynamic>> newRecords,  bool showPrToast)  completed,required TResult Function( String message)  error,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( String existingSessionId)  conflict,required TResult Function()  exerciseDetailLoading,required TResult Function( ExerciseDto exercise,  List<WorkoutSessionDto> sessions)  exerciseDetailLoaded,required TResult Function( String message)  exerciseDetailError,required TResult Function( WorkoutSessionDto session,  List<ExerciseLogDto> logs,  Duration elapsed,  bool isPaused,  bool isMinimized,  DateTime? restStartedAt,  Duration restElapsed,  DateTime? startTime,  int? restDuration,  int? restRemaining,  bool showLongSessionWarning,  bool showRestFinishedToast,  List<Map<String, dynamic>> sessionNewRecords,  bool newPrRecord)  active,required TResult Function( WorkoutSessionDto session,  Duration totalDuration,  List<ExerciseLogDto> logs,  List<Map<String, dynamic>> newRecords,  bool showPrToast)  completed,required TResult Function( String message)  error,}) {final _that = this;
 switch (_that) {
 case WorkoutSessionInitial():
 return initial();case WorkoutSessionLoading():
 return loading();case WorkoutSessionConflict():
-return conflict(_that.existingSessionId);case WorkoutSessionActive():
+return conflict(_that.existingSessionId);case WorkoutSessionExerciseDetailLoading():
+return exerciseDetailLoading();case WorkoutSessionExerciseDetailLoaded():
+return exerciseDetailLoaded(_that.exercise,_that.sessions);case WorkoutSessionExerciseDetailError():
+return exerciseDetailError(_that.message);case WorkoutSessionActive():
 return active(_that.session,_that.logs,_that.elapsed,_that.isPaused,_that.isMinimized,_that.restStartedAt,_that.restElapsed,_that.startTime,_that.restDuration,_that.restRemaining,_that.showLongSessionWarning,_that.showRestFinishedToast,_that.sessionNewRecords,_that.newPrRecord);case WorkoutSessionCompleted():
 return completed(_that.session,_that.totalDuration,_that.logs,_that.newRecords,_that.showPrToast);case WorkoutSessionError():
 return error(_that.message);}
@@ -179,12 +194,15 @@ return error(_that.message);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( String existingSessionId)?  conflict,TResult? Function( WorkoutSessionDto session,  List<ExerciseLogDto> logs,  Duration elapsed,  bool isPaused,  bool isMinimized,  DateTime? restStartedAt,  Duration restElapsed,  DateTime? startTime,  int? restDuration,  int? restRemaining,  bool showLongSessionWarning,  bool showRestFinishedToast,  List<Map<String, dynamic>> sessionNewRecords,  bool newPrRecord)?  active,TResult? Function( WorkoutSessionDto session,  Duration totalDuration,  List<ExerciseLogDto> logs,  List<Map<String, dynamic>> newRecords,  bool showPrToast)?  completed,TResult? Function( String message)?  error,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( String existingSessionId)?  conflict,TResult? Function()?  exerciseDetailLoading,TResult? Function( ExerciseDto exercise,  List<WorkoutSessionDto> sessions)?  exerciseDetailLoaded,TResult? Function( String message)?  exerciseDetailError,TResult? Function( WorkoutSessionDto session,  List<ExerciseLogDto> logs,  Duration elapsed,  bool isPaused,  bool isMinimized,  DateTime? restStartedAt,  Duration restElapsed,  DateTime? startTime,  int? restDuration,  int? restRemaining,  bool showLongSessionWarning,  bool showRestFinishedToast,  List<Map<String, dynamic>> sessionNewRecords,  bool newPrRecord)?  active,TResult? Function( WorkoutSessionDto session,  Duration totalDuration,  List<ExerciseLogDto> logs,  List<Map<String, dynamic>> newRecords,  bool showPrToast)?  completed,TResult? Function( String message)?  error,}) {final _that = this;
 switch (_that) {
 case WorkoutSessionInitial() when initial != null:
 return initial();case WorkoutSessionLoading() when loading != null:
 return loading();case WorkoutSessionConflict() when conflict != null:
-return conflict(_that.existingSessionId);case WorkoutSessionActive() when active != null:
+return conflict(_that.existingSessionId);case WorkoutSessionExerciseDetailLoading() when exerciseDetailLoading != null:
+return exerciseDetailLoading();case WorkoutSessionExerciseDetailLoaded() when exerciseDetailLoaded != null:
+return exerciseDetailLoaded(_that.exercise,_that.sessions);case WorkoutSessionExerciseDetailError() when exerciseDetailError != null:
+return exerciseDetailError(_that.message);case WorkoutSessionActive() when active != null:
 return active(_that.session,_that.logs,_that.elapsed,_that.isPaused,_that.isMinimized,_that.restStartedAt,_that.restElapsed,_that.startTime,_that.restDuration,_that.restRemaining,_that.showLongSessionWarning,_that.showRestFinishedToast,_that.sessionNewRecords,_that.newPrRecord);case WorkoutSessionCompleted() when completed != null:
 return completed(_that.session,_that.totalDuration,_that.logs,_that.newRecords,_that.showPrToast);case WorkoutSessionError() when error != null:
 return error(_that.message);case _:
@@ -318,6 +336,187 @@ class _$WorkoutSessionConflictCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') $Res call({Object? existingSessionId = null,}) {
   return _then(WorkoutSessionConflict(
 existingSessionId: null == existingSessionId ? _self.existingSessionId : existingSessionId // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class WorkoutSessionExerciseDetailLoading implements WorkoutSessionState {
+  const WorkoutSessionExerciseDetailLoading();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WorkoutSessionExerciseDetailLoading);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'WorkoutSessionState.exerciseDetailLoading()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class WorkoutSessionExerciseDetailLoaded implements WorkoutSessionState {
+  const WorkoutSessionExerciseDetailLoaded({required this.exercise, required final  List<WorkoutSessionDto> sessions}): _sessions = sessions;
+  
+
+ final  ExerciseDto exercise;
+ final  List<WorkoutSessionDto> _sessions;
+ List<WorkoutSessionDto> get sessions {
+  if (_sessions is EqualUnmodifiableListView) return _sessions;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_sessions);
+}
+
+
+/// Create a copy of WorkoutSessionState
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$WorkoutSessionExerciseDetailLoadedCopyWith<WorkoutSessionExerciseDetailLoaded> get copyWith => _$WorkoutSessionExerciseDetailLoadedCopyWithImpl<WorkoutSessionExerciseDetailLoaded>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WorkoutSessionExerciseDetailLoaded&&(identical(other.exercise, exercise) || other.exercise == exercise)&&const DeepCollectionEquality().equals(other._sessions, _sessions));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,exercise,const DeepCollectionEquality().hash(_sessions));
+
+@override
+String toString() {
+  return 'WorkoutSessionState.exerciseDetailLoaded(exercise: $exercise, sessions: $sessions)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $WorkoutSessionExerciseDetailLoadedCopyWith<$Res> implements $WorkoutSessionStateCopyWith<$Res> {
+  factory $WorkoutSessionExerciseDetailLoadedCopyWith(WorkoutSessionExerciseDetailLoaded value, $Res Function(WorkoutSessionExerciseDetailLoaded) _then) = _$WorkoutSessionExerciseDetailLoadedCopyWithImpl;
+@useResult
+$Res call({
+ ExerciseDto exercise, List<WorkoutSessionDto> sessions
+});
+
+
+$ExerciseDtoCopyWith<$Res> get exercise;
+
+}
+/// @nodoc
+class _$WorkoutSessionExerciseDetailLoadedCopyWithImpl<$Res>
+    implements $WorkoutSessionExerciseDetailLoadedCopyWith<$Res> {
+  _$WorkoutSessionExerciseDetailLoadedCopyWithImpl(this._self, this._then);
+
+  final WorkoutSessionExerciseDetailLoaded _self;
+  final $Res Function(WorkoutSessionExerciseDetailLoaded) _then;
+
+/// Create a copy of WorkoutSessionState
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? exercise = null,Object? sessions = null,}) {
+  return _then(WorkoutSessionExerciseDetailLoaded(
+exercise: null == exercise ? _self.exercise : exercise // ignore: cast_nullable_to_non_nullable
+as ExerciseDto,sessions: null == sessions ? _self._sessions : sessions // ignore: cast_nullable_to_non_nullable
+as List<WorkoutSessionDto>,
+  ));
+}
+
+/// Create a copy of WorkoutSessionState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ExerciseDtoCopyWith<$Res> get exercise {
+  
+  return $ExerciseDtoCopyWith<$Res>(_self.exercise, (value) {
+    return _then(_self.copyWith(exercise: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class WorkoutSessionExerciseDetailError implements WorkoutSessionState {
+  const WorkoutSessionExerciseDetailError(this.message);
+  
+
+ final  String message;
+
+/// Create a copy of WorkoutSessionState
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$WorkoutSessionExerciseDetailErrorCopyWith<WorkoutSessionExerciseDetailError> get copyWith => _$WorkoutSessionExerciseDetailErrorCopyWithImpl<WorkoutSessionExerciseDetailError>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WorkoutSessionExerciseDetailError&&(identical(other.message, message) || other.message == message));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,message);
+
+@override
+String toString() {
+  return 'WorkoutSessionState.exerciseDetailError(message: $message)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $WorkoutSessionExerciseDetailErrorCopyWith<$Res> implements $WorkoutSessionStateCopyWith<$Res> {
+  factory $WorkoutSessionExerciseDetailErrorCopyWith(WorkoutSessionExerciseDetailError value, $Res Function(WorkoutSessionExerciseDetailError) _then) = _$WorkoutSessionExerciseDetailErrorCopyWithImpl;
+@useResult
+$Res call({
+ String message
+});
+
+
+
+
+}
+/// @nodoc
+class _$WorkoutSessionExerciseDetailErrorCopyWithImpl<$Res>
+    implements $WorkoutSessionExerciseDetailErrorCopyWith<$Res> {
+  _$WorkoutSessionExerciseDetailErrorCopyWithImpl(this._self, this._then);
+
+  final WorkoutSessionExerciseDetailError _self;
+  final $Res Function(WorkoutSessionExerciseDetailError) _then;
+
+/// Create a copy of WorkoutSessionState
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
+  return _then(WorkoutSessionExerciseDetailError(
+null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }

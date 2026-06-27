@@ -71,6 +71,8 @@ class _CheckInScreenState extends State<CheckInScreen> {
                 ),
               CheckInStep(:final step, :final submission, :final config) =>
                 _buildWizard(step, submission, config),
+              CheckInHistoryLoaded() => const SizedBox.shrink(),
+              CheckInDetailLoaded() => const SizedBox.shrink(),
             };
           },
         ),

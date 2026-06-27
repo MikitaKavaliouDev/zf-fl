@@ -3,8 +3,8 @@ import 'dart:developer' as developer;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../../core/widgets/error_widget.dart';
 
-import '../../../../core/di/injection.dart';
 import '../../../../core/network/image_url_helper.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../cubit/profile_config_cubit.dart';
@@ -27,8 +27,6 @@ class ProfileConfigScreen extends StatefulWidget {
 }
 
 class _ProfileConfigScreenState extends State<ProfileConfigScreen> {
-  late final ProfileConfigCubit _cubit;
-
   final _nameController = TextEditingController();
   final _usernameController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -40,7 +38,9 @@ class _ProfileConfigScreenState extends State<ProfileConfigScreen> {
   @override
   void initState() {
     super.initState();
-    _cubit = getIt<ProfileConfigCubit>()..loadProfile();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProfileConfigCubit>().loadProfile();
+    });
   }
 
   @override
@@ -70,7 +70,7 @@ class _ProfileConfigScreenState extends State<ProfileConfigScreen> {
   }
 
   void _onFieldChanged() {
-    _cubit.markChanged();
+    context.read<ProfileConfigCubit>().markChanged();
   }
 
   Future<void> _handleSave() async {
@@ -96,14 +96,14 @@ class _ProfileConfigScreenState extends State<ProfileConfigScreen> {
     }
 
     try {
-      await _cubit.saveCoreInfo(
+      await context.read<ProfileConfigCubit>().saveCoreInfo(
         name: name,
         username: username,
         phone: phone.isNotEmpty ? phone : null,
         weightUnit: _weightUnit,
       );
-      await _cubit.saveTextContent(bio);
-      _cubit.emitSaveSuccess('Profile updated successfully!');
+      await context.read<ProfileConfigCubit>().saveTextContent(bio);
+      context.read<ProfileConfigCubit>().emitSaveSuccess('Profile updated successfully!');
     } catch (e) {
       _showError('Failed to save profile. Please try again.');
     }
@@ -122,9 +122,9 @@ class _ProfileConfigScreenState extends State<ProfileConfigScreen> {
 
   Future<void> _handleAvatarUpload() async {
     try {
-      final filePath = await _cubit.pickImage();
+      final filePath = await context.read<ProfileConfigCubit>().pickImage();
       if (filePath == null) return;
-      await _cubit.uploadAvatar(filePath);
+      await context.read<ProfileConfigCubit>().uploadAvatar(filePath);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -149,7 +149,6 @@ class _ProfileConfigScreenState extends State<ProfileConfigScreen> {
         centerTitle: true,
       ),
       body: BlocConsumer<ProfileConfigCubit, ProfileConfigState>(
-        bloc: _cubit,
         listener: (context, state) {
           if (state is ProfileConfigSaveSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -160,7 +159,7 @@ class _ProfileConfigScreenState extends State<ProfileConfigScreen> {
               ),
             );
             // Re-emit loaded state so the form doesn't stay on "save success"
-            _cubit.loadProfile();
+            context.read<ProfileConfigCubit>().loadProfile();
           }
           if (state is ProfileConfigError) {
             _showError(state.message);
@@ -180,34 +179,9 @@ class _ProfileConfigScreenState extends State<ProfileConfigScreen> {
   }
 
   Widget _buildError(String message) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.error_outline_rounded,
-              size: 48,
-              color: AppColors.mutedText,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.mutedText,
-              ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () => _cubit.loadProfile(),
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      ),
+    return ZiroErrorWidget(
+      message: message,
+      onRetry: () => context.read<ProfileConfigCubit>().loadProfile(),
     );
   }
 
@@ -457,47 +431,47 @@ class _ProfileConfigScreenState extends State<ProfileConfigScreen> {
           child: Row(
             children: [
               Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() => _weightUnit = 'KG');
-                    _cubit.markChanged();
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      color: _weightUnit == 'KG'
-                          ? AppColors.primary
-                          : Colors.transparent,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(9),
-                        bottomLeft: Radius.circular(9),
-                      ),
-                    ),
-                    child: Text(
-                      'Kilograms (kg)',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() => _weightUnit = 'KG');
+                      context.read<ProfileConfigCubit>().markChanged();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
                         color: _weightUnit == 'KG'
-                            ? Colors.white
-                            : AppColors.mutedText,
+                            ? AppColors.primary
+                            : Colors.transparent,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(9),
+                          bottomLeft: Radius.circular(9),
+                        ),
+                      ),
+                      child: Text(
+                        'Kilograms (kg)',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: _weightUnit == 'KG'
+                              ? Colors.white
+                              : AppColors.mutedText,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              Container(
-                width: 1,
-                height: 24,
-                color: AppColors.borderMuted,
-              ),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() => _weightUnit = 'LB');
-                    _cubit.markChanged();
-                  },
+                Container(
+                  width: 1,
+                  height: 24,
+                  color: AppColors.borderMuted,
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() => _weightUnit = 'LB');
+                      context.read<ProfileConfigCubit>().markChanged();
+                    },
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(

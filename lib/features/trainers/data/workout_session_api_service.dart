@@ -74,7 +74,7 @@ class WorkoutSessionApiService {
       session['clientId'] = clientId;
     }
 
-    // Extract exerciseLogs, inject missing clientId/workoutSessionId
+    // Extract exerciseLogs, inject missing clientId/workoutSessionId/exerciseId
     final rawLogs = session.remove('exerciseLogs') as List<dynamic>?;
     if (rawLogs != null && rawLogs.isNotEmpty && clientId != null) {
       final sessionId = session['id'] as String?;
@@ -82,6 +82,8 @@ class WorkoutSessionApiService {
         final log = Map<String, dynamic>.from(e as Map<String, dynamic>);
         log['clientId'] = log['clientId'] ?? clientId;
         log['workoutSessionId'] = log['workoutSessionId'] ?? sessionId;
+        log['exerciseId'] = log['exerciseId'] ??
+            (log['exercise'] as Map<String, dynamic>?)?['id'];
         if (log['completed'] != null) {
           log['isCompleted'] = log['completed'];
         }

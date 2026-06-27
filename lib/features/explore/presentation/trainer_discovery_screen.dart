@@ -1,12 +1,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tanquery_flutter/tanquery_flutter.dart';
 
-import '../../../core/di/injection.dart';
+import 'package:ziro_fit/core/models/trainer_list_item_dto.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../trainers/data/models/trainer_list_item_dto.dart';
-import '../data/explore_api_service.dart';
+import '../cubit/trainer_discovery_cubit.dart';
 import '../data/models/paginated_events.dart';
 import 'widgets/explore_event_row.dart';
 
@@ -67,7 +67,7 @@ class _TrainerDiscoveryScreenState extends State<TrainerDiscoveryScreen> {
   int _trainerPage = 1;
   int _eventPage = 1;
 
-  ExploreApiService get _api => getIt<ExploreApiService>();
+  late final TrainerDiscoveryCubit _trainerCubit;
   bool _initialized = false;
 
   @override
@@ -81,6 +81,7 @@ class _TrainerDiscoveryScreenState extends State<TrainerDiscoveryScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _trainerCubit = context.read<TrainerDiscoveryCubit>();
     if (!_initialized) {
       _initialized = true;
       final extra = GoRouterState.of(context).extra as Map<String, dynamic>?;
@@ -228,7 +229,7 @@ class _TrainerDiscoveryScreenState extends State<TrainerDiscoveryScreen> {
 
     return InfiniteQueryBuilder<TrainerListResponse, int>(
       queryKey: trainerKey,
-      queryFn: (page) => _api.searchTrainers(
+      queryFn: (page) => _trainerCubit.searchTrainers(
         page: page,
         pageSize: 15,
         query: _searchQuery.isEmpty ? null : _searchQuery,
@@ -326,7 +327,7 @@ class _TrainerDiscoveryScreenState extends State<TrainerDiscoveryScreen> {
 
     return InfiniteQueryBuilder<PaginatedEvents, int>(
       queryKey: eventKey,
-      queryFn: (page) => _api.getEvents(
+      queryFn: (page) => _trainerCubit.getEvents(
         page: page,
         limit: 20,
         search: _searchQuery.isEmpty ? null : _searchQuery,

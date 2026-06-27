@@ -4,7 +4,6 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart' as latlong;
 
-import 'package:ziro_fit/core/di/injection.dart' as di;
 import 'package:ziro_fit/features/explore/cubit/explore_map_cubit.dart';
 import 'package:ziro_fit/features/explore/cubit/explore_map_state.dart';
 import 'package:ziro_fit/features/explore/presentation/widgets/map_cluster_annotation.dart';
@@ -33,7 +32,6 @@ class TrainerMapScreen extends StatefulWidget {
 
 class _TrainerMapScreenState extends State<TrainerMapScreen> {
   final MapController _mapController = MapController();
-  late final ExploreMapCubit _cubit;
   bool _hasZoomedToUser = false;
   bool _showFilterMenu = false;
   final FocusNode _searchFocusNode = FocusNode();
@@ -41,12 +39,15 @@ class _TrainerMapScreenState extends State<TrainerMapScreen> {
   @override
   void initState() {
     super.initState();
-    _cubit = di.getIt<ExploreMapCubit>()..load();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ExploreMapCubit>().load();
+    });
   }
+
+  ExploreMapCubit get _cubit => context.read<ExploreMapCubit>();
 
   @override
   void dispose() {
-    _cubit.close();
     _mapController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
@@ -57,7 +58,6 @@ class _TrainerMapScreenState extends State<TrainerMapScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: BlocConsumer<ExploreMapCubit, ExploreMapState>(
-        bloc: _cubit,
         listener: (context, state) {
           if (state is ExploreMapLoaded) {
             // Auto-zoom to user location on first successful load.

@@ -1,6 +1,8 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../data/models/check_in_config_dto.dart';
+import '../data/models/check_in_detail_dto.dart';
+import '../data/models/check_in_history_item_dto.dart';
 import '../data/models/check_in_response_dto.dart';
 import '../data/models/check_in_submission_dto.dart';
 
@@ -28,4 +30,13 @@ sealed class CheckInState with _$CheckInState {
 
   /// An error occurred.
   const factory CheckInState.error(String message) = CheckInError;
+
+  /// History list was loaded successfully.
+  const factory CheckInState.historyLoaded(
+    List<CheckInHistoryItemDto> items,
+  ) = CheckInHistoryLoaded;
+
+  /// Check-in detail was loaded successfully.
+  const factory CheckInState.detailLoaded(CheckInDetailDto detail) =
+      CheckInDetailLoaded;
 }

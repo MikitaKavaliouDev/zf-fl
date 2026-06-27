@@ -156,6 +156,31 @@ class CheckInCubit extends Cubit<CheckInState> {
     }
   }
 
+  // --- History & Detail ---
+
+  /// Load check-in history list, sorted by date descending.
+  Future<void> loadHistory() async {
+    try {
+      final items = await _repository.getHistory();
+      items.sort((a, b) => b.date.compareTo(a.date));
+      emit(CheckInState.historyLoaded(items));
+    } catch (e) {
+      developer.log('CheckInCubit.loadHistory failed: $e', name: 'check_in');
+      emit(const CheckInState.error('Failed to load check-in history.'));
+    }
+  }
+
+  /// Load a single check-in detail by ID.
+  Future<void> loadDetail(String checkInId) async {
+    try {
+      final detail = await _repository.getDetail(checkInId);
+      emit(CheckInState.detailLoaded(detail));
+    } catch (e) {
+      developer.log('CheckInCubit.loadDetail failed: $e', name: 'check_in');
+      emit(const CheckInState.error('Failed to load check-in details.'));
+    }
+  }
+
   // --- Reset ---
 
   void reset() {

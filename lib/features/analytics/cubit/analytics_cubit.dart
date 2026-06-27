@@ -9,7 +9,9 @@ import 'package:ziro_fit/core/events/event_bus.dart';
 
 import '../data/analytics_local_service.dart';
 import '../data/analytics_repository.dart';
+import '../data/measurements_repository.dart';
 import '../data/models/analytics_response_dto.dart';
+import '../data/models/measurement_dto.dart';
 import '../data/models/progress_response_dto.dart';
 import '../data/models/widget_config_dto.dart';
 import 'analytics_state.dart';
@@ -39,12 +41,14 @@ class AnalyticsCubit extends Cubit<AnalyticsState> {
   final AnalyticsRepository _repository;
   final AnalyticsLocalService _localService;
   final ConnectivityService _connectivity;
+  final MeasurementsRepository _measurementsRepository;
   StreamSubscription<AppEvent>? _eventSub;
 
   AnalyticsCubit(
     this._repository,
     this._localService,
     this._connectivity,
+    this._measurementsRepository,
   ) : super(const AnalyticsState.initial()) {
     _eventSub = getIt<EventBus>().on<AppEvent>().listen(_onAppEvent);
   }
@@ -125,27 +129,27 @@ class AnalyticsCubit extends Cubit<AnalyticsState> {
     }
   }
 
-  /// Fetch per-exercise stats from the API and parse into [DataPoint] list.
+  /// Fetch per-exercise stats from the API.
   Future<List<DataPoint>> fetchExerciseStats(String exerciseId) async {
     try {
-      final raw = await _repository.getExerciseStats(exerciseId: exerciseId);
-      final List<dynamic>? points = (raw['points'] ??
-              raw['dataPoints'] ??
-              raw['data']) as List<dynamic>?;
-      if (points == null) return [];
-      return points.map((p) {
-        if (p is Map<String, dynamic>) {
-          return DataPoint.fromJson(p);
-        }
-        return DataPoint(
-          date: (p['date'] ?? '').toString(),
-          value: (p['value'] ?? 0.0).toDouble(),
-        );
-      }).toList();
+      return await _repository.getExerciseStats(exerciseId: exerciseId);
     } catch (e) {
       developer.log('AnalyticsCubit.fetchExerciseStats failed: $e',
           name: 'analytics');
       return [];
+    }
+  }
+
+  /// Save a new measurement by delegating to the MeasurementsRepository.
+  Future<void> saveMeasurement(CreateMeasurementRequest request) async {
+    emit(const AnalyticsState.measurementSaving());
+    try {
+      await _measurementsRepository.createMeasurement(request);
+      emit(const AnalyticsState.measurementSaved());
+    } catch (e) {
+      developer.log('AnalyticsCubit.saveMeasurement failed: $e',
+          name: 'analytics');
+      emit(const AnalyticsState.measurementSaveError('Failed to save measurement.'));
     }
   }
 

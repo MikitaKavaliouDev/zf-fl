@@ -7,7 +7,7 @@ import 'package:ziro_fit/features/explore/cubit/explore_map_state.dart';
 import 'package:ziro_fit/features/explore/data/explore_api_service.dart';
 import 'package:ziro_fit/features/explore/data/models/explore_event_dto.dart';
 import 'package:ziro_fit/features/explore/data/models/paginated_events.dart';
-import 'package:ziro_fit/features/trainers/data/models/trainer_list_item_dto.dart';
+import 'package:ziro_fit/core/models/trainer_list_item_dto.dart';
 
 /// Manages map state: trainers + events loading, clustering, filtering, search.
 ///

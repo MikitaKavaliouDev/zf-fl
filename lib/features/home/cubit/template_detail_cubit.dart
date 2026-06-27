@@ -3,11 +3,15 @@ import 'package:injectable/injectable.dart';
 
 import '../../trainers/data/models/exercise_dto.dart';
 import '../../trainers/data/models/template_dto.dart';
+import '../../trainers/data/workout_session_repository.dart';
 import 'template_detail_state.dart';
 
 @injectable
 class TemplateDetailCubit extends Cubit<TemplateDetailState> {
-  TemplateDetailCubit() : super(const TemplateDetailState.initial());
+  final WorkoutSessionRepository _workoutSessionRepo;
+
+  TemplateDetailCubit(this._workoutSessionRepo)
+      : super(const TemplateDetailState.initial());
 
   /// Load a template's details into the state.
   Future<void> loadTemplate(TemplateDto template) async {
@@ -20,6 +24,15 @@ class TemplateDetailCubit extends Cubit<TemplateDetailState> {
       template: template,
       exercises: List.unmodifiable(template.exercises),
     ));
+  }
+
+  /// Fetch the full exercise library for the exercise picker.
+  Future<List<ExerciseDto>> fetchExerciseLibrary() async {
+    try {
+      return await _workoutSessionRepo.getExerciseLibrary();
+    } catch (e) {
+      return [];
+    }
   }
 
   /// Add an exercise to the template with default reps/sets.

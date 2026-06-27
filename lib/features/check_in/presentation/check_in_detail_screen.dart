@@ -1,10 +1,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/di/injection.dart';
+import '../../../core/widgets/error_widget.dart';
 import '../../../core/theme/app_theme.dart';
-import '../data/check_in_repository.dart';
+import '../cubit/check_in_cubit.dart';
+import '../cubit/check_in_state.dart';
 import '../data/models/check_in_detail_dto.dart';
 
 /// Full detail of a single check-in, showing all metrics, photos,
@@ -19,102 +21,67 @@ class CheckInDetailScreen extends StatefulWidget {
 }
 
 class _CheckInDetailScreenState extends State<CheckInDetailScreen> {
-  final CheckInRepository _repository = getIt<CheckInRepository>();
-
-  bool _isLoading = true;
-  String? _error;
-  CheckInDetailDto? _detail;
-
   @override
   void initState() {
     super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CheckInCubit>().loadDetail(widget.checkInId);
     });
-    try {
-      final detail = await _repository.getDetail(widget.checkInId);
-      if (mounted) {
-        setState(() {
-          _detail = detail;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = 'Failed to load check-in details.';
-          _isLoading = false;
-        });
-      }
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          _detail != null
-              ? DateFormat('MMM d, yyyy').format(_detail!.date)
-              : 'Check-In Detail',
-        ),
-      ),
-      body: _buildBody(),
+    return BlocConsumer<CheckInCubit, CheckInState>(
+      listener: (context, state) {},
+      builder: (context, state) {
+        final title = state.maybeMap(
+          detailLoaded: (d) => DateFormat('MMM d, yyyy').format(d.detail.date),
+          orElse: () => 'Check-In Detail',
+        );
+
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: AppBar(
+            title: Text(title),
+          ),
+          body: _buildBody(context, state),
+        );
+      },
     );
   }
 
-  Widget _buildBody() {
-    if (_isLoading) {
-      return const Center(
+  Widget _buildBody(BuildContext context, CheckInState state) {
+    return state.map(
+      initial: (_) => const Center(
         child: CircularProgressIndicator(
           strokeWidth: 3,
           color: AppColors.primary,
         ),
-      );
-    }
-
-    if (_error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.error_outline_rounded,
-                size: 48,
-                color: AppColors.mutedText,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                _error!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppColors.mutedText,
-                ),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _load,
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
+      ),
+      step: (_) => const SizedBox.shrink(),
+      submitting: (_) => const Center(
+        child: CircularProgressIndicator(
+          strokeWidth: 3,
+          color: AppColors.primary,
         ),
-      );
-    }
+      ),
+      success: (_) => const SizedBox.shrink(),
+      error: (e) => _buildError(context, e.message),
+      historyLoaded: (_) => const SizedBox.shrink(),
+      detailLoaded: (d) => _buildDetail(context, d.detail),
+    );
+  }
 
-    final detail = _detail!;
+  Widget _buildError(BuildContext context, String message) {
+    return ZiroErrorWidget(
+      message: message,
+      onRetry: () => context.read<CheckInCubit>().loadDetail(widget.checkInId),
+    );
+  }
 
+  Widget _buildDetail(BuildContext context, CheckInDetailDto detail) {
     return RefreshIndicator(
-      onRefresh: _load,
+      onRefresh: () => context.read<CheckInCubit>().loadDetail(widget.checkInId),
       color: AppColors.primary,
       child: ListView(
         padding: const EdgeInsets.all(16),

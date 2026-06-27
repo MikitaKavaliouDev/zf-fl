@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../core/di/injection.dart' as di;
+import '../../../../core/widgets/error_widget.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../trainers/data/models/exercise_dto.dart';
 import '../../trainers/data/models/template_dto.dart';
-import '../../trainers/data/workout_session_api_service.dart';
 import '../../trainers/presentation/widgets/exercise_picker_sheet.dart';
 import '../cubit/template_detail_cubit.dart';
 import '../cubit/template_detail_state.dart';
@@ -24,19 +22,12 @@ class TemplateDetailScreen extends StatefulWidget {
 }
 
 class _TemplateDetailScreenState extends State<TemplateDetailScreen> {
-  late final TemplateDetailCubit _cubit;
-
   @override
   void initState() {
     super.initState();
-    _cubit = di.getIt<TemplateDetailCubit>();
-    _cubit.loadTemplate(widget.template);
-  }
-
-  @override
-  void dispose() {
-    _cubit.close();
-    super.dispose();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<TemplateDetailCubit>().loadTemplate(widget.template);
+    });
   }
 
   @override
@@ -90,32 +81,10 @@ class _TemplateDetailScreenState extends State<TemplateDetailScreen> {
   }
 
   Widget _buildError(String message) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.error_outline_rounded,
-                size: 48, color: AppColors.mutedText),
-            const SizedBox(height: 12),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 14, color: AppColors.mutedText),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => _cubit.loadTemplate(widget.template),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      ),
+    return ZiroErrorWidget(
+      message: message,
+      padding: const EdgeInsets.all(32),
+      onRetry: () => context.read<TemplateDetailCubit>().loadTemplate(widget.template),
     );
   }
 
@@ -189,18 +158,15 @@ class _TemplateDetailScreenState extends State<TemplateDetailScreen> {
         return _ExerciseCard(
           exercise: exercise,
           index: index,
-          onDelete: () => _cubit.removeExercise(index),
+          onDelete: () => context.read<TemplateDetailCubit>().removeExercise(index),
         );
       },
     );
   }
 
   Future<void> _showExercisePicker() async {
-    final apiService = di.getIt<WorkoutSessionApiService>();
-    List<ExerciseDto> allExercises;
-    try {
-      allExercises = await apiService.getExerciseLibrary();
-    } catch (_) {
+    final allExercises = await context.read<TemplateDetailCubit>().fetchExerciseLibrary();
+    if (allExercises.isEmpty) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -222,7 +188,7 @@ class _TemplateDetailScreenState extends State<TemplateDetailScreen> {
         isLoading: false,
         onExercisesSelected: (selected) {
           for (final exercise in selected) {
-            _cubit.addExercise(exercise);
+            context.read<TemplateDetailCubit>().addExercise(exercise);
           }
         },
       ),

@@ -9,6 +9,10 @@ import '../../cubit/booking_state.dart';
 import '../../data/booking_repository.dart';
 import '../../data/models/trainer_schedule_dto.dart';
 
+import 'schedule_animations.dart';
+import 'schedule_day_cell.dart';
+import 'schedule_slot_list.dart';
+
 /// Interactive month-calendar schedule section with heat-color availability and
 /// inline booking. Tapping a date reveals available time slots + a booking form.
 ///
@@ -321,7 +325,7 @@ class _ScheduleSectionState extends State<ScheduleSection>
           // Prev button with scale tap
           GestureDetector(
             onTap: canGoBack ? _previousMonth : null,
-            child: _TapScale(
+            child: TapScale(
               child: Container(
                 width: 32,
                 height: 32,
@@ -363,7 +367,7 @@ class _ScheduleSectionState extends State<ScheduleSection>
           // Next button with scale tap
           GestureDetector(
             onTap: _nextMonth,
-            child: _TapScale(
+            child: TapScale(
               child: Container(
                 width: 32,
                 height: 32,
@@ -468,7 +472,7 @@ class _ScheduleSectionState extends State<ScheduleSection>
       cells.add(const Spacer());
     }
     for (int day = 1; day <= daysInMonth; day++) {
-      cells.add(_DayCell(
+      cells.add(DayCell(
         day: day,
         date: _dateFromDay(day),
         slotCount: _slotCount(_dateFromDay(day)),
@@ -562,7 +566,7 @@ class _ScheduleSectionState extends State<ScheduleSection>
             ),
           )
         else
-          _StaggeredSlotList(
+          StaggeredSlotList(
             slots: slots,
             selectedSlot: _selectedTimeSlot,
             animation: _staggerAnim,
@@ -615,7 +619,7 @@ class _ScheduleSectionState extends State<ScheduleSection>
                     final isSelected = _durationMinutes == min;
                     return Padding(
                       padding: const EdgeInsets.only(right: 8),
-                      child: _TapScale(
+                      child: TapScale(
                         child: GestureDetector(
                           onTap: () =>
                               setState(() => _durationMinutes = min),
@@ -692,7 +696,7 @@ class _ScheduleSectionState extends State<ScheduleSection>
                 BlocBuilder<BookingCubit, BookingState>(
                   builder: (context, state) {
                     final isSubmitting = state is BookingSubmitting;
-                    return _TapScale(
+                    return TapScale(
                       child: SizedBox(
                         width: double.infinity,
                         height: 44,
@@ -782,354 +786,6 @@ class _ScheduleSectionState extends State<ScheduleSection>
       const Spacer(),
     ],
       ),
-    );
-  }
-}
-
-// ────────────────────────────────────────────
-// Staggered time-slot list with cascading animation
-// ────────────────────────────────────────────
-
-class _StaggeredSlotList extends StatelessWidget {
-  final List<String> slots;
-  final String? selectedSlot;
-  final Animation<double> animation;
-  final ValueChanged<String> onTap;
-
-  const _StaggeredSlotList({
-    required this.slots,
-    required this.selectedSlot,
-    required this.animation,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: slots.asMap().entries.map((entry) {
-        final idx = entry.key;
-        final slot = entry.value;
-        final isSelected = selectedSlot == slot;
-        final t = CurvedAnimation(
-          parent: animation,
-          curve: Interval(
-            idx * 0.08,
-            0.4 + idx * 0.06,
-            curve: Curves.easeOutCubic,
-          ),
-        );
-        return FadeTransition(
-          opacity: t,
-          child: SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0, 0.2),
-              end: Offset.zero,
-            ).animate(t),
-            child: _TapScale(
-              child: GestureDetector(
-                onTap: () => onTap(slot),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
-                  curve: Curves.easeOutCubic,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: isSelected ? AppColors.primary : AppColors.card,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color:
-                          isSelected ? AppColors.primary : AppColors.borderMuted,
-                    ),
-                  ),
-                  child: Text(
-                    _formatTimeSlot(slot),
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: isSelected ? Colors.white : AppColors.foreground,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  String _formatTimeSlot(String slot) {
-    try {
-      final parts = slot.split(':');
-      final hour = int.parse(parts[0]);
-      final minute = parts.length > 1 ? int.parse(parts[1]) : 0;
-      final period = hour >= 12 ? 'PM' : 'AM';
-      final displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
-      final minuteStr = minute > 0 ? ':$minute' : '';
-      return '$displayHour$minuteStr $period';
-    } catch (_) {
-      return slot;
-    }
-  }
-}
-
-// ────────────────────────────────────────────
-// Press-scale feedback for tappable widgets
-// ────────────────────────────────────────────
-
-class _TapScale extends StatefulWidget {
-  final Widget child;
-
-  const _TapScale({required this.child});
-
-  @override
-  State<_TapScale> createState() => _TapScaleState();
-}
-
-class _TapScaleState extends State<_TapScale>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-  late final Animation<double> _scaleAnim;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 150),
-    );
-    _scaleAnim = Tween<double>(begin: 1.0, end: 0.93).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic),
-    );
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Listener(
-      onPointerDown: (_) => _ctrl.forward(),
-      onPointerUp: (_) {
-        _ctrl.reverse();
-        // Spring-back feel: release → slight overshoot then settle
-        Future.delayed(const Duration(milliseconds: 80), () {
-          if (mounted) _ctrl.reverse();
-        });
-      },
-      onPointerCancel: (_) => _ctrl.reverse(),
-      child: AnimatedBuilder(
-        animation: _scaleAnim,
-        builder: (context, child) => Transform.scale(
-          scale: _scaleAnim.value,
-          child: child,
-        ),
-        child: widget.child,
-      ),
-    );
-  }
-}
-
-// ────────────────────────────────────────────
-// Diagonal cross-out painter for past dates
-// ────────────────────────────────────────────
-
-class _CrossPainter extends CustomPainter {
-  final Color color;
-  final double strokeWidth;
-
-  _CrossPainter({required this.color, this.strokeWidth = 1.5});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = strokeWidth
-      ..style = PaintingStyle.stroke;
-
-    canvas.drawLine(
-      Offset(4, 4),
-      Offset(size.width - 4, size.height - 4),
-      paint,
-    );
-    canvas.drawLine(
-      Offset(size.width - 4, 4),
-      Offset(4, size.height - 4),
-      paint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_CrossPainter oldDelegate) =>
-      oldDelegate.color != color || oldDelegate.strokeWidth != strokeWidth;
-}
-
-// ────────────────────────────────────────────
-// Calendar Day Cell with spring-selection and
-// smooth color morphing
-// ────────────────────────────────────────────
-
-class _DayCell extends StatelessWidget {
-  final int day;
-  final DateTime date;
-  final int slotCount;
-  final bool isPast;
-  final bool isToday;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _DayCell({
-    required this.day,
-    required this.date,
-    required this.slotCount,
-    required this.isPast,
-    required this.isToday,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  Color _heatColor(int count) {
-    if (count == 0) return AppColors.borderMuted;
-    if (count <= 2) return const Color(0xFFBBF7D0);
-    if (count <= 4) return const Color(0xFF4ADE80);
-    return const Color(0xFF16A34A);
-  }
-
-  Color _textColor(int count) {
-    if (count >= 3) return Colors.white;
-    return AppColors.foreground;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isDisabled = isPast && !isToday;
-    final heat = isDisabled ? AppColors.borderMuted : _heatColor(slotCount);
-    final txtColor = isSelected
-        ? Colors.white
-        : isDisabled
-            ? AppColors.mutedText.withAlpha(80)
-            : _textColor(slotCount);
-    final bgColor = isSelected ? AppColors.primary : heat;
-    final borderColor = isToday && !isSelected
-        ? AppColors.primary.withAlpha(100)
-        : Colors.transparent;
-
-    return _TapScale(
-      child: GestureDetector(
-        onTap: isDisabled ? null : onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOutCubic,
-          height: 38,
-          margin: const EdgeInsets.symmetric(horizontal: 1),
-          decoration: BoxDecoration(
-            color: bgColor,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: borderColor, width: 1.5),
-          ),
-          child: _SelectionSpring(
-            isSelected: isSelected,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Center(
-                  child: AnimatedDefaultTextStyle(
-                    duration: const Duration(milliseconds: 250),
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: isToday || isSelected
-                          ? FontWeight.bold
-                          : FontWeight.w500,
-                      color: txtColor,
-                      decoration:
-                          isDisabled ? TextDecoration.lineThrough : null,
-                      decorationColor: AppColors.mutedText.withAlpha(120),
-                      decorationThickness: 1.5,
-                    ),
-                    child: Text('$day'),
-                  ),
-                ),
-                if (isDisabled)
-                  Positioned.fill(
-                    child: CustomPaint(
-                      painter: _CrossPainter(
-                        color: AppColors.mutedText.withAlpha(60),
-                        strokeWidth: 1.5,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ────────────────────────────────────────────
-// Spring scale-up for selected state
-// ────────────────────────────────────────────
-
-class _SelectionSpring extends StatefulWidget {
-  final bool isSelected;
-  final Widget child;
-
-  const _SelectionSpring({
-    required this.isSelected,
-    required this.child,
-  });
-
-  @override
-  State<_SelectionSpring> createState() => _SelectionSpringState();
-}
-
-class _SelectionSpringState extends State<_SelectionSpring>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-  late final Animation<double> _anim;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    _anim = CurvedAnimation(
-      parent: _ctrl,
-      curve: Curves.elasticOut,
-    );
-  }
-
-  @override
-  void didUpdateWidget(_SelectionSpring old) {
-    super.didUpdateWidget(old);
-    if (widget.isSelected && !old.isSelected) {
-      _ctrl.forward(from: 0);
-    }
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _anim,
-      builder: (context, child) {
-        final scale = 1.0 + (_anim.value * 0.08);
-        return Transform.scale(scale: scale, child: child);
-      },
-      child: widget.child,
     );
   }
 }

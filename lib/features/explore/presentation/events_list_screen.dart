@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tanquery_flutter/tanquery_flutter.dart';
 
-import '../../../core/di/injection.dart';
+import '../../../core/di/injection.dart' as di;
 import '../../../core/theme/app_theme.dart';
-import '../data/explore_api_service.dart';
+import '../cubit/explore_cubit.dart';
 import '../data/models/explore_event_dto.dart';
 import '../data/models/paginated_events.dart';
 import 'widgets/explore_empty_events_view.dart';
@@ -17,87 +18,90 @@ import 'widgets/explore_event_row.dart';
 class EventsListViewScreen extends StatelessWidget {
   const EventsListViewScreen({super.key});
 
-  ExploreApiService get _api => getIt<ExploreApiService>();
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Events'),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.map_outlined),
-            onPressed: () => context.push('/explore/map'),
-            tooltip: 'Map view',
-          ),
-        ],
-      ),
-      body: QueryBuilder<PaginatedEvents>(
-        queryKey: QueryKey(['explore', 'events', 'list']),
-        queryFn: () => _api.getEvents(limit: 50),
-        staleTime: const Duration(minutes: 5),
-        placeholderData: PaginatedEvents(events: [], hasMore: false, page: 1, limit: 50),
-        builder: (context, state) {
-          if (state.isLoading && !state.isFetched) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            );
-          }
-          if (state.isError && !state.isFetched) {
-            return _ErrorView(
-              message: state.error?.toString() ?? 'Failed to load events.',
-              onRetry: () => DartQuery.of(context).refetchQueries(
-                queryKey: QueryKey(['explore', 'events', 'list']),
+    return BlocProvider<ExploreCubit>(
+      create: (_) => di.getIt<ExploreCubit>(),
+      child: Builder(
+        builder: (ctx) => Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: AppBar(
+            title: const Text('Events'),
+            centerTitle: true,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.map_outlined),
+                onPressed: () => ctx.push('/explore/map'),
+                tooltip: 'Map view',
               ),
-            );
-          }
-          final events = state.data?.events ?? <ExploreEventDto>[];
-          if (events.isEmpty) {
-            return ExploreEmptyEventsView(
-              onNotifyMe: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Notifications will be available soon.')),
+            ],
+          ),
+          body: QueryBuilder<PaginatedEvents>(
+            queryKey: QueryKey(['explore', 'events', 'list']),
+            queryFn: () => ctx.read<ExploreCubit>().getEvents(limit: 50),
+            staleTime: const Duration(minutes: 5),
+            placeholderData: PaginatedEvents(events: [], hasMore: false, page: 1, limit: 50),
+            builder: (context, state) {
+              if (state.isLoading && !state.isFetched) {
+                return const Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
                 );
-              },
-            );
-          }
+              }
+              if (state.isError && !state.isFetched) {
+                return _ErrorView(
+                  message: state.error?.toString() ?? 'Failed to load events.',
+                  onRetry: () => DartQuery.of(context).refetchQueries(
+                    queryKey: QueryKey(['explore', 'events', 'list']),
+                  ),
+                );
+              }
+              final events = state.data?.events ?? <ExploreEventDto>[];
+              if (events.isEmpty) {
+                return ExploreEmptyEventsView(
+                  onNotifyMe: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Notifications will be available soon.')),
+                    );
+                  },
+                );
+              }
 
-          // Group by date
-          final now = DateTime.now();
-          final upcoming = events.where((e) => e.startTime.isAfter(now)).toList();
-          final Map<String, List<ExploreEventDto>> grouped = {};
-          final List<DateTime> sortedDates = [];
-          for (final event in upcoming) {
-            final key = _dateKey(event.startTime);
-            grouped.putIfAbsent(key, () => []).add(event);
-            if (!sortedDates.any((d) => _dateKey(d) == key)) {
-              sortedDates.add(DateTime(
-                event.startTime.year,
-                event.startTime.month,
-                event.startTime.day,
-              ));
-            }
-          }
-          sortedDates.sort();
+              // Group by date
+              final now = DateTime.now();
+              final upcoming = events.where((e) => e.startTime.isAfter(now)).toList();
+              final Map<String, List<ExploreEventDto>> grouped = {};
+              final List<DateTime> sortedDates = [];
+              for (final event in upcoming) {
+                final key = _dateKey(event.startTime);
+                grouped.putIfAbsent(key, () => []).add(event);
+                if (!sortedDates.any((d) => _dateKey(d) == key)) {
+                  sortedDates.add(DateTime(
+                    event.startTime.year,
+                    event.startTime.month,
+                    event.startTime.day,
+                  ));
+                }
+              }
+              sortedDates.sort();
 
-          return RefreshIndicator(
-            onRefresh: () => DartQuery.of(context).refetchQueries(
-              queryKey: QueryKey(['explore', 'events', 'list']),
-            ),
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              itemCount: sortedDates.length,
-              itemBuilder: (context, index) {
-                final date = sortedDates[index];
-                final key = _dateKey(date);
-                final dayEvents = grouped[key] ?? [];
-                return RepaintBoundary(child: _DateSection(date: date, events: dayEvents));
-              },
-            ),
-          );
-        },
+              return RefreshIndicator(
+                onRefresh: () => DartQuery.of(context).refetchQueries(
+                  queryKey: QueryKey(['explore', 'events', 'list']),
+                ),
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  itemCount: sortedDates.length,
+                  itemBuilder: (context, index) {
+                    final date = sortedDates[index];
+                    final key = _dateKey(date);
+                    final dayEvents = grouped[key] ?? [];
+                    return RepaintBoundary(child: _DateSection(date: date, events: dayEvents));
+                  },
+                ),
+              );
+            },
+          ),
+        ),
       ),
     );
   }

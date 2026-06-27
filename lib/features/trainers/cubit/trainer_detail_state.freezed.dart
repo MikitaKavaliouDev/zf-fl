@@ -125,12 +125,12 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( TrainerDetailDto trainer,  TrainerScheduleDto? schedule,  bool isLoadingSchedule,  List<TrainerPreviewMediaDto> previewMedia,  bool isLinking,  bool isUnlinking,  bool linkRequestPending,  String? linkError)?  loaded,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( TrainerDetailDto trainer,  TrainerScheduleDto? schedule,  bool isLoadingSchedule,  List<TrainerPreviewMediaDto> previewMedia,  bool isLinking,  bool isUnlinking,  bool linkRequestPending,  String? linkError,  String? checkoutError)?  loaded,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case TrainerDetailInitial() when initial != null:
 return initial();case TrainerDetailLoading() when loading != null:
 return loading();case TrainerDetailLoaded() when loaded != null:
-return loaded(_that.trainer,_that.schedule,_that.isLoadingSchedule,_that.previewMedia,_that.isLinking,_that.isUnlinking,_that.linkRequestPending,_that.linkError);case TrainerDetailError() when error != null:
+return loaded(_that.trainer,_that.schedule,_that.isLoadingSchedule,_that.previewMedia,_that.isLinking,_that.isUnlinking,_that.linkRequestPending,_that.linkError,_that.checkoutError);case TrainerDetailError() when error != null:
 return error(_that.message);case _:
   return orElse();
 
@@ -149,12 +149,12 @@ return error(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( TrainerDetailDto trainer,  TrainerScheduleDto? schedule,  bool isLoadingSchedule,  List<TrainerPreviewMediaDto> previewMedia,  bool isLinking,  bool isUnlinking,  bool linkRequestPending,  String? linkError)  loaded,required TResult Function( String message)  error,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( TrainerDetailDto trainer,  TrainerScheduleDto? schedule,  bool isLoadingSchedule,  List<TrainerPreviewMediaDto> previewMedia,  bool isLinking,  bool isUnlinking,  bool linkRequestPending,  String? linkError,  String? checkoutError)  loaded,required TResult Function( String message)  error,}) {final _that = this;
 switch (_that) {
 case TrainerDetailInitial():
 return initial();case TrainerDetailLoading():
 return loading();case TrainerDetailLoaded():
-return loaded(_that.trainer,_that.schedule,_that.isLoadingSchedule,_that.previewMedia,_that.isLinking,_that.isUnlinking,_that.linkRequestPending,_that.linkError);case TrainerDetailError():
+return loaded(_that.trainer,_that.schedule,_that.isLoadingSchedule,_that.previewMedia,_that.isLinking,_that.isUnlinking,_that.linkRequestPending,_that.linkError,_that.checkoutError);case TrainerDetailError():
 return error(_that.message);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -169,12 +169,12 @@ return error(_that.message);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( TrainerDetailDto trainer,  TrainerScheduleDto? schedule,  bool isLoadingSchedule,  List<TrainerPreviewMediaDto> previewMedia,  bool isLinking,  bool isUnlinking,  bool linkRequestPending,  String? linkError)?  loaded,TResult? Function( String message)?  error,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( TrainerDetailDto trainer,  TrainerScheduleDto? schedule,  bool isLoadingSchedule,  List<TrainerPreviewMediaDto> previewMedia,  bool isLinking,  bool isUnlinking,  bool linkRequestPending,  String? linkError,  String? checkoutError)?  loaded,TResult? Function( String message)?  error,}) {final _that = this;
 switch (_that) {
 case TrainerDetailInitial() when initial != null:
 return initial();case TrainerDetailLoading() when loading != null:
 return loading();case TrainerDetailLoaded() when loaded != null:
-return loaded(_that.trainer,_that.schedule,_that.isLoadingSchedule,_that.previewMedia,_that.isLinking,_that.isUnlinking,_that.linkRequestPending,_that.linkError);case TrainerDetailError() when error != null:
+return loaded(_that.trainer,_that.schedule,_that.isLoadingSchedule,_that.previewMedia,_that.isLinking,_that.isUnlinking,_that.linkRequestPending,_that.linkError,_that.checkoutError);case TrainerDetailError() when error != null:
 return error(_that.message);case _:
   return null;
 
@@ -251,7 +251,7 @@ String toString() {
 
 
 class TrainerDetailLoaded implements TrainerDetailState {
-  const TrainerDetailLoaded({required this.trainer, this.schedule, this.isLoadingSchedule = false, final  List<TrainerPreviewMediaDto> previewMedia = const <TrainerPreviewMediaDto>[], this.isLinking = false, this.isUnlinking = false, this.linkRequestPending = false, this.linkError}): _previewMedia = previewMedia;
+  const TrainerDetailLoaded({required this.trainer, this.schedule, this.isLoadingSchedule = false, final  List<TrainerPreviewMediaDto> previewMedia = const <TrainerPreviewMediaDto>[], this.isLinking = false, this.isUnlinking = false, this.linkRequestPending = false, this.linkError, this.checkoutError}): _previewMedia = previewMedia;
   
 
  final  TrainerDetailDto trainer;
@@ -268,6 +268,7 @@ class TrainerDetailLoaded implements TrainerDetailState {
 @JsonKey() final  bool isUnlinking;
 @JsonKey() final  bool linkRequestPending;
  final  String? linkError;
+ final  String? checkoutError;
 
 /// Create a copy of TrainerDetailState
 /// with the given fields replaced by the non-null parameter values.
@@ -279,16 +280,16 @@ $TrainerDetailLoadedCopyWith<TrainerDetailLoaded> get copyWith => _$TrainerDetai
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TrainerDetailLoaded&&(identical(other.trainer, trainer) || other.trainer == trainer)&&(identical(other.schedule, schedule) || other.schedule == schedule)&&(identical(other.isLoadingSchedule, isLoadingSchedule) || other.isLoadingSchedule == isLoadingSchedule)&&const DeepCollectionEquality().equals(other._previewMedia, _previewMedia)&&(identical(other.isLinking, isLinking) || other.isLinking == isLinking)&&(identical(other.isUnlinking, isUnlinking) || other.isUnlinking == isUnlinking)&&(identical(other.linkRequestPending, linkRequestPending) || other.linkRequestPending == linkRequestPending)&&(identical(other.linkError, linkError) || other.linkError == linkError));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TrainerDetailLoaded&&(identical(other.trainer, trainer) || other.trainer == trainer)&&(identical(other.schedule, schedule) || other.schedule == schedule)&&(identical(other.isLoadingSchedule, isLoadingSchedule) || other.isLoadingSchedule == isLoadingSchedule)&&const DeepCollectionEquality().equals(other._previewMedia, _previewMedia)&&(identical(other.isLinking, isLinking) || other.isLinking == isLinking)&&(identical(other.isUnlinking, isUnlinking) || other.isUnlinking == isUnlinking)&&(identical(other.linkRequestPending, linkRequestPending) || other.linkRequestPending == linkRequestPending)&&(identical(other.linkError, linkError) || other.linkError == linkError)&&(identical(other.checkoutError, checkoutError) || other.checkoutError == checkoutError));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,trainer,schedule,isLoadingSchedule,const DeepCollectionEquality().hash(_previewMedia),isLinking,isUnlinking,linkRequestPending,linkError);
+int get hashCode => Object.hash(runtimeType,trainer,schedule,isLoadingSchedule,const DeepCollectionEquality().hash(_previewMedia),isLinking,isUnlinking,linkRequestPending,linkError,checkoutError);
 
 @override
 String toString() {
-  return 'TrainerDetailState.loaded(trainer: $trainer, schedule: $schedule, isLoadingSchedule: $isLoadingSchedule, previewMedia: $previewMedia, isLinking: $isLinking, isUnlinking: $isUnlinking, linkRequestPending: $linkRequestPending, linkError: $linkError)';
+  return 'TrainerDetailState.loaded(trainer: $trainer, schedule: $schedule, isLoadingSchedule: $isLoadingSchedule, previewMedia: $previewMedia, isLinking: $isLinking, isUnlinking: $isUnlinking, linkRequestPending: $linkRequestPending, linkError: $linkError, checkoutError: $checkoutError)';
 }
 
 
@@ -299,7 +300,7 @@ abstract mixin class $TrainerDetailLoadedCopyWith<$Res> implements $TrainerDetai
   factory $TrainerDetailLoadedCopyWith(TrainerDetailLoaded value, $Res Function(TrainerDetailLoaded) _then) = _$TrainerDetailLoadedCopyWithImpl;
 @useResult
 $Res call({
- TrainerDetailDto trainer, TrainerScheduleDto? schedule, bool isLoadingSchedule, List<TrainerPreviewMediaDto> previewMedia, bool isLinking, bool isUnlinking, bool linkRequestPending, String? linkError
+ TrainerDetailDto trainer, TrainerScheduleDto? schedule, bool isLoadingSchedule, List<TrainerPreviewMediaDto> previewMedia, bool isLinking, bool isUnlinking, bool linkRequestPending, String? linkError, String? checkoutError
 });
 
 
@@ -316,7 +317,7 @@ class _$TrainerDetailLoadedCopyWithImpl<$Res>
 
 /// Create a copy of TrainerDetailState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? trainer = null,Object? schedule = freezed,Object? isLoadingSchedule = null,Object? previewMedia = null,Object? isLinking = null,Object? isUnlinking = null,Object? linkRequestPending = null,Object? linkError = freezed,}) {
+@pragma('vm:prefer-inline') $Res call({Object? trainer = null,Object? schedule = freezed,Object? isLoadingSchedule = null,Object? previewMedia = null,Object? isLinking = null,Object? isUnlinking = null,Object? linkRequestPending = null,Object? linkError = freezed,Object? checkoutError = freezed,}) {
   return _then(TrainerDetailLoaded(
 trainer: null == trainer ? _self.trainer : trainer // ignore: cast_nullable_to_non_nullable
 as TrainerDetailDto,schedule: freezed == schedule ? _self.schedule : schedule // ignore: cast_nullable_to_non_nullable
@@ -326,6 +327,7 @@ as List<TrainerPreviewMediaDto>,isLinking: null == isLinking ? _self.isLinking :
 as bool,isUnlinking: null == isUnlinking ? _self.isUnlinking : isUnlinking // ignore: cast_nullable_to_non_nullable
 as bool,linkRequestPending: null == linkRequestPending ? _self.linkRequestPending : linkRequestPending // ignore: cast_nullable_to_non_nullable
 as bool,linkError: freezed == linkError ? _self.linkError : linkError // ignore: cast_nullable_to_non_nullable
+as String?,checkoutError: freezed == checkoutError ? _self.checkoutError : checkoutError // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

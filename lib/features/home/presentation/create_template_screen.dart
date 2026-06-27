@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../core/di/injection.dart' as di;
 import '../../../core/theme/app_theme.dart';
 import '../../notifications/presentation/widgets/ziro_sheet_header.dart';
 import '../../trainers/data/models/exercise_dto.dart';
 import '../../trainers/data/models/template_dto.dart';
-import '../../trainers/data/workout_session_api_service.dart';
 import '../../trainers/presentation/widgets/exercise_picker_sheet.dart';
+import '../cubit/program_cubit.dart';
 
 /// Full-screen template creation view matching iOS `CreateTemplateView.swift`.
 ///
@@ -338,12 +338,9 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
   }
 
   Future<void> _showExercisePicker() async {
-    // Fetch exercises on-demand (same pattern as workout session screen).
-    final apiService = di.getIt<WorkoutSessionApiService>();
-    List<ExerciseDto> allExercises;
-    try {
-      allExercises = await apiService.getExerciseLibrary();
-    } catch (_) {
+    final allExercises =
+        await context.read<ProgramCubit>().fetchExerciseLibrary();
+    if (allExercises.isEmpty) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

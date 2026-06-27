@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
-import '../../../trainers/data/models/trainer_list_item_dto.dart';
+import 'package:ziro_fit/core/models/trainer_list_item_dto.dart';
 
 /// Featured Specialist hero card — dark gradient spotlight card.
 /// Matches iOS TrainerSpotlightHeroCard — ExploreComponents.swift lines 655-808.

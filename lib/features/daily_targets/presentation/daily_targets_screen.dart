@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/di/injection.dart';
 import '../../../core/theme/app_theme.dart';
 import '../cubit/daily_targets_cubit.dart';
 import '../cubit/daily_targets_state.dart';
@@ -20,14 +19,14 @@ class DailyTargetsScreen extends StatefulWidget {
 
 class _DailyTargetsScreenState extends State<DailyTargetsScreen> {
   late DateTime _selectedDate;
-  late DailyTargetsCubit _cubit;
 
   @override
   void initState() {
     super.initState();
     _selectedDate = widget.initialDate ?? DateTime.now();
-    _cubit = getIt<DailyTargetsCubit>();
-    _cubit.loadTargets(date: _dateParam);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<DailyTargetsCubit>().loadTargets(date: _dateParam);
+    });
   }
 
   String get _dateParam =>
@@ -37,73 +36,70 @@ class _DailyTargetsScreenState extends State<DailyTargetsScreen> {
     setState(() {
       _selectedDate = _selectedDate.add(Duration(days: days));
     });
-    _cubit.loadTargets(date: _dateParam);
+    context.read<DailyTargetsCubit>().loadTargets(date: _dateParam);
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<DailyTargetsCubit>.value(
-      value: _cubit,
-      child: Scaffold(
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
         backgroundColor: AppColors.background,
-        appBar: AppBar(
-          backgroundColor: AppColors.background,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded,
-                color: AppColors.foreground),
-            onPressed: () {
-              final router = GoRouter.of(context);
-              if (router.canPop()) {
-                router.pop();
-              } else {
-                context.go('/');
-              }
-            },
-          ),
-          title: const Text(
-            'Daily Targets',
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-              color: AppColors.foreground,
-            ),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded,
+              color: AppColors.foreground),
+          onPressed: () {
+            final router = GoRouter.of(context);
+            if (router.canPop()) {
+              router.pop();
+            } else {
+              context.go('/');
+            }
+          },
+        ),
+        title: const Text(
+          'Daily Targets',
+          style: TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            color: AppColors.foreground,
           ),
         ),
-        body: Column(
-          children: [
-            _DateNavigation(
-              selectedDate: _selectedDate,
-              onPrevious: () => _changeDate(-1),
-              onNext: () => _changeDate(1),
-            ),
-            Expanded(
-              child: BlocBuilder<DailyTargetsCubit, DailyTargetsState>(
-                builder: (context, state) {
-                  return switch (state) {
-                    DailyTargetsInitial() || DailyTargetsLoading() =>
-                      const Center(
-                        child: CircularProgressIndicator(
-                          strokeWidth: 3,
-                          color: AppColors.primary,
-                        ),
+      ),
+      body: Column(
+        children: [
+          _DateNavigation(
+            selectedDate: _selectedDate,
+            onPrevious: () => _changeDate(-1),
+            onNext: () => _changeDate(1),
+          ),
+          Expanded(
+            child: BlocBuilder<DailyTargetsCubit, DailyTargetsState>(
+              builder: (context, state) {
+                return switch (state) {
+                  DailyTargetsInitial() || DailyTargetsLoading() =>
+                    const Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 3,
+                        color: AppColors.primary,
                       ),
-                    DailyTargetsError(:final message) =>
-                      _ErrorView(message: message),
-                    DailyTargetsLoaded(:final targets) => targets.isEmpty
-                        ? const _EmptyState()
-                        : _TargetsList(targets: targets),
-                  };
-                },
-              ),
+                    ),
+                  DailyTargetsError(:final message) =>
+                    _ErrorView(message: message),
+                  DailyTargetsLoaded(:final targets) => targets.isEmpty
+                      ? const _EmptyState()
+                      : _TargetsList(targets: targets),
+                };
+              },
             ),
-          ],
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () => _showCreateDialog(context),
-          backgroundColor: AppColors.primary,
-          child: const Icon(Icons.add, color: Colors.white),
-        ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showCreateDialog(context),
+        backgroundColor: AppColors.primary,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
@@ -190,7 +186,7 @@ class _DailyTargetsScreenState extends State<DailyTargetsScreen> {
                   'date': _dateParam,
                 };
 
-                final success = await _cubit.createTarget(body);
+                final success = await context.read<DailyTargetsCubit>().createTarget(body);
                 if (success && ctx.mounted) Navigator.of(ctx).pop();
               },
               child: const Text('Create'),

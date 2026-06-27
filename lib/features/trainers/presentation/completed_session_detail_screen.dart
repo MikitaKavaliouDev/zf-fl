@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../core/di/injection.dart';
+import '../cubit/workout_session_cubit.dart';
+import '../cubit/workout_session_state.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/error_widget.dart';
 import '../data/models/exercise_log_dto.dart';
 import '../data/models/workout_session_dto.dart';
-import '../data/workout_session_repository.dart';
 
-class CompletedSessionDetailScreen extends StatefulWidget {
+class CompletedSessionDetailScreen extends StatelessWidget {
   final String sessionId;
 
   const CompletedSessionDetailScreen({
@@ -15,106 +17,71 @@ class CompletedSessionDetailScreen extends StatefulWidget {
   });
 
   @override
-  State<CompletedSessionDetailScreen> createState() =>
-      _CompletedSessionDetailScreenState();
-}
-
-class _CompletedSessionDetailScreenState
-    extends State<CompletedSessionDetailScreen> {
-  final _repository = getIt<WorkoutSessionRepository>();
-
-  WorkoutSessionDto? _session;
-  List<ExerciseLogDto> _logs = [];
-  bool _isLoading = true;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadDetails();
-  }
-
-  Future<void> _loadDetails() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-    try {
-      final result = await _repository.getSessionDetails(widget.sessionId);
-      if (!mounted) return;
-      setState(() {
-        _session = result.session;
-        _logs = result.logs;
-        _isLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _error = 'Failed to load session details.';
-        _isLoading = false;
-      });
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Session Details'),
-      ),
-      body: _buildBody(),
+    return BlocConsumer<WorkoutSessionCubit, WorkoutSessionState>(
+      listener: (context, state) {},
+      builder: (context, state) {
+        WorkoutSessionDto? session;
+        List<ExerciseLogDto> logs = [];
+        String? error;
+
+        if (state is WorkoutSessionCompleted) {
+          if (state.session.id == sessionId) {
+            session = state.session;
+            logs = state.logs;
+          }
+        } else if (state is WorkoutSessionExerciseDetailError) {
+          error = state.message;
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Session Details'),
+          ),
+          body: _buildBody(context, session, logs, error),
+        );
+      },
     );
   }
 
-  Widget _buildBody() {
-    if (_isLoading) {
+  Widget _buildBody(
+    BuildContext context,
+    WorkoutSessionDto? session,
+    List<ExerciseLogDto> logs,
+    String? error,
+  ) {
+    if (session == null && error == null) {
       return const Center(
         child: CircularProgressIndicator(color: AppColors.primary),
       );
     }
 
-    if (_error != null) {
-      return _buildError();
-    }
-
-    if (_session == null) {
-      return _buildError();
-    }
-
-    return _buildContent();
-  }
-
-  Widget _buildError() {
-    return Center(
-      child: Padding(
+    if (error != null) {
+      return ZiroErrorWidget(
+        message: error,
+        iconSize: 64,
         padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.error_outline_rounded,
-              size: 64,
-              color: AppColors.mutedText,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _error ?? 'Session not found.',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _loadDetails,
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      ),
-    );
+        messageFontSize: 16,
+        onRetry: () =>
+            context.read<WorkoutSessionCubit>().fetchSessionDetails(sessionId),
+      );
+    }
+
+    if (session == null) {
+      return ZiroErrorWidget(
+        message: 'Session not found.',
+        iconSize: 64,
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        messageFontSize: 16,
+        onRetry: () =>
+            context.read<WorkoutSessionCubit>().fetchSessionDetails(sessionId),
+      );
+    }
+
+    return _buildContent(context, session, logs);
   }
 
-  Widget _buildContent() {
-    final session = _session!;
+  Widget _buildContent(BuildContext context, WorkoutSessionDto session, List<ExerciseLogDto> logs) {
     final startTime = _parseDateTime(session.startTime);
     final endTime = session.endTime != null
         ? _parseDateTime(session.endTime!)
@@ -125,8 +92,8 @@ class _CompletedSessionDetailScreenState
     final timeRangeStr = _formatTimeRange(startTime, endTime);
 
     // Compute stats
-    final totalSets = _logs.length;
-    final totalVolume = _logs.fold<double>(
+    final totalSets = logs.length;
+    final totalVolume = logs.fold<double>(
       0,
       (sum, log) => sum + ((log.weight ?? 0) * (log.reps ?? 0)),
     );
@@ -134,7 +101,7 @@ class _CompletedSessionDetailScreenState
     // Group logs by exercise
     final grouped = <String, List<ExerciseLogDto>>{};
     final exerciseNames = <String, String>{};
-    for (final log in _logs) {
+    for (final log in logs) {
       grouped.putIfAbsent(log.exerciseId, () => []);
       grouped[log.exerciseId]!.add(log);
       if (log.exercise != null) {

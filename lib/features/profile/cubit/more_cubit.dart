@@ -48,4 +48,15 @@ class MoreCubit extends Cubit<MoreState> {
   Future<void> refresh() async {
     await loadUserData();
   }
+
+  /// Load privacy settings from the backend.
+  /// Returns the [PrivacySettingsDto] or rethrows on error.
+  Future<PrivacySettingsDto> loadPrivacySettings() async {
+    return await _apiService.getPrivacySettings();
+  }
+
+  /// Update privacy settings on the backend.
+  Future<void> updatePrivacySettings(Map<String, dynamic> updates) async {
+    await _apiService.updatePrivacySettings(updates);
+  }
 }

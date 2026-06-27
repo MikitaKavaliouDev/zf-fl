@@ -1,17 +1,18 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/di/injection.dart';
+import '../cubit/workout_session_cubit.dart';
+import '../cubit/workout_session_state.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/cached_exercise_image.dart';
+import '../../../core/widgets/error_widget.dart';
 import '../data/models/exercise_dto.dart';
 import '../data/models/exercise_log_dto.dart';
 import '../data/models/workout_session_dto.dart';
-import '../data/models/workout_session_response.dart';
-import '../data/workout_session_repository.dart';
 
-class ExerciseDetailScreen extends StatefulWidget {
+class ExerciseDetailScreen extends StatelessWidget {
   final String exerciseId;
   final String exerciseName;
   final void Function(String? videoUrl)? onPlayVideo;
@@ -24,266 +25,80 @@ class ExerciseDetailScreen extends StatefulWidget {
   });
 
   @override
-  State<ExerciseDetailScreen> createState() => _ExerciseDetailScreenState();
-}
-
-class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
-    with SingleTickerProviderStateMixin {
-  final _repository = getIt<WorkoutSessionRepository>();
-
-  ExerciseDto? _exercise;
-  List<WorkoutSessionDto> _sessions = [];
-  bool _isLoading = true;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadData();
-  }
-
-  Future<void> _loadData() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-    try {
-      final results = await Future.wait([
-        _repository.getExerciseLibrary(),
-        _repository.getHistory(limit: 100),
-      ]);
-
-      final library = results[0] as List<ExerciseDto>;
-      final historyResponse = results[1] as SessionHistoryResponse;
-
-      if (!mounted) return;
-      setState(() {
-        _exercise = library.cast<ExerciseDto?>().firstWhere(
-              (e) => e?.id == widget.exerciseId,
-              orElse: () => null,
-            );
-        _sessions = historyResponse.sessions;
-        _isLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _error = 'Failed to load exercise details.';
-        _isLoading = false;
-      });
-    }
-  }
-
-  // ── Helpers ──
-
-  List<WorkoutSessionDto> _sessionsWithExercise() {
-    return _sessions.where((s) {
-      final logs = s.exerciseLogs ?? [];
-      return logs.any((l) => l.exerciseId == widget.exerciseId);
-    }).toList()
-      ..sort((a, b) => b.startTime.compareTo(a.startTime));
-  }
-
-  List<ExerciseLogDto> _logsForSession(WorkoutSessionDto session) {
-    return (session.exerciseLogs ?? [])
-        .where((l) => l.exerciseId == widget.exerciseId)
-        .toList();
-  }
-
-  double _volumeForSet(ExerciseLogDto log) {
-    return (log.weight ?? 0) * (log.reps ?? 0);
-  }
-
-  double _totalVolumeForSession(WorkoutSessionDto session) {
-    return _logsForSession(session)
-        .fold<double>(0, (sum, l) => sum + _volumeForSet(l));
-  }
-
-  double _estimated1Rm(double weight, int reps) {
-    if (weight <= 0 || reps <= 0) return 0;
-    return weight / (1.0278 - 0.0278 * reps);
-  }
-
-  DateTime _parseDateTime(String iso) {
-    return DateTime.tryParse(iso) ?? DateTime.now();
-  }
-
-  // ── Records calculations ──
-
-  double? _computeEstimated1Rm() {
-    double? max1rm;
-    for (final session in _sessionsWithExercise()) {
-      for (final log in _logsForSession(session)) {
-        final weight = log.weight ?? 0;
-        final reps = log.reps ?? 0;
-        if (weight > 0 && reps > 0) {
-          final rm = _estimated1Rm(weight, reps);
-          if (max1rm == null || rm > max1rm) {
-            max1rm = rm;
-          }
-        }
-      }
-    }
-    return max1rm;
-  }
-
-  double? _computeMaxWeight() {
-    double? maxW;
-    for (final session in _sessionsWithExercise()) {
-      for (final log in _logsForSession(session)) {
-        final w = log.weight ?? 0;
-        if (w > 0 && (maxW == null || w > maxW)) {
-          maxW = w;
-        }
-      }
-    }
-    return maxW;
-  }
-
-  double? _computeMaxVolume() {
-    double? maxV;
-    for (final session in _sessionsWithExercise()) {
-      for (final log in _logsForSession(session)) {
-        final v = _volumeForSet(log);
-        if (v > 0 && (maxV == null || v > maxV)) {
-          maxV = v;
-        }
-      }
-    }
-    return maxV;
-  }
-
-  int _computeSessionCount() {
-    return _sessionsWithExercise().length;
-  }
-
-  // ── Chart data ──
-
-  List<_ChartPoint> _chartPoints() {
-    final sessions = _sessionsWithExercise();
-    final points = <_ChartPoint>[];
-    for (final session in sessions) {
-      final volume = _totalVolumeForSession(session);
-      if (volume > 0) {
-        points.add(_ChartPoint(
-          date: _parseDateTime(session.startTime),
-          volume: volume,
-        ));
-      }
-    }
-    return points.reversed.toList(); // chronological order
-  }
-
-  // ── Build ──
-
-  @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 4,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            widget.exerciseName,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+    return BlocConsumer<WorkoutSessionCubit, WorkoutSessionState>(
+      listener: (context, state) {},
+      builder: (context, state) {
+        return DefaultTabController(
+          length: 4,
+          child: Scaffold(
+            appBar: AppBar(
+              title: Text(
+                exerciseName,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              bottom: const TabBar(
+                labelColor: AppColors.primary,
+                unselectedLabelColor: AppColors.mutedText,
+                indicatorColor: AppColors.primary,
+                labelStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                tabs: [
+                  Tab(text: 'About'),
+                  Tab(text: 'History'),
+                  Tab(text: 'Charts'),
+                  Tab(text: 'Records'),
+                ],
+              ),
             ),
+            backgroundColor: AppColors.background,
+            body: _buildBody(context, state),
           ),
-          bottom: const TabBar(
-            labelColor: AppColors.primary,
-            unselectedLabelColor: AppColors.mutedText,
-            indicatorColor: AppColors.primary,
-            labelStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-            tabs: [
-              Tab(text: 'About'),
-              Tab(text: 'History'),
-              Tab(text: 'Charts'),
-              Tab(text: 'Records'),
-            ],
-          ),
-        ),
-        backgroundColor: AppColors.background,
-        body: _buildBody(),
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildBody() {
-    if (_isLoading) {
+  Widget _buildBody(BuildContext context, WorkoutSessionState state) {
+    if (state is WorkoutSessionExerciseDetailLoading) {
       return const Center(
         child: CircularProgressIndicator(color: AppColors.primary),
       );
     }
 
-    if (_error != null) {
-      return _buildError();
+    if (state is WorkoutSessionExerciseDetailError) {
+      return _buildError(context, state.message);
     }
 
-    if (_exercise == null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.search_off_rounded,
-                size: 64,
-                color: AppColors.mutedText,
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Exercise not found in library.',
-                style: TextStyle(fontSize: 16, color: AppColors.mutedText),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _loadData,
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
-      );
+    if (state is! WorkoutSessionExerciseDetailLoaded) {
+      return const SizedBox.shrink();
     }
+
+    final exercise = state.exercise;
+    final sessions = state.sessions;
+    final filteredSessions = _sessionsWithExercise(sessions)..sort(
+      (a, b) => b.startTime.compareTo(a.startTime),
+    );
 
     return TabBarView(
       children: [
-        _buildAboutTab(),
-        _buildHistoryTab(),
-        _buildChartsTab(),
-        _buildRecordsTab(),
+        _buildAboutTab(exercise),
+        _buildHistoryTab(filteredSessions),
+        _buildChartsTab(filteredSessions, exercise.id),
+        _buildRecordsTab(filteredSessions, exercise.id),
       ],
     );
   }
 
-  Widget _buildError() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.error_outline_rounded,
-              size: 64,
-              color: AppColors.mutedText,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _error ?? 'An error occurred.',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _loadData,
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      ),
+  Widget _buildError(BuildContext context, String message) {
+    return ZiroErrorWidget(
+      message: message,
+      iconSize: 64,
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      messageFontSize: 16,
+      onRetry: () => context.read<WorkoutSessionCubit>().loadExerciseDetail(exerciseId),
     );
   }
 
@@ -291,8 +106,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
   //  TAB 1 – About
   // ═══════════════════════════════════════════════════════════════
 
-  Widget _buildAboutTab() {
-    final exercise = _exercise!;
+  Widget _buildAboutTab(ExerciseDto exercise) {
     final mediaUrl = exercise.imageUrl ?? exercise.videoUrl;
     final isYT = mediaUrl != null && CachedExerciseImage.isYouTubeUrl(mediaUrl);
 
@@ -301,8 +115,6 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Media section — matches iOS AboutView
-          // Full-width GIF/image/YouTube display with 1.2 aspect ratio
           CachedExerciseImage(
             imageUrl: exercise.imageUrl,
             videoUrl: exercise.videoUrl,
@@ -312,13 +124,11 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
             fit: BoxFit.contain,
             compact: false,
             showYouTubeOverlay: true,
-            onTap: isYT && widget.onPlayVideo != null
-                ? () => widget.onPlayVideo!(mediaUrl)
+            onTap: isYT && onPlayVideo != null
+                ? () => onPlayVideo!(mediaUrl)
                 : null,
           ),
           const SizedBox(height: 20),
-
-          // Name
           Text(
             exercise.name,
             style: const TextStyle(
@@ -328,8 +138,6 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
             ),
           ),
           const SizedBox(height: 12),
-
-          // Info capsules (Target + Equipment — like iOS InfoCapsule)
           Wrap(
             spacing: 12,
             runSpacing: 12,
@@ -351,12 +159,8 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
             ],
           ),
           const SizedBox(height: 24),
-
-          // Divider
           const Divider(color: AppColors.borderMuted),
           const SizedBox(height: 16),
-
-          // Instructions section
           const Text(
             'Instructions',
             style: TextStyle(
@@ -451,9 +255,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
   //  TAB 2 – History
   // ═══════════════════════════════════════════════════════════════
 
-  Widget _buildHistoryTab() {
-    final sessions = _sessionsWithExercise();
-
+  Widget _buildHistoryTab(List<WorkoutSessionDto> sessions) {
     if (sessions.isEmpty) {
       return _buildEmptyState(
         icon: Icons.history_rounded,
@@ -465,14 +267,12 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
       padding: const EdgeInsets.all(16),
       itemCount: sessions.length,
       separatorBuilder: (_, _) => const SizedBox(height: 8),
-      itemBuilder: (context, index) {
-        return _buildHistoryCard(sessions[index]);
-      },
+      itemBuilder: (context, index) => _buildHistoryCard(sessions[index], exerciseId),
     );
   }
 
-  Widget _buildHistoryCard(WorkoutSessionDto session) {
-    final logs = _logsForSession(session);
+  Widget _buildHistoryCard(WorkoutSessionDto session, String exerciseId) {
+    final logs = _logsForSession(session, exerciseId);
     final date = _parseDateTime(session.startTime);
     final formattedDate = DateFormat('MMM d, yyyy').format(date);
     final formattedTime = DateFormat('h:mm a').format(date);
@@ -488,7 +288,6 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Date + name row
           Row(
             children: [
               Expanded(
@@ -505,7 +304,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '$sessionName · $formattedTime',
+                      '$sessionName \u00B7 $formattedTime',
                       style: const TextStyle(
                         fontSize: 12,
                         color: AppColors.mutedText,
@@ -515,8 +314,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
                 ),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(99),
@@ -533,11 +331,9 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
             ],
           ),
           const SizedBox(height: 10),
-
-          // Sets table
           ...logs.asMap().entries.map(
-                (entry) => _buildSetRow(entry.key + 1, entry.value),
-              ),
+            (entry) => _buildSetRow(entry.key + 1, entry.value),
+          ),
         ],
       ),
     );
@@ -548,8 +344,8 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
         ? (log.weight == log.weight!.floorToDouble()
             ? '${log.weight!.toInt()} kg'
             : '${log.weight!.toStringAsFixed(1)} kg')
-        : '—';
-    final repsStr = log.reps != null && log.reps! > 0 ? '${log.reps}' : '—';
+        : '\u2014';
+    final repsStr = log.reps != null && log.reps! > 0 ? '${log.reps}' : '\u2014';
     final volume = _volumeForSet(log);
 
     return Container(
@@ -563,7 +359,6 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
       ),
       child: Row(
         children: [
-          // Set number
           Container(
             width: 24,
             height: 24,
@@ -618,18 +413,28 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
   //  TAB 3 – Charts
   // ═══════════════════════════════════════════════════════════════
 
-  Widget _buildChartsTab() {
-    final points = _chartPoints();
+  Widget _buildChartsTab(List<WorkoutSessionDto> sessions, String exerciseId) {
+    final chartPoints = <_ChartPoint>[];
+    for (final session in sessions) {
+      final volume = _totalVolumeForSession(session, exerciseId);
+      if (volume > 0) {
+        chartPoints.add(_ChartPoint(
+          date: _parseDateTime(session.startTime),
+          volume: volume,
+        ));
+      }
+    }
 
-    if (points.length < 2) {
+    if (chartPoints.length < 2) {
       return _buildEmptyState(
         icon: Icons.show_chart_rounded,
-        message: points.isEmpty
+        message: chartPoints.isEmpty
             ? 'No volume data for this exercise yet.'
             : 'At least 2 data points needed for a chart.\nComplete more sessions to see your progress.',
       );
     }
 
+    final points = chartPoints.reversed.toList();
     final maxY = points.fold<double>(0, (max, p) => p.volume > max ? p.volume : max);
     final spots = points.asMap().entries.map((entry) {
       return FlSpot(entry.key.toDouble(), entry.value.volume);
@@ -668,9 +473,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
                     dotData: FlDotData(
                       show: points.length <= 20,
                       getDotPainter: (spot, percent, barData, index) {
-                        return FlDotCirclePainter(
-                          radius: 3,
-                        );
+                        return FlDotCirclePainter(radius: 3);
                       },
                     ),
                     belowBarData: BarAreaData(
@@ -769,11 +572,10 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
   //  TAB 4 – Records
   // ═══════════════════════════════════════════════════════════════
 
-  Widget _buildRecordsTab() {
-    final est1rm = _computeEstimated1Rm();
-    final maxWeight = _computeMaxWeight();
-    final maxVolume = _computeMaxVolume();
-    final sessionCount = _computeSessionCount();
+  Widget _buildRecordsTab(List<WorkoutSessionDto> sessions, String exerciseId) {
+    final est1rm = _computeEstimated1Rm(sessions, exerciseId);
+    final maxWeight = _computeMaxWeight(sessions, exerciseId);
+    final maxVolume = _computeMaxVolume(sessions, exerciseId);
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -805,28 +607,25 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
               _buildRecordCard(
                 icon: Icons.trending_up_rounded,
                 label: 'Est. 1RM',
-                value: est1rm != null ? '${est1rm.toStringAsFixed(1)} kg' : '—',
+                value: est1rm != null ? '${est1rm.toStringAsFixed(1)} kg' : '\u2014',
                 color: const Color(0xFF007AFF),
               ),
               _buildRecordCard(
                 icon: Icons.monitor_weight_outlined,
                 label: 'Max Weight',
-                value:
-                    maxWeight != null ? '${maxWeight.toStringAsFixed(1)} kg' : '—',
+                value: maxWeight != null ? '${maxWeight.toStringAsFixed(1)} kg' : '\u2014',
                 color: Colors.orange,
               ),
               _buildRecordCard(
                 icon: Icons.height_rounded,
                 label: 'Max Volume',
-                value: maxVolume != null
-                    ? '${maxVolume.toStringAsFixed(0)} kg'
-                    : '—',
+                value: maxVolume != null ? '${maxVolume.toStringAsFixed(0)} kg' : '\u2014',
                 color: Colors.green,
               ),
               _buildRecordCard(
                 icon: Icons.fitness_center_rounded,
                 label: 'Sessions',
-                value: '$sessionCount',
+                value: '${sessions.length}',
                 color: const Color(0xFF8E8E93),
               ),
             ],
@@ -905,6 +704,82 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen>
         ),
       ),
     );
+  }
+
+  // ── Helpers ──
+
+  List<WorkoutSessionDto> _sessionsWithExercise(List<WorkoutSessionDto> sessions) {
+    return sessions.where((s) {
+      final logs = s.exerciseLogs ?? [];
+      return logs.any((l) => l.exerciseId == exerciseId);
+    }).toList();
+  }
+
+  List<ExerciseLogDto> _logsForSession(WorkoutSessionDto session, String exerciseId) {
+    return (session.exerciseLogs ?? [])
+        .where((l) => l.exerciseId == exerciseId)
+        .toList();
+  }
+
+  double _volumeForSet(ExerciseLogDto log) {
+    return (log.weight ?? 0) * (log.reps ?? 0);
+  }
+
+  double _totalVolumeForSession(WorkoutSessionDto session, String exerciseId) {
+    return _logsForSession(session, exerciseId)
+        .fold<double>(0, (sum, l) => sum + _volumeForSet(l));
+  }
+
+  double _estimated1Rm(double weight, int reps) {
+    if (weight <= 0 || reps <= 0) return 0;
+    return weight / (1.0278 - 0.0278 * reps);
+  }
+
+  DateTime _parseDateTime(String iso) {
+    return DateTime.tryParse(iso) ?? DateTime.now();
+  }
+
+  double? _computeEstimated1Rm(List<WorkoutSessionDto> sessions, String exerciseId) {
+    double? max1rm;
+    for (final session in sessions) {
+      for (final log in _logsForSession(session, exerciseId)) {
+        final weight = log.weight ?? 0;
+        final reps = log.reps ?? 0;
+        if (weight > 0 && reps > 0) {
+          final rm = _estimated1Rm(weight, reps);
+          if (max1rm == null || rm > max1rm) {
+            max1rm = rm;
+          }
+        }
+      }
+    }
+    return max1rm;
+  }
+
+  double? _computeMaxWeight(List<WorkoutSessionDto> sessions, String exerciseId) {
+    double? maxW;
+    for (final session in sessions) {
+      for (final log in _logsForSession(session, exerciseId)) {
+        final w = log.weight ?? 0;
+        if (w > 0 && (maxW == null || w > maxW)) {
+          maxW = w;
+        }
+      }
+    }
+    return maxW;
+  }
+
+  double? _computeMaxVolume(List<WorkoutSessionDto> sessions, String exerciseId) {
+    double? maxV;
+    for (final session in sessions) {
+      for (final log in _logsForSession(session, exerciseId)) {
+        final v = _volumeForSet(log);
+        if (v > 0 && (maxV == null || v > maxV)) {
+          maxV = v;
+        }
+      }
+    }
+    return maxV;
   }
 }
 

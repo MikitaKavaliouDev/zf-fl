@@ -2,10 +2,10 @@ import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../data/measurements_repository.dart';
+import '../../cubit/analytics_cubit.dart';
 import '../../data/models/measurement_dto.dart';
 import 'models/measurement_type.dart';
 
@@ -25,7 +25,6 @@ class _AddMeasurementSheetState extends State<AddMeasurementSheet> {
   final _valueController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
   bool _isSaving = false;
-  final _repository = getIt<MeasurementsRepository>();
 
   @override
   void dispose() {
@@ -237,7 +236,7 @@ class _AddMeasurementSheetState extends State<AddMeasurementSheet> {
         measurementDate: measurementDate,
       );
 
-      await _repository.createMeasurement(request);
+      await context.read<AnalyticsCubit>().saveMeasurement(request);
 
       developer.log(
         'Measurement saved: ${widget.type.id}=$value',

@@ -55,14 +55,17 @@ extension AnalyticsStatePatterns on AnalyticsState {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( AnalyticsInitial value)?  initial,TResult Function( AnalyticsLoading value)?  loading,TResult Function( AnalyticsLoaded value)?  loaded,TResult Function( AnalyticsError value)?  error,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( AnalyticsInitial value)?  initial,TResult Function( AnalyticsLoading value)?  loading,TResult Function( AnalyticsLoaded value)?  loaded,TResult Function( AnalyticsError value)?  error,TResult Function( AnalyticsMeasurementSaving value)?  measurementSaving,TResult Function( AnalyticsMeasurementSaved value)?  measurementSaved,TResult Function( AnalyticsMeasurementSaveError value)?  measurementSaveError,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case AnalyticsInitial() when initial != null:
 return initial(_that);case AnalyticsLoading() when loading != null:
 return loading(_that);case AnalyticsLoaded() when loaded != null:
 return loaded(_that);case AnalyticsError() when error != null:
-return error(_that);case _:
+return error(_that);case AnalyticsMeasurementSaving() when measurementSaving != null:
+return measurementSaving(_that);case AnalyticsMeasurementSaved() when measurementSaved != null:
+return measurementSaved(_that);case AnalyticsMeasurementSaveError() when measurementSaveError != null:
+return measurementSaveError(_that);case _:
   return orElse();
 
 }
@@ -80,14 +83,17 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( AnalyticsInitial value)  initial,required TResult Function( AnalyticsLoading value)  loading,required TResult Function( AnalyticsLoaded value)  loaded,required TResult Function( AnalyticsError value)  error,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( AnalyticsInitial value)  initial,required TResult Function( AnalyticsLoading value)  loading,required TResult Function( AnalyticsLoaded value)  loaded,required TResult Function( AnalyticsError value)  error,required TResult Function( AnalyticsMeasurementSaving value)  measurementSaving,required TResult Function( AnalyticsMeasurementSaved value)  measurementSaved,required TResult Function( AnalyticsMeasurementSaveError value)  measurementSaveError,}){
 final _that = this;
 switch (_that) {
 case AnalyticsInitial():
 return initial(_that);case AnalyticsLoading():
 return loading(_that);case AnalyticsLoaded():
 return loaded(_that);case AnalyticsError():
-return error(_that);}
+return error(_that);case AnalyticsMeasurementSaving():
+return measurementSaving(_that);case AnalyticsMeasurementSaved():
+return measurementSaved(_that);case AnalyticsMeasurementSaveError():
+return measurementSaveError(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -101,14 +107,17 @@ return error(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( AnalyticsInitial value)?  initial,TResult? Function( AnalyticsLoading value)?  loading,TResult? Function( AnalyticsLoaded value)?  loaded,TResult? Function( AnalyticsError value)?  error,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( AnalyticsInitial value)?  initial,TResult? Function( AnalyticsLoading value)?  loading,TResult? Function( AnalyticsLoaded value)?  loaded,TResult? Function( AnalyticsError value)?  error,TResult? Function( AnalyticsMeasurementSaving value)?  measurementSaving,TResult? Function( AnalyticsMeasurementSaved value)?  measurementSaved,TResult? Function( AnalyticsMeasurementSaveError value)?  measurementSaveError,}){
 final _that = this;
 switch (_that) {
 case AnalyticsInitial() when initial != null:
 return initial(_that);case AnalyticsLoading() when loading != null:
 return loading(_that);case AnalyticsLoaded() when loaded != null:
 return loaded(_that);case AnalyticsError() when error != null:
-return error(_that);case _:
+return error(_that);case AnalyticsMeasurementSaving() when measurementSaving != null:
+return measurementSaving(_that);case AnalyticsMeasurementSaved() when measurementSaved != null:
+return measurementSaved(_that);case AnalyticsMeasurementSaveError() when measurementSaveError != null:
+return measurementSaveError(_that);case _:
   return null;
 
 }
@@ -125,13 +134,16 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( AnalyticsResponseDto analytics,  ProgressResponseDto progress,  WidgetConfigDto widgets,  int currentStreak,  int longestStreak,  double volumeTrend,  double consistencyTrend,  double frequencyTrend,  double averageVolumeTrend)?  loaded,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( AnalyticsResponseDto analytics,  ProgressResponseDto progress,  WidgetConfigDto widgets,  int currentStreak,  int longestStreak,  double volumeTrend,  double consistencyTrend,  double frequencyTrend,  double averageVolumeTrend)?  loaded,TResult Function( String message)?  error,TResult Function()?  measurementSaving,TResult Function()?  measurementSaved,TResult Function( String message)?  measurementSaveError,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case AnalyticsInitial() when initial != null:
 return initial();case AnalyticsLoading() when loading != null:
 return loading();case AnalyticsLoaded() when loaded != null:
 return loaded(_that.analytics,_that.progress,_that.widgets,_that.currentStreak,_that.longestStreak,_that.volumeTrend,_that.consistencyTrend,_that.frequencyTrend,_that.averageVolumeTrend);case AnalyticsError() when error != null:
-return error(_that.message);case _:
+return error(_that.message);case AnalyticsMeasurementSaving() when measurementSaving != null:
+return measurementSaving();case AnalyticsMeasurementSaved() when measurementSaved != null:
+return measurementSaved();case AnalyticsMeasurementSaveError() when measurementSaveError != null:
+return measurementSaveError(_that.message);case _:
   return orElse();
 
 }
@@ -149,13 +161,16 @@ return error(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( AnalyticsResponseDto analytics,  ProgressResponseDto progress,  WidgetConfigDto widgets,  int currentStreak,  int longestStreak,  double volumeTrend,  double consistencyTrend,  double frequencyTrend,  double averageVolumeTrend)  loaded,required TResult Function( String message)  error,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( AnalyticsResponseDto analytics,  ProgressResponseDto progress,  WidgetConfigDto widgets,  int currentStreak,  int longestStreak,  double volumeTrend,  double consistencyTrend,  double frequencyTrend,  double averageVolumeTrend)  loaded,required TResult Function( String message)  error,required TResult Function()  measurementSaving,required TResult Function()  measurementSaved,required TResult Function( String message)  measurementSaveError,}) {final _that = this;
 switch (_that) {
 case AnalyticsInitial():
 return initial();case AnalyticsLoading():
 return loading();case AnalyticsLoaded():
 return loaded(_that.analytics,_that.progress,_that.widgets,_that.currentStreak,_that.longestStreak,_that.volumeTrend,_that.consistencyTrend,_that.frequencyTrend,_that.averageVolumeTrend);case AnalyticsError():
-return error(_that.message);}
+return error(_that.message);case AnalyticsMeasurementSaving():
+return measurementSaving();case AnalyticsMeasurementSaved():
+return measurementSaved();case AnalyticsMeasurementSaveError():
+return measurementSaveError(_that.message);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -169,13 +184,16 @@ return error(_that.message);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( AnalyticsResponseDto analytics,  ProgressResponseDto progress,  WidgetConfigDto widgets,  int currentStreak,  int longestStreak,  double volumeTrend,  double consistencyTrend,  double frequencyTrend,  double averageVolumeTrend)?  loaded,TResult? Function( String message)?  error,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( AnalyticsResponseDto analytics,  ProgressResponseDto progress,  WidgetConfigDto widgets,  int currentStreak,  int longestStreak,  double volumeTrend,  double consistencyTrend,  double frequencyTrend,  double averageVolumeTrend)?  loaded,TResult? Function( String message)?  error,TResult? Function()?  measurementSaving,TResult? Function()?  measurementSaved,TResult? Function( String message)?  measurementSaveError,}) {final _that = this;
 switch (_that) {
 case AnalyticsInitial() when initial != null:
 return initial();case AnalyticsLoading() when loading != null:
 return loading();case AnalyticsLoaded() when loaded != null:
 return loaded(_that.analytics,_that.progress,_that.widgets,_that.currentStreak,_that.longestStreak,_that.volumeTrend,_that.consistencyTrend,_that.frequencyTrend,_that.averageVolumeTrend);case AnalyticsError() when error != null:
-return error(_that.message);case _:
+return error(_that.message);case AnalyticsMeasurementSaving() when measurementSaving != null:
+return measurementSaving();case AnalyticsMeasurementSaved() when measurementSaved != null:
+return measurementSaved();case AnalyticsMeasurementSaveError() when measurementSaveError != null:
+return measurementSaveError(_that.message);case _:
   return null;
 
 }
@@ -414,6 +432,136 @@ class _$AnalyticsErrorCopyWithImpl<$Res>
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
   return _then(AnalyticsError(
+null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class AnalyticsMeasurementSaving implements AnalyticsState {
+  const AnalyticsMeasurementSaving();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AnalyticsMeasurementSaving);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'AnalyticsState.measurementSaving()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class AnalyticsMeasurementSaved implements AnalyticsState {
+  const AnalyticsMeasurementSaved();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AnalyticsMeasurementSaved);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'AnalyticsState.measurementSaved()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class AnalyticsMeasurementSaveError implements AnalyticsState {
+  const AnalyticsMeasurementSaveError(this.message);
+  
+
+ final  String message;
+
+/// Create a copy of AnalyticsState
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AnalyticsMeasurementSaveErrorCopyWith<AnalyticsMeasurementSaveError> get copyWith => _$AnalyticsMeasurementSaveErrorCopyWithImpl<AnalyticsMeasurementSaveError>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AnalyticsMeasurementSaveError&&(identical(other.message, message) || other.message == message));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,message);
+
+@override
+String toString() {
+  return 'AnalyticsState.measurementSaveError(message: $message)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AnalyticsMeasurementSaveErrorCopyWith<$Res> implements $AnalyticsStateCopyWith<$Res> {
+  factory $AnalyticsMeasurementSaveErrorCopyWith(AnalyticsMeasurementSaveError value, $Res Function(AnalyticsMeasurementSaveError) _then) = _$AnalyticsMeasurementSaveErrorCopyWithImpl;
+@useResult
+$Res call({
+ String message
+});
+
+
+
+
+}
+/// @nodoc
+class _$AnalyticsMeasurementSaveErrorCopyWithImpl<$Res>
+    implements $AnalyticsMeasurementSaveErrorCopyWith<$Res> {
+  _$AnalyticsMeasurementSaveErrorCopyWithImpl(this._self, this._then);
+
+  final AnalyticsMeasurementSaveError _self;
+  final $Res Function(AnalyticsMeasurementSaveError) _then;
+
+/// Create a copy of AnalyticsState
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
+  return _then(AnalyticsMeasurementSaveError(
 null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String,
   ));

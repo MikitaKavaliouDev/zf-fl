@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../core/di/injection.dart';
 import '../../../core/theme/app_theme.dart';
 import '../cubit/trainer_detail_cubit.dart';
 import '../cubit/trainer_detail_state.dart';
@@ -44,17 +43,15 @@ class TrainerDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RepositoryProvider.value(
-      value: getIt<TrainerRepository>(),
-      child: BlocProvider(
-        create: (context) {
-          final cubit = TrainerDetailCubit(
-            context.read<TrainerRepository>(),
-          );
-          cubit.load(username);
-          return cubit;
-        },
-        child: BlocConsumer<TrainerDetailCubit, TrainerDetailState>(
+    return BlocProvider<TrainerDetailCubit>(
+      create: (context) {
+        final cubit = TrainerDetailCubit(
+          context.read<TrainerRepository>(),
+        );
+        cubit.load(username);
+        return cubit;
+      },
+      child: BlocConsumer<TrainerDetailCubit, TrainerDetailState>(
           listener: (context, state) {
             if (state is TrainerDetailLoaded && state.linkError != null) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -67,39 +64,44 @@ class TrainerDetailScreen extends StatelessWidget {
             }
           },
           builder: (context, state) {
-            return switch (state) {
-              TrainerDetailInitial() || TrainerDetailLoading() =>
-                const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
-                ),
-              TrainerDetailLoaded(:final trainer) =>
-                _ProfileContent(
-                  trainer: trainer,
-                  username: username,
-                ),
-              TrainerDetailError(:final message) => Scaffold(
-                  body: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.error_outline, size: 48),
-                        const SizedBox(height: 16),
-                        Text(message),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () =>
-                              context.read<TrainerDetailCubit>().load(username),
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    ),
+            Widget body;
+            if (state is TrainerDetailLoading) {
+              body = const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            } else if (state is TrainerDetailLoaded) {
+              body = _ProfileContent(
+                trainer: state.trainer,
+                username: username,
+              );
+            } else if (state is TrainerDetailError) {
+              body = Scaffold(
+                body: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, size: 48),
+                      const SizedBox(height: 16),
+                      Text(state.message),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () =>
+                            context.read<TrainerDetailCubit>().load(username),
+                        child: const Text('Retry'),
+                      ),
+                    ],
                   ),
                 ),
-            };
+              );
+            } else {
+              body = const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
+            return body;
           },
         ),
-      ),
-    );
+      );
   }
 }
 
@@ -531,7 +533,7 @@ class _PackagesSection extends StatelessWidget {
 
   void _purchasePackage(BuildContext context, TrainerPackageDto pkg) async {
     try {
-      final repo = getIt<TrainerRepository>();
+      final repo = context.read<TrainerRepository>();
       final url = await repo.createCheckoutSession(
         type: 'PACKAGE_SALE',
         id: pkg.id,

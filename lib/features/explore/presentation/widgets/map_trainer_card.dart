@@ -1,6 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:ziro_fit/features/trainers/data/models/trainer_list_item_dto.dart';
+import 'package:ziro_fit/core/models/trainer_list_item_dto.dart';
 
 class TrainerMapCard extends StatelessWidget {
   final TrainerListItemDto trainer;

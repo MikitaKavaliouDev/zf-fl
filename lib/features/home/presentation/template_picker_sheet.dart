@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../notifications/presentation/widgets/ziro_sheet_header.dart';
+import '../../../../core/widgets/error_widget.dart';
 import '../../trainers/data/models/template_dto.dart';
 import '../cubit/program_cubit.dart';
 import '../cubit/program_state.dart';
@@ -89,27 +90,12 @@ class _TemplatePickerSheetState extends State<TemplatePickerSheet> {
   }
 
   Widget _buildError(String message) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.cloud_off_rounded,
-              size: 40, color: AppColors.mutedText),
-          const SizedBox(height: 12),
-          Text(
-            message,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.mutedText,
-            ),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () => context.read<ProgramCubit>().loadTemplates(),
-            child: const Text('Retry'),
-          ),
-        ],
-      ),
+    return ZiroErrorWidget(
+      message: message,
+      icon: Icons.cloud_off_rounded,
+      iconSize: 40,
+      padding: EdgeInsets.zero,
+      onRetry: () => context.read<ProgramCubit>().loadTemplates(),
     );
   }
 

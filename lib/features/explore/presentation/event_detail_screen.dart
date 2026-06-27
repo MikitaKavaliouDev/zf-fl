@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:tanquery_flutter/tanquery_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../core/di/injection.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../core/theme/app_theme.dart';
-import '../data/explore_api_service.dart';
+import '../cubit/event_detail_cubit.dart';
 import '../data/models/event_detail_dto.dart';
 
 /// Event Detail Screen — matches iOS EventDetailView layout.
@@ -21,14 +22,19 @@ class EventDetailScreen extends StatefulWidget {
 class _EventDetailScreenState extends State<EventDetailScreen> {
   bool _enrolled = false;
   bool _enrolling = false;
+  late final EventDetailCubit _cubit;
 
-  ExploreApiService get _api => getIt<ExploreApiService>();
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _cubit = context.read<EventDetailCubit>();
+  }
 
   Future<void> _enroll(EventDetailDto event) async {
     setState(() => _enrolling = true);
     try {
       if (event.isFree) {
-        await _api.joinFreeEvent(widget.eventId);
+        await _cubit.joinFreeEvent(widget.eventId);
         if (mounted) {
           setState(() => _enrolled = true);
           DartQuery.of(context).invalidateQueries(
@@ -42,7 +48,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           );
         }
       } else {
-        final url = await _api.createCheckoutSession(
+        final url = await _cubit.createCheckoutSession(
           type: 'EVENT_TICKET',
           id: widget.eventId,
         );
@@ -67,7 +73,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       backgroundColor: AppColors.background,
       body: QueryBuilder<EventDetailDto>(
         queryKey: QueryKey(['events', widget.eventId]),
-        queryFn: () => _api.getEventDetail(widget.eventId),
+        queryFn: () => _cubit.getEventDetail(widget.eventId),
         staleTime: const Duration(minutes: 10),
         builder: (context, state) {
           if (state.isLoading && !state.isFetched) {

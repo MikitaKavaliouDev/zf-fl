@@ -20,6 +20,7 @@ import 'widgets/volume_line_chart_widget.dart';
 import 'widgets/weight_line_chart_widget.dart';
 import 'widgets/widget_container.dart';
 import 'widget_detail_view.dart';
+import '../domain/widget_registry.dart';
 
 /// Main analytics tab screen.
 ///
@@ -51,15 +52,22 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       body: SafeArea(
         child: BlocBuilder<AnalyticsCubit, AnalyticsState>(
           builder: (context, state) {
-            return switch (state) {
-              AnalyticsInitial() => const SizedBox.shrink(),
-              AnalyticsLoading() => const _LoadingView(),
-              AnalyticsError(:final message) => _ErrorView(
-                  message: message,
-                  onRetry: () => context.read<AnalyticsCubit>().loadData(forceRefresh: true),
-                ),
-              AnalyticsLoaded() => _LoadedView(state: state),
-            };
+            if (state is AnalyticsInitial) {
+              return const SizedBox.shrink();
+            }
+            if (state is AnalyticsLoading) {
+              return const _LoadingView();
+            }
+            if (state is AnalyticsLoaded) {
+              return _LoadedView(state: state);
+            }
+            if (state is AnalyticsError) {
+              return _ErrorView(
+                message: state.message,
+                onRetry: () => context.read<AnalyticsCubit>().loadData(forceRefresh: true),
+              );
+            }
+            return const SizedBox.shrink();
           },
         ),
       ),
@@ -119,108 +127,38 @@ class _LoadedView extends StatelessWidget {
   }
 
   Widget _buildWidget(BuildContext context, String type) {
-    final analytics = state.analytics;
-    final progress = state.progress;
+    final entry = widgetRegistry[type];
+    if (entry == null) return const SizedBox.shrink();
 
-    Widget buildInner() {
-      switch (type) {
-        case 'workoutsPerWeek':
-          return VolumeChartWidget(data: analytics.volumeHistory);
-        case 'consistency':
-          return ConsistencyWidget(consistency: analytics.consistency.toInt());
-        case 'volumeProgression':
-          return VolumeLineChartWidget(data: analytics.volumeHistory);
-        case 'muscleFocus':
-          return MuscleDonutChartWidget(
-            data: analytics.muscleDistribution,
-          );
-        case 'prs':
-          return PRsListWidget(data: analytics.recentPRs);
-        case 'heatMap':
-          return HeatmapWidget(heatmapDates: analytics.heatmapDates);
-        case 'weightHistory':
-          return WeightLineChartWidget(data: progress.weight);
-        case 'goal':
-          return const GoalsWidget();
-        case 'insights':
-          return InsightsWidget(volumeHistory: analytics.volumeHistory);
-        case 'exerciseProgress':
-          return ExerciseProgressWidget(
-            favoriteExercises: progress.favoriteExercises,
-            onFetchExerciseStats: (exerciseId) =>
-                context.read<AnalyticsCubit>().fetchExerciseStats(exerciseId),
-          );
-        case 'recovery':
-          return const RecoveryWidget();
-        default:
-          return const SizedBox.shrink();
-      }
+    // Special case: exerciseProgress needs the fetch callback from context
+    Widget child;
+    if (type == 'exerciseProgress') {
+      child = ExerciseProgressWidget(
+        favoriteExercises: state.progress.favoriteExercises,
+        onFetchExerciseStats: (exerciseId) =>
+            context.read<AnalyticsCubit>().fetchExerciseStats(exerciseId),
+      );
+    } else {
+      child = entry.builder(state.analytics, state.progress);
     }
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       child: GestureDetector(
-        onTap: () => _openDetail(context, type),
+        onTap: entry.hasDetail ? () => _openDetail(context, type) : null,
         child: WidgetContainer(
-          title: _widgetTitle(type),
-          subtitle: _widgetSubtitle(type),
-          icon: _widgetIcon(type),
-          child: buildInner(),
+          title: entry.title,
+          subtitle: entry.subtitle,
+          icon: entry.icon,
+          child: child,
         ),
       ),
     );
   }
 
-  String _widgetTitle(String type) {
-    switch (type) {
-      case 'workoutsPerWeek': return 'Workouts Per Week';
-      case 'consistency': return 'Consistency';
-      case 'volumeProgression': return 'Volume Progression';
-      case 'muscleFocus': return 'Muscle Focus';
-      case 'prs': return 'Recent PRs';
-      case 'heatMap': return 'Activity';
-      case 'weightHistory': return 'Weight History';
-      case 'goal': return 'Fitness Goal';
-      case 'insights': return 'Personal Insights';
-      case 'exerciseProgress': return 'Exercise Progress';
-      case 'recovery': return 'Recovery & Load';
-      default: return type;
-    }
-  }
-
-  String? _widgetSubtitle(String type) {
-    switch (type) {
-      case 'consistency': return 'Workout adherence rate';
-      case 'volumeProgression': return 'Total volume over time';
-      case 'muscleFocus': return 'Distribution by muscle group';
-      case 'prs': return 'Personal records';
-      case 'heatMap': return 'Last 12 weeks';
-      case 'weightHistory': return 'From check-ins';
-      case 'exerciseProgress': return 'Per-exercise performance';
-      case 'recovery': return 'Training load analysis';
-      default: return null;
-    }
-  }
-
-  IconData _widgetIcon(String type) {
-    switch (type) {
-      case 'workoutsPerWeek': return Icons.bar_chart_rounded;
-      case 'consistency': return Icons.check_circle_outlined;
-      case 'volumeProgression': return Icons.trending_up_rounded;
-      case 'muscleFocus': return Icons.fitness_center_rounded;
-      case 'prs': return Icons.emoji_events_rounded;
-      case 'heatMap': return Icons.grid_on_rounded;
-      case 'weightHistory': return Icons.monitor_weight_outlined;
-      case 'goal': return Icons.track_changes_rounded;
-      case 'insights': return Icons.auto_awesome_rounded;
-      case 'exerciseProgress': return Icons.show_chart_rounded;
-      case 'recovery': return Icons.favorite_border_rounded;
-      default: return Icons.widgets_outlined;
-    }
-  }
-
   void _openDetail(BuildContext context, String type) {
-    if (type == 'recovery' || type == 'exerciseProgress' || type == 'goal') return;
+    final entry = widgetRegistry[type];
+    if (entry == null || !entry.hasDetail) return;
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => WidgetDetailView(

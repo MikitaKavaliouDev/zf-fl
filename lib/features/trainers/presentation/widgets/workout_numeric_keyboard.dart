@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// Custom numeric keyboard overlay that replaces the system keyboard
-/// for weight/reps input during a workout session.
+import '../../../../core/theme/app_theme.dart';
+
+/// Custom numeric keyboard overlay for logging exercise set values.
 ///
-/// Layout (matching iOS WorkoutNumericKeyboard):
-/// ┌──────────────┬──────────┐
-/// │  1   2   3   │    ⌄     │  ← dismiss
-/// │  4   5   6   │   ⚡/RPE │  ← contextual action
-/// │  7   8   9   │  ─    ＋ │  ← inc/dec
-/// │  0   ,   ⌫  │  Next    │  ← next field
-/// └──────────────┴──────────┘
+/// Features a standard numeric pad plus custom action buttons:
+/// - Dismiss button
+/// - Custom RPE picker or Plate Calculator launcher
+/// - -10 / +10 increment modifiers
+/// - Next/Done focus advance button
 class WorkoutNumericKeyboard extends StatelessWidget {
   final bool isWeight;
+  final bool isLastField;
   final String text;
   final ValueChanged<String> onTextChanged;
   final VoidCallback onNext;
@@ -22,6 +22,7 @@ class WorkoutNumericKeyboard extends StatelessWidget {
   const WorkoutNumericKeyboard({
     super.key,
     required this.isWeight,
+    this.isLastField = false,
     required this.text,
     required this.onTextChanged,
     required this.onNext,
@@ -58,6 +59,7 @@ class WorkoutNumericKeyboard extends StatelessWidget {
                 width: MediaQuery.of(context).size.width * 0.22,
                 child: _ActionColumn(
                   isWeight: isWeight,
+                  isLastField: isLastField,
                   onDismiss: onDismiss,
                   onAction: onAction,
                   onTextChanged: onTextChanged,
@@ -158,6 +160,7 @@ class _NumberGrid extends StatelessWidget {
 
 class _ActionColumn extends StatelessWidget {
   final bool isWeight;
+  final bool isLastField;
   final VoidCallback onDismiss;
   final VoidCallback? onAction;
   final ValueChanged<String> onTextChanged;
@@ -166,6 +169,7 @@ class _ActionColumn extends StatelessWidget {
 
   const _ActionColumn({
     required this.isWeight,
+    required this.isLastField,
     required this.onDismiss,
     this.onAction,
     required this.onTextChanged,
@@ -212,7 +216,7 @@ class _ActionColumn extends StatelessWidget {
         const SizedBox(height: 8),
         // Next / Done button
         _ActionButton(
-          label: isWeight ? 'Next' : 'Done',
+          label: isLastField ? 'Done' : 'Next',
           primary: true,
           onTap: onNext,
           height: 60,
@@ -341,3 +345,4 @@ class _ActionButton extends StatelessWidget {
     );
   }
 }
+      

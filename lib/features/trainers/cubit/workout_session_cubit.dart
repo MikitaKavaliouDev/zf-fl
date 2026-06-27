@@ -8,6 +8,8 @@ import 'package:injectable/injectable.dart';
 import '../data/models/exercise_dto.dart';
 import '../data/models/exercise_log_dto.dart';
 import '../data/models/template_dto.dart';
+import '../data/models/workout_session_dto.dart';
+import '../data/models/workout_session_response.dart';
 import '../data/workout_session_repository.dart';
 import 'workout_session_state.dart';
 
@@ -172,7 +174,9 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
       if (current is WorkoutSessionConflict) {
         try {
           await _repository.cancelSession(current.existingSessionId);
-        } catch (_) {}
+        } catch (e) {
+          developer.log('resolveConflict cancel failed: $e', name: 'workout');
+        }
       }
       emit(const WorkoutSessionState.initial());
       // Don't auto-restart — user must tap "Start Workout" again
@@ -185,6 +189,45 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
   /// Fetch exercise library from backend (system + custom exercises).
   Future<List<ExerciseDto>> fetchExercises() =>
       _repository.getExerciseLibrary();
+
+  /// Fetch session history (paginated).
+  Future<SessionHistoryResponse> fetchHistory({int limit = 20, String? cursor}) =>
+      _repository.getHistory(limit: limit, cursor: cursor);
+
+  /// Load exercise detail (from exercise library) plus session history for a given exercise.
+  Future<void> loadExerciseDetail(String exerciseId) async {
+    emit(const WorkoutSessionState.exerciseDetailLoading());
+    try {
+      final results = await Future.wait([
+        _repository.getExerciseLibrary(),
+        _repository.getHistory(limit: 100),
+      ]);
+      final library = results[0] as List<ExerciseDto>;
+      final historyResponse = results[1] as SessionHistoryResponse;
+      final exercise = library.cast<ExerciseDto?>().firstWhere(
+            (e) => e?.id == exerciseId,
+            orElse: () => null,
+          );
+      if (exercise == null) {
+        emit(const WorkoutSessionState.exerciseDetailError('Exercise not found in library.'));
+        return;
+      }
+      emit(WorkoutSessionState.exerciseDetailLoaded(
+        exercise: exercise,
+        sessions: historyResponse.sessions,
+      ));
+    } catch (e) {
+      emit(const WorkoutSessionState.exerciseDetailError('Failed to load exercise details.'));
+    }
+  }
+
+  // ── Session Detail ──
+
+  /// Fetch session details with exercise logs.
+  Future<({WorkoutSessionDto? session, List<ExerciseLogDto> logs})> fetchSessionDetails(
+    String sessionId,
+  ) =>
+      _repository.getSessionDetails(sessionId);
 
   /// Fetch all available templates.
   Future<List<TemplateDto>> fetchTemplates() =>
@@ -384,6 +427,29 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
     }
   }
 
+  /// Update log locally in-memory (no API call).
+  void updateLogLocally({
+    required String logId,
+    required String exerciseId,
+    double? weight,
+    int? reps,
+  }) {
+    final current = state;
+    if (current is! WorkoutSessionActive) return;
+
+    final updatedLogs = current.logs.map((log) {
+      if (log.id == logId) {
+        return log.copyWith(
+          weight: weight ?? log.weight,
+          reps: reps ?? log.reps,
+        );
+      }
+      return log;
+    }).toList();
+
+    emit(current.copyWith(logs: updatedLogs));
+  }
+
   /// Finish the active session.
   Future<void> finish({String? notes, bool? completeUnfinished}) async {
     final current = state;
@@ -428,7 +494,9 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
     );
     try {
       await _repository.startRest(current.session.id);
-    } catch (_) {}
+    } catch (e) {
+      developer.log('startRest failed: $e', name: 'workout');
+    }
   }
 
   /// End the rest timer.
@@ -448,7 +516,9 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
     );
     try {
       await _repository.endRest(current.session.id);
-    } catch (_) {}
+    } catch (e) {
+      developer.log('endRest failed: $e', name: 'workout');
+    }
   }
 
   /// Adjust the rest countdown by [delta] seconds.

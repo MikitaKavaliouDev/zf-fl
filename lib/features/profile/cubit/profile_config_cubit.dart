@@ -123,7 +123,9 @@ class ProfileConfigCubit extends Cubit<ProfileConfigState> {
       // Refresh auth state to update header avatar
       try {
         await _authCubit.refreshUser();
-      } catch (_) {}
+      } catch (e) {
+        developer.log('ProfileConfigCubit.refreshUser after avatar upload failed: $e', name: 'profile');
+      }
 
       return newAvatarUrl;
     } catch (e) {

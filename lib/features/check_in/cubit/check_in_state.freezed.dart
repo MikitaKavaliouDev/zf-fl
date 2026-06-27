@@ -55,7 +55,7 @@ extension CheckInStatePatterns on CheckInState {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( CheckInInitial value)?  initial,TResult Function( CheckInStep value)?  step,TResult Function( CheckInSubmitting value)?  submitting,TResult Function( CheckInSuccess value)?  success,TResult Function( CheckInError value)?  error,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( CheckInInitial value)?  initial,TResult Function( CheckInStep value)?  step,TResult Function( CheckInSubmitting value)?  submitting,TResult Function( CheckInSuccess value)?  success,TResult Function( CheckInError value)?  error,TResult Function( CheckInHistoryLoaded value)?  historyLoaded,TResult Function( CheckInDetailLoaded value)?  detailLoaded,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case CheckInInitial() when initial != null:
@@ -63,7 +63,9 @@ return initial(_that);case CheckInStep() when step != null:
 return step(_that);case CheckInSubmitting() when submitting != null:
 return submitting(_that);case CheckInSuccess() when success != null:
 return success(_that);case CheckInError() when error != null:
-return error(_that);case _:
+return error(_that);case CheckInHistoryLoaded() when historyLoaded != null:
+return historyLoaded(_that);case CheckInDetailLoaded() when detailLoaded != null:
+return detailLoaded(_that);case _:
   return orElse();
 
 }
@@ -81,7 +83,7 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( CheckInInitial value)  initial,required TResult Function( CheckInStep value)  step,required TResult Function( CheckInSubmitting value)  submitting,required TResult Function( CheckInSuccess value)  success,required TResult Function( CheckInError value)  error,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( CheckInInitial value)  initial,required TResult Function( CheckInStep value)  step,required TResult Function( CheckInSubmitting value)  submitting,required TResult Function( CheckInSuccess value)  success,required TResult Function( CheckInError value)  error,required TResult Function( CheckInHistoryLoaded value)  historyLoaded,required TResult Function( CheckInDetailLoaded value)  detailLoaded,}){
 final _that = this;
 switch (_that) {
 case CheckInInitial():
@@ -89,7 +91,9 @@ return initial(_that);case CheckInStep():
 return step(_that);case CheckInSubmitting():
 return submitting(_that);case CheckInSuccess():
 return success(_that);case CheckInError():
-return error(_that);}
+return error(_that);case CheckInHistoryLoaded():
+return historyLoaded(_that);case CheckInDetailLoaded():
+return detailLoaded(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -103,7 +107,7 @@ return error(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( CheckInInitial value)?  initial,TResult? Function( CheckInStep value)?  step,TResult? Function( CheckInSubmitting value)?  submitting,TResult? Function( CheckInSuccess value)?  success,TResult? Function( CheckInError value)?  error,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( CheckInInitial value)?  initial,TResult? Function( CheckInStep value)?  step,TResult? Function( CheckInSubmitting value)?  submitting,TResult? Function( CheckInSuccess value)?  success,TResult? Function( CheckInError value)?  error,TResult? Function( CheckInHistoryLoaded value)?  historyLoaded,TResult? Function( CheckInDetailLoaded value)?  detailLoaded,}){
 final _that = this;
 switch (_that) {
 case CheckInInitial() when initial != null:
@@ -111,7 +115,9 @@ return initial(_that);case CheckInStep() when step != null:
 return step(_that);case CheckInSubmitting() when submitting != null:
 return submitting(_that);case CheckInSuccess() when success != null:
 return success(_that);case CheckInError() when error != null:
-return error(_that);case _:
+return error(_that);case CheckInHistoryLoaded() when historyLoaded != null:
+return historyLoaded(_that);case CheckInDetailLoaded() when detailLoaded != null:
+return detailLoaded(_that);case _:
   return null;
 
 }
@@ -128,14 +134,16 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function( int step,  CheckInSubmissionDto submission,  CheckInConfigDto? config)?  step,TResult Function()?  submitting,TResult Function( CheckInResponseDto response)?  success,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function( int step,  CheckInSubmissionDto submission,  CheckInConfigDto? config)?  step,TResult Function()?  submitting,TResult Function( CheckInResponseDto response)?  success,TResult Function( String message)?  error,TResult Function( List<CheckInHistoryItemDto> items)?  historyLoaded,TResult Function( CheckInDetailDto detail)?  detailLoaded,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case CheckInInitial() when initial != null:
 return initial();case CheckInStep() when step != null:
 return step(_that.step,_that.submission,_that.config);case CheckInSubmitting() when submitting != null:
 return submitting();case CheckInSuccess() when success != null:
 return success(_that.response);case CheckInError() when error != null:
-return error(_that.message);case _:
+return error(_that.message);case CheckInHistoryLoaded() when historyLoaded != null:
+return historyLoaded(_that.items);case CheckInDetailLoaded() when detailLoaded != null:
+return detailLoaded(_that.detail);case _:
   return orElse();
 
 }
@@ -153,14 +161,16 @@ return error(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function( int step,  CheckInSubmissionDto submission,  CheckInConfigDto? config)  step,required TResult Function()  submitting,required TResult Function( CheckInResponseDto response)  success,required TResult Function( String message)  error,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function( int step,  CheckInSubmissionDto submission,  CheckInConfigDto? config)  step,required TResult Function()  submitting,required TResult Function( CheckInResponseDto response)  success,required TResult Function( String message)  error,required TResult Function( List<CheckInHistoryItemDto> items)  historyLoaded,required TResult Function( CheckInDetailDto detail)  detailLoaded,}) {final _that = this;
 switch (_that) {
 case CheckInInitial():
 return initial();case CheckInStep():
 return step(_that.step,_that.submission,_that.config);case CheckInSubmitting():
 return submitting();case CheckInSuccess():
 return success(_that.response);case CheckInError():
-return error(_that.message);}
+return error(_that.message);case CheckInHistoryLoaded():
+return historyLoaded(_that.items);case CheckInDetailLoaded():
+return detailLoaded(_that.detail);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -174,14 +184,16 @@ return error(_that.message);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function( int step,  CheckInSubmissionDto submission,  CheckInConfigDto? config)?  step,TResult? Function()?  submitting,TResult? Function( CheckInResponseDto response)?  success,TResult? Function( String message)?  error,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function( int step,  CheckInSubmissionDto submission,  CheckInConfigDto? config)?  step,TResult? Function()?  submitting,TResult? Function( CheckInResponseDto response)?  success,TResult? Function( String message)?  error,TResult? Function( List<CheckInHistoryItemDto> items)?  historyLoaded,TResult? Function( CheckInDetailDto detail)?  detailLoaded,}) {final _that = this;
 switch (_that) {
 case CheckInInitial() when initial != null:
 return initial();case CheckInStep() when step != null:
 return step(_that.step,_that.submission,_that.config);case CheckInSubmitting() when submitting != null:
 return submitting();case CheckInSuccess() when success != null:
 return success(_that.response);case CheckInError() when error != null:
-return error(_that.message);case _:
+return error(_that.message);case CheckInHistoryLoaded() when historyLoaded != null:
+return historyLoaded(_that.items);case CheckInDetailLoaded() when detailLoaded != null:
+return detailLoaded(_that.detail);case _:
   return null;
 
 }
@@ -483,6 +495,153 @@ as String,
 }
 
 
+}
+
+/// @nodoc
+
+
+class CheckInHistoryLoaded implements CheckInState {
+  const CheckInHistoryLoaded(final  List<CheckInHistoryItemDto> items): _items = items;
+  
+
+ final  List<CheckInHistoryItemDto> _items;
+ List<CheckInHistoryItemDto> get items {
+  if (_items is EqualUnmodifiableListView) return _items;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_items);
+}
+
+
+/// Create a copy of CheckInState
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CheckInHistoryLoadedCopyWith<CheckInHistoryLoaded> get copyWith => _$CheckInHistoryLoadedCopyWithImpl<CheckInHistoryLoaded>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CheckInHistoryLoaded&&const DeepCollectionEquality().equals(other._items, _items));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_items));
+
+@override
+String toString() {
+  return 'CheckInState.historyLoaded(items: $items)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CheckInHistoryLoadedCopyWith<$Res> implements $CheckInStateCopyWith<$Res> {
+  factory $CheckInHistoryLoadedCopyWith(CheckInHistoryLoaded value, $Res Function(CheckInHistoryLoaded) _then) = _$CheckInHistoryLoadedCopyWithImpl;
+@useResult
+$Res call({
+ List<CheckInHistoryItemDto> items
+});
+
+
+
+
+}
+/// @nodoc
+class _$CheckInHistoryLoadedCopyWithImpl<$Res>
+    implements $CheckInHistoryLoadedCopyWith<$Res> {
+  _$CheckInHistoryLoadedCopyWithImpl(this._self, this._then);
+
+  final CheckInHistoryLoaded _self;
+  final $Res Function(CheckInHistoryLoaded) _then;
+
+/// Create a copy of CheckInState
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? items = null,}) {
+  return _then(CheckInHistoryLoaded(
+null == items ? _self._items : items // ignore: cast_nullable_to_non_nullable
+as List<CheckInHistoryItemDto>,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class CheckInDetailLoaded implements CheckInState {
+  const CheckInDetailLoaded(this.detail);
+  
+
+ final  CheckInDetailDto detail;
+
+/// Create a copy of CheckInState
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CheckInDetailLoadedCopyWith<CheckInDetailLoaded> get copyWith => _$CheckInDetailLoadedCopyWithImpl<CheckInDetailLoaded>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CheckInDetailLoaded&&(identical(other.detail, detail) || other.detail == detail));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,detail);
+
+@override
+String toString() {
+  return 'CheckInState.detailLoaded(detail: $detail)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CheckInDetailLoadedCopyWith<$Res> implements $CheckInStateCopyWith<$Res> {
+  factory $CheckInDetailLoadedCopyWith(CheckInDetailLoaded value, $Res Function(CheckInDetailLoaded) _then) = _$CheckInDetailLoadedCopyWithImpl;
+@useResult
+$Res call({
+ CheckInDetailDto detail
+});
+
+
+$CheckInDetailDtoCopyWith<$Res> get detail;
+
+}
+/// @nodoc
+class _$CheckInDetailLoadedCopyWithImpl<$Res>
+    implements $CheckInDetailLoadedCopyWith<$Res> {
+  _$CheckInDetailLoadedCopyWithImpl(this._self, this._then);
+
+  final CheckInDetailLoaded _self;
+  final $Res Function(CheckInDetailLoaded) _then;
+
+/// Create a copy of CheckInState
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? detail = null,}) {
+  return _then(CheckInDetailLoaded(
+null == detail ? _self.detail : detail // ignore: cast_nullable_to_non_nullable
+as CheckInDetailDto,
+  ));
+}
+
+/// Create a copy of CheckInState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$CheckInDetailDtoCopyWith<$Res> get detail {
+  
+  return $CheckInDetailDtoCopyWith<$Res>(_self.detail, (value) {
+    return _then(_self.copyWith(detail: value));
+  });
+}
 }
 
 // dart format on

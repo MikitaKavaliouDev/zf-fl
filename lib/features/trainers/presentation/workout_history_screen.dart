@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/di/injection.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/error_widget.dart';
 import '../cubit/workout_history_cubit.dart';
 import '../cubit/workout_history_state.dart';
 import '../data/models/workout_session_dto.dart';
@@ -831,32 +832,12 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
   // ── Empty / Error states ──
 
   Widget _buildError(BuildContext context, String message) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.error_outline_rounded,
-              size: 64,
-              color: AppColors.mutedText,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () =>
-                  context.read<WorkoutHistoryCubit>().loadHistory(),
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      ),
+    return ZiroErrorWidget(
+      message: message,
+      iconSize: 64,
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      messageFontSize: 16,
+      onRetry: () => context.read<WorkoutHistoryCubit>().loadHistory(),
     );
   }
 

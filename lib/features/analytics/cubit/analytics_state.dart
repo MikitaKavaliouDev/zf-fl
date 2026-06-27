@@ -25,4 +25,10 @@ sealed class AnalyticsState with _$AnalyticsState {
   }) = AnalyticsLoaded;
 
   const factory AnalyticsState.error(String message) = AnalyticsError;
+
+  const factory AnalyticsState.measurementSaving() = AnalyticsMeasurementSaving;
+
+  const factory AnalyticsState.measurementSaved() = AnalyticsMeasurementSaved;
+
+  const factory AnalyticsState.measurementSaveError(String message) = AnalyticsMeasurementSaveError;
 }

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../notifications/presentation/widgets/ziro_sheet_header.dart';
+import '../../../../core/widgets/error_widget.dart';
 import '../../trainers/data/models/template_dto.dart';
 import '../cubit/program_cubit.dart';
 import '../cubit/program_state.dart';
@@ -141,31 +142,11 @@ class _TemplatesLibraryScreenState extends State<TemplatesLibraryScreen> {
   }
 
   Widget _buildError(String message) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.cloud_off_rounded,
-                size: 48, color: AppColors.mutedText),
-            const SizedBox(height: 12),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.mutedText,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => context.read<ProgramCubit>().loadTemplates(),
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      ),
+    return ZiroErrorWidget(
+      message: message,
+      icon: Icons.cloud_off_rounded,
+      padding: const EdgeInsets.all(32),
+      onRetry: () => context.read<ProgramCubit>().loadTemplates(),
     );
   }
 

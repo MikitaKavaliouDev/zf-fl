@@ -5,6 +5,7 @@ import 'package:injectable/injectable.dart';
 
 import '../../trainers/data/models/exercise_dto.dart';
 import '../../trainers/data/models/template_dto.dart';
+import '../../trainers/data/workout_session_repository.dart';
 import '../data/local_template_repository.dart';
 import '../data/models/program_dto.dart';
 import '../data/models/program_library_response.dart';
@@ -15,8 +16,9 @@ import 'program_state.dart';
 class ProgramCubit extends Cubit<ProgramState> {
   final ProgramRepository _repository;
   final LocalTemplateRepository _localRepo;
+  final WorkoutSessionRepository _workoutSessionRepo;
 
-  ProgramCubit(this._repository, this._localRepo)
+  ProgramCubit(this._repository, this._localRepo, this._workoutSessionRepo)
       : super(const ProgramState.initial());
 
   /// Load all programs for the current client.
@@ -172,6 +174,15 @@ class ProgramCubit extends Cubit<ProgramState> {
         name: 'program',
       );
       return null;
+    }
+  }
+
+  /// Fetch the full exercise library for the exercise picker.
+  Future<List<ExerciseDto>> fetchExerciseLibrary() async {
+    try {
+      return await _workoutSessionRepo.getExerciseLibrary();
+    } catch (e) {
+      return [];
     }
   }
 

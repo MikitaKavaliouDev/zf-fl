@@ -102,12 +102,12 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
           builder: (context, state) {
             return switch (state) {
               WorkoutSessionInitial() => WorkoutIdleView(
-                onStartWorkout: () => context.read<WorkoutSessionCubit>().start(),
-                onStartFromTemplate: () => _showTemplatePicker(context),
-              ),
+                  onStartWorkout: () => context.read<WorkoutSessionCubit>().start(),
+                  onStartFromTemplate: () => _showTemplatePicker(context),
+                ),
               WorkoutSessionLoading() => const Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
-              ),
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                ),
               WorkoutSessionActive(
                 :final elapsed,
                 :final isPaused,
@@ -123,27 +123,30 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
                   restRemaining, showRestFinishedToast, sessionNewRecords,
                   showKeyboard,
                 ),
-              WorkoutSessionCompleted(:final totalDuration, :final logs, :final newRecords) =>
+              WorkoutSessionCompleted(:final session, :final totalDuration, :final logs, :final newRecords) =>
                 WorkoutCompletedView(
+                  session: session,
                   totalDuration: totalDuration,
                   logs: logs,
                   newRecords: newRecords,
                   onNewWorkout: () => context.read<WorkoutSessionCubit>().start(),
                   onSaveAsTemplate: () => _showSaveAsTemplate(context),
+                  onGoHome: () => context.go('/'),
                 ),
               WorkoutSessionConflict(:final existingSessionId) =>
                 WorkoutConflictView(
                   existingSessionId: existingSessionId,
                   onResumeExisting: () =>
-                    context.read<WorkoutSessionCubit>().resolveConflict(startNew: false),
+                      context.read<WorkoutSessionCubit>().resolveConflict(startNew: false),
                   onStartFresh: () =>
-                    context.read<WorkoutSessionCubit>().resolveConflict(startNew: true),
+                      context.read<WorkoutSessionCubit>().resolveConflict(startNew: true),
                 ),
               WorkoutSessionError(:final message) =>
                 WorkoutErrorView(
                   message: message,
                   onRetry: () => context.read<WorkoutSessionCubit>().loadCurrent(),
                 ),
+              _ => const SizedBox.shrink(),
             };
           },
         ),
@@ -172,19 +175,10 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
 
   void _stateListener(BuildContext context, WorkoutSessionState state) {
     if (state is WorkoutSessionCompleted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Workout completed! Duration: ${formatDuration(state.totalDuration)}',
-          ),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
       getIt<EventBus>().emit(WorkoutCompletedEvent(
         sessionId: state.session.id,
         duration: state.totalDuration,
       ));
-      context.go('/');
     }
     if (state is WorkoutSessionActive) {
       if (state.newPrRecord && !_lastNewPrRecord) {
@@ -252,6 +246,14 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
     }
 
     final isResting = restStartedAt != null;
+
+    // Compute isLastField for keyboard
+    bool isLastField = false;
+    if (showKeyboard && _focusTarget != null) {
+      final exLogs = grouped[_focusTarget!.exerciseId] ?? [];
+      isLastField = !_focusTarget!.isWeight &&
+          _focusTarget!.setIndex == exLogs.length - 1;
+    }
 
     return Stack(
       children: [
@@ -403,6 +405,7 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
                 child: _overlayMode == _InputOverlay.none
                     ? WorkoutNumericKeyboard(
                         isWeight: _focusTarget!.isWeight,
+                        isLastField: isLastField,
                         text: _activeInputText,
                         onTextChanged: (v) => setState(() => _activeInputText = v),
                         onNext: _handleInputNext,
@@ -617,10 +620,40 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
     }
   }
 
+  void _syncActiveInputLocally() {
+    if (_focusTarget == null || _activeInputText.isEmpty) return;
+
+    final value = double.tryParse(_activeInputText.replaceAll(',', '.'));
+    if (value == null) return;
+
+    final cubit = context.read<WorkoutSessionCubit>();
+    final state = cubit.state;
+    if (state is! WorkoutSessionActive) return;
+
+    final exLogs = state.logs
+        .where((l) => l.exerciseId == _focusTarget!.exerciseId)
+        .toList();
+
+    if (_focusTarget!.setIndex >= exLogs.length) return;
+    final log = exLogs[_focusTarget!.setIndex];
+
+    if (_focusTarget!.isWeight) {
+      cubit.updateLogLocally(
+        logId: log.id,
+        exerciseId: _focusTarget!.exerciseId,
+        weight: value,
+      );
+    } else {
+      cubit.updateLogLocally(
+        logId: log.id,
+        exerciseId: _focusTarget!.exerciseId,
+        reps: value.toInt(),
+      );
+    }
+  }
+
   void _handleInputNext() {
     if (_focusTarget == null) return;
-
-    _syncActiveInput();
 
     final cubit = context.read<WorkoutSessionCubit>();
     final state = cubit.state;
@@ -635,11 +668,18 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
         .where((l) => l.exerciseId == exerciseId)
         .toList();
 
-    final exerciseName = setIndex < exLogs.length
-        ? exLogs[setIndex].exercise?.name ?? exerciseId
-        : exerciseId;
+    if (setIndex >= exLogs.length) {
+      _handleInputDismiss();
+      return;
+    }
+
+    final log = exLogs[setIndex];
 
     if (_focusTarget!.isWeight) {
+      // 1. We are on weight. Save draft weight value locally and move to reps.
+      _syncActiveInputLocally();
+      
+      final exerciseName = log.exercise?.name ?? exerciseId;
       developer.log(
         'nav_next | exercise=$exerciseName | set=$setIndex | field=weight→reps',
         name: 'workout',
@@ -648,13 +688,15 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
         exerciseId: exerciseId,
         setIndex: setIndex,
         fieldType: FieldType.reps,
-        currentValue: setIndex < exLogs.length
-            ? exLogs[setIndex].reps?.toDouble()
-            : null,
+        currentValue: log.reps?.toDouble(),
       );
     } else {
+      // 2. We are on reps.
       final nextIndex = setIndex + 1;
       if (nextIndex < exLogs.length) {
+        // There is a next set. Save draft reps value locally and move to next set's weight.
+        _syncActiveInputLocally();
+        
         developer.log(
           'nav_next | exercise=${exLogs[nextIndex].exercise?.name ?? exerciseId} '
           '| set=$setIndex→$nextIndex | field=reps→weight',
@@ -667,11 +709,13 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
           currentValue: exLogs[nextIndex].weight,
         );
       } else {
-        developer.log(
-          'nav_next_dismiss | exercise=$exerciseName | set=$setIndex | lastSet=reps→done',
-          name: 'workout',
+        // This is the last field of the last set!
+        // Tapping 'Done' should submit the set/exercise as completed!
+        _completeSet(
+          exerciseId: exerciseId,
+          setIndex: setIndex,
+          log: log,
         );
-        _handleInputDismiss();
       }
     }
   }

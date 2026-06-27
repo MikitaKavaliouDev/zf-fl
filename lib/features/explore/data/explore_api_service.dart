@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../trainers/data/models/trainer_list_item_dto.dart';
+import 'package:ziro_fit/core/models/trainer_list_item_dto.dart';
 import 'models/event_detail_dto.dart';
 import 'models/explore_metadata.dart';
 import 'models/featured_content.dart';

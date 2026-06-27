@@ -131,4 +131,21 @@ class TrainerDetailCubit extends Cubit<TrainerDetailState> {
       emit(current.copyWith(linkError: null));
     }
   }
+
+  Future<String?> createCheckoutSession(String packageId) async {
+    final current = state;
+    if (current is! TrainerDetailLoaded) return null;
+    try {
+      final url = await _repository.createCheckoutSession(
+        type: 'PACKAGE_SALE',
+        id: packageId,
+      );
+      return url;
+    } catch (e) {
+      emit(current.copyWith(
+        checkoutError: 'Failed to start checkout. Please try again.',
+      ));
+      return null;
+    }
+  }
 }

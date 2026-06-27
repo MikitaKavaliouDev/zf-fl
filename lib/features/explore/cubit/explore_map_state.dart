@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:ziro_fit/features/explore/data/models/explore_event_dto.dart';
-import 'package:ziro_fit/features/trainers/data/models/trainer_list_item_dto.dart';
+import 'package:ziro_fit/core/models/trainer_list_item_dto.dart';
 
 part 'explore_map_state.freezed.dart';
 

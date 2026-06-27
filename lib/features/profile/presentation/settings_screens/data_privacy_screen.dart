@@ -1,12 +1,11 @@
 import 'dart:developer' as developer;
 
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../data/profile_api_service.dart';
+import '../../cubit/more_cubit.dart';
 
 class DataPrivacyScreen extends StatefulWidget {
   const DataPrivacyScreen({super.key});
@@ -16,8 +15,6 @@ class DataPrivacyScreen extends StatefulWidget {
 }
 
 class _DataPrivacyScreenState extends State<DataPrivacyScreen> {
-  final ProfileApiService _api = getIt<ProfileApiService>();
-
   bool _isLoading = true;
   String? _error;
   bool _isSaving = false;
@@ -42,7 +39,7 @@ class _DataPrivacyScreenState extends State<DataPrivacyScreen> {
       _error = null;
     });
     try {
-      final settings = await _api.getPrivacySettings();
+      final settings = await context.read<MoreCubit>().loadPrivacySettings();
       setState(() {
         _shareWorkoutHistory = settings.shareWorkoutHistory;
         _shareBodyMeasurements = settings.shareBodyMeasurements;
@@ -52,18 +49,10 @@ class _DataPrivacyScreenState extends State<DataPrivacyScreen> {
         _dataRetentionDays = settings.dataRetentionDays;
         _isLoading = false;
       });
-    } on DioException catch (e) {
-      developer.log('Failed to load privacy settings: $e', name: 'data_privacy');
-      setState(() {
-        _error = e.response?.statusCode == 404
-            ? 'No client profile found.'
-            : 'Failed to load privacy settings.';
-        _isLoading = false;
-      });
     } catch (e) {
       developer.log('Failed to load privacy settings: $e', name: 'data_privacy');
       setState(() {
-        _error = 'Failed to load privacy settings. Please check your connection.';
+        _error = 'Failed to load privacy settings.';
         _isLoading = false;
       });
     }
@@ -80,7 +69,7 @@ class _DataPrivacyScreenState extends State<DataPrivacyScreen> {
         'allowTrainerExport': _allowTrainerExport,
         'dataRetentionDays': _dataRetentionDays,
       };
-      await _api.updatePrivacySettings(updates);
+      await context.read<MoreCubit>().updatePrivacySettings(updates);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

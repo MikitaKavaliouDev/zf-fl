@@ -8,21 +8,27 @@ import 'package:ziro_fit/features/home/data/local_template_repository.dart';
 import 'package:ziro_fit/features/home/data/models/program_library_response.dart';
 import 'package:ziro_fit/features/home/data/program_repository.dart';
 import 'package:ziro_fit/features/trainers/data/models/template_dto.dart';
+import 'package:ziro_fit/features/trainers/data/workout_session_repository.dart';
 
 class MockProgramRepository extends Mock implements ProgramRepository {}
 
 class MockLocalTemplateRepository extends Mock
     implements LocalTemplateRepository {}
 
+class MockWorkoutSessionRepository extends Mock
+    implements WorkoutSessionRepository {}
+
 void main() {
   late ProgramRepository repository;
   late LocalTemplateRepository localRepo;
+  late WorkoutSessionRepository workoutSessionRepo;
   late ProgramCubit cubit;
 
   setUp(() {
     repository = MockProgramRepository();
     localRepo = MockLocalTemplateRepository();
-    cubit = ProgramCubit(repository, localRepo);
+    workoutSessionRepo = MockWorkoutSessionRepository();
+    cubit = ProgramCubit(repository, localRepo, workoutSessionRepo);
   });
 
   tearDown(() {

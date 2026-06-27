@@ -12,6 +12,8 @@ import '../../features/auth/presentation/onboarding_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/check_in/cubit/check_in_cubit.dart';
 import '../../features/check_in/presentation/check_in_screen.dart';
+import '../../features/explore/cubit/event_detail_cubit.dart';
+import '../../features/explore/cubit/trainer_discovery_cubit.dart';
 import '../../features/explore/presentation/event_detail_screen.dart';
 import '../../features/explore/presentation/events_list_screen.dart';
 import '../../features/explore/presentation/explore_screen.dart';
@@ -196,13 +198,16 @@ GoRouter createAppRouter(AuthCubit authCubit) {
         path: '/explore/discovery',
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
-          child: TrainerDiscoveryScreen(
-            initialQuery: state.extra is Map
-                ? (state.extra as Map)['query'] as String?
-                : null,
-            initialSpecialty: state.extra is Map
-                ? (state.extra as Map)['specialty'] as String?
-                : null,
+          child: BlocProvider<TrainerDiscoveryCubit>(
+            create: (_) => getIt<TrainerDiscoveryCubit>(),
+            child: TrainerDiscoveryScreen(
+              initialQuery: state.extra is Map
+                  ? (state.extra as Map)['query'] as String?
+                  : null,
+              initialSpecialty: state.extra is Map
+                  ? (state.extra as Map)['specialty'] as String?
+                  : null,
+            ),
           ),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return SlideTransition(
@@ -241,8 +246,11 @@ GoRouter createAppRouter(AuthCubit authCubit) {
         path: '/explore/event/:id',
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
-          child: EventDetailScreen(
-            eventId: state.pathParameters['id'] ?? '',
+          child: BlocProvider<EventDetailCubit>(
+            create: (_) => getIt<EventDetailCubit>(),
+            child: EventDetailScreen(
+              eventId: state.pathParameters['id'] ?? '',
+            ),
           ),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return SlideTransition(
@@ -511,12 +519,18 @@ GoRouter createAppRouter(AuthCubit authCubit) {
       ),
       GoRoute(
         path: '/check-in-history',
-        builder: (_, _) => const CheckInHistoryScreen(),
+        builder: (_, _) => BlocProvider(
+          create: (_) => getIt<CheckInCubit>(),
+          child: const CheckInHistoryScreen(),
+        ),
       ),
       GoRoute(
         path: '/check-in-detail/:id',
-        builder: (_, state) => CheckInDetailScreen(
-          checkInId: state.pathParameters['id'] ?? '',
+        builder: (_, state) => BlocProvider(
+          create: (_) => getIt<CheckInCubit>(),
+          child: CheckInDetailScreen(
+            checkInId: state.pathParameters['id'] ?? '',
+          ),
         ),
       ),
       GoRoute(

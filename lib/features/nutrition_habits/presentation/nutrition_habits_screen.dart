@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/di/injection.dart';
 import '../../../core/theme/app_theme.dart';
 import '../cubit/nutrition_habits_cubit.dart';
 import '../cubit/nutrition_habits_state.dart';
@@ -23,85 +22,81 @@ class NutritionHabitsScreen extends StatefulWidget {
 }
 
 class _NutritionHabitsScreenState extends State<NutritionHabitsScreen> {
-  late final NutritionHabitsCubit _cubit;
-
   @override
   void initState() {
     super.initState();
-    _cubit = getIt<NutritionHabitsCubit>();
-    _cubit.loadData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<NutritionHabitsCubit>().loadData();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<NutritionHabitsCubit>.value(
-      value: _cubit,
-      child: Scaffold(
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
         backgroundColor: AppColors.background,
-        appBar: AppBar(
-          backgroundColor: AppColors.background,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded,
-                color: AppColors.foreground),
-            onPressed: () {
-              final router = GoRouter.of(context);
-              if (router.canPop()) {
-                router.pop();
-              } else {
-                context.go('/');
-              }
-            },
-          ),
-          title: const Text(
-            'Nutrition & Habits',
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-              color: AppColors.foreground,
-            ),
-          ),
-        ),
-        body: BlocBuilder<NutritionHabitsCubit, NutritionHabitsState>(
-          builder: (context, state) {
-            return switch (state) {
-              NutritionHabitsInitial() || NutritionHabitsLoading() =>
-                const Center(
-                  child: CircularProgressIndicator(
-                    strokeWidth: 3,
-                    color: AppColors.primary,
-                  ),
-                ),
-              NutritionHabitsError(:final message) =>
-                _ErrorView(message: message, onRetry: () => _cubit.loadData()),
-              NutritionHabitsLoaded(:final plan, :final habits) =>
-                RefreshIndicator(
-                  onRefresh: () => _cubit.refresh(),
-                  color: AppColors.primary,
-                  child: ListView(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-                    children: [
-                      // ── Nutrition Plan Section ──
-                      if (plan != null) ...[
-                        _NutritionPlanCard(plan: plan),
-                        const SizedBox(height: 24),
-                      ] else ...[
-                        _NoPlanCard(),
-                        const SizedBox(height: 24),
-                      ],
-
-                      // ── Today's Habits Section ──
-                      _HabitsSection(
-                        habits: habits,
-                        onToggle: (habitId, isCompleted) =>
-                            _cubit.toggleHabit(habitId, isCompleted),
-                      ),
-                    ],
-                  ),
-                ),
-            };
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded,
+              color: AppColors.foreground),
+          onPressed: () {
+            final router = GoRouter.of(context);
+            if (router.canPop()) {
+              router.pop();
+            } else {
+              context.go('/');
+            }
           },
         ),
+        title: const Text(
+          'Nutrition & Habits',
+          style: TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            color: AppColors.foreground,
+          ),
+        ),
+      ),
+      body: BlocBuilder<NutritionHabitsCubit, NutritionHabitsState>(
+        builder: (context, state) {
+          return switch (state) {
+            NutritionHabitsInitial() || NutritionHabitsLoading() =>
+              const Center(
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  color: AppColors.primary,
+                ),
+              ),
+            NutritionHabitsError(:final message) =>
+              _ErrorView(message: message, onRetry: () => context.read<NutritionHabitsCubit>().loadData()),
+            NutritionHabitsLoaded(:final plan, :final habits) =>
+              RefreshIndicator(
+                onRefresh: () => context.read<NutritionHabitsCubit>().refresh(),
+                color: AppColors.primary,
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                  children: [
+                    // ── Nutrition Plan Section ──
+                    if (plan != null) ...[
+                      _NutritionPlanCard(plan: plan),
+                      const SizedBox(height: 24),
+                    ] else ...[
+                      _NoPlanCard(),
+                      const SizedBox(height: 24),
+                    ],
+
+                    // ── Today's Habits Section ──
+                    _HabitsSection(
+                      habits: habits,
+                      onToggle: (habitId, isCompleted) =>
+                          context.read<NutritionHabitsCubit>().toggleHabit(habitId, isCompleted),
+                    ),
+                  ],
+                ),
+              ),
+          };
+        },
       ),
     );
   }

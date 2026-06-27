@@ -8,6 +8,7 @@ import 'package:ziro_fit/features/analytics/cubit/analytics_cubit.dart';
 import 'package:ziro_fit/features/analytics/cubit/analytics_state.dart';
 import 'package:ziro_fit/features/analytics/data/analytics_local_service.dart';
 import 'package:ziro_fit/features/analytics/data/analytics_repository.dart';
+import 'package:ziro_fit/features/analytics/data/measurements_repository.dart';
 import 'package:ziro_fit/features/analytics/data/models/analytics_response_dto.dart';
 import 'package:ziro_fit/features/analytics/data/models/progress_response_dto.dart';
 import 'package:ziro_fit/features/analytics/data/models/widget_config_dto.dart';
@@ -15,11 +16,13 @@ import 'package:ziro_fit/features/analytics/data/models/widget_config_dto.dart';
 class MockAnalyticsRepository extends Mock implements AnalyticsRepository {}
 class MockAnalyticsLocalService extends Mock implements AnalyticsLocalService {}
 class MockConnectivityService extends Mock implements ConnectivityService {}
+class MockMeasurementsRepository extends Mock implements MeasurementsRepository {}
 
 void main() {
   late AnalyticsRepository repository;
   late AnalyticsLocalService localService;
   late ConnectivityService connectivity;
+  late MeasurementsRepository measurementsRepository;
   late AnalyticsCubit cubit;
 
   setUpAll(() {
@@ -33,12 +36,13 @@ void main() {
     repository = MockAnalyticsRepository();
     localService = MockAnalyticsLocalService();
     connectivity = MockConnectivityService();
+    measurementsRepository = MockMeasurementsRepository();
 
     when(() => connectivity.isOnline).thenReturn(true);
     when(() => connectivity.onConnectivityChanged)
         .thenAnswer((_) => const Stream.empty());
 
-    cubit = AnalyticsCubit(repository, localService, connectivity);
+    cubit = AnalyticsCubit(repository, localService, connectivity, measurementsRepository);
   });
 
   tearDown(() {

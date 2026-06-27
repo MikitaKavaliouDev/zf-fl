@@ -1,421 +1,597 @@
 <response>
   <reasoning>
-    The issue with the RPE (Rate of Perceived Exertion) modal staying open indefinitely when attempting to submit, clear, or tap outside of it is caused by the callbacks not dismissing the dialog context. 
-
-    The `showDialog` method is used in both `lib/features/trainers/presentation/widgets/exercise_card.dart` and `lib/features/trainers/presentation/workout_session_screen.dart` to open the `RpePicker` widget. However, their `onSelected` callbacks only call `cubit.logSet(...)` and do not invoke `Navigator.of(dialogContext).pop()`. Consequently, neither clicking "Confirm", "Clear" (which updates selections then submits), nor clicking on the modal's overlay dismisses the dialog.
-
-    I will modify `lib/features/trainers/presentation/widgets/exercise_card.dart` and `lib/features/trainers/presentation/workout_session_screen.dart` to:
-    1. Capture the dialog's context in the `builder: (dialogContext) => ...` parameter.
-    2. Invoke `Navigator.of(dialogContext).pop();` inside the `onSelected` callback once logging is performed.
-
-    Finally, I will create `TASKS.md` to track this completion as required.
+    I will fix the issues as requested:
+    1. Clicking "Next" (transitioning between weight and reps, or transitioning to the next set) should *only* perform a local, in-memory state update to preserve the typed values in the UI, without calling the backend API.
+    2. Clicking "Done" (on the last reps field of the exercise) should submit the set/exercise to the API as completed (`isCompleted: true`), which marks it with a green checkmark in the UI, starts the rest timer, and dismisses the keyboard.
+    
+    To achieve this:
+    - I will add an `updateLogLocally` method to `WorkoutSessionCubit` which updates the local logs state in-memory without making an API request.
+    - I will create `_syncActiveInputLocally()` in `WorkoutSessionScreen` which calls `updateLogLocally` on the Cubit.
+    - I will update `_handleInputNext()` to use `_syncActiveInputLocally()` during intermediate "Next" transitions so that no API calls are made.
+    - I will ensure `_handleInputDismiss()` (when keyboard is closed manually or blurred) still calls `_syncActiveInput()` (autosave draft to API with `isCompleted: false`) to prevent any loss of data.
+    - I will verify that clicking "Done" calls `_completeSet()` to set the status to completed (`isCompleted: true`) in the UI and save to the API.
   </reasoning>
   <modifications>
-    <file path="lib/features/trainers/presentation/widgets/exercise_card.dart">
+    <file path="lib/features/trainers/cubit/workout_session_cubit.dart">
       <![CDATA[
-import 'package:flutter/material.dart';
+import 'dart:async';
+import 'dart:developer' as developer;
+import 'dart:math';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
+import 'package:injectable/injectable.dart';
 
-import '../../../../core/theme/app_theme.dart';
-import '../../cubit/workout_session_cubit.dart';
-import '../../data/models/exercise_log_dto.dart';
-import 'coach_note_card.dart';
-import 'rpe_picker.dart';
-import 'set_row.dart';
-import 'youtube_player_widget.dart';
+import '../data/models/exercise_dto.dart';
+import '../data/models/exercise_log_dto.dart';
+import '../data/models/template_dto.dart';
+import '../data/workout_session_repository.dart';
+import 'workout_session_state.dart';
 
-/// An exercise card within the active workout session.
-///
-/// Shows the exercise name, muscle group badge, superset badge,
-/// a table of set rows (weight/reps/RPE/completion), coach notes/video,
-/// and add/remove actions.
-class ExerciseCard extends StatelessWidget {
-  const ExerciseCard({
-    super.key,
-    required this.exerciseName,
-    this.muscleGroup,
-    required this.exerciseId,
-    required this.logs,
-    this.supersetKey,
-    this.coachNotes,
-    this.coachVideoUrl,
-    this.focusTarget,
-    required this.activeInputText,
-    required this.onTapWeight,
-    required this.onTapReps,
-    required this.onComplete,
-    required this.onAddSet,
-    required this.onRemove,
-  });
+@injectable
+class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
+  final WorkoutSessionRepository _repository;
+  Timer? _timer;
 
-  final String exerciseName;
-  final String? muscleGroup;
-  final String exerciseId;
-  final List<ExerciseLogDto> logs;
-  final String? supersetKey;
-  final String? coachNotes;
-  final String? coachVideoUrl;
-  final FocusTarget? focusTarget;
-  final String activeInputText;
-  final void Function(int logIndex) onTapWeight;
-  final void Function(int logIndex) onTapReps;
-  final void Function(int logIndex) onComplete;
-  final VoidCallback onAddSet;
-  final VoidCallback onRemove;
-
-  bool get _hasTempoData => logs.any((l) => l.tempo != null);
-  bool get _hasCoachContent => coachNotes != null || coachVideoUrl != null;
+  WorkoutSessionCubit(this._repository) : super(const WorkoutSessionState.initial());
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: supersetKey != null
-              ? Colors.blue.withValues(alpha: 0.4)
-              : AppColors.borderMuted,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (supersetKey != null) _buildSupersetBadge(),
-          _buildHeader(context),
-          _buildTableHeader(_hasTempoData),
-          ...logs.asMap().entries.map((entry) {
-            final i = entry.key;
-            final log = entry.value;
-            final isWeightFocused = focusTarget?.exerciseId == exerciseId &&
-                focusTarget?.setIndex == i &&
-                focusTarget?.isWeight == true;
-            final isRepsFocused = focusTarget?.exerciseId == exerciseId &&
-                focusTarget?.setIndex == i &&
-                focusTarget?.isReps == true;
-
-            return SetRow(
-              key: ValueKey(log.id),
-              setNumber: i + 1,
-              weight: log.weight,
-              reps: log.reps,
-              rpe: log.rpe,
-              tempo: log.tempo,
-              isCompleted: log.isCompleted,
-              isWeightFocused: isWeightFocused,
-              isRepsFocused: isRepsFocused,
-              activeInputText: activeInputText,
-              onTapWeight: () => onTapWeight(i),
-              onTapReps: () => onTapReps(i),
-              onComplete: () => onComplete(i),
-              onTapRpe: () => _onTapRpe(context, exerciseId, log),
-              onTapTempo: _hasTempoData
-                  ? () => _onTapTempo(context, exerciseId, log)
-                  : null,
-            );
-          }),
-          const Divider(height: 1, indent: 16, endIndent: 16),
-          InkWell(
-            onTap: onAddSet,
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                children: [
-                  Icon(Icons.add_rounded, size: 16, color: AppColors.primary),
-                  SizedBox(width: 8),
-                  Text(
-                    'Add Set',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  Future<void> close() {
+    _timer?.cancel();
+    return super.close();
   }
 
-  Widget _buildSupersetBadge() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      color: Colors.blue.withValues(alpha: 0.06),
-      child: const Row(
-        children: [
-          Icon(Icons.link_rounded, size: 14, color: Colors.blue),
-          SizedBox(width: 6),
-          Text(
-            'SUPERSET',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-              color: Colors.blue,
-            ),
-          ),
-        ],
-      ),
-    );
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
   }
 
-  Widget _buildHeader(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(16, supersetKey != null ? 8 : 16, 16, 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: _hasCoachContent
-                ? GestureDetector(
-                    onTap: () => _showCoachNotes(context),
-                    child: Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            exerciseName,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.foreground,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        const Icon(Icons.info_outline,
-                            size: 16, color: AppColors.primary),
-                      ],
-                    ),
-                  )
-                : Text(
-                    exerciseName,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.foreground,
-                    ),
-                  ),
-          ),
-          if (muscleGroup != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(99),
-              ),
-              child: Text(
-                muscleGroup!,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.primary,
-                ),
-              ),
-            ),
-          const SizedBox(width: 4),
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'remove') {
-                onRemove();
-              } else if (value == 'details') {
-                context.push('/workout/exercise/$exerciseId',
-                    extra: exerciseName);
-              }
-            },
-            itemBuilder: (_) => [
-              const PopupMenuItem(
-                value: 'details',
-                child: Row(
-                  children: [
-                    Icon(Icons.info_outline,
-                        size: 18, color: AppColors.primary),
-                    SizedBox(width: 8),
-                    Text('Details'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'remove',
-                child: Row(
-                  children: [
-                    Icon(Icons.remove_circle_outline,
-                        size: 18, color: Colors.red),
-                    SizedBox(width: 8),
-                    Text('Remove', style: TextStyle(color: Colors.red)),
-                  ],
-                ),
-              ),
-            ],
-            icon: const Icon(Icons.more_vert_rounded,
-                size: 18, color: AppColors.mutedText),
-          ),
-        ],
-      ),
-    );
+  void _tick() {
+    final current = state;
+    if (current is! WorkoutSessionActive || current.isPaused) return;
+
+    // Compute elapsed from startTime (absolute timing, not accumulated)
+    final elapsed = current.startTime != null
+        ? DateTime.now().difference(current.startTime!)
+        : current.elapsed + const Duration(seconds: 1);
+
+    // Countdown rest timer (if restDuration is set)
+    int? restRemaining = current.restRemaining;
+    if (current.restDuration != null && current.restRemaining != null) {
+      final remaining = current.restRemaining!;
+      if (remaining > 0) {
+        restRemaining = remaining - 1;
+      }
+      if (restRemaining != null && restRemaining <= 0) {
+        // Rest finished
+        restRemaining = null;
+      }
+    }
+
+    // Rest finished toast trigger
+    bool showRestFinishedToast = current.showRestFinishedToast;
+    if (current.restRemaining != null && current.restRemaining! > 0 && restRemaining == null) {
+      // Rest just finished this tick (transitioned from >0 to null)
+      showRestFinishedToast = true;
+      developer.log(
+        'rest_finished | elapsed=${elapsed.inSeconds}s',
+        name: 'workout',
+      );
+      // Auto-reset after 3 seconds
+      Future.delayed(const Duration(seconds: 3), () {
+        final s = state;
+        if (s is WorkoutSessionActive) {
+          emit(s.copyWith(showRestFinishedToast: false));
+        }
+      });
+    }
+
+    // Compute restElapsed from restStartedAt
+    Duration newRestElapsed = current.restElapsed;
+    if (current.restStartedAt != null) {
+      newRestElapsed = DateTime.now().difference(current.restStartedAt!);
+    }
+
+    final showWarning = elapsed.inSeconds >= 7200 && !current.showLongSessionWarning;
+
+    emit(current.copyWith(
+      elapsed: elapsed,
+      restElapsed: newRestElapsed,
+      restRemaining: restRemaining,
+      showLongSessionWarning: showWarning,
+      showRestFinishedToast: showRestFinishedToast,
+    ));
   }
 
-  Widget _buildTableHeader(bool hasTempoData) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Row(
-        children: [
-          const SizedBox(width: 28),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Text(
-              'WEIGHT',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                color: AppColors.mutedText,
-              ),
-            ),
-          ),
-          const SizedBox(width: 4),
-          const Expanded(
-            child: Text(
-              'REPS',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                color: AppColors.mutedText,
-              ),
-            ),
-          ),
-          if (hasTempoData) ...[
-            const SizedBox(width: 4),
-            const Expanded(
-              child: Text(
-                'TEMPO',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.mutedText,
-                ),
-              ),
-            ),
-            const SizedBox(width: 4),
-          ],
-          const SizedBox(width: 36),
-        ],
-      ),
-    );
+  /// Start a new workout session.
+  Future<void> start({
+    String? clientId,
+    String? plannedSessionId,
+    String? templateId,
+    String? clientPackageId,
+  }) async {
+    // Don't start if already active — emit conflict state
+    if (state is WorkoutSessionActive) {
+      final currentState = state as WorkoutSessionActive;
+      developer.log(
+        'start_conflict | existingSessionId=${currentState.session.id}',
+        name: 'workout',
+      );
+      emit(WorkoutSessionState.conflict(existingSessionId: currentState.session.id));
+      return;
+    }
+    emit(const WorkoutSessionState.loading());
+    try {
+      final result = await _repository.startSession(
+        clientId: clientId,
+        plannedSessionId: plannedSessionId,
+        templateId: templateId,
+        clientPackageId: clientPackageId,
+      );
+      // Use the server's authoritative startTime so the timer
+      // stays accurate even across app restarts or clock drift.
+      final serverStartTime = DateTime.parse(result.session.startTime);
+      emit(WorkoutSessionState.active(
+        session: result.session,
+        logs: result.logs,
+        elapsed: Duration.zero,
+        startTime: serverStartTime,
+      ));
+      _startTimer();
+      developer.log('workout_started | exerciseCount=${result.logs.length}', name: 'analytics');
+      developer.log(
+        'start | sessionId=${result.session.id} | exerciseCount=${result.logs.length} | serverStartTime=${result.session.startTime}',
+        name: 'workout',
+      );
+    } catch (e) {
+      emit(const WorkoutSessionState.error('Failed to start session.'));
+    }
   }
 
-  void _onTapTempo(
-      BuildContext context, String exerciseId, ExerciseLogDto log) {
-    final controller = TextEditingController(text: log.tempo ?? '');
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Tempo'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            hintText: 'e.g. 3-0-1-0',
-            labelText: 'Tempo',
-          ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              final tempo = controller.text.trim();
-              if (context.mounted) {
-                final cubit = context.read<WorkoutSessionCubit>();
-                cubit.logSet(
-                  logId: log.id,
-                  exerciseId: exerciseId,
-                  reps: log.reps ?? 0,
-                  weight: log.weight,
-                  isCompleted: log.isCompleted,
-                  rpe: log.rpe,
-                  tempo: tempo.isEmpty ? null : tempo,
-                );
-              }
-              Navigator.of(context).pop();
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-    controller.dispose();
+  /// Load the current live session if one exists.
+  Future<void> loadCurrent({bool isMinimized = true}) async {
+    emit(const WorkoutSessionState.loading());
+    try {
+      final result = await _repository.getLiveSession();
+      if (result.session != null) {
+        // Auto-minimize when resuming from cold start so the user
+        // isn't thrown into a full-screen workout unexpectedly.
+        // Use the server's startTime for accurate elapsed calculation.
+        final serverStartTime = DateTime.parse(result.session!.startTime);
+        emit(WorkoutSessionState.active(
+          session: result.session!,
+          logs: result.logs,
+          elapsed: Duration.zero,
+          startTime: serverStartTime,
+          isMinimized: isMinimized,
+        ));
+        _startTimer();
+        developer.log(
+          'loadCurrent | sessionId=${result.session!.id} '
+          '| logCount=${result.logs.length} '
+          '| serverStartTime=${result.session!.startTime}',
+          name: 'workout',
+        );
+      } else {
+        emit(const WorkoutSessionState.initial());
+        developer.log('loadCurrent | no active session', name: 'workout');
+      }
+    } catch (e) {
+      emit(const WorkoutSessionState.error('Failed to load session.'));
+    }
   }
 
-  void _showCoachNotes(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => Padding(
-        padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: CoachNoteCard(
-          trainerName: 'Coach',
-          notes: coachNotes ?? 'Watch the video for form guidance.',
-          videoUrl: coachVideoUrl,
-          onPlayVideo: coachVideoUrl != null
-              ? () => showYouTubeVideo(context, coachVideoUrl!)
-              : null,
-        ),
-      ),
-    );
+  /// Resolve a session conflict by either starting fresh or continuing existing.
+  Future<void> resolveConflict({required bool startNew}) async {
+    if (startNew) {
+      // Cancel existing, then start fresh
+      final current = state;
+      if (current is WorkoutSessionConflict) {
+        try {
+          await _repository.cancelSession(current.existingSessionId);
+        } catch (_) {}
+      }
+      emit(const WorkoutSessionState.initial());
+      // Don't auto-restart — user must tap "Start Workout" again
+    } else {
+      // Continue existing — load the current session
+      await loadCurrent(isMinimized: false);
+    }
   }
 
-  void _onTapRpe(
-      BuildContext context, String exerciseId, ExerciseLogDto log) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => RpePicker(
-        currentRpe: log.rpe,
-        onSelected: (rpe) {
-          if (context.mounted) {
-            final cubit = context.read<WorkoutSessionCubit>();
-            cubit.logSet(
-              logId: log.id,
-              exerciseId: exerciseId,
-              reps: log.reps ?? 0,
-              weight: log.weight,
-              isCompleted: log.isCompleted,
-              rpe: rpe,
-            );
+  /// Fetch exercise library from backend (system + custom exercises).
+  Future<List<ExerciseDto>> fetchExercises() =>
+      _repository.getExerciseLibrary();
+
+  /// Fetch all available templates.
+  Future<List<TemplateDto>> fetchTemplates() =>
+      _repository.getTemplates();
+
+  /// Get a specific template by ID.
+  Future<TemplateDto> getTemplate(String templateId) =>
+      _repository.getTemplate(templateId);
+
+  /// Save the completed session as a template.
+  Future<void> saveSessionAsTemplate(String templateName) async {
+    final current = state;
+    if (current is! WorkoutSessionCompleted) return;
+    try {
+      await _repository.saveSessionAsTemplate(
+        sessionId: current.session.id,
+        templateName: templateName,
+      );
+    } catch (e) {
+      emit(const WorkoutSessionState.error('Failed to save template.'));
+    }
+  }
+
+  /// Add exercises to the active session.
+  /// The new logs are appended directly from the POST response —
+  /// no separate reload, no loading flash, timer keeps ticking.
+  Future<void> addExercises(List<String> exerciseIds) async {
+    final current = state;
+    if (current is! WorkoutSessionActive) return;
+    try {
+      final newLogs = await _repository.addExercises(
+        sessionId: current.session.id,
+        exerciseIds: exerciseIds,
+      );
+      emit(current.copyWith(logs: [...current.logs, ...newLogs]));
+      final names = newLogs
+          .map((l) => l.exercise?.name ?? l.exerciseId)
+          .join(', ');
+      developer.log(
+        'addExercises | count=${newLogs.length} | exercises=[$names]',
+        name: 'workout',
+      );
+    } catch (e) {
+      emit(const WorkoutSessionState.error('Failed to add exercises.'));
+    }
+  }
+
+  /// Remove an exercise from the active session.
+  Future<void> removeExercise(String exerciseId) async {
+    final current = state;
+    if (current is! WorkoutSessionActive) return;
+    try {
+      await _repository.removeExercise(
+        sessionId: current.session.id,
+        exerciseId: exerciseId,
+      );
+      final removedName = current.logs
+          .where((l) => l.exerciseId == exerciseId)
+          .firstOrNull
+          ?.exercise?.name ?? exerciseId;
+      emit(current.copyWith(
+        logs: current.logs.where((l) => l.exerciseId != exerciseId).toList(),
+      ));
+      developer.log(
+        'removeExercise | exercise=$removedName($exerciseId)',
+        name: 'workout',
+      );
+    } catch (e) {
+      emit(const WorkoutSessionState.error('Failed to remove exercise.'));
+    }
+  }
+
+  /// Log an exercise set in the active session.
+  /// Applies an optimistic local update immediately so the UI feels instant,
+  /// then reconciles with the server response.
+  Future<void> logSet({
+    String? logId,
+    required String exerciseId,
+    required int reps,
+    double? weight,
+    int? rpe,
+    String? tempo,
+    int? order,
+    String? supersetKey,
+    int? orderInSuperset,
+    bool? isCompleted,
+  }) async {
+    final current = state;
+    if (current is! WorkoutSessionActive) return;
+
+    // Resolve exercise name from existing logs for readable logging.
+    final existingForExercise = current.logs
+        .where((l) => l.exerciseId == exerciseId)
+        .toList();
+    final exerciseName =
+        existingForExercise.firstOrNull?.exercise?.name ?? exerciseId;
+
+    // Safely look up the previous completion status of this set log.
+    final existingLog = current.logs.where((l) => l.id == logId).firstOrNull;
+    final currentIsCompleted = existingLog?.isCompleted ?? false;
+
+    // Use explicitly passed status or fall back to the existing completion status of this set.
+    final resolvedIsCompleted = isCompleted ?? currentIsCompleted;
+
+    developer.log(
+      'logSet | exercise=$exerciseName($exerciseId) '
+      '| reps=$reps | weight=${weight ?? "—"} | rpe=${rpe ?? "—"} '
+      '| order=$order | isCompleted=$resolvedIsCompleted '
+      '| setId=${logId ?? "new"}',
+      name: 'workout',
+    );
+
+    // Optimistic update: apply the new set immediately.
+    final optimisticLog = ExerciseLogDto(
+      id: logId ?? 'opt_${DateTime.now().microsecondsSinceEpoch}',
+      clientId: current.session.clientId,
+      exerciseId: exerciseId,
+      reps: reps,
+      weight: weight,
+      rpe: rpe,
+      tempo: tempo,
+      isCompleted: resolvedIsCompleted,
+      order: order,
+      supersetKey: supersetKey,
+      orderInSuperset: orderInSuperset,
+      workoutSessionId: current.session.id,
+    );
+    final updatedLogs = [...current.logs];
+    final idx = updatedLogs.indexWhere((l) => l.id == optimisticLog.id);
+    if (idx >= 0) {
+      updatedLogs[idx] = optimisticLog;
+    } else {
+      updatedLogs.add(optimisticLog);
+    }
+    emit(current.copyWith(logs: updatedLogs));
+
+    // Reconcile with the server response.
+    try {
+      final response = await _repository.logExercise(
+        logId: logId,
+        workoutSessionId: current.session.id,
+        exerciseId: exerciseId,
+        reps: reps,
+        weight: weight,
+        rpe: rpe,
+        tempo: tempo,
+        order: order,
+        supersetKey: supersetKey,
+        orderInSuperset: orderInSuperset,
+        isCompleted: resolvedIsCompleted,
+      );
+      // Use the LATEST active state (not `current`) to avoid overwriting
+      // fields set after the optimistic emit (e.g. restStartedAt).
+      final latest = state as WorkoutSessionActive;
+      final reconciledLogs = [...latest.logs];
+      // Replace the optimistic entry (temp ID) with the server-confirmed one at the exact same index.
+      final indexToReplace = reconciledLogs.indexWhere((l) => l.id == optimisticLog.id || l.id == response.log.id);
+      if (indexToReplace >= 0) {
+        reconciledLogs[indexToReplace] = response.log;
+      } else {
+        reconciledLogs.add(response.log);
+      }
+      emit(latest.copyWith(logs: reconciledLogs));
+      developer.log(
+        'logSet_reconciled | exercise=$exerciseName($exerciseId) '
+        '| logId=${response.log.id} | reps=${response.log.reps} '
+        '| weight=${response.log.weight} | rpe=${response.log.rpe}',
+        name: 'workout',
+      );
+
+      // Check for PR records
+      if (response.newRecords != null && response.newRecords!.isNotEmpty) {
+        final latest2 = state as WorkoutSessionActive;
+        final newRecords = response.newRecords!.cast<Map<String, dynamic>>();
+        final accumulated = [...latest2.sessionNewRecords, ...newRecords];
+        emit(latest2.copyWith(
+          newPrRecord: true,
+          sessionNewRecords: accumulated,
+        ));
+        // Auto-reset PR flag after 3s (but keep accumulated records)
+        Future.delayed(const Duration(seconds: 3), () {
+          final s = state;
+          if (s is WorkoutSessionActive) {
+            emit(s.copyWith(newPrRecord: false));
           }
-          Navigator.of(dialogContext).pop();
-        },
-      ),
+        });
+      }
+    } catch (e) {
+      // Server rejected — revert the optimistic log without disrupting the UI.
+      final currentState = state;
+      if (currentState is WorkoutSessionActive) {
+        final reverted = currentState.logs
+            .where((l) => l.id != optimisticLog.id)
+            .toList();
+        emit(current.copyWith(logs: reverted));
+      }
+    }
+  }
+
+  /// Update log locally in-memory (no API call).
+  void updateLogLocally({
+    required String logId,
+    required String exerciseId,
+    double? weight,
+    int? reps,
+  }) {
+    final current = state;
+    if (current is! WorkoutSessionActive) return;
+
+    final updatedLogs = current.logs.map((log) {
+      if (log.id == logId) {
+        return log.copyWith(
+          weight: weight ?? log.weight,
+          reps: reps ?? log.reps,
+        );
+      }
+      return log;
+    }).toList();
+
+    emit(current.copyWith(logs: updatedLogs));
+  }
+
+  /// Finish the active session.
+  Future<void> finish({String? notes, bool? completeUnfinished}) async {
+    final current = state;
+    if (current is! WorkoutSessionActive) return;
+    try {
+      _timer?.cancel();
+      final result = await _repository.finishSession(
+        workoutSessionId: current.session.id,
+        notes: notes,
+        completeUnfinished: completeUnfinished,
+      );
+      final sessionNewRecords = current.sessionNewRecords;
+      emit(WorkoutSessionState.completed(
+        session: result.session,
+        totalDuration: current.elapsed,
+        logs: result.logs,
+        newRecords: sessionNewRecords,
+        showPrToast: sessionNewRecords.isNotEmpty,
+      ));
+      developer.log('workout_completed | duration=${current.elapsed.inMinutes}min exerciseCount=${current.logs.length}', name: 'analytics');
+      developer.log(
+        'finish | sessionId=${result.session.id} | duration=${current.elapsed.inSeconds}s | exerciseCount=${result.logs.length} | newRecords=${sessionNewRecords.length} | notes=${notes ?? "—"}', name: 'workout',
+      );
+    } catch (e) {
+      emit(const WorkoutSessionState.error('Failed to finish session.'));
+    }
+  }
+
+  /// Start the rest timer.
+  Future<void> startRest({int? duration}) async {
+    final current = state;
+    if (current is! WorkoutSessionActive) return;
+    emit(current.copyWith(
+      restStartedAt: DateTime.now(),
+      restElapsed: Duration.zero,
+      restDuration: duration,
+      restRemaining: duration,
+    ));
+    developer.log(
+      'startRest | duration=${duration ?? "default"}s | elapsed=${current.elapsed.inSeconds}s',
+      name: 'workout',
+    );
+    try {
+      await _repository.startRest(current.session.id);
+    } catch (_) {}
+  }
+
+  /// End the rest timer.
+  Future<void> endRest() async {
+    final current = state;
+    if (current is! WorkoutSessionActive) return;
+    final wasRemaining = current.restRemaining;
+    emit(current.copyWith(
+      restStartedAt: null,
+      restElapsed: Duration.zero,
+      restRemaining: null,
+      restDuration: null,
+    ));
+    developer.log(
+      'endRest | remaining=${wasRemaining ?? "—"}s | elapsed=${current.elapsed.inSeconds}s',
+      name: 'workout',
+    );
+    try {
+      await _repository.endRest(current.session.id);
+    } catch (_) {}
+  }
+
+  /// Adjust the rest countdown by [delta] seconds.
+  void adjustRest(int delta) {
+    final current = state;
+    if (current is! WorkoutSessionActive || current.restRemaining == null) return;
+    final newRemaining = max(0, current.restRemaining! + delta);
+    emit(current.copyWith(
+      restRemaining: newRemaining,
+      restDuration: max(current.restDuration ?? 0, newRemaining),
+    ));
+    developer.log(
+      'adjustRest | delta=$delta | newRemaining=${newRemaining}s',
+      name: 'workout',
     );
   }
+
+  /// Skip the rest timer early.
+  Future<void> skipRest() async {
+    developer.log('skipRest', name: 'workout');
+    await endRest();
+  }
+
+  /// Minimize the active session to the mini-player overlay.
+  /// The session stays active but the full-screen view is dismissed.
+  void minimize() {
+    final current = state;
+    if (current is! WorkoutSessionActive) return;
+    emit(current.copyWith(isMinimized: true));
+    developer.log(
+      'minimize | elapsed=${current.elapsed.inSeconds}s',
+      name: 'workout',
+    );
+  }
+
+  /// Maximize the mini-player back to the full workout session view.
+  void maximize() {
+    final current = state;
+    if (current is! WorkoutSessionActive) return;
+    emit(current.copyWith(isMinimized: false));
+    developer.log(
+      'maximize | elapsed=${current.elapsed.inSeconds}s',
+      name: 'workout',
+    );
+  }
+
+  /// Cancel the active workout session.
+  Future<void> cancelSession() async {
+    final current = state;
+    if (current is! WorkoutSessionActive) return;
+    try {
+      _timer?.cancel();
+      await _repository.cancelSession(current.session.id);
+      emit(const WorkoutSessionState.initial());
+      developer.log(
+        'cancelSession | sessionId=${current.session.id} '
+        '| duration=${current.elapsed.inSeconds}s',
+        name: 'workout',
+      );
+    } catch (e) {
+      emit(const WorkoutSessionState.error('Failed to cancel session.'));
+    }
+  }
+
+  /// Pause the timer.
+  void pause() {
+    final current = state;
+    if (current is! WorkoutSessionActive) return;
+    _timer?.cancel();
+    emit(current.copyWith(isPaused: true));
+    developer.log(
+      'pause | elapsed=${current.elapsed.inSeconds}s | restRemaining=${current.restRemaining ?? "—"}',
+      name: 'workout',
+    );
+  }
+
+  /// Resume the timer.
+  void resume() {
+    final current = state;
+    if (current is! WorkoutSessionActive) return;
+    emit(current.copyWith(isPaused: false));
+    _startTimer();
+    developer.log(
+      'resume | elapsed=${current.elapsed.inSeconds}s',
+      name: 'workout',
+    );
+  }
+
+  /// Clear the new PR record state.
+  void clearNewPrRecord() {
+    final current = state;
+    if (current is WorkoutSessionActive && current.newPrRecord) {
+      emit(current.copyWith(newPrRecord: false));
+    }
+  }
+
+  /// Clear the rest finished toast.
+  void clearRestFinishedToast() {
+    final current = state;
+    if (current is WorkoutSessionActive && current.showRestFinishedToast) {
+      emit(current.copyWith(showRestFinishedToast: false));
+    }
+  }
 }
-
-/// Focus target for the custom input system.
-///
-/// Tracks which field (weight/reps) of which set of which exercise
-/// is currently active for the numeric keyboard overlay.
-class FocusTarget {
-  final String exerciseId;
-  final int setIndex;
-  final FieldType fieldType;
-
-  const FocusTarget({
-    required this.exerciseId,
-    required this.setIndex,
-    required this.fieldType,
-  });
-
-  bool get isWeight => fieldType == FieldType.weight;
-  bool get isReps => fieldType == FieldType.reps;
-}
-
-/// Type of field in a set row.
-enum FieldType { weight, reps }
       ]]>
     </file>
     <file path="lib/features/trainers/presentation/workout_session_screen.dart">
@@ -675,6 +851,14 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
 
     final isResting = restStartedAt != null;
 
+    // Compute isLastField for keyboard
+    bool isLastField = false;
+    if (showKeyboard && _focusTarget != null) {
+      final exLogs = grouped[_focusTarget!.exerciseId] ?? [];
+      isLastField = !_focusTarget!.isWeight &&
+          _focusTarget!.setIndex == exLogs.length - 1;
+    }
+
     return Stack(
       children: [
         GestureDetector(
@@ -825,6 +1009,7 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
                 child: _overlayMode == _InputOverlay.none
                     ? WorkoutNumericKeyboard(
                         isWeight: _focusTarget!.isWeight,
+                        isLastField: isLastField,
                         text: _activeInputText,
                         onTextChanged: (v) => setState(() => _activeInputText = v),
                         onNext: _handleInputNext,
@@ -1039,10 +1224,40 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
     }
   }
 
+  void _syncActiveInputLocally() {
+    if (_focusTarget == null || _activeInputText.isEmpty) return;
+
+    final value = double.tryParse(_activeInputText.replaceAll(',', '.'));
+    if (value == null) return;
+
+    final cubit = context.read<WorkoutSessionCubit>();
+    final state = cubit.state;
+    if (state is! WorkoutSessionActive) return;
+
+    final exLogs = state.logs
+        .where((l) => l.exerciseId == _focusTarget!.exerciseId)
+        .toList();
+
+    if (_focusTarget!.setIndex >= exLogs.length) return;
+    final log = exLogs[_focusTarget!.setIndex];
+
+    if (_focusTarget!.isWeight) {
+      cubit.updateLogLocally(
+        logId: log.id,
+        exerciseId: _focusTarget!.exerciseId,
+        weight: value,
+      );
+    } else {
+      cubit.updateLogLocally(
+        logId: log.id,
+        exerciseId: _focusTarget!.exerciseId,
+        reps: value.toInt(),
+      );
+    }
+  }
+
   void _handleInputNext() {
     if (_focusTarget == null) return;
-
-    _syncActiveInput();
 
     final cubit = context.read<WorkoutSessionCubit>();
     final state = cubit.state;
@@ -1057,11 +1272,18 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
         .where((l) => l.exerciseId == exerciseId)
         .toList();
 
-    final exerciseName = setIndex < exLogs.length
-        ? exLogs[setIndex].exercise?.name ?? exerciseId
-        : exerciseId;
+    if (setIndex >= exLogs.length) {
+      _handleInputDismiss();
+      return;
+    }
+
+    final log = exLogs[setIndex];
 
     if (_focusTarget!.isWeight) {
+      // 1. We are on weight. Save draft weight value locally and move to reps.
+      _syncActiveInputLocally();
+      
+      final exerciseName = log.exercise?.name ?? exerciseId;
       developer.log(
         'nav_next | exercise=$exerciseName | set=$setIndex | field=weight→reps',
         name: 'workout',
@@ -1070,13 +1292,15 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
         exerciseId: exerciseId,
         setIndex: setIndex,
         fieldType: FieldType.reps,
-        currentValue: setIndex < exLogs.length
-            ? exLogs[setIndex].reps?.toDouble()
-            : null,
+        currentValue: log.reps?.toDouble(),
       );
     } else {
+      // 2. We are on reps.
       final nextIndex = setIndex + 1;
       if (nextIndex < exLogs.length) {
+        // There is a next set. Save draft reps value locally and move to next set's weight.
+        _syncActiveInputLocally();
+        
         developer.log(
           'nav_next | exercise=${exLogs[nextIndex].exercise?.name ?? exerciseId} '
           '| set=$setIndex→$nextIndex | field=reps→weight',
@@ -1089,11 +1313,13 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
           currentValue: exLogs[nextIndex].weight,
         );
       } else {
-        developer.log(
-          'nav_next_dismiss | exercise=$exerciseName | set=$setIndex | lastSet=reps→done',
-          name: 'workout',
+        // This is the last field of the last set!
+        // Tapping 'Done' should submit the set/exercise as completed!
+        _completeSet(
+          exerciseId: exerciseId,
+          setIndex: setIndex,
+          log: log,
         );
-        _handleInputDismiss();
       }
     }
   }
@@ -1414,6 +1640,8 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
     <file path="TASKS.md">
       <![CDATA[
 - [x] Fix RPE (Rate of Perceived Exertion) modal dialog dismissal and submission issue.
+- [x] Fix custom keyboard "Next"/"Done" button behavior: "Next" moves to the next field/set without marking as completed, while "Done" completes and submits the set/exercise on the last reps field.
+- [x] Ensure that "Next" transitions save values locally to prevent losing entered inputs without sending any redundant API request.
       ]]>
     </file>
   </modifications>
