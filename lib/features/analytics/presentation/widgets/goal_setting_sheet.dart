@@ -287,7 +287,7 @@ class _GoalSettingSheetState extends State<GoalSettingSheet> {
     );
   }
 
-  List<_GoalTypeOption> get _goalTypes => [
+  List<_GoalTypeOption> get _goalTypes => const [
         _GoalTypeOption(
           id: 'sessions',
           label: 'Weekly Workouts',

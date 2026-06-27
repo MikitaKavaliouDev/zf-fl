@@ -815,8 +815,6 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
               primary: AppColors.primary,
-              onPrimary: Colors.white,
-              surface: AppColors.card,
               onSurface: AppColors.foreground,
             ),
           ),

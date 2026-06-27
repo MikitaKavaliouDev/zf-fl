@@ -135,7 +135,7 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
 
     return PopScope(
       canPop: !isSessionActive,
-      onPopInvoked: (didPop) {
+      onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
         _handleInputDismiss();
         cubit.minimize();
@@ -1012,7 +1012,7 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
     );
     if (name != null && name.isNotEmpty && mounted) {
       context.read<WorkoutSessionCubit>().saveSessionAsTemplate(name);
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Template "$name" saved!'),

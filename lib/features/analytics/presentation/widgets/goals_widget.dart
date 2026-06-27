@@ -237,7 +237,7 @@ class _GoalProgressRow extends StatelessWidget {
           Row(
             children: [
               Text(
-                '${(goal.currentValue ?? 0).toStringAsFixed(0)}',
+                (goal.currentValue ?? 0).toStringAsFixed(0),
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
