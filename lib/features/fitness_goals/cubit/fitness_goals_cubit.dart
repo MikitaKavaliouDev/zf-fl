@@ -6,14 +6,20 @@ import 'package:injectable/injectable.dart';
 import '../data/fitness_goals_repository.dart';
 import 'fitness_goals_state.dart';
 
-@injectable
+@singleton
 class FitnessGoalsCubit extends Cubit<FitnessGoalsState> {
   final FitnessGoalsRepository _repository;
 
   FitnessGoalsCubit(this._repository) : super(const FitnessGoalsState.initial());
 
   /// Load all fitness goals from the API.
-  Future<void> loadGoals() async {
+  ///
+  /// Skips the network call if state is already [FitnessGoalsLoaded] and
+  /// [forceRefresh] is false. Since this cubit is a singleton shared across
+  /// screens (analytics + fitness-goals), this eliminates cross-screen
+  /// redundant fetches (Fix B).
+  Future<void> loadGoals({bool forceRefresh = false}) async {
+    if (!forceRefresh && state is FitnessGoalsLoaded) return;
     emit(const FitnessGoalsState.loading());
     try {
       final goals = await _repository.getGoals();
@@ -29,7 +35,7 @@ class FitnessGoalsCubit extends Cubit<FitnessGoalsState> {
   Future<bool> createGoal(Map<String, dynamic> body) async {
     try {
       await _repository.createGoal(body);
-      await loadGoals();
+      await loadGoals(forceRefresh: true);
       return true;
     } catch (e) {
       developer.log('FitnessGoalsCubit.createGoal failed: $e',
@@ -48,7 +54,7 @@ class FitnessGoalsCubit extends Cubit<FitnessGoalsState> {
     try {
       await _repository.updateGoal(id,
           targetValue: targetValue, currentValue: currentValue);
-      await loadGoals();
+      await loadGoals(forceRefresh: true);
       return true;
     } catch (e) {
       developer.log('FitnessGoalsCubit.updateGoal failed: $e',
@@ -62,7 +68,7 @@ class FitnessGoalsCubit extends Cubit<FitnessGoalsState> {
   Future<bool> deleteGoal(String id) async {
     try {
       await _repository.deleteGoal(id);
-      await loadGoals();
+      await loadGoals(forceRefresh: true);
       return true;
     } catch (e) {
       developer.log('FitnessGoalsCubit.deleteGoal failed: $e',

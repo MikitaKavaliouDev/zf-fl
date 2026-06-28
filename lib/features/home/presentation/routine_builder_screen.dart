@@ -579,6 +579,7 @@ class _RoutineBuilderScreenState extends State<RoutineBuilderScreen> {
 
         if (mounted) {
           setState(() => _isSaving = false);
+          await cubit.loadPrograms();
           Navigator.of(context).maybePop();
         }
         return;
@@ -642,6 +643,7 @@ class _RoutineBuilderScreenState extends State<RoutineBuilderScreen> {
 
     if (mounted) {
       setState(() => _isSaving = false);
+      await cubit.loadPrograms();
       Navigator.of(context).maybePop();
     }
   }

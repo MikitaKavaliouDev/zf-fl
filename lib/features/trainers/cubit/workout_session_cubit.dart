@@ -35,10 +35,11 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
     final current = state;
     if (current is! WorkoutSessionActive || current.isPaused) return;
 
-    // Compute elapsed from startTime (absolute timing, not accumulated)
-    final elapsed = current.startTime != null
-        ? DateTime.now().difference(current.startTime!)
-        : current.elapsed + const Duration(seconds: 1);
+    // Accumulate elapsed time locally. The initial elapsed is set once
+    // from the server's startTime (in start/loadCurrent), then incremented
+    // here each tick. This avoids cross-timezone issues from comparing
+    // DateTime.now() (local) against a UTC-parsed server timestamp.
+    final elapsed = current.elapsed + const Duration(seconds: 1);
 
     // Countdown rest timer (if restDuration is set)
     int? restRemaining = current.restRemaining;
@@ -113,14 +114,17 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
         templateId: templateId,
         clientPackageId: clientPackageId,
       );
-      // Use the server's authoritative startTime so the timer
-      // stays accurate even across app restarts or clock drift.
+      // Use a local DateTime.now() as the timer reference point to avoid
+      // cross-timezone issues comparing DateTime.now() (local) with the
+      // server's UTC string. The initial elapsed is computed once from the
+      // server startTime for correctness, then accumulated locally.
       final serverStartTime = DateTime.parse(result.session.startTime);
+      final localTimerStart = DateTime.now();
       emit(WorkoutSessionState.active(
         session: result.session,
         logs: result.logs,
-        elapsed: Duration.zero,
-        startTime: serverStartTime,
+        elapsed: localTimerStart.difference(serverStartTime),
+        startTime: localTimerStart,
       ));
       _startTimer();
       developer.log('workout_started | exerciseCount=${result.logs.length}', name: 'analytics');
@@ -141,13 +145,16 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
       if (result.session != null) {
         // Auto-minimize when resuming from cold start so the user
         // isn't thrown into a full-screen workout unexpectedly.
-        // Use the server's startTime for accurate elapsed calculation.
+        // Compute initial elapsed from the server's startTime once,
+        // then use a local timer reference for ongoing ticks to avoid
+        // cross-timezone calculation issues.
         final serverStartTime = DateTime.parse(result.session!.startTime);
+        final localTimerStart = DateTime.now();
         emit(WorkoutSessionState.active(
           session: result.session!,
           logs: result.logs,
-          elapsed: Duration.zero,
-          startTime: serverStartTime,
+          elapsed: localTimerStart.difference(serverStartTime),
+          startTime: localTimerStart,
           isMinimized: isMinimized,
         ));
         _startTimer();

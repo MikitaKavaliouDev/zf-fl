@@ -19,6 +19,10 @@ class ProgramCubit extends Cubit<ProgramState> {
   final LocalTemplateRepository _localRepo;
   final WorkoutSessionRepository _workoutSessionRepo;
 
+  /// Cached raw API response so [loadTemplates] can reuse [loadPrograms]
+  /// data without a redundant network call.
+  ProgramLibraryResponse? _libraryCache;
+
   ProgramCubit(this._repository, this._localRepo, this._workoutSessionRepo)
       : super(const ProgramState.initial());
 
@@ -35,6 +39,7 @@ class ProgramCubit extends Cubit<ProgramState> {
           .map((a) => a.program.id)
           .firstOrNull;
 
+      _libraryCache = library;
       emit(ProgramState.loaded(
         assignedPrograms: library.assignedPrograms,
         personalPrograms: library.personalPrograms,
@@ -57,76 +62,94 @@ class ProgramCubit extends Cubit<ProgramState> {
   /// Local templates with IDs that collide with API templates are skipped
   /// (API wins). Matches the web app's single-call pattern in
   /// ClientProgramsView.tsx (GET /api/client/programs, no ?type= filter).
-  Future<void> loadTemplates() async {
+  ///
+  /// When [forceRefresh] is false (default) and data was previously fetched
+  /// via [loadPrograms], reuses that cached response to avoid a redundant
+  /// network call (Fix D).
+  Future<void> loadTemplates({bool forceRefresh = false}) async {
+    if (!forceRefresh && _libraryCache != null) {
+      // Reuse cached library data — no re-fetch to backend.
+      await _buildTemplateState(_libraryCache!);
+      return;
+    }
+
     emit(const ProgramState.loading());
     try {
       // 1. Single API call — no ?type= filter (web app parity)
       final library = await _repository.getPrograms();
+      _libraryCache = library;
 
-      // 2. Collect templates from all three sources
-      final apiTemplates = <String, TemplateDto>{};
-
-      // 2a. Templates embedded in assigned programs
-      for (final assignment in library.assignedPrograms) {
-        for (final template in assignment.program.templates) {
-          apiTemplates[template.id] = template.copyWith(
-            programId: assignment.program.id,
-            exerciseCount: template.exercises.isNotEmpty
-                ? template.exercises.length
-                : template.exerciseCount,
-            category: 'Trainer Assigned',
-            source: 'assigned',
-            programName: assignment.program.name,
-          );
-        }
-      }
-
-      // 2b. Standalone personal templates
-      for (final t in library.personalTemplates.map(_toTemplateDto)) {
-        apiTemplates[t.id] = t;
-      }
-
-      // 2c. Standalone system templates
-      for (final t in library.systemTemplates.map(_toTemplateDto)) {
-        apiTemplates[t.id] = t;
-      }
-
-      // 3. Fetch local templates, merge with API (API wins on ID collision)
-      final localTemplates = await _localRepo.getAll();
-      for (final t in localTemplates) {
-        if (!apiTemplates.containsKey(t.id)) {
-          apiTemplates[t.id] = t.copyWith(
-            category: 'Personal',
-            source: 'local',
-            programName: 'My Templates',
-          );
-        }
-      }
-
-      // 4. Determine active program ID
-      final activeId = library.assignedPrograms
-          .where((a) => a.isActive)
-          .map((a) => a.program.id)
-          .firstOrNull;
-
-      emit(ProgramState.loaded(
-        assignedPrograms: library.assignedPrograms,
-        personalPrograms: library.personalPrograms,
-        categories: library.categories,
-        activeProgramId: activeId,
-        templates: apiTemplates.values.toList(),
-      ));
+      await _buildTemplateState(library);
     } catch (e) {
       developer.log('ProgramCubit.loadTemplates failed: $e', name: 'program');
       emit(const ProgramState.error('Failed to load templates.'));
     }
   }
 
+  /// Shared template-building logic used by both [loadTemplates] (fresh fetch)
+  /// and cache-reuse paths. Builds template list from the raw library,
+  /// merges local templates, and emits [ProgramState.loaded].
+  Future<void> _buildTemplateState(ProgramLibraryResponse library) async {
+    // 1. Collect templates from all three API sources
+    final apiTemplates = <String, TemplateDto>{};
+
+    // 1a. Templates embedded in assigned programs
+    for (final assignment in library.assignedPrograms) {
+      for (final template in assignment.program.templates) {
+        apiTemplates[template.id] = template.copyWith(
+          programId: assignment.program.id,
+          exerciseCount: template.exercises.isNotEmpty
+              ? template.exercises.length
+              : template.exerciseCount,
+          category: 'Trainer Assigned',
+          source: 'assigned',
+          programName: assignment.program.name,
+        );
+      }
+    }
+
+    // 1b. Standalone personal templates
+    for (final t in library.personalTemplates.map(_toTemplateDto)) {
+      apiTemplates[t.id] = t;
+    }
+
+    // 1c. Standalone system templates
+    for (final t in library.systemTemplates.map(_toTemplateDto)) {
+      apiTemplates[t.id] = t;
+    }
+
+    // 2. Fetch local templates, merge with API (API wins on ID collision)
+    final localTemplates = await _localRepo.getAll();
+    for (final t in localTemplates) {
+      if (!apiTemplates.containsKey(t.id)) {
+        apiTemplates[t.id] = t.copyWith(
+          category: 'Personal',
+          source: 'local',
+          programName: 'My Templates',
+        );
+      }
+    }
+
+    // 3. Determine active program ID
+    final activeId = library.assignedPrograms
+        .where((a) => a.isActive)
+        .map((a) => a.program.id)
+        .firstOrNull;
+
+    emit(ProgramState.loaded(
+      assignedPrograms: library.assignedPrograms,
+      personalPrograms: library.personalPrograms,
+      categories: library.categories,
+      activeProgramId: activeId,
+      templates: apiTemplates.values.toList(),
+    ));
+  }
+
   /// Save a [TemplateDto] to local persistence and refresh the template list.
   Future<void> saveLocalTemplate(TemplateDto template) async {
     try {
       await _localRepo.save(template);
-      await loadTemplates();
+      await loadTemplates(forceRefresh: true);
     } catch (e) {
       developer.log(
         'ProgramCubit.saveLocalTemplate failed: $e',
@@ -151,7 +174,6 @@ class ProgramCubit extends Cubit<ProgramState> {
         name: name,
         description: description,
       );
-      await loadPrograms();
       return program;
     } catch (e) {
       developer.log('ProgramCubit.updateProgram failed: $e', name: 'program');
@@ -171,7 +193,6 @@ class ProgramCubit extends Cubit<ProgramState> {
         name: name,
         description: description,
       );
-      await loadPrograms();
       return program;
     } catch (e) {
       developer.log('ProgramCubit.createProgram failed: $e', name: 'program');
@@ -242,7 +263,6 @@ class ProgramCubit extends Cubit<ProgramState> {
         description: description,
         exercises: exercises,
       );
-      await loadPrograms();
       return template;
     } catch (e) {
       developer.log(
@@ -258,7 +278,6 @@ class ProgramCubit extends Cubit<ProgramState> {
   Future<bool> deleteTemplate(String templateId) async {
     try {
       await _repository.deleteTemplate(templateId);
-      await loadPrograms();
       return true;
     } catch (e) {
       developer.log(

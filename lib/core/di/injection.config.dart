@@ -270,7 +270,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i975.TrainerDiscoveryCubit>(
       () => _i975.TrainerDiscoveryCubit(gh<_i549.ExploreApiService>()),
     );
-    gh.factory<_i413.FitnessGoalsCubit>(
+    gh.singleton<_i413.FitnessGoalsCubit>(
       () => _i413.FitnessGoalsCubit(gh<_i1035.FitnessGoalsRepository>()),
     );
     gh.singleton<_i736.AuthRepository>(
