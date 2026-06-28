@@ -15,6 +15,13 @@ class ProgramRepository {
   Future<ProgramLibraryResponse> getPrograms({String? type, String? source}) =>
       _api.getPrograms(type: type, source: source);
 
+  Future<ProgramDto> updateProgram({
+    required String id,
+    String? name,
+    String? description,
+  }) =>
+      _api.updateProgram(id: id, name: name, description: description);
+
   Future<ProgramDto> createProgram({
     required String name,
     String? description,
@@ -43,6 +50,9 @@ class ProgramRepository {
         description: description,
         exercises: exercises,
       );
+
+  Future<void> deleteTemplate(String templateId) =>
+      _api.deleteTemplate(templateId);
 
   Future<TemplateExerciseDto> addExerciseToTemplate({
     required String templateId,

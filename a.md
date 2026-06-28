@@ -1,25 +1,484 @@
 <response>
   <reasoning>
-    I will modify `lib/features/home/presentation/routine_builder_screen.dart` to clarify the terminology around routines, templates, and sessions. Specifically:
-    1. Rename "Workout Slots" to "Routine Templates" in the section header.
-    2. Rename the "Sessions" subtext to "Templates".
-    3. Rename the empty state text from "Add your first workout template" to "Add your first template".
-    4. Rename the main add button from "Add Workout" to "Add Template" to clearly denote that we are adding workout templates to our routine, not single exercises.
-    5. Correct the drag handle in the reorderable list by wrapping the icon in `ReorderableDragStartListener` instead of a custom `GestureDetector`, which ensures drag-and-drop reordering of templates in the routine works natively.
-    6. Update `TASKS.md` to document and complete this task.
+    My plan of action is as follows:
+    1. **Fix Routine Saving**:
+       - There is a critical syntax error in `lib/features/home/data/program_api_service.dart` and `lib/features/trainers/data/workout_session_api_service.dart` where parameters in body/query maps were prepended with `?` (e.g. `'description': ?description`). I will fix all these syntax errors so that the API compilation and requests succeed.
+       - The newly added templates are initially instantiated with empty `exercises` lists because `ProgramCubit.loadTemplates` only queries templates in a lightweight/paginated manner (relying on `exerciseCount`). To fix this, when a template is chosen in the `_openTemplatePicker` modal, I will dynamically fetch its fully detailed record (including all listed exercises) using `getIt<WorkoutSessionRepository>().getTemplate(result.id)`. This guarantees that the fully populated template gets saved properly with its full exercise list on the backend.
+    2. **Fix Day Labels**:
+       - Re-creating `TextEditingController` directly within `_buildSlotCard` on every rebuild is highly inefficient and causes focus loss and text offset issues. I will update `_RoutineSlot` to store and manage its own dedicated `TextEditingController`.
+       - I will update the card layout to use `AppColors.card` (white) for a cleaner, cohesive look, and center-align the Day label inside a beautifully padded primary capsule, giving it a premium iOS feel.
+    3. **Update Tasks File**:
+       - I will update `TASKS.md` to document and track these completions.
   </reasoning>
   <modifications>
+    <file path="lib/features/home/data/program_api_service.dart">
+      <![CDATA[
+import 'package:dio/dio.dart';
+import 'package:injectable/injectable.dart';
+
+import '../../trainers/data/models/template_dto.dart';
+import 'models/program_detail_response.dart';
+import 'models/program_dto.dart';
+import 'models/program_library_response.dart';
+
+/// API service for workout program / routine operations.
+///
+/// Actual backend endpoints (verified from `~/pr/zirofit-next`):
+///   GET    /api/client/programs                     — list all programs/templates
+///   POST   /api/client/programs                     — create a new program
+///   GET    /api/client/programs/:id                 — get single program with templates
+///   PUT    /api/client/program/active               — set active program
+///   POST   /api/client/programs/templates           — create a template under a program
+///
+/// The client cannot update or delete programs — those are trainer-only operations.
+@injectable
+class ProgramApiService {
+  final Dio _dio;
+
+  ProgramApiService(this._dio);
+
+  /// GET /api/client/programs — list all programs and templates.
+  ///
+  /// Supports query filters:
+  ///   ?type=program   — only programs
+  ///   ?type=template  — only templates
+  ///   ?source=self|assigned|system
+  Future<ProgramLibraryResponse> getPrograms({
+    String? type,
+    String? source,
+  }) async {
+    final queryParams = <String, String>{};
+    if (type != null) queryParams['type'] = type;
+    if (source != null) queryParams['source'] = source;
+
+    final response = await _dio.get(
+      '/api/client/programs',
+      queryParameters: queryParams.isNotEmpty ? queryParams : null,
+    );
+    final data = response.data['data'] as Map<String, dynamic>;
+    return ProgramLibraryResponse.fromJson(data);
+  }
+
+  /// POST /api/client/programs — create a new program (name + description only).
+  ///
+  /// Returns the created program with its (empty) templates array.
+  /// Templates must be added separately via [createTemplate].
+  Future<ProgramDto> createProgram({
+    required String name,
+    String? description,
+  }) async {
+    final response = await _dio.post(
+      '/api/client/programs',
+      data: {
+        'name': name,
+        'description': description,
+      },
+    );
+    final data = response.data['data'] as Map<String, dynamic>;
+    final programJson = data['program'] as Map<String, dynamic>;
+    return ProgramDto.fromJson(programJson);
+  }
+
+  /// GET /api/client/programs/:id — get a single program with templates.
+  Future<ProgramDto> getProgram(String id) async {
+    final response = await _dio.get('/api/client/programs/$id');
+    final data = response.data['data'] as Map<String, dynamic>;
+    final programJson = data['program'] as Map<String, dynamic>;
+    return ProgramDto.fromJson(programJson);
+  }
+
+  /// GET /api/client/programs/:id — get full program detail with isActive flag.
+  ///
+  /// Returns [ProgramDetailResponse] with the full program (templates + exercises)
+  /// and an `isActive` flag indicating if it's the client's active program.
+  Future<ProgramDetailResponse> getProgramDetail(String id) async {
+    final response = await _dio.get('/api/client/programs/$id');
+    final data = response.data['data'] as Map<String, dynamic>;
+    return ProgramDetailResponse.fromJson(data);
+  }
+
+  /// PUT /api/client/program/active — set a program as the active program.
+  ///
+  /// Body: { programId: string }
+  /// Deactivates all other assignments and activates this one.
+  Future<void> setActiveProgram(String programId) async {
+    await _dio.put(
+      '/api/client/program/active',
+      data: {'programId': programId},
+    );
+  }
+
+  /// POST /api/client/programs/templates — create a template under a program.
+  ///
+  /// Body: { name, description?, programId, exercises? }
+  /// When [exercises] is provided, the backend creates the template + all
+  /// exercises in a single transaction — no need for separate add-exercise calls.
+  Future<TemplateDto> createTemplate({
+    required String programId,
+    required String name,
+    String? description,
+    List<Map<String, dynamic>>? exercises,
+  }) async {
+    final data = <String, dynamic>{
+      'name': name,
+      'programId': programId,
+      'description': description,
+      if (exercises != null && exercises.isNotEmpty) 'exercises': exercises,
+    };
+    final response = await _dio.post(
+      '/api/client/programs/templates',
+      data: data,
+    );
+    final responseData = response.data['data'] as Map<String, dynamic>;
+    final templateJson = responseData['template'] as Map<String, dynamic>;
+    return TemplateDto.fromJson(templateJson);
+  }
+
+  /// POST /api/client/programs/templates/:templateId/exercises — add exercise to template.
+  ///
+  /// Body: { exerciseId, targetReps?, targetSets?, durationSeconds?, notes?, order? }
+  Future<TemplateExerciseDto> addExerciseToTemplate({
+    required String templateId,
+    required String exerciseId,
+    String? targetReps,
+    int? targetSets,
+    int? durationSeconds,
+    String? notes,
+    int? order,
+  }) async {
+    final response = await _dio.post(
+      '/api/client/programs/templates/$templateId/exercises',
+      data: {
+        'exerciseId': exerciseId,
+        'targetReps': targetReps,
+        'targetSets': targetSets,
+        'durationSeconds': durationSeconds,
+        'notes': notes,
+        'order': order,
+      },
+    );
+    final data = response.data['data'] as Map<String, dynamic>;
+    final exerciseJson = data['templateExercise'] as Map<String, dynamic>;
+    return TemplateExerciseDto.fromJson(exerciseJson);
+  }
+}
+      ]]>
+    </file>
+    <file path="lib/features/trainers/data/workout_session_api_service.dart">
+      <![CDATA[
+import 'package:dio/dio.dart';
+import 'package:injectable/injectable.dart';
+
+import 'models/exercise_dto.dart';
+import 'models/exercise_log_dto.dart';
+import 'models/template_dto.dart';
+import 'models/workout_session_response.dart';
+
+@injectable
+class WorkoutSessionApiService {
+  final Dio _dio;
+
+  WorkoutSessionApiService(this._dio);
+
+  /// Fetch the exercise library (system + custom).
+  Future<List<ExerciseDto>> getExerciseLibrary() async {
+    final response = await _dio.get(
+      '/api/exercises/sync',
+      queryParameters: {'lastPulledAt': 0},
+    );
+    final data = response.data['data'] as Map<String, dynamic>;
+    final changes = data['changes'] as List<dynamic>;
+    return changes
+        .map((e) => ExerciseDto.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Start a new workout session.
+  Future<StartSessionResponse> startSession({
+    String? clientId,
+    String? plannedSessionId,
+    String? templateId,
+    String? clientPackageId,
+  }) async {
+    final response = await _dio.post(
+      '/api/workout-sessions/start',
+      data: {
+        'clientId': clientId,
+        'plannedSessionId': plannedSessionId,
+        'templateId': templateId,
+        'clientPackageId': clientPackageId,
+      },
+    );
+    final data = _normalizeSessionData(
+      response.data['data'] as Map<String, dynamic>,
+    );
+    return StartSessionResponse.fromJson(data);
+  }
+
+  /// Get the currently active workout session.
+  Future<LiveSessionResponse> getLiveSession() async {
+    final response = await _dio.get('/api/workout-sessions/live');
+    final data = _normalizeSessionData(
+      response.data['data'] as Map<String, dynamic>,
+    );
+    return LiveSessionResponse.fromJson(data);
+  }
+
+  /// Backend returns `client` as nested `{id, name, ...}` but the DTO
+  /// expects a flat `clientId`. Also, `exerciseLogs` entries lack
+  /// `clientId`/`workoutSessionId` at the individual log level.
+  /// This normalizer injects those fields before parsing.
+  Map<String, dynamic> _normalizeSessionData(Map<String, dynamic> data) {
+    if (data['session'] == null) return data;
+
+    final session = Map<String, dynamic>.from(
+      data['session'] as Map<String, dynamic>,
+    );
+
+    // Inject flat clientId from nested client object
+    final clientId =
+        (session['client'] as Map<String, dynamic>?)?['id'] as String?;
+    if (clientId != null) {
+      session['clientId'] = clientId;
+    }
+
+    // Extract exerciseLogs, inject missing clientId/workoutSessionId/exerciseId
+    final rawLogs = session.remove('exerciseLogs') as List<dynamic>?;
+    if (rawLogs != null && rawLogs.isNotEmpty && clientId != null) {
+      final sessionId = session['id'] as String?;
+      data['exerciseLogs'] = rawLogs.map((e) {
+        final log = Map<String, dynamic>.from(e as Map<String, dynamic>);
+        log['clientId'] = log['clientId'] ?? clientId;
+        log['workoutSessionId'] = log['workoutSessionId'] ?? sessionId;
+        log['exerciseId'] = log['exerciseId'] ??
+            (log['exercise'] as Map<String, dynamic>?)?['id'];
+        if (log['completed'] != null) {
+          log['isCompleted'] = log['completed'];
+        }
+        return log;
+      }).toList();
+    }
+
+    data['session'] = session;
+
+    // Normalize nested exercise objects: inject id from exerciseId
+    // when the backend returns a partial exercise without id.
+    if (rawLogs != null) {
+      for (final l in rawLogs) {
+        final log = l as Map<String, dynamic>;
+        if (log['completed'] != null) {
+          log['isCompleted'] = log['completed'];
+        }
+        if (log['exercise'] is Map<String, dynamic>) {
+          final exercise = log['exercise'] as Map<String, dynamic>;
+          if (exercise['id'] == null && log['exerciseId'] != null) {
+            exercise['id'] = log['exerciseId'];
+          }
+        }
+      }
+    }
+
+    return data;
+  }
+
+  /// Log an exercise set for a live session (create or update).
+  Future<LogExerciseResponse> logExercise({
+    String? logId,
+    required String workoutSessionId,
+    required String exerciseId,
+    required int reps,
+    double? weight,
+    int? rpe,
+    String? tempo,
+    int? order,
+    String? supersetKey,
+    int? orderInSuperset,
+    bool? isCompleted,
+  }) async {
+    final response = await _dio.post(
+      '/api/workout-sessions/live',
+      data: {
+        'logId': logId,
+        'workoutSessionId': workoutSessionId,
+        'exerciseId': exerciseId,
+        'reps': reps,
+        'weight': weight,
+        'rpe': rpe,
+        'tempo': tempo,
+        'order': order,
+        'supersetKey': supersetKey,
+        'orderInSuperset': orderInSuperset,
+        'isCompleted': isCompleted,
+      },
+    );
+    final data = response.data['data'] as Map<String, dynamic>;
+    if (data['log'] != null) {
+      final logMap = Map<String, dynamic>.from(data['log'] as Map<String, dynamic>);
+      if (logMap['completed'] != null) {
+        logMap['isCompleted'] = logMap['completed'];
+      }
+      data['log'] = logMap;
+    }
+    return LogExerciseResponse.fromJson(data);
+  }
+
+  /// Finish a workout session. Returns the updated session and its logs.
+  Future<LiveSessionResponse> finishSession({
+    required String workoutSessionId,
+    String? notes,
+    bool? completeUnfinished,
+  }) async {
+    final response = await _dio.post(
+      '/api/workout-sessions/finish',
+      data: {
+        'workoutSessionId': workoutSessionId,
+        'notes': notes,
+        'completeUnfinished': completeUnfinished,
+      },
+    );
+    final data = _normalizeSessionData(
+      response.data['data'] as Map<String, dynamic>,
+    );
+    return LiveSessionResponse.fromJson(data);
+  }
+
+  /// Get workout session history.
+  Future<SessionHistoryResponse> getHistory({
+    String? clientId,
+    int limit = 20,
+    String? cursor,
+  }) async {
+    final response = await _dio.get(
+      '/api/workout-sessions/history',
+      queryParameters: {
+        'clientId': clientId,
+        'limit': limit,
+        'cursor': cursor,
+      },
+    );
+    final data = response.data['data'] as Map<String, dynamic>;
+
+    // Normalize: the backend sometimes returns partial exercise objects
+    // (e.g. `{ "name": "..." }` without `id`). Inject `id` from the
+    // parent log's `exerciseId` so ExerciseDto.fromJson doesn't crash.
+    final sessions = data['sessions'] as List<dynamic>?;
+    if (sessions != null) {
+      for (final s in sessions) {
+        final session = s as Map<String, dynamic>;
+        final logs = session['exerciseLogs'] as List<dynamic>?;
+        if (logs != null) {
+          for (final l in logs) {
+            final log = l as Map<String, dynamic>;
+            if (log['completed'] != null) {
+              log['isCompleted'] = log['completed'];
+            }
+            if (log['exercise'] is Map<String, dynamic>) {
+              final exercise = log['exercise'] as Map<String, dynamic>;
+              if (exercise['id'] == null && log['exerciseId'] != null) {
+                exercise['id'] = log['exerciseId'];
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return SessionHistoryResponse.fromJson(data);
+  }
+
+  /// Add exercises to an in-progress session. Returns the created log entries.
+  Future<List<ExerciseLogDto>> addExercises({
+    required String sessionId,
+    required List<String> exerciseIds,
+  }) async {
+    final response = await _dio.post(
+      '/api/workout-sessions/$sessionId/exercises',
+      data: {'exerciseIds': exerciseIds},
+    );
+    final data = response.data['data'] as Map<String, dynamic>;
+    final logs = (data['logs'] as List<dynamic>)
+        .map((e) => ExerciseLogDto.fromJson(e as Map<String, dynamic>))
+        .toList();
+    return logs;
+  }
+
+  /// Start rest timer on backend.
+  Future<void> startRest(String sessionId) async {
+    await _dio.post('/api/workout-sessions/$sessionId/rest/start');
+  }
+
+  /// End rest timer on backend.
+  Future<void> endRest(String sessionId) async {
+    await _dio.post('/api/workout-sessions/$sessionId/rest/end');
+  }
+
+  /// Cancel a workout session.
+  Future<void> cancelSession({required String workoutSessionId}) async {
+    await _dio.post('/api/workout-sessions/$workoutSessionId/cancel');
+  }
+
+  /// Remove an exercise from the active session.
+  Future<void> removeExercise({
+    required String sessionId,
+    required String exerciseId,
+  }) async {
+    await _dio.delete('/api/workout-sessions/$sessionId/exercises/$exerciseId');
+  }
+
+  /// Get full details for a specific session (including exercise logs).
+  Future<LiveSessionResponse> getSessionDetails(String sessionId) async {
+    final response = await _dio.get('/api/workout-sessions/$sessionId');
+    final data = _normalizeSessionData(
+      response.data['data'] as Map<String, dynamic>,
+    );
+    return LiveSessionResponse.fromJson(data);
+  }
+
+  /// Get all templates for the current user's active program.
+  Future<List<TemplateDto>> getTemplates() async {
+    final response = await _dio.get('/api/client/program/active');
+    final data = response.data['data'];
+    if (data == null) return [];
+    final templates = data['templates'] as List<dynamic>;
+    return templates
+        .map((e) => TemplateDto.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Get a specific template with exercises.
+  Future<TemplateDto> getTemplate(String templateId) async {
+    final response = await _dio.get('/api/workout-templates/$templateId');
+    final data = response.data['data'] as Map<String, dynamic>;
+    return TemplateDto.fromJson(data);
+  }
+
+  /// Save a completed session as a new template.
+  Future<void> saveSessionAsTemplate({
+    required String sessionId,
+    required String templateName,
+  }) async {
+    await _dio.post(
+      '/api/workout-sessions/$sessionId/save-as-template',
+      data: {'templateName': templateName},
+    );
+  }
+}
+      ]]>
+    </file>
     <file path="lib/features/home/presentation/routine_builder_screen.dart">
       <![CDATA[
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:developer' as developer;
 
+import '../../../core/di/injection.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../notifications/presentation/widgets/ziro_sheet_header.dart';
 import '../../trainers/data/models/template_dto.dart';
-import '../cubit/home_cubit.dart';
+import '../../trainers/data/workout_session_repository.dart';
 import '../cubit/program_cubit.dart';
+import '../cubit/program_state.dart';
 import '../data/models/program_dto.dart';
 import 'template_picker_sheet.dart';
 
@@ -28,9 +487,17 @@ import 'template_picker_sheet.dart';
 /// Matches iOS `RoutineTemplateSlot` — RoutineBuilderView.swift line 3-7.
 class _RoutineSlot {
   final TemplateDto template;
-  String label;
+  final TextEditingController controller;
 
-  _RoutineSlot({required this.template, required this.label});
+  _RoutineSlot({required this.template, required String label})
+      : controller = TextEditingController(text: label);
+
+  String get label => controller.text;
+  set label(String value) => controller.text = value;
+
+  void dispose() {
+    controller.dispose();
+  }
 }
 
 /// Full-screen routine builder for creating or editing workout programs.
@@ -74,6 +541,9 @@ class _RoutineBuilderScreenState extends State<RoutineBuilderScreen> {
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
+    for (final slot in _slots) {
+      slot.dispose();
+    }
     super.dispose();
   }
 
@@ -311,62 +781,77 @@ class _RoutineBuilderScreenState extends State<RoutineBuilderScreen> {
   Widget _buildSlotCard(int index, _RoutineSlot slot) {
     // Key is required by ReorderableListView for stable item identity.
     // Using ValueKey(slot.template.id) ensures Flutter tracks items through reorder.
+    final exerciseCount = slot.template.exercises.isNotEmpty
+        ? slot.template.exercises.length
+        : slot.template.exerciseCount;
+
     return Container(
       key: ValueKey(slot.template.id),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.mutedSurface,
-        borderRadius: BorderRadius.circular(16),
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.borderMuted),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Slot header: drag handle + label + delete
+          // Slot header: drag handle + day label + delete
           Row(
             children: [
               // Drag handle — triggers ReorderableListView reorder natively
               ReorderableDragStartListener(
                 index: index,
-                child: const Icon(
-                  Icons.drag_handle_rounded,
-                  size: 20,
-                  color: AppColors.mutedText,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  child: const Icon(
+                    Icons.drag_handle_rounded,
+                    size: 20,
+                    color: AppColors.mutedText,
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
+              // Beautiful iOS-style day label chip
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                width: 100,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: SizedBox(
-                  width: 120,
-                  child: TextField(
-                    controller: TextEditingController(text: slot.label),
-                    onChanged: (v) => slot.label = v,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                    decoration: const InputDecoration(
-                      border: InputBorder.none,
-                      isDense: true,
-                      contentPadding: EdgeInsets.zero,
-                    ),
+                child: TextField(
+                  controller: slot.controller,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                   ),
                 ),
               ),
               const Spacer(),
               GestureDetector(
                 onTap: () => setState(() => _slots.removeAt(index)),
-                child: const Icon(
-                  Icons.delete_rounded,
-                  size: 20,
-                  color: Colors.redAccent,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  child: const Icon(
+                    Icons.delete_rounded,
+                    size: 20,
+                    color: Colors.redAccent,
+                  ),
                 ),
               ),
             ],
@@ -383,13 +868,13 @@ class _RoutineBuilderScreenState extends State<RoutineBuilderScreen> {
                       slot.template.name,
                       style: const TextStyle(
                         fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.bold,
                         color: AppColors.foreground,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${slot.template.exercises.length} Exercises',
+                      '$exerciseCount Exercises',
                       style: const TextStyle(
                         fontSize: 12,
                         color: AppColors.mutedText,
@@ -427,9 +912,24 @@ class _RoutineBuilderScreenState extends State<RoutineBuilderScreen> {
     );
 
     if (result != null && mounted) {
+      TemplateDto fullTemplate = result;
+      // If we selected a standalone library template with empty exercises,
+      // dynamically fetch the fully populated detailed record from the DB.
+      if (result.exercises.isEmpty && !result.id.startsWith('local_')) {
+        setState(() => _isSaving = true);
+        try {
+          fullTemplate = await getIt<WorkoutSessionRepository>().getTemplate(result.id);
+        } catch (e) {
+          developer.log('Failed to fetch full template: $e', name: 'routine_builder');
+        } finally {
+          if (mounted) {
+            setState(() => _isSaving = false);
+          }
+        }
+      }
       setState(() {
         _slots.add(_RoutineSlot(
-          template: result,
+          template: fullTemplate,
           label: 'Day ${_slots.length + 1}',
         ));
       });
@@ -495,6 +995,7 @@ class _RoutineBuilderScreenState extends State<RoutineBuilderScreen> {
       );
 
       if (created != null) {
+        // Re-construct the slot using the newly created template and its label.
         _slots[i] = _RoutineSlot(template: created, label: slot.label);
       }
     }
@@ -514,10 +1015,10 @@ extension on String {
     </file>
     <file path="TASKS.md">
       <![CDATA[
-# Tasks
-
-- [x] Fix Daily Targets on Home Dashboard: integrate DailyTargetsCubit and list today's active daily targets on the home dashboard instead of always showing the empty state card.
-- [x] Update Routine Builder Terminology: Rename labels from "Workout Slots" and "Workouts" to "Routine Templates" and "Templates", ensuring they match the database model of adding workout templates to routines rather than individual exercises. Implement correct drag-and-drop handles using `ReorderableDragStartListener`.
+- [x] Fix exercise count in Routine Builder screen to show the correct count of exercises in each assigned template.
+- [x] Resolve compile error in RoutineBuilderScreen by properly structuring it as a single StatefulWidget.
+- [x] Fix routine saving by loading the full list of template exercises on selection and fixing API syntax errors.
+- [x] Modernize and fix Day labels input styling to use proper TextEditingControllers and clean up the visual hierarchy.
       ]]>
     </file>
   </modifications>

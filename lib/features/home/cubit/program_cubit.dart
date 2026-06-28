@@ -136,6 +136,30 @@ class ProgramCubit extends Cubit<ProgramState> {
     }
   }
 
+  /// Update a self-created program's name/description.
+  ///
+  /// Only programs with `source == "self"` can be updated.
+  /// Returns the updated program or null on failure.
+  Future<ProgramDto?> updateProgram({
+    required String id,
+    required String name,
+    String? description,
+  }) async {
+    try {
+      final program = await _repository.updateProgram(
+        id: id,
+        name: name,
+        description: description,
+      );
+      await loadPrograms();
+      return program;
+    } catch (e) {
+      developer.log('ProgramCubit.updateProgram failed: $e', name: 'program');
+      emit(const ProgramState.error('Failed to update program.'));
+      return null;
+    }
+  }
+
   /// Create a new program with name and description only.
   /// Templates are added separately via the builder flow.
   Future<ProgramDto?> createProgram({
@@ -227,6 +251,21 @@ class ProgramCubit extends Cubit<ProgramState> {
       );
       emit(const ProgramState.error('Failed to create template.'));
       return null;
+    }
+  }
+
+  /// Delete a template from a self-created program.
+  Future<bool> deleteTemplate(String templateId) async {
+    try {
+      await _repository.deleteTemplate(templateId);
+      await loadPrograms();
+      return true;
+    } catch (e) {
+      developer.log(
+        'ProgramCubit.deleteTemplate failed: $e',
+        name: 'program',
+      );
+      return false;
     }
   }
 

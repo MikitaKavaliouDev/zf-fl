@@ -72,6 +72,27 @@ class ProgramApiService {
     return ProgramDto.fromJson(programJson);
   }
 
+  /// PUT /api/client/programs/:id — update a self-created program's name/description.
+  ///
+  /// Only programs where `trainerId === authUserId` (self-created) can be updated.
+  /// Returns the updated program.
+  Future<ProgramDto> updateProgram({
+    required String id,
+    String? name,
+    String? description,
+  }) async {
+    final response = await _dio.put(
+      '/api/client/programs/$id',
+      data: {
+        if (name != null) 'name': name,
+        if (description != null) 'description': description,
+      },
+    );
+    final data = response.data['data'] as Map<String, dynamic>;
+    final programJson = data['program'] as Map<String, dynamic>;
+    return ProgramDto.fromJson(programJson);
+  }
+
   /// GET /api/client/programs/:id — get full program detail with isActive flag.
   ///
   /// Returns [ProgramDetailResponse] with the full program (templates + exercises)
@@ -107,7 +128,7 @@ class ProgramApiService {
     final data = <String, dynamic>{
       'name': name,
       'programId': programId,
-      'description': ?description,
+      'description': description,
       if (exercises != null && exercises.isNotEmpty) 'exercises': exercises,
     };
     final response = await _dio.post(
@@ -117,6 +138,11 @@ class ProgramApiService {
     final responseData = response.data['data'] as Map<String, dynamic>;
     final templateJson = responseData['template'] as Map<String, dynamic>;
     return TemplateDto.fromJson(templateJson);
+  }
+
+  /// DELETE /api/client/programs/templates/:templateId — delete a template.
+  Future<void> deleteTemplate(String templateId) async {
+    await _dio.delete('/api/client/programs/templates/$templateId');
   }
 
   /// POST /api/client/programs/templates/:templateId/exercises — add exercise to template.
@@ -135,11 +161,11 @@ class ProgramApiService {
       '/api/client/programs/templates/$templateId/exercises',
       data: {
         'exerciseId': exerciseId,
-        'targetReps': ?targetReps,
-        'targetSets': ?targetSets,
-        'durationSeconds': ?durationSeconds,
-        'notes': ?notes,
-        'order': ?order,
+        'targetReps': targetReps,
+        'targetSets': targetSets,
+        'durationSeconds': durationSeconds,
+        'notes': notes,
+        'order': order,
       },
     );
     final data = response.data['data'] as Map<String, dynamic>;
@@ -147,3 +173,4 @@ class ProgramApiService {
     return TemplateExerciseDto.fromJson(exerciseJson);
   }
 }
+      

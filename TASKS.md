@@ -1,5 +1,5 @@
-# Tasks
-
-- [x] Fix Daily Targets on Home Dashboard: integrate DailyTargetsCubit and list today's active daily targets on the home dashboard instead of always showing the empty state card.
-- [x] Update Routine Builder Terminology: Rename labels from "Workout Slots" and "Workouts" to "Routine Templates" and "Templates", ensuring they match the database model of adding workout templates to routines rather than individual exercises. Implement correct drag-and-drop handles using `ReorderableDragStartListener`.
+- [x] Fix exercise count in Routine Builder screen to show the correct count of exercises in each assigned template.
+- [x] Resolve compile error in RoutineBuilderScreen by properly structuring it as a single StatefulWidget.
+- [x] Fix routine saving by loading the full list of template exercises on selection and fixing API syntax errors.
+- [x] Modernize and fix Day labels input styling to use proper TextEditingControllers and clean up the visual hierarchy.
       

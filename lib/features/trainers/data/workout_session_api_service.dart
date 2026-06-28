@@ -32,14 +32,16 @@ class WorkoutSessionApiService {
     String? templateId,
     String? clientPackageId,
   }) async {
+    // Strip null values so Zod's .optional() accepts the payload
+    final body = <String, dynamic>{
+      if (clientId != null) 'clientId': clientId,
+      if (plannedSessionId != null) 'plannedSessionId': plannedSessionId,
+      if (templateId != null) 'templateId': templateId,
+      if (clientPackageId != null) 'clientPackageId': clientPackageId,
+    };
     final response = await _dio.post(
       '/api/workout-sessions/start',
-      data: {
-        'clientId': ?clientId,
-        'plannedSessionId': ?plannedSessionId,
-        'templateId': ?templateId,
-        'clientPackageId': ?clientPackageId,
-      },
+      data: body,
     );
     final data = _normalizeSessionData(
       response.data['data'] as Map<String, dynamic>,
@@ -130,17 +132,17 @@ class WorkoutSessionApiService {
     final response = await _dio.post(
       '/api/workout-sessions/live',
       data: {
-        'logId': ?logId,
+        'logId': logId,
         'workoutSessionId': workoutSessionId,
         'exerciseId': exerciseId,
         'reps': reps,
-        'weight': ?weight,
-        'rpe': ?rpe,
-        'tempo': ?tempo,
-        'order': ?order,
-        'supersetKey': ?supersetKey,
-        'orderInSuperset': ?orderInSuperset,
-        'isCompleted': ?isCompleted,
+        'weight': weight,
+        'rpe': rpe,
+        'tempo': tempo,
+        'order': order,
+        'supersetKey': supersetKey,
+        'orderInSuperset': orderInSuperset,
+        'isCompleted': isCompleted,
       },
     );
     final data = response.data['data'] as Map<String, dynamic>;
@@ -164,8 +166,8 @@ class WorkoutSessionApiService {
       '/api/workout-sessions/finish',
       data: {
         'workoutSessionId': workoutSessionId,
-        'notes': ?notes,
-        'completeUnfinished': ?completeUnfinished,
+        'notes': notes,
+        'completeUnfinished': completeUnfinished,
       },
     );
     final data = _normalizeSessionData(
@@ -183,9 +185,9 @@ class WorkoutSessionApiService {
     final response = await _dio.get(
       '/api/workout-sessions/history',
       queryParameters: {
-        'clientId': ?clientId,
+        'clientId': clientId,
         'limit': limit,
-        'cursor': ?cursor,
+        'cursor': cursor,
       },
     );
     final data = response.data['data'] as Map<String, dynamic>;
