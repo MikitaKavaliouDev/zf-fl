@@ -40,7 +40,7 @@ class NutritionHabitsApiService {
       data: {
         'date': date,
         'isCompleted': isCompleted,
-        ?'note': note,
+        'note': note,
       },
     );
     final data = response.data['data']['log'] as Map<String, dynamic>;

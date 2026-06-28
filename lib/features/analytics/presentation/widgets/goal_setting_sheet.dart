@@ -186,12 +186,12 @@ class _GoalSettingSheetState extends State<GoalSettingSheet> {
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
                   initialValue: _selectedExercise,
-                  decoration: InputDecoration(
-                    border: const OutlineInputBorder(
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(12)),
                       borderSide: BorderSide(color: AppColors.borderActive),
                     ),
-                    contentPadding: const EdgeInsets.symmetric(
+                    contentPadding: EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 12,
                     ),

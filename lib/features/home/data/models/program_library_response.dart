@@ -1,15 +1,27 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'assigned_program_dto.dart';
 import 'program_dto.dart';
 
 part 'program_library_response.freezed.dart';
 part 'program_library_response.g.dart';
 
 /// Response from GET /api/client/programs.
+///
+/// Backend shape (from route.ts line 141-147):
+/// ```json
+/// {
+///   "assignedPrograms": [{ assignmentId, startDate, isActive, program: {...}, source: "assigned" }],
+///   "personalPrograms": [{ id, name, ..., source: "self" }],
+///   "personalTemplates": [...],
+///   "systemTemplates": [...],
+///   "categories": [...]
+/// }
+/// ```
 @freezed
 abstract class ProgramLibraryResponse with _$ProgramLibraryResponse {
   const factory ProgramLibraryResponse({
-    @Default(<ProgramDto>[]) List<ProgramDto> assignedPrograms,
+    @Default(<AssignedProgramDto>[]) List<AssignedProgramDto> assignedPrograms,
     @Default(<ProgramDto>[]) List<ProgramDto> personalPrograms,
     @Default(<TemplateLibraryItem>[]) List<TemplateLibraryItem> personalTemplates,
     @Default(<TemplateLibraryItem>[]) List<TemplateLibraryItem> systemTemplates,

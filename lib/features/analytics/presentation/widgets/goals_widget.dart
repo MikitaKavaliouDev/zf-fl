@@ -277,7 +277,7 @@ class _GoalProgressRow extends StatelessWidget {
               value: progress,
               minHeight: 8,
               backgroundColor: AppColors.borderMuted,
-              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
             ),
           ),
           if (progress >= 1.0)

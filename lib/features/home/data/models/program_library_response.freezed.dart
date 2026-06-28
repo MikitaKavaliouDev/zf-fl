@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ProgramLibraryResponse {
 
- List<ProgramDto> get assignedPrograms; List<ProgramDto> get personalPrograms; List<TemplateLibraryItem> get personalTemplates; List<TemplateLibraryItem> get systemTemplates; List<String> get categories;
+ List<AssignedProgramDto> get assignedPrograms; List<ProgramDto> get personalPrograms; List<TemplateLibraryItem> get personalTemplates; List<TemplateLibraryItem> get systemTemplates; List<String> get categories;
 /// Create a copy of ProgramLibraryResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $ProgramLibraryResponseCopyWith<$Res>  {
   factory $ProgramLibraryResponseCopyWith(ProgramLibraryResponse value, $Res Function(ProgramLibraryResponse) _then) = _$ProgramLibraryResponseCopyWithImpl;
 @useResult
 $Res call({
- List<ProgramDto> assignedPrograms, List<ProgramDto> personalPrograms, List<TemplateLibraryItem> personalTemplates, List<TemplateLibraryItem> systemTemplates, List<String> categories
+ List<AssignedProgramDto> assignedPrograms, List<ProgramDto> personalPrograms, List<TemplateLibraryItem> personalTemplates, List<TemplateLibraryItem> systemTemplates, List<String> categories
 });
 
 
@@ -68,7 +68,7 @@ class _$ProgramLibraryResponseCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') @override $Res call({Object? assignedPrograms = null,Object? personalPrograms = null,Object? personalTemplates = null,Object? systemTemplates = null,Object? categories = null,}) {
   return _then(_self.copyWith(
 assignedPrograms: null == assignedPrograms ? _self.assignedPrograms : assignedPrograms // ignore: cast_nullable_to_non_nullable
-as List<ProgramDto>,personalPrograms: null == personalPrograms ? _self.personalPrograms : personalPrograms // ignore: cast_nullable_to_non_nullable
+as List<AssignedProgramDto>,personalPrograms: null == personalPrograms ? _self.personalPrograms : personalPrograms // ignore: cast_nullable_to_non_nullable
 as List<ProgramDto>,personalTemplates: null == personalTemplates ? _self.personalTemplates : personalTemplates // ignore: cast_nullable_to_non_nullable
 as List<TemplateLibraryItem>,systemTemplates: null == systemTemplates ? _self.systemTemplates : systemTemplates // ignore: cast_nullable_to_non_nullable
 as List<TemplateLibraryItem>,categories: null == categories ? _self.categories : categories // ignore: cast_nullable_to_non_nullable
@@ -157,7 +157,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<ProgramDto> assignedPrograms,  List<ProgramDto> personalPrograms,  List<TemplateLibraryItem> personalTemplates,  List<TemplateLibraryItem> systemTemplates,  List<String> categories)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<AssignedProgramDto> assignedPrograms,  List<ProgramDto> personalPrograms,  List<TemplateLibraryItem> personalTemplates,  List<TemplateLibraryItem> systemTemplates,  List<String> categories)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ProgramLibraryResponse() when $default != null:
 return $default(_that.assignedPrograms,_that.personalPrograms,_that.personalTemplates,_that.systemTemplates,_that.categories);case _:
@@ -178,7 +178,7 @@ return $default(_that.assignedPrograms,_that.personalPrograms,_that.personalTemp
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<ProgramDto> assignedPrograms,  List<ProgramDto> personalPrograms,  List<TemplateLibraryItem> personalTemplates,  List<TemplateLibraryItem> systemTemplates,  List<String> categories)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<AssignedProgramDto> assignedPrograms,  List<ProgramDto> personalPrograms,  List<TemplateLibraryItem> personalTemplates,  List<TemplateLibraryItem> systemTemplates,  List<String> categories)  $default,) {final _that = this;
 switch (_that) {
 case _ProgramLibraryResponse():
 return $default(_that.assignedPrograms,_that.personalPrograms,_that.personalTemplates,_that.systemTemplates,_that.categories);case _:
@@ -198,7 +198,7 @@ return $default(_that.assignedPrograms,_that.personalPrograms,_that.personalTemp
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<ProgramDto> assignedPrograms,  List<ProgramDto> personalPrograms,  List<TemplateLibraryItem> personalTemplates,  List<TemplateLibraryItem> systemTemplates,  List<String> categories)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<AssignedProgramDto> assignedPrograms,  List<ProgramDto> personalPrograms,  List<TemplateLibraryItem> personalTemplates,  List<TemplateLibraryItem> systemTemplates,  List<String> categories)?  $default,) {final _that = this;
 switch (_that) {
 case _ProgramLibraryResponse() when $default != null:
 return $default(_that.assignedPrograms,_that.personalPrograms,_that.personalTemplates,_that.systemTemplates,_that.categories);case _:
@@ -213,11 +213,11 @@ return $default(_that.assignedPrograms,_that.personalPrograms,_that.personalTemp
 @JsonSerializable()
 
 class _ProgramLibraryResponse implements ProgramLibraryResponse {
-  const _ProgramLibraryResponse({final  List<ProgramDto> assignedPrograms = const <ProgramDto>[], final  List<ProgramDto> personalPrograms = const <ProgramDto>[], final  List<TemplateLibraryItem> personalTemplates = const <TemplateLibraryItem>[], final  List<TemplateLibraryItem> systemTemplates = const <TemplateLibraryItem>[], final  List<String> categories = const <String>[]}): _assignedPrograms = assignedPrograms,_personalPrograms = personalPrograms,_personalTemplates = personalTemplates,_systemTemplates = systemTemplates,_categories = categories;
+  const _ProgramLibraryResponse({final  List<AssignedProgramDto> assignedPrograms = const <AssignedProgramDto>[], final  List<ProgramDto> personalPrograms = const <ProgramDto>[], final  List<TemplateLibraryItem> personalTemplates = const <TemplateLibraryItem>[], final  List<TemplateLibraryItem> systemTemplates = const <TemplateLibraryItem>[], final  List<String> categories = const <String>[]}): _assignedPrograms = assignedPrograms,_personalPrograms = personalPrograms,_personalTemplates = personalTemplates,_systemTemplates = systemTemplates,_categories = categories;
   factory _ProgramLibraryResponse.fromJson(Map<String, dynamic> json) => _$ProgramLibraryResponseFromJson(json);
 
- final  List<ProgramDto> _assignedPrograms;
-@override@JsonKey() List<ProgramDto> get assignedPrograms {
+ final  List<AssignedProgramDto> _assignedPrograms;
+@override@JsonKey() List<AssignedProgramDto> get assignedPrograms {
   if (_assignedPrograms is EqualUnmodifiableListView) return _assignedPrograms;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_assignedPrograms);
@@ -285,7 +285,7 @@ abstract mixin class _$ProgramLibraryResponseCopyWith<$Res> implements $ProgramL
   factory _$ProgramLibraryResponseCopyWith(_ProgramLibraryResponse value, $Res Function(_ProgramLibraryResponse) _then) = __$ProgramLibraryResponseCopyWithImpl;
 @override @useResult
 $Res call({
- List<ProgramDto> assignedPrograms, List<ProgramDto> personalPrograms, List<TemplateLibraryItem> personalTemplates, List<TemplateLibraryItem> systemTemplates, List<String> categories
+ List<AssignedProgramDto> assignedPrograms, List<ProgramDto> personalPrograms, List<TemplateLibraryItem> personalTemplates, List<TemplateLibraryItem> systemTemplates, List<String> categories
 });
 
 
@@ -305,7 +305,7 @@ class __$ProgramLibraryResponseCopyWithImpl<$Res>
 @override @pragma('vm:prefer-inline') $Res call({Object? assignedPrograms = null,Object? personalPrograms = null,Object? personalTemplates = null,Object? systemTemplates = null,Object? categories = null,}) {
   return _then(_ProgramLibraryResponse(
 assignedPrograms: null == assignedPrograms ? _self._assignedPrograms : assignedPrograms // ignore: cast_nullable_to_non_nullable
-as List<ProgramDto>,personalPrograms: null == personalPrograms ? _self._personalPrograms : personalPrograms // ignore: cast_nullable_to_non_nullable
+as List<AssignedProgramDto>,personalPrograms: null == personalPrograms ? _self._personalPrograms : personalPrograms // ignore: cast_nullable_to_non_nullable
 as List<ProgramDto>,personalTemplates: null == personalTemplates ? _self._personalTemplates : personalTemplates // ignore: cast_nullable_to_non_nullable
 as List<TemplateLibraryItem>,systemTemplates: null == systemTemplates ? _self._systemTemplates : systemTemplates // ignore: cast_nullable_to_non_nullable
 as List<TemplateLibraryItem>,categories: null == categories ? _self._categories : categories // ignore: cast_nullable_to_non_nullable

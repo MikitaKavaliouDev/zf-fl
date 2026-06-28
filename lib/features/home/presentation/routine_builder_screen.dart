@@ -87,7 +87,7 @@ class _RoutineBuilderScreenState extends State<RoutineBuilderScreen> {
             ),
           ),
 
-          // Fixed bottom "Add Workout" button
+          // Fixed bottom "Add Template" button
           if (_slots.isNotEmpty)
             Positioned(
               left: 16,
@@ -100,7 +100,7 @@ class _RoutineBuilderScreenState extends State<RoutineBuilderScreen> {
                     onPressed: _openTemplatePicker,
                     icon: const Icon(Icons.add_circle_outline_rounded,
                         size: 20),
-                    label: const Text('Add Workout'),
+                    label: const Text('Add Template'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
@@ -206,7 +206,7 @@ class _RoutineBuilderScreenState extends State<RoutineBuilderScreen> {
           child: Row(
             children: [
               const Text(
-                'Workout Slots',
+                'Routine Templates',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -215,7 +215,7 @@ class _RoutineBuilderScreenState extends State<RoutineBuilderScreen> {
               ),
               const Spacer(),
               Text(
-                '${_slots.length} Sessions',
+                '${_slots.length} Templates',
                 style: const TextStyle(
                   fontSize: 12,
                   color: AppColors.mutedText,
@@ -281,7 +281,7 @@ class _RoutineBuilderScreenState extends State<RoutineBuilderScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Add your first workout template',
+                'Add your first template',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -312,12 +312,9 @@ class _RoutineBuilderScreenState extends State<RoutineBuilderScreen> {
           // Slot header: drag handle + label + delete
           Row(
             children: [
-              // Drag handle — triggers ReorderableListView reorder
-              GestureDetector(
-                onLongPressStart: (_) {
-                  // ReorderableListView detects long-press on drag handle.
-                  // We wrap with LongPressDraggable via default behavior.
-                },
+              // Drag handle — triggers ReorderableListView reorder natively
+              ReorderableDragStartListener(
+                index: index,
                 child: const Icon(
                   Icons.drag_handle_rounded,
                   size: 20,

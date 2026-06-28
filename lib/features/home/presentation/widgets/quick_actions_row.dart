@@ -41,7 +41,16 @@ class QuickActionsRow extends StatelessWidget {
                 color: AppColors.primary,
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _QuickActionCard(
+                onTap: () => context.push('/home/my-routines'),
+                icon: Icons.list_alt_rounded,
+                label: 'Routines',
+                color: const Color(0xFFF59E0B),
+              ),
+            ),
+            const SizedBox(width: 12),
             Expanded(
               child: _QuickActionCard(
                 onTap: () => context.push('/home/templates-library'),

@@ -115,7 +115,7 @@ class PackageCard extends StatelessWidget {
                   ),
                   child: const Text(
                     'Buy',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,

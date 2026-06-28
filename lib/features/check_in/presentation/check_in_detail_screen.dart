@@ -256,11 +256,11 @@ class _CheckInDetailScreenState extends State<CheckInDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 8),
+          const Padding(
+            padding: EdgeInsets.only(left: 4, bottom: 8),
             child: Text(
               'Notes',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: AppColors.mutedText,
@@ -332,7 +332,7 @@ class _CheckInDetailScreenState extends State<CheckInDetailScreen> {
                           color: AppColors.mutedText,
                         ),
                       ),
-                      progressIndicatorBuilder: (_, __, ___) => Container(
+                      progressIndicatorBuilder: (_, _, _) => Container(
                         width: 100,
                         height: 120,
                         color: AppColors.mutedSurface,

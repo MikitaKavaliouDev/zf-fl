@@ -1,2 +1,5 @@
-- [x] Fix the floating header layout on the Explore tab screen by extracting `_CityHeaderSection` from the `CustomScrollView` sliver list and properly overlaying it inside a `Stack` positioned over the scrollable contents. Correct incorrect parent data usage of `Positioned` inside `SliverToBoxAdapter`.
+# Tasks
+
+- [x] Fix Daily Targets on Home Dashboard: integrate DailyTargetsCubit and list today's active daily targets on the home dashboard instead of always showing the empty state card.
+- [x] Update Routine Builder Terminology: Rename labels from "Workout Slots" and "Workouts" to "Routine Templates" and "Templates", ensuring they match the database model of adding workout templates to routines rather than individual exercises. Implement correct drag-and-drop handles using `ReorderableDragStartListener`.
       

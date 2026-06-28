@@ -39,7 +39,6 @@ class _AddMeasurementSheetState extends State<AddMeasurementSheet> {
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
-      initialChildSize: 0.5,
       minChildSize: 0.3,
       maxChildSize: 0.7,
 

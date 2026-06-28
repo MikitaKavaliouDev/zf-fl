@@ -111,7 +111,7 @@ class _WorkoutMiniPlayerState extends State<WorkoutMiniPlayer> {
                           'My Session',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
                             color: AppColors.foreground,

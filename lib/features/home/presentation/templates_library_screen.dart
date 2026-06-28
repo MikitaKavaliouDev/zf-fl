@@ -10,6 +10,19 @@ import '../cubit/program_cubit.dart';
 import '../cubit/program_state.dart';
 import 'create_template_screen.dart';
 
+Color _getCategoryColor(String category) {
+  switch (category) {
+    case 'Trainer Assigned':
+      return Colors.blue;
+    case 'System':
+      return Colors.purple;
+    case 'Personal':
+      return Colors.green;
+    default:
+      return AppColors.primary;
+  }
+}
+
 /// Templates Library screen — searchable list of all templates.
 ///
 /// Matches iOS `WorkoutTemplatesView` — WorkoutTemplatesView.swift lines 1-264.
@@ -23,6 +36,14 @@ class TemplatesLibraryScreen extends StatefulWidget {
 class _TemplatesLibraryScreenState extends State<TemplatesLibraryScreen> {
   final _searchController = TextEditingController();
   String _searchText = '';
+  String _selectedCategory = 'All';
+
+  static const _categories = [
+    'All',
+    'Trainer Assigned',
+    'System',
+    'Personal',
+  ];
 
   @override
   void initState() {
@@ -59,6 +80,9 @@ class _TemplatesLibraryScreenState extends State<TemplatesLibraryScreen> {
           Column(
             children: [
               SizedBox(height: topPadding + 80),
+              // Category filter bar
+              _buildCategoryFilters(),
+              const SizedBox(height: 12),
               // Search bar
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -141,6 +165,46 @@ class _TemplatesLibraryScreenState extends State<TemplatesLibraryScreen> {
     );
   }
 
+  Widget _buildCategoryFilters() {
+    return SizedBox(
+      height: 40,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: _categories.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final category = _categories[index];
+          final isSelected = category == _selectedCategory;
+          return GestureDetector(
+            onTap: () => setState(() => _selectedCategory = category),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppColors.primary
+                    : AppColors.mutedSurface,
+                borderRadius: BorderRadius.circular(99),
+              ),
+              child: Text(
+                category,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight:
+                      isSelected ? FontWeight.w600 : FontWeight.normal,
+                  color: isSelected
+                      ? Colors.white
+                      : AppColors.foreground,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildError(String message) {
     return ZiroErrorWidget(
       message: message,
@@ -151,13 +215,18 @@ class _TemplatesLibraryScreenState extends State<TemplatesLibraryScreen> {
   }
 
   Widget _buildTemplateList(List<TemplateDto> templates) {
-    final filtered = _searchText.isEmpty
-        ? templates
-        : templates.where((t) {
-            final q = _searchText.toLowerCase();
-            return t.name.toLowerCase().contains(q) ||
-                (t.description?.toLowerCase().contains(q) ?? false);
-          }).toList();
+    var filtered = templates;
+    if (_selectedCategory != 'All') {
+      filtered = templates.where((t) => t.category == _selectedCategory).toList();
+    }
+
+    if (_searchText.isNotEmpty) {
+      final q = _searchText.toLowerCase();
+      filtered = filtered.where((t) {
+        return t.name.toLowerCase().contains(q) ||
+            (t.description?.toLowerCase().contains(q) ?? false);
+      }).toList();
+    }
 
     if (filtered.isEmpty) {
       return _buildEmptyState(templates.isEmpty);
@@ -241,7 +310,7 @@ class _TemplatesLibraryScreenState extends State<TemplatesLibraryScreen> {
   }
 }
 
-/// A single template row in the templates library list.
+/// A single row in the templates library list.
 class _TemplateLibraryRow extends StatelessWidget {
   final TemplateDto template;
   final VoidCallback onPlay;
@@ -255,6 +324,10 @@ class _TemplateLibraryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final exerciseCount = template.exercises.isNotEmpty
+        ? template.exercises.length
+        : template.exerciseCount;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -292,23 +365,48 @@ class _TemplateLibraryRow extends StatelessWidget {
                   ),
                 ],
                 const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    '${template.exercises.length} Exercises',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '$exerciseCount Exercises',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
                     ),
-                  ),
+                    if (template.category != null) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _getCategoryColor(template.category!).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          template.category!,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: _getCategoryColor(template.category!),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ],
             ),

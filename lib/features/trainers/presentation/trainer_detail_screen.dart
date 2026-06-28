@@ -561,11 +561,11 @@ class _PackagesSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _sectionDivider(),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
           child: Row(
             children: [
-              const Text(
+              Text(
                 'Packages',
                 style: TextStyle(
                   fontSize: 20,

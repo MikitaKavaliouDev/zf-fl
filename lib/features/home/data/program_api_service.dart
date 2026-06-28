@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../trainers/data/models/template_dto.dart';
+import 'models/program_detail_response.dart';
 import 'models/program_dto.dart';
 import 'models/program_library_response.dart';
 
@@ -11,6 +12,7 @@ import 'models/program_library_response.dart';
 ///   GET    /api/client/programs                     — list all programs/templates
 ///   POST   /api/client/programs                     — create a new program
 ///   GET    /api/client/programs/:id                 — get single program with templates
+///   PUT    /api/client/program/active               — set active program
 ///   POST   /api/client/programs/templates           — create a template under a program
 ///
 /// The client cannot update or delete programs — those are trainer-only operations.
@@ -68,6 +70,27 @@ class ProgramApiService {
     final data = response.data['data'] as Map<String, dynamic>;
     final programJson = data['program'] as Map<String, dynamic>;
     return ProgramDto.fromJson(programJson);
+  }
+
+  /// GET /api/client/programs/:id — get full program detail with isActive flag.
+  ///
+  /// Returns [ProgramDetailResponse] with the full program (templates + exercises)
+  /// and an `isActive` flag indicating if it's the client's active program.
+  Future<ProgramDetailResponse> getProgramDetail(String id) async {
+    final response = await _dio.get('/api/client/programs/$id');
+    final data = response.data['data'] as Map<String, dynamic>;
+    return ProgramDetailResponse.fromJson(data);
+  }
+
+  /// PUT /api/client/program/active — set a program as the active program.
+  ///
+  /// Body: { programId: string }
+  /// Deactivates all other assignments and activates this one.
+  Future<void> setActiveProgram(String programId) async {
+    await _dio.put(
+      '/api/client/program/active',
+      data: {'programId': programId},
+    );
   }
 
   /// POST /api/client/programs/templates — create a template under a program.

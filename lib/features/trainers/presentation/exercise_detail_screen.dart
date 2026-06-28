@@ -123,7 +123,6 @@ class ExerciseDetailScreen extends StatelessWidget {
             height: 260,
             borderRadius: 16,
             fit: BoxFit.contain,
-            showYouTubeOverlay: true,
             onTap: isYT && onPlayVideo != null
                 ? () => onPlayVideo!(mediaUrl)
                 : null,

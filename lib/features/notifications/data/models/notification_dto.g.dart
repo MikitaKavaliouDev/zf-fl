@@ -14,8 +14,10 @@ _NotificationDto _$NotificationDtoFromJson(Map<String, dynamic> json) =>
       message: json['message'] as String,
       type: json['type'] as String,
       readStatus: json['readStatus'] as bool,
-      createdAt: (json['createdAt'] as num).toInt(),
-      updatedAt: (json['updatedAt'] as num?)?.toInt() ?? 0,
+      createdAt: _parseDateToInt(json['createdAt']),
+      updatedAt: json['updatedAt'] == null
+          ? 0
+          : _parseDateToInt(json['updatedAt']),
       targetRole: json['targetRole'] as String?,
       metadata: json['metadata'] as String?,
       syncStatus: json['syncStatus'] as String? ?? 'synced',

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/di/injection.dart';
 import '../../../../core/widgets/error_widget.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../trainers/data/models/template_dto.dart';
@@ -12,24 +13,30 @@ import '../cubit/template_detail_state.dart';
 ///
 /// Shows the template's exercises with sets/reps, allows adding and removing
 /// exercises, and supports editing exercise parameters.
-class TemplateDetailScreen extends StatefulWidget {
+class TemplateDetailScreen extends StatelessWidget {
   final TemplateDto template;
 
   const TemplateDetailScreen({super.key, required this.template});
 
   @override
-  State<TemplateDetailScreen> createState() => _TemplateDetailScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider<TemplateDetailCubit>(
+      create: (_) => getIt<TemplateDetailCubit>()..loadTemplate(template),
+      child: _TemplateDetailBody(template: template),
+    );
+  }
 }
 
-class _TemplateDetailScreenState extends State<TemplateDetailScreen> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<TemplateDetailCubit>().loadTemplate(widget.template);
-    });
-  }
+class _TemplateDetailBody extends StatefulWidget {
+  final TemplateDto template;
 
+  const _TemplateDetailBody({required this.template});
+
+  @override
+  State<_TemplateDetailBody> createState() => _TemplateDetailBodyState();
+}
+
+class _TemplateDetailBodyState extends State<_TemplateDetailBody> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -273,3 +280,4 @@ class _ExerciseCard extends StatelessWidget {
     );
   }
 }
+      

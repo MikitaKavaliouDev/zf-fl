@@ -15,6 +15,12 @@ _TemplateDto _$TemplateDtoFromJson(Map<String, dynamic> json) => _TemplateDto(
           ?.map((e) => TemplateExerciseDto.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const <TemplateExerciseDto>[],
+  exerciseCount: (json['exerciseCount'] as num?)?.toInt() ?? 0,
+  programId: json['programId'] as String?,
+  order: (json['order'] as num?)?.toInt() ?? 0,
+  category: json['category'] as String?,
+  source: json['source'] as String?,
+  programName: json['programName'] as String?,
 );
 
 Map<String, dynamic> _$TemplateDtoToJson(_TemplateDto instance) =>
@@ -23,6 +29,12 @@ Map<String, dynamic> _$TemplateDtoToJson(_TemplateDto instance) =>
       'name': instance.name,
       'description': instance.description,
       'exercises': instance.exercises,
+      'exerciseCount': instance.exerciseCount,
+      'programId': instance.programId,
+      'order': instance.order,
+      'category': instance.category,
+      'source': instance.source,
+      'programName': instance.programName,
     };
 
 _TemplateExerciseDto _$TemplateExerciseDtoFromJson(Map<String, dynamic> json) =>

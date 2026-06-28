@@ -212,16 +212,16 @@ class _CheckInHistoryCard extends StatelessWidget {
                   ],
                   if (item.hasFeedback) ...[
                     const SizedBox(height: 4),
-                    Row(
+                    const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.feedback_rounded,
                           size: 12,
                           color: AppColors.primary,
                         ),
-                        const SizedBox(width: 3),
-                        const Text(
+                        SizedBox(width: 3),
+                        Text(
                           'Feedback',
                           style: TextStyle(
                             fontSize: 11,

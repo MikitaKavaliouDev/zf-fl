@@ -54,7 +54,7 @@ class ConnectButton extends StatelessWidget {
         ),
         child: const Text(
           'Pending',
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
             color: AppColors.mutedText,

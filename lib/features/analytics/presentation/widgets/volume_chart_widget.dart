@@ -12,8 +12,8 @@ class VolumeChartWidget extends StatelessWidget {
   const VolumeChartWidget({super.key, required this.data});
 
   Map<String, double> _calculateNiceRange(double minY, double maxY, {bool forceZeroStart = false}) {
-    double minVal = forceZeroStart ? 0 : minY;
-    double maxVal = maxY;
+    final double minVal = forceZeroStart ? 0 : minY;
+    final double maxVal = maxY;
 
     double range = maxVal - minVal;
     if (range <= 0) {
@@ -40,7 +40,7 @@ class VolumeChartWidget extends StatelessWidget {
       cleanInterval = 1.0;
     }
 
-    double chartMinY = forceZeroStart ? 0 : (minVal / cleanInterval).floor() * cleanInterval;
+    final double chartMinY = forceZeroStart ? 0 : (minVal / cleanInterval).floor() * cleanInterval;
     double chartMaxY = (maxVal / cleanInterval).ceil() * cleanInterval;
 
     if (chartMinY == chartMaxY) {
@@ -93,7 +93,6 @@ class VolumeChartWidget extends StatelessWidget {
             ),
           ),
           titlesData: FlTitlesData(
-            show: true,
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
@@ -134,13 +133,10 @@ class VolumeChartWidget extends StatelessWidget {
                 },
               ),
             ),
-            topTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles: const AxisTitles(),
+            rightTitles: const AxisTitles(),
           ),
           gridData: FlGridData(
-            show: true,
             drawVerticalLine: false,
             horizontalInterval: interval,
             getDrawingHorizontalLine: (value) {

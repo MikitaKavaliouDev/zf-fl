@@ -11,9 +11,9 @@ _ProgramLibraryResponse _$ProgramLibraryResponseFromJson(
 ) => _ProgramLibraryResponse(
   assignedPrograms:
       (json['assignedPrograms'] as List<dynamic>?)
-          ?.map((e) => ProgramDto.fromJson(e as Map<String, dynamic>))
+          ?.map((e) => AssignedProgramDto.fromJson(e as Map<String, dynamic>))
           .toList() ??
-      const <ProgramDto>[],
+      const <AssignedProgramDto>[],
   personalPrograms:
       (json['personalPrograms'] as List<dynamic>?)
           ?.map((e) => ProgramDto.fromJson(e as Map<String, dynamic>))

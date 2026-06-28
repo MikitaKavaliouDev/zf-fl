@@ -1,52 +1,76 @@
-import 'package:add_2_calendar/add_2_calendar.dart' as cal;
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
-import '../data/models/active_program_response.dart';
+import '../../trainers/data/models/template_dto.dart';
+import '../cubit/program_cubit.dart';
+import '../cubit/program_state.dart';
+import '../data/models/program_detail_response.dart';
 import '../data/models/program_dto.dart';
 
-/// Full-screen detail view for a client's training program.
+/// Full-screen program detail view matching web PageClient.tsx behavior.
 ///
-/// Accepts either [ActiveProgramResponse] (from dashboard endpoint) or
-/// [ProgramDto] (from program CRUD API), normalizes internally for display.
+/// Supports three modes:
+/// 1. [programDetail] — loads detail from GET /api/client/programs/[id]
+/// 2. [programDto] — uses a local ProgramDto (from programs list)
+/// 3. [activeProgram] — uses ActiveProgramResponse (from dashboard)
 ///
-/// Matches iOS behavior from PersonalHomeView showProgramDetail sheet.
-class ProgramDetailScreen extends StatelessWidget {
-  final ActiveProgramResponse? activeProgram;
+/// Shows program info, expandable template list with exercises,
+/// and "Set as Active" / "Active Program" badge.
+class ProgramDetailScreen extends StatefulWidget {
+  final ProgramDetailResponse? programDetail;
   final ProgramDto? programDto;
 
   const ProgramDetailScreen({
     super.key,
-    this.activeProgram,
+    this.programDetail,
     this.programDto,
-  }) : assert(activeProgram != null || programDto != null,
-            'Either activeProgram or programDto must be provided');
+  }) : assert(
+          programDetail != null || programDto != null,
+          'Either programDetail or programDto must be provided',
+        );
 
-  /// Program name normalized from either model.
-  String get _name {
-    if (activeProgram != null) return activeProgram!.program.name;
-    return programDto!.name;
-  }
+  @override
+  State<ProgramDetailScreen> createState() => _ProgramDetailScreenState();
+}
 
-  /// Description normalized from either model.
-  String? get _description {
-    if (activeProgram != null) return activeProgram!.program.description;
-    return programDto!.description;
-  }
+class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
+  String? _expandedTemplateId;
+  ProgramDetailResponse? _detail;
 
-  /// Template count normalized from either model.
-  int get _templateCount {
-    if (activeProgram != null) return activeProgram!.templates.length;
-    return programDto!.templates.length;
-  }
-
-  /// Template names normalized from either model.
-  List<String> get _templateNames {
-    if (activeProgram != null) {
-      return activeProgram!.templates.map((t) => t.name).toList();
+  @override
+  void initState() {
+    super.initState();
+    if (widget.programDetail != null) {
+      _detail = widget.programDetail;
+    } else if (widget.programDto != null) {
+      _fetchDetail();
     }
-    return programDto!.templates.map((t) => t.name).toList();
+  }
+
+  Future<void> _fetchDetail() async {
+    final id = widget.programDto!.id;
+    final cubit = context.read<ProgramCubit>();
+    final detail = await cubit.getProgramDetail(id);
+    if (mounted && detail != null) {
+      setState(() => _detail = detail);
+    }
+  }
+
+  ProgramDto get _program {
+    if (_detail != null) return _detail!.program;
+    return widget.programDto!;
+  }
+
+  bool get _isActive {
+    if (_detail != null) return _detail!.isActive;
+    // Check from cubit state
+    final state = context.read<ProgramCubit>().state;
+    if (state is ProgramLoaded) {
+      return state.activeProgramId == _program.id;
+    }
+    return false;
   }
 
   @override
@@ -69,384 +93,498 @@ class ProgramDetailScreen extends StatelessWidget {
             color: AppColors.foreground,
           ),
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: _isActive
+                ? _ActiveBadge()
+                : _SetActiveButton(programId: _program.id),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Program header card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.mutedSurface,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _name,
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.foreground,
-                    ),
-                  ),
-                  if (_description != null &&
-                      _description!.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      _description!,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppColors.mutedText,
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 20),
-
-                  // Progress stats (only for active program response)
-                  if (activeProgram != null) ...[
-                    Row(
-                      children: [
-                        _StatBadge(
-                          label: 'Completed',
-                          value: '${activeProgram!.progress.completedCount}',
-                        ),
-                        const SizedBox(width: 16),
-                        _StatBadge(
-                          label: 'Total',
-                          value: '${activeProgram!.progress.totalCount}',
-                        ),
-                        const SizedBox(width: 16),
-                        _StatBadge(
-                          label: 'Progress',
-                          value:
-                              '${activeProgram!.progress.progressPercentage}%',
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(99),
-                      child: LinearProgressIndicator(
-                        value: activeProgram!.progress.totalCount > 0
-                            ? activeProgram!.progress.completedCount /
-                                activeProgram!.progress.totalCount
-                            : 0,
-                        minHeight: 8,
-                        backgroundColor: AppColors.borderActive,
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                          AppColors.primary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
+            // Program info card
+            _ProgramInfoCard(
+              name: _program.name,
+              description: _program.description,
+              category: _program.category,
             ),
-
             const SizedBox(height: 24),
 
-            // Schedule info (for ProgramDto with scheduling)
-            if (programDto != null && programDto!.isScheduled) ...[
-              _buildScheduleInfo(),
-              const SizedBox(height: 24),
-            ],
-
-            // Template list header
-            Text(
-              'Workouts ($_templateCount)',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.foreground,
-              ),
+            // Workout Routines header
+            Row(
+              children: [
+                const Icon(Icons.calendar_month_rounded,
+                    size: 20, color: AppColors.primary),
+                const SizedBox(width: 8),
+                Text(
+                  'Workout Routines (${_program.templates.length})',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.foreground,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
 
-            // Template rows
-            if (activeProgram != null)
-              ...activeProgram!.templates.map(
-                (template) => _TemplateDetailRow(
-                  templateName: template.name,
-                  exerciseCount: template.exerciseCount,
-                  status: template.status,
-                  onStart: template.status == 'NEXT'
-                      ? () => context.go('/workout')
-                      : null,
-                ),
-              )
-            else
-              ...programDto!.templates.map(
-                (template) => _TemplateDetailRow(
-                  templateName: template.name,
-                  exerciseCount: template.exercises.length,
-                ),
-              ),
+            // Template cards with expandable exercises
+            ..._program.templates.map((template) {
+              return _TemplateCard(
+                template: template,
+                isExpanded: _expandedTemplateId == template.id,
+                onTap: () {
+                  setState(() {
+                    _expandedTemplateId =
+                        _expandedTemplateId == template.id ? null : template.id;
+                  });
+                },
+                onStart: _isActive
+                    ? () {
+                        // Navigate to workout with this template
+                        context.go('/workout');
+                      }
+                    : null,
+              );
+            }),
 
-            const SizedBox(height: 24),
-            _CalendarButton(
-              programName: _name,
-              templateNames: _templateNames,
-            ),
             const SizedBox(height: 32),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildScheduleInfo() {
+/// Program info card: name, category badge, description.
+class _ProgramInfoCard extends StatelessWidget {
+  final String name;
+  final String? description;
+  final String? category;
+
+  const _ProgramInfoCard({
+    required this.name,
+    this.description,
+    this.category,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.mutedSurface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.calendar_month_rounded,
-              size: 20, color: AppColors.primary),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              'Scheduled ${programDto!.scheduleFrequency ?? ""}',
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.foreground,
+          if (category != null) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                category!.toUpperCase(),
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                  letterSpacing: 1,
+                ),
               ),
             ),
+            const SizedBox(height: 12),
+          ],
+          Text(
+            name,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: AppColors.foreground,
+            ),
           ),
+          if (description != null && description!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              description!,
+              style: const TextStyle(
+                fontSize: 14,
+                color: AppColors.mutedText,
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 }
 
-/// Small stat badge showing a label and value.
-class _StatBadge extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _StatBadge({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: AppColors.foreground,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            color: AppColors.mutedText,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// Stateful calendar button matching iOS MyProgramDetailView's addAllToCalendar.
-class _CalendarButton extends StatefulWidget {
-  final String programName;
-  final List<String> templateNames;
-
-  const _CalendarButton({
-    required this.programName,
-    required this.templateNames,
-  });
-
-  @override
-  State<_CalendarButton> createState() => _CalendarButtonState();
-}
-
-class _CalendarButtonState extends State<_CalendarButton> {
-  bool _addedToCalendar = false;
-
-  Future<void> _addAllToCalendar() async {
-    final now = DateTime.now();
-    final tomorrow = DateTime(now.year, now.month, now.day + 1);
-
-    for (var i = 0; i < widget.templateNames.length; i++) {
-      final startDate = tomorrow.add(Duration(days: i));
-      final endDate = startDate.add(const Duration(hours: 1));
-
-      final event = cal.Event(
-        title: '${widget.programName} - ${widget.templateNames[i]}',
-        startDate: startDate,
-        endDate: endDate,
-        location: 'ZIRO.FIT',
-      );
-
-      try {
-        await cal.Add2Calendar.addEvent2Cal(event);
-      } catch (_) {
-        // Calendar integration failure is non-blocking (matching iOS behavior).
-      }
-    }
-
-    if (mounted) {
-      setState(() => _addedToCalendar = true);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (widget.templateNames.isEmpty) return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: SizedBox(
-        width: double.infinity,
-        child: ElevatedButton.icon(
-          onPressed: _addedToCalendar ? null : _addAllToCalendar,
-          icon: Icon(
-            _addedToCalendar
-                ? Icons.check_circle_rounded
-                : Icons.calendar_month_rounded,
-            size: 20,
-          ),
-          label: Text(
-            _addedToCalendar ? 'Added to Calendar' : 'Add All to Calendar',
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor:
-                _addedToCalendar ? const Color(0xFF22C55E) : AppColors.primary,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            textStyle: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// A single template row in the program detail list.
-class _TemplateDetailRow extends StatelessWidget {
-  final String templateName;
-  final int exerciseCount;
-  final String? status;
+/// A single template card with expandable exercise list.
+class _TemplateCard extends StatefulWidget {
+  final TemplateDto template;
+  final bool isExpanded;
+  final VoidCallback onTap;
   final VoidCallback? onStart;
 
-  const _TemplateDetailRow({
-    required this.templateName,
-    required this.exerciseCount,
-    this.status,
+  const _TemplateCard({
+    required this.template,
+    required this.isExpanded,
+    required this.onTap,
     this.onStart,
   });
 
   @override
+  State<_TemplateCard> createState() => _TemplateCardState();
+}
+
+class _TemplateCardState extends State<_TemplateCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animController;
+  late Animation<double> _chevronRotation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _chevronRotation = Tween<double>(begin: 0.0, end: 0.5).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.easeInOut),
+    );
+    if (widget.isExpanded) {
+      _animController.value = 1.0;
+    }
+  }
+
+  @override
+  void didUpdateWidget(_TemplateCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isExpanded != oldWidget.isExpanded) {
+      if (widget.isExpanded) {
+        _animController.forward();
+      } else {
+        _animController.reverse();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final isCompleted = status == 'COMPLETED';
-    final isNext = status == 'NEXT';
+    final exerciseCount = widget.template.exercises.isNotEmpty
+        ? widget.template.exercises.length
+        : widget.template.exerciseCount;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.mutedSurface,
         borderRadius: BorderRadius.circular(16),
-        border: isNext
-            ? Border.all(color: AppColors.primary.withValues(alpha: 0.3))
-            : null,
+        border: Border.all(color: AppColors.borderMuted),
+      ),
+      child: Column(
+        children: [
+          // Header — tap to expand
+          InkWell(
+            onTap: widget.onTap,
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.template.name,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.foreground,
+                          ),
+                        ),
+                        if (widget.template.description != null &&
+                            widget.template.description!.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            widget.template.description!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.mutedText,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Exercise count badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '$exerciseCount steps',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Start button (only if onStart is set)
+                  if (widget.onStart != null) ...[
+                    GestureDetector(
+                      onTap: widget.onStart,
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: const BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.play_arrow_rounded,
+                          size: 20,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  // Animated chevron
+                  AnimatedBuilder(
+                    animation: _chevronRotation,
+                    builder: (context, child) {
+                      return Transform.rotate(
+                        angle: _chevronRotation.value * 3.14159,
+                        child: child,
+                      );
+                    },
+                    child: const Icon(
+                      Icons.chevron_left_rounded,
+                      size: 22,
+                      color: AppColors.mutedText,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Expanded exercise list
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: _buildExerciseList(),
+            crossFadeState: widget.isExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 300),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExerciseList() {
+    final exercises = widget.template.exercises;
+    if (exercises.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+        child: Text(
+          'No exercises in this template.',
+          style: TextStyle(fontSize: 13, color: AppColors.mutedText),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Column(
+        children: [
+          const Divider(height: 1, color: AppColors.borderMuted),
+          const SizedBox(height: 12),
+          ...exercises.map((exercise) => _buildExerciseRow(exercise)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExerciseRow(TemplateExerciseDto exercise) {
+    final isRest = exercise.type == 'REST';
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.borderMuted),
       ),
       child: Row(
         children: [
-          // Status icon
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isCompleted
-                  ? const Color(0xFF22C55E)
-                  : isNext
-                      ? AppColors.primary
-                      : AppColors.borderActive,
-            ),
-            child: Center(
-              child: isCompleted
-                  ? const Icon(Icons.check_rounded,
-                      size: 18, color: Colors.white)
-                  : isNext
-                      ? const Icon(Icons.play_arrow_rounded,
-                          size: 18, color: Colors.white)
-                      : null,
-            ),
+          Icon(
+            isRest ? Icons.timer_outlined : Icons.fitness_center_rounded,
+            size: 18,
+            color: isRest ? AppColors.primary : AppColors.foreground,
           ),
-          const SizedBox(width: 12),
-          // Name and exercise count
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  templateName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: isCompleted
-                        ? AppColors.mutedText
-                        : AppColors.foreground,
-                    decoration:
-                        isCompleted ? TextDecoration.lineThrough : null,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '$exerciseCount exercises',
+                  exercise.exercise?.name ?? 'Rest Period',
                   style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.mutedText,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.foreground,
                   ),
                 ),
+                if (exercise.exercise?.muscleGroup != null)
+                  Text(
+                    exercise.exercise!.muscleGroup!,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.mutedText,
+                    ),
+                  ),
               ],
             ),
           ),
-          // Action button for NEXT template
-          if (isNext && onStart != null)
-            ElevatedButton(
-              onPressed: onStart,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(99),
-                ),
-                elevation: 0,
-                textStyle: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              child: const Text('Start'),
+          Text(
+            isRest
+                ? '${exercise.durationSeconds ?? 60}s'
+                : '${exercise.targetSets ?? 3} × ${exercise.targetReps ?? '8-12'}',
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: AppColors.primary,
+              fontFamily: 'monospace',
             ),
+          ),
         ],
       ),
     );
+  }
+}
+
+/// Green "Active Program" badge for the app bar.
+class _ActiveBadge extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFF22C55E).withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(99),
+        border: Border.all(
+          color: const Color(0xFF22C55E).withValues(alpha: 0.3),
+        ),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.check_circle_rounded,
+              size: 14, color: Color(0xFF22C55E)),
+          SizedBox(width: 4),
+          Text(
+            'Active',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF22C55E),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// "Set as Active Program" button for the app bar.
+class _SetActiveButton extends StatefulWidget {
+  final String programId;
+
+  const _SetActiveButton({required this.programId});
+
+  @override
+  State<_SetActiveButton> createState() => _SetActiveButtonState();
+}
+
+class _SetActiveButtonState extends State<_SetActiveButton> {
+  bool _loading = false;
+
+  Future<void> _setActive() async {
+    setState(() => _loading = true);
+    final cubit = context.read<ProgramCubit>();
+    final success = await cubit.setActiveProgram(widget.programId);
+    if (mounted) {
+      setState(() => _loading = false);
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Program set as active!'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to set as active.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _loading
+        ? const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        : GestureDetector(
+            onTap: _setActive,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(99),
+              ),
+              child: const Text(
+                'Set as Active',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          );
   }
 }

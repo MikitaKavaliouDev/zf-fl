@@ -26,6 +26,10 @@ void main() {
   late AnalyticsCubit cubit;
 
   setUpAll(() {
+    registerFallbackValue(const AnalyticsResponseDto());
+    registerFallbackValue(const ProgressResponseDto());
+    registerFallbackValue(const WidgetConfigDto());
+
     final getIt = GetIt.instance;
     if (!getIt.isRegistered<EventBus>()) {
       getIt.registerSingleton<EventBus>(EventBus());
@@ -87,7 +91,7 @@ void main() {
         analytics: AnalyticsResponseDto(),
         progress: ProgressResponseDto(),
         widgets: WidgetConfigDto(widgets: [
-          WidgetConfigItem(id: 'w1', type: 'prs', isVisible: true, order: 0),
+          WidgetConfigItem(id: 'w1', type: 'prs'),
         ]),
       ),
       act: (cubit) => cubit.toggleWidgetVisibility('w1'),

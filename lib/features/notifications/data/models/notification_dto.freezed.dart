@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$NotificationDto {
 
- String get id; String get userId; String? get senderId; String get message; String get type;@JsonKey(name: 'readStatus') bool get readStatus;@JsonKey(name: 'createdAt') int get createdAt;@JsonKey(name: 'updatedAt') int get updatedAt; String? get targetRole; String? get metadata;@JsonKey(name: 'syncStatus') String get syncStatus;
+ String get id; String get userId; String? get senderId; String get message; String get type;@JsonKey(name: 'readStatus') bool get readStatus;@JsonKey(name: 'createdAt', fromJson: _parseDateToInt) int get createdAt;@JsonKey(name: 'updatedAt', fromJson: _parseDateToInt) int get updatedAt; String? get targetRole; String? get metadata;@JsonKey(name: 'syncStatus') String get syncStatus;
 /// Create a copy of NotificationDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $NotificationDtoCopyWith<$Res>  {
   factory $NotificationDtoCopyWith(NotificationDto value, $Res Function(NotificationDto) _then) = _$NotificationDtoCopyWithImpl;
 @useResult
 $Res call({
- String id, String userId, String? senderId, String message, String type,@JsonKey(name: 'readStatus') bool readStatus,@JsonKey(name: 'createdAt') int createdAt,@JsonKey(name: 'updatedAt') int updatedAt, String? targetRole, String? metadata,@JsonKey(name: 'syncStatus') String syncStatus
+ String id, String userId, String? senderId, String message, String type,@JsonKey(name: 'readStatus') bool readStatus,@JsonKey(name: 'createdAt', fromJson: _parseDateToInt) int createdAt,@JsonKey(name: 'updatedAt', fromJson: _parseDateToInt) int updatedAt, String? targetRole, String? metadata,@JsonKey(name: 'syncStatus') String syncStatus
 });
 
 
@@ -163,7 +163,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String userId,  String? senderId,  String message,  String type, @JsonKey(name: 'readStatus')  bool readStatus, @JsonKey(name: 'createdAt')  int createdAt, @JsonKey(name: 'updatedAt')  int updatedAt,  String? targetRole,  String? metadata, @JsonKey(name: 'syncStatus')  String syncStatus)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String userId,  String? senderId,  String message,  String type, @JsonKey(name: 'readStatus')  bool readStatus, @JsonKey(name: 'createdAt', fromJson: _parseDateToInt)  int createdAt, @JsonKey(name: 'updatedAt', fromJson: _parseDateToInt)  int updatedAt,  String? targetRole,  String? metadata, @JsonKey(name: 'syncStatus')  String syncStatus)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _NotificationDto() when $default != null:
 return $default(_that.id,_that.userId,_that.senderId,_that.message,_that.type,_that.readStatus,_that.createdAt,_that.updatedAt,_that.targetRole,_that.metadata,_that.syncStatus);case _:
@@ -184,7 +184,7 @@ return $default(_that.id,_that.userId,_that.senderId,_that.message,_that.type,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String userId,  String? senderId,  String message,  String type, @JsonKey(name: 'readStatus')  bool readStatus, @JsonKey(name: 'createdAt')  int createdAt, @JsonKey(name: 'updatedAt')  int updatedAt,  String? targetRole,  String? metadata, @JsonKey(name: 'syncStatus')  String syncStatus)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String userId,  String? senderId,  String message,  String type, @JsonKey(name: 'readStatus')  bool readStatus, @JsonKey(name: 'createdAt', fromJson: _parseDateToInt)  int createdAt, @JsonKey(name: 'updatedAt', fromJson: _parseDateToInt)  int updatedAt,  String? targetRole,  String? metadata, @JsonKey(name: 'syncStatus')  String syncStatus)  $default,) {final _that = this;
 switch (_that) {
 case _NotificationDto():
 return $default(_that.id,_that.userId,_that.senderId,_that.message,_that.type,_that.readStatus,_that.createdAt,_that.updatedAt,_that.targetRole,_that.metadata,_that.syncStatus);case _:
@@ -204,7 +204,7 @@ return $default(_that.id,_that.userId,_that.senderId,_that.message,_that.type,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String userId,  String? senderId,  String message,  String type, @JsonKey(name: 'readStatus')  bool readStatus, @JsonKey(name: 'createdAt')  int createdAt, @JsonKey(name: 'updatedAt')  int updatedAt,  String? targetRole,  String? metadata, @JsonKey(name: 'syncStatus')  String syncStatus)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String userId,  String? senderId,  String message,  String type, @JsonKey(name: 'readStatus')  bool readStatus, @JsonKey(name: 'createdAt', fromJson: _parseDateToInt)  int createdAt, @JsonKey(name: 'updatedAt', fromJson: _parseDateToInt)  int updatedAt,  String? targetRole,  String? metadata, @JsonKey(name: 'syncStatus')  String syncStatus)?  $default,) {final _that = this;
 switch (_that) {
 case _NotificationDto() when $default != null:
 return $default(_that.id,_that.userId,_that.senderId,_that.message,_that.type,_that.readStatus,_that.createdAt,_that.updatedAt,_that.targetRole,_that.metadata,_that.syncStatus);case _:
@@ -219,7 +219,7 @@ return $default(_that.id,_that.userId,_that.senderId,_that.message,_that.type,_t
 @JsonSerializable()
 
 class _NotificationDto extends NotificationDto {
-  const _NotificationDto({required this.id, required this.userId, this.senderId, required this.message, required this.type, @JsonKey(name: 'readStatus') required this.readStatus, @JsonKey(name: 'createdAt') required this.createdAt, @JsonKey(name: 'updatedAt') this.updatedAt = 0, this.targetRole, this.metadata, @JsonKey(name: 'syncStatus') this.syncStatus = 'synced'}): super._();
+  const _NotificationDto({required this.id, required this.userId, this.senderId, required this.message, required this.type, @JsonKey(name: 'readStatus') required this.readStatus, @JsonKey(name: 'createdAt', fromJson: _parseDateToInt) required this.createdAt, @JsonKey(name: 'updatedAt', fromJson: _parseDateToInt) this.updatedAt = 0, this.targetRole, this.metadata, @JsonKey(name: 'syncStatus') this.syncStatus = 'synced'}): super._();
   factory _NotificationDto.fromJson(Map<String, dynamic> json) => _$NotificationDtoFromJson(json);
 
 @override final  String id;
@@ -228,8 +228,8 @@ class _NotificationDto extends NotificationDto {
 @override final  String message;
 @override final  String type;
 @override@JsonKey(name: 'readStatus') final  bool readStatus;
-@override@JsonKey(name: 'createdAt') final  int createdAt;
-@override@JsonKey(name: 'updatedAt') final  int updatedAt;
+@override@JsonKey(name: 'createdAt', fromJson: _parseDateToInt) final  int createdAt;
+@override@JsonKey(name: 'updatedAt', fromJson: _parseDateToInt) final  int updatedAt;
 @override final  String? targetRole;
 @override final  String? metadata;
 @override@JsonKey(name: 'syncStatus') final  String syncStatus;
@@ -267,7 +267,7 @@ abstract mixin class _$NotificationDtoCopyWith<$Res> implements $NotificationDto
   factory _$NotificationDtoCopyWith(_NotificationDto value, $Res Function(_NotificationDto) _then) = __$NotificationDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String userId, String? senderId, String message, String type,@JsonKey(name: 'readStatus') bool readStatus,@JsonKey(name: 'createdAt') int createdAt,@JsonKey(name: 'updatedAt') int updatedAt, String? targetRole, String? metadata,@JsonKey(name: 'syncStatus') String syncStatus
+ String id, String userId, String? senderId, String message, String type,@JsonKey(name: 'readStatus') bool readStatus,@JsonKey(name: 'createdAt', fromJson: _parseDateToInt) int createdAt,@JsonKey(name: 'updatedAt', fromJson: _parseDateToInt) int updatedAt, String? targetRole, String? metadata,@JsonKey(name: 'syncStatus') String syncStatus
 });
 
 

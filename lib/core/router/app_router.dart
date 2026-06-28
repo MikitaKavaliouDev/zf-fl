@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/analytics/cubit/analytics_cubit.dart';
+import '../../features/analytics/presentation/analytics_screen.dart';
 import '../../features/auth/cubit/auth_cubit.dart';
 import '../../features/auth/cubit/auth_state.dart';
 import '../../features/auth/presentation/email_verification_screen.dart';
@@ -11,7 +13,10 @@ import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/onboarding_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/check_in/cubit/check_in_cubit.dart';
+import '../../features/check_in/presentation/check_in_detail_screen.dart';
+import '../../features/check_in/presentation/check_in_history_screen.dart';
 import '../../features/check_in/presentation/check_in_screen.dart';
+import '../../features/daily_targets/presentation/daily_targets_screen.dart';
 import '../../features/explore/cubit/event_detail_cubit.dart';
 import '../../features/explore/cubit/explore_map_cubit.dart';
 import '../../features/explore/cubit/trainer_discovery_cubit.dart';
@@ -19,33 +24,29 @@ import '../../features/explore/presentation/event_detail_screen.dart';
 import '../../features/explore/presentation/events_list_screen.dart';
 import '../../features/explore/presentation/explore_screen.dart';
 import '../../features/explore/presentation/trainer_discovery_screen.dart';
-import '../../features/home/data/models/active_program_response.dart';
+import '../../features/fitness_goals/presentation/fitness_goals_screen.dart';
+import '../../features/home/data/models/program_detail_response.dart';
 import '../../features/home/data/models/program_dto.dart';
 import '../../features/home/presentation/home_screen.dart';
+import '../../features/home/presentation/my_routines_screen.dart';
 import '../../features/home/presentation/program_detail_screen.dart';
 import '../../features/home/presentation/routine_builder_screen.dart';
 import '../../features/home/presentation/routine_scheduler_screen.dart';
 import '../../features/home/presentation/template_detail_screen.dart';
 import '../../features/home/presentation/templates_library_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
-import '../../features/analytics/cubit/analytics_cubit.dart';
-import '../../features/analytics/presentation/analytics_screen.dart';
-import '../../features/check_in/presentation/check_in_detail_screen.dart';
-import '../../features/check_in/presentation/check_in_history_screen.dart';
-import '../../features/daily_targets/presentation/daily_targets_screen.dart';
-import '../../features/fitness_goals/presentation/fitness_goals_screen.dart';
 import '../../features/nutrition_habits/cubit/nutrition_habits_cubit.dart';
 import '../../features/nutrition_habits/presentation/nutrition_habits_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
+import '../../features/profile/presentation/settings_screens/contact_support_screen.dart';
 import '../../features/profile/presentation/settings_screens/profile_config_screen.dart';
 import '../../features/sharing/presentation/sharing_screen.dart';
-import '../../features/profile/presentation/settings_screens/contact_support_screen.dart';
-import '../../features/trainers/data/models/template_dto.dart';
-import '../../features/trainers/presentation/completed_session_detail_screen.dart';
-import '../../features/trainers/presentation/trainer_detail_screen.dart';
 import '../../features/trainers/cubit/workout_session_cubit.dart';
 import '../../features/trainers/cubit/workout_session_state.dart';
+import '../../features/trainers/data/models/template_dto.dart';
+import '../../features/trainers/presentation/completed_session_detail_screen.dart';
 import '../../features/trainers/presentation/exercise_detail_screen.dart';
+import '../../features/trainers/presentation/trainer_detail_screen.dart';
 import '../../features/trainers/presentation/trainer_map_screen.dart';
 import '../../features/trainers/presentation/widgets/workout_mini_player.dart';
 import '../../features/trainers/presentation/workout_history_screen.dart';
@@ -380,8 +381,8 @@ GoRouter createAppRouter(AuthCubit authCubit) {
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
           child: ProgramDetailScreen(
-            activeProgram: state.extra is ActiveProgramResponse
-                ? state.extra as ActiveProgramResponse
+            programDetail: state.extra is ProgramDetailResponse
+                ? state.extra as ProgramDetailResponse
                 : null,
             programDto: state.extra is ProgramDto
                 ? state.extra as ProgramDto
@@ -475,6 +476,26 @@ GoRouter createAppRouter(AuthCubit authCubit) {
           child: RoutineSchedulerScreen(
             program: state.extra as ProgramDto,
           ),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 1),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutCubic,
+              )),
+              child: child,
+            );
+          },
+        ),
+      ),
+      // My Routines list
+      GoRoute(
+        path: '/home/my-routines',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const MyRoutinesScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return SlideTransition(
               position: Tween<Offset>(

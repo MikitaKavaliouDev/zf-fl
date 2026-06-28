@@ -53,7 +53,7 @@ void main() {
   group('LocalTemplateRepository', () {
     test('save and getAll — saves template and retrieves it with exercises', () async {
       final exercises = [
-        createExercise(id: 'e1', exerciseId: 'pushup', order: 0, targetReps: '12', targetSets: 3),
+        createExercise(exerciseId: 'pushup', targetReps: '12', targetSets: 3),
         createExercise(id: 'e2', exerciseId: 'squat', order: 1, targetReps: '15', targetSets: 4),
       ];
       final template = createTemplate(
@@ -131,7 +131,7 @@ void main() {
         id: 'updatable',
         name: 'Updated Name',
         exercises: [
-          createExercise(id: 'e-upd', exerciseId: 'new-ex', order: 0),
+          createExercise(id: 'e-upd', exerciseId: 'new-ex'),
         ],
       );
       await repository.save(updated);
@@ -160,10 +160,9 @@ void main() {
         createExercise(
           id: 'roundtrip-1',
           exerciseId: 'bench',
-          order: 0,
           targetReps: '12',
           targetSets: 4,
-          exercise: ExerciseDto(
+          exercise: const ExerciseDto(
             id: 'bench-detail',
             name: 'Bench Press',
             muscleGroup: 'Chest',

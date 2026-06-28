@@ -1,6 +1,7 @@
 import 'package:injectable/injectable.dart';
 
 import '../../trainers/data/models/template_dto.dart';
+import 'models/program_detail_response.dart';
 import 'models/program_dto.dart';
 import 'models/program_library_response.dart';
 import 'program_api_service.dart';
@@ -21,6 +22,14 @@ class ProgramRepository {
       _api.createProgram(name: name, description: description);
 
   Future<ProgramDto> getProgram(String id) => _api.getProgram(id);
+
+  /// Get full program detail with isActive flag.
+  Future<ProgramDetailResponse> getProgramDetail(String id) =>
+      _api.getProgramDetail(id);
+
+  /// Set a program as the active program (PUT /api/client/program/active).
+  Future<void> setActiveProgram(String programId) =>
+      _api.setActiveProgram(programId);
 
   Future<TemplateDto> createTemplate({
     required String programId,

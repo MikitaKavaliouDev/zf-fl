@@ -125,12 +125,12 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<ProgramDto> programs,  List<TemplateDto> templates)?  loaded,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<AssignedProgramDto> assignedPrograms,  List<ProgramDto> personalPrograms,  List<TemplateDto> templates,  List<String> categories,  String? activeProgramId,  bool isSettingActive)?  loaded,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case ProgramInitial() when initial != null:
 return initial();case ProgramLoading() when loading != null:
 return loading();case ProgramLoaded() when loaded != null:
-return loaded(_that.programs,_that.templates);case ProgramError() when error != null:
+return loaded(_that.assignedPrograms,_that.personalPrograms,_that.templates,_that.categories,_that.activeProgramId,_that.isSettingActive);case ProgramError() when error != null:
 return error(_that.message);case _:
   return orElse();
 
@@ -149,12 +149,12 @@ return error(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<ProgramDto> programs,  List<TemplateDto> templates)  loaded,required TResult Function( String message)  error,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<AssignedProgramDto> assignedPrograms,  List<ProgramDto> personalPrograms,  List<TemplateDto> templates,  List<String> categories,  String? activeProgramId,  bool isSettingActive)  loaded,required TResult Function( String message)  error,}) {final _that = this;
 switch (_that) {
 case ProgramInitial():
 return initial();case ProgramLoading():
 return loading();case ProgramLoaded():
-return loaded(_that.programs,_that.templates);case ProgramError():
+return loaded(_that.assignedPrograms,_that.personalPrograms,_that.templates,_that.categories,_that.activeProgramId,_that.isSettingActive);case ProgramError():
 return error(_that.message);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -169,12 +169,12 @@ return error(_that.message);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<ProgramDto> programs,  List<TemplateDto> templates)?  loaded,TResult? Function( String message)?  error,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<AssignedProgramDto> assignedPrograms,  List<ProgramDto> personalPrograms,  List<TemplateDto> templates,  List<String> categories,  String? activeProgramId,  bool isSettingActive)?  loaded,TResult? Function( String message)?  error,}) {final _that = this;
 switch (_that) {
 case ProgramInitial() when initial != null:
 return initial();case ProgramLoading() when loading != null:
 return loading();case ProgramLoaded() when loaded != null:
-return loaded(_that.programs,_that.templates);case ProgramError() when error != null:
+return loaded(_that.assignedPrograms,_that.personalPrograms,_that.templates,_that.categories,_that.activeProgramId,_that.isSettingActive);case ProgramError() when error != null:
 return error(_that.message);case _:
   return null;
 
@@ -251,23 +251,49 @@ String toString() {
 
 
 class ProgramLoaded implements ProgramState {
-  const ProgramLoaded({final  List<ProgramDto> programs = const <ProgramDto>[], final  List<TemplateDto> templates = const <TemplateDto>[]}): _programs = programs,_templates = templates;
+  const ProgramLoaded({final  List<AssignedProgramDto> assignedPrograms = const <AssignedProgramDto>[], final  List<ProgramDto> personalPrograms = const <ProgramDto>[], final  List<TemplateDto> templates = const <TemplateDto>[], final  List<String> categories = const <String>[], this.activeProgramId, this.isSettingActive = false}): _assignedPrograms = assignedPrograms,_personalPrograms = personalPrograms,_templates = templates,_categories = categories;
   
 
- final  List<ProgramDto> _programs;
-@JsonKey() List<ProgramDto> get programs {
-  if (_programs is EqualUnmodifiableListView) return _programs;
+/// Programs assigned by the trainer (with assignment wrapper).
+ final  List<AssignedProgramDto> _assignedPrograms;
+/// Programs assigned by the trainer (with assignment wrapper).
+@JsonKey() List<AssignedProgramDto> get assignedPrograms {
+  if (_assignedPrograms is EqualUnmodifiableListView) return _assignedPrograms;
   // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_programs);
+  return EqualUnmodifiableListView(_assignedPrograms);
 }
 
+/// Programs created by the client themselves.
+ final  List<ProgramDto> _personalPrograms;
+/// Programs created by the client themselves.
+@JsonKey() List<ProgramDto> get personalPrograms {
+  if (_personalPrograms is EqualUnmodifiableListView) return _personalPrograms;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_personalPrograms);
+}
+
+/// All available templates (personal + system + local), merged.
  final  List<TemplateDto> _templates;
+/// All available templates (personal + system + local), merged.
 @JsonKey() List<TemplateDto> get templates {
   if (_templates is EqualUnmodifiableListView) return _templates;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_templates);
 }
 
+/// Sorted unique program categories.
+ final  List<String> _categories;
+/// Sorted unique program categories.
+@JsonKey() List<String> get categories {
+  if (_categories is EqualUnmodifiableListView) return _categories;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_categories);
+}
+
+/// The ID of the currently active program (if any).
+ final  String? activeProgramId;
+/// Whether a set-active operation is in progress.
+@JsonKey() final  bool isSettingActive;
 
 /// Create a copy of ProgramState
 /// with the given fields replaced by the non-null parameter values.
@@ -279,16 +305,16 @@ $ProgramLoadedCopyWith<ProgramLoaded> get copyWith => _$ProgramLoadedCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ProgramLoaded&&const DeepCollectionEquality().equals(other._programs, _programs)&&const DeepCollectionEquality().equals(other._templates, _templates));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ProgramLoaded&&const DeepCollectionEquality().equals(other._assignedPrograms, _assignedPrograms)&&const DeepCollectionEquality().equals(other._personalPrograms, _personalPrograms)&&const DeepCollectionEquality().equals(other._templates, _templates)&&const DeepCollectionEquality().equals(other._categories, _categories)&&(identical(other.activeProgramId, activeProgramId) || other.activeProgramId == activeProgramId)&&(identical(other.isSettingActive, isSettingActive) || other.isSettingActive == isSettingActive));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_programs),const DeepCollectionEquality().hash(_templates));
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_assignedPrograms),const DeepCollectionEquality().hash(_personalPrograms),const DeepCollectionEquality().hash(_templates),const DeepCollectionEquality().hash(_categories),activeProgramId,isSettingActive);
 
 @override
 String toString() {
-  return 'ProgramState.loaded(programs: $programs, templates: $templates)';
+  return 'ProgramState.loaded(assignedPrograms: $assignedPrograms, personalPrograms: $personalPrograms, templates: $templates, categories: $categories, activeProgramId: $activeProgramId, isSettingActive: $isSettingActive)';
 }
 
 
@@ -299,7 +325,7 @@ abstract mixin class $ProgramLoadedCopyWith<$Res> implements $ProgramStateCopyWi
   factory $ProgramLoadedCopyWith(ProgramLoaded value, $Res Function(ProgramLoaded) _then) = _$ProgramLoadedCopyWithImpl;
 @useResult
 $Res call({
- List<ProgramDto> programs, List<TemplateDto> templates
+ List<AssignedProgramDto> assignedPrograms, List<ProgramDto> personalPrograms, List<TemplateDto> templates, List<String> categories, String? activeProgramId, bool isSettingActive
 });
 
 
@@ -316,11 +342,15 @@ class _$ProgramLoadedCopyWithImpl<$Res>
 
 /// Create a copy of ProgramState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? programs = null,Object? templates = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? assignedPrograms = null,Object? personalPrograms = null,Object? templates = null,Object? categories = null,Object? activeProgramId = freezed,Object? isSettingActive = null,}) {
   return _then(ProgramLoaded(
-programs: null == programs ? _self._programs : programs // ignore: cast_nullable_to_non_nullable
+assignedPrograms: null == assignedPrograms ? _self._assignedPrograms : assignedPrograms // ignore: cast_nullable_to_non_nullable
+as List<AssignedProgramDto>,personalPrograms: null == personalPrograms ? _self._personalPrograms : personalPrograms // ignore: cast_nullable_to_non_nullable
 as List<ProgramDto>,templates: null == templates ? _self._templates : templates // ignore: cast_nullable_to_non_nullable
-as List<TemplateDto>,
+as List<TemplateDto>,categories: null == categories ? _self._categories : categories // ignore: cast_nullable_to_non_nullable
+as List<String>,activeProgramId: freezed == activeProgramId ? _self.activeProgramId : activeProgramId // ignore: cast_nullable_to_non_nullable
+as String?,isSettingActive: null == isSettingActive ? _self.isSettingActive : isSettingActive // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

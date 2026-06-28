@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
@@ -14,16 +15,27 @@ class TemplateDetailCubit extends Cubit<TemplateDetailState> {
       : super(const TemplateDetailState.initial());
 
   /// Load a template's details into the state.
+  /// If the exercises list is empty and it's not a local template,
+  /// fetch the full template details from the backend.
   Future<void> loadTemplate(TemplateDto template) async {
     emit(const TemplateDetailState.loading());
 
-    // For local templates, show the data directly.
-    // For API templates, use the already-fetched TemplateDto data
-    // (full exercise list is included in the template).
-    emit(TemplateDetailState.loaded(
-      template: template,
-      exercises: List.unmodifiable(template.exercises),
-    ));
+    try {
+      if (template.exercises.isEmpty && !template.id.startsWith('local_')) {
+        final fullTemplate = await _workoutSessionRepo.getTemplate(template.id);
+        emit(TemplateDetailState.loaded(
+          template: fullTemplate,
+          exercises: List.unmodifiable(fullTemplate.exercises),
+        ));
+      } else {
+        emit(TemplateDetailState.loaded(
+          template: template,
+          exercises: List.unmodifiable(template.exercises),
+        ));
+      }
+    } catch (e) {
+      emit(TemplateDetailState.error('Failed to load template details: $e'));
+    }
   }
 
   /// Fetch the full exercise library for the exercise picker.
@@ -75,3 +87,4 @@ class TemplateDetailCubit extends Cubit<TemplateDetailState> {
     ));
   }
 }
+      

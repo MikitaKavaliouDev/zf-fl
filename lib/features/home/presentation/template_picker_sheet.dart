@@ -27,6 +27,15 @@ class TemplatePickerSheet extends StatefulWidget {
 }
 
 class _TemplatePickerSheetState extends State<TemplatePickerSheet> {
+  String _selectedCategory = 'All';
+
+  static const _categories = [
+    'All',
+    'Trainer Assigned',
+    'System',
+    'Personal',
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -64,6 +73,11 @@ class _TemplatePickerSheetState extends State<TemplatePickerSheet> {
               ),
               const Divider(height: 1, color: AppColors.borderMuted),
 
+              // Category filter bar
+              const SizedBox(height: 8),
+              _buildCategoryFilters(),
+              const SizedBox(height: 8),
+
               // Content driven by cubit state
               Expanded(
                 child: BlocBuilder<ProgramCubit, ProgramState>(
@@ -86,6 +100,46 @@ class _TemplatePickerSheetState extends State<TemplatePickerSheet> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildCategoryFilters() {
+    return SizedBox(
+      height: 36,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: _categories.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final category = _categories[index];
+          final isSelected = category == _selectedCategory;
+          return GestureDetector(
+            onTap: () => setState(() => _selectedCategory = category),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppColors.primary
+                    : AppColors.mutedSurface,
+                borderRadius: BorderRadius.circular(99),
+              ),
+              child: Text(
+                category,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight:
+                      isSelected ? FontWeight.w600 : FontWeight.normal,
+                  color: isSelected
+                      ? Colors.white
+                      : AppColors.foreground,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -122,7 +176,12 @@ class _TemplatePickerSheetState extends State<TemplatePickerSheet> {
     ScrollController scrollController,
     List<TemplateDto> templates,
   ) {
-    if (templates.isEmpty) {
+    var filtered = templates;
+    if (_selectedCategory != 'All') {
+      filtered = templates.where((t) => t.category == _selectedCategory).toList();
+    }
+
+    if (filtered.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -176,10 +235,10 @@ class _TemplatePickerSheetState extends State<TemplatePickerSheet> {
     return ListView.separated(
       controller: scrollController,
       padding: const EdgeInsets.all(16),
-      itemCount: templates.length,
+      itemCount: filtered.length,
       separatorBuilder: (_, _) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
-        final template = templates[index];
+        final template = filtered[index];
         final isUsed = widget.existingTemplateIds.contains(template.id);
         return _TemplateRow(
           template: template,
@@ -209,6 +268,10 @@ class _TemplateRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final exerciseCount = template.exercises.isNotEmpty
+        ? template.exercises.length
+        : template.exerciseCount;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -237,12 +300,26 @@ class _TemplateRow extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    '${template.exercises.length} Exercises',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.mutedText,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        '$exerciseCount Exercises',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.mutedText,
+                        ),
+                      ),
+                      if (template.category != null) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          '\u2022  ${template.category}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.mutedText,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),

@@ -68,13 +68,17 @@ class _TemplatePickerDialogState extends State<TemplatePickerDialog> {
                 itemCount: _filtered.length,
                 itemBuilder: (context, index) {
                   final template = _filtered[index];
+                  final exerciseCount = template.exercises.isNotEmpty
+                      ? template.exercises.length
+                      : template.exerciseCount;
+
                   return ListTile(
                     dense: true,
                     title: Text(template.name),
                     subtitle: template.description != null
                         ? Text(template.description!,
                             style: const TextStyle(fontSize: 12))
-                        : Text('${template.exercises.length} exercises',
+                        : Text('$exerciseCount exercises',
                             style: const TextStyle(fontSize: 12)),
                     trailing: const Icon(Icons.chevron_right_rounded, size: 18),
                     onTap: () => Navigator.of(context).pop(template),
@@ -94,3 +98,4 @@ class _TemplatePickerDialogState extends State<TemplatePickerDialog> {
     );
   }
 }
+      
