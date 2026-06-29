@@ -924,10 +924,10 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => ExercisePickerSheet.single(
+      builder: (_) => ExercisePickerSheet.multiple(
         exercises: allExercises,
-        onExerciseSelected: (selected) {
-          cubit.addExercises([selected.id]);
+        onExercisesSelected: (selected) {
+          cubit.addExercises(selected.map((e) => e.id).toList());
         },
       ),
     );
