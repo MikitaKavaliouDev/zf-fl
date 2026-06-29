@@ -8,86 +8,105 @@ import '../data/models/notification_dto.dart';
 import 'widgets/notification_row.dart';
 import 'widgets/ziro_sheet_header.dart';
 
-/// Full-screen notifications list — replicates iOS NotificationsView exactly.
-///
-/// Layout:
-/// - ZiroSheetHeader pinned at top (title: "Notifications", Done button pops)
-/// - Scrollable notification list with pull-to-refresh
-/// - Empty state when no notifications
-/// - Loading spinner on initial load
-class NotificationsScreen extends StatelessWidget {
+/// Full-screen notifications list with infinite scroll pagination.
+class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
+
+  @override
+  State<NotificationsScreen> createState() => _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends State<NotificationsScreen> {
+  final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      context.read<NotificationsCubit>().loadMore();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider<NotificationsCubit>(
       create: (context) =>
           context.read<NotificationsCubit>()..fetchNotifications(),
-      child: const _NotificationsBody(),
-    );
-  }
-}
-
-class _NotificationsBody extends StatelessWidget {
-  const _NotificationsBody();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Stack(
-        alignment: Alignment.topCenter,
-        children: [
-          // Main content
-          BlocBuilder<NotificationsCubit, NotificationsState>(
-            builder: (context, state) {
-              return switch (state) {
-                NotificationsInitial() || NotificationsLoading()
-                    when _notificationsList(state).isEmpty =>
-                  const Center(
-                    child: CircularProgressIndicator(
-                      strokeWidth: 3,
-                      color: AppColors.primary,
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: Stack(
+          alignment: Alignment.topCenter,
+          children: [
+            BlocBuilder<NotificationsCubit, NotificationsState>(
+              builder: (context, state) {
+                return switch (state) {
+                  NotificationsInitial() || NotificationsLoading() =>
+                    const Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 3,
+                        color: AppColors.primary,
+                      ),
                     ),
-                  ),
-                NotificationsLoaded(:final notifications)
-                    when notifications.isEmpty =>
-                  const _EmptyState(),
-                NotificationsError() => const _EmptyState(),
-                NotificationsLoaded(:final notifications) =>
-                  _NotificationList(notifications: notifications),
-                _ => const _EmptyState(),
-              };
-            },
-          ),
-          // Pinned header overlay
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: ZiroSheetHeader(
-              title: 'Notifications',
-              showDone: true,
-              onDone: () => Navigator.of(context).pop(),
+                  NotificationsLoaded(:final notifications)
+                      when notifications.isEmpty =>
+                    const _EmptyState(),
+                  NotificationsError() => const _EmptyState(),
+                  NotificationsLoaded(
+                    :final notifications,
+                    :final isLoadingMore,
+                    :final hasMore,
+                  ) =>
+                    _NotificationList(
+                      notifications: notifications,
+                      isLoadingMore: isLoadingMore,
+                      hasMore: hasMore,
+                      scrollController: _scrollController,
+                    ),
+                  _ => const _EmptyState(),
+                };
+              },
             ),
-          ),
-        ],
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: ZiroSheetHeader(
+                title: 'Notifications',
+                showDone: true,
+                onDone: () => Navigator.of(context).pop(),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
-
-  /// Extract the notifications list from any state (empty list for non-loaded).
-  List<NotificationDto> _notificationsList(NotificationsState state) {
-    if (state is NotificationsLoaded) return state.notifications;
-    return const [];
-  }
 }
 
-/// Scrollable list of notification rows with pull-to-refresh.
+/// Scrollable list of notification rows with pull-to-refresh and infinite scroll.
 class _NotificationList extends StatelessWidget {
   final List<NotificationDto> notifications;
+  final bool isLoadingMore;
+  final bool hasMore;
+  final ScrollController scrollController;
 
-  const _NotificationList({required this.notifications});
+  const _NotificationList({
+    required this.notifications,
+    required this.isLoadingMore,
+    required this.hasMore,
+    required this.scrollController,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -98,10 +117,26 @@ class _NotificationList extends StatelessWidget {
       onRefresh: () => cubit.fetchNotifications(),
       color: AppColors.primary,
       child: ListView.builder(
+        controller: scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.only(top: topPadding + 108), // header height + status bar
-        itemCount: notifications.length,
+        padding: EdgeInsets.only(top: topPadding + 108),
+        itemCount: notifications.length + (isLoadingMore ? 1 : 0),
         itemBuilder: (context, index) {
+          if (index == notifications.length) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            );
+          }
           final notification = notifications[index];
           return RepaintBoundary(
             child: NotificationRow(
@@ -148,4 +183,3 @@ class _EmptyState extends StatelessWidget {
     );
   }
 }
-      

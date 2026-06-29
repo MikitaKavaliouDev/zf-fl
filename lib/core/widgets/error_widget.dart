@@ -27,7 +27,7 @@ class ZiroErrorWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: padding,
         child: Column(
           mainAxisSize: MainAxisSize.min,

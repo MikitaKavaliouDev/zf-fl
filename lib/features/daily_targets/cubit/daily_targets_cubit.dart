@@ -25,28 +25,50 @@ class DailyTargetsCubit extends Cubit<DailyTargetsState> {
     }
   }
 
-  /// Toggle the completion status of a target.
+  /// Toggle the completion status of a target with optimistic UI + rollback.
   Future<bool> toggleComplete(String id, bool isCompleted) async {
+    final s = state;
+    if (s is! DailyTargetsLoaded) return false;
+    final snapshot = s;
+
+    // Optimistic update
+    final updated = s.targets.map((t) {
+      if (t.id == id) return t.copyWith(isCompleted: isCompleted);
+      return t;
+    }).toList();
+    emit(DailyTargetsState.loaded(targets: updated));
+
     try {
       await _repository.updateTarget(id, isCompleted: isCompleted);
       return true;
     } catch (e) {
       developer.log('DailyTargetsCubit.toggleComplete failed: $e',
           name: 'daily_targets');
-      emit(const DailyTargetsState.error('Failed to update target.'));
+      emit(snapshot); // rollback
       return false;
     }
   }
 
-  /// Update progress (currentValue) for a target.
+  /// Update progress (currentValue) for a target with optimistic UI + rollback.
   Future<bool> updateProgress(String id, double currentValue) async {
+    final s = state;
+    if (s is! DailyTargetsLoaded) return false;
+    final snapshot = s;
+
+    // Optimistic update
+    final updated = s.targets.map((t) {
+      if (t.id == id) return t.copyWith(currentValue: currentValue);
+      return t;
+    }).toList();
+    emit(DailyTargetsState.loaded(targets: updated));
+
     try {
       await _repository.updateTarget(id, currentValue: currentValue);
       return true;
     } catch (e) {
       developer.log('DailyTargetsCubit.updateProgress failed: $e',
           name: 'daily_targets');
-      emit(const DailyTargetsState.error('Failed to update progress.'));
+      emit(snapshot); // rollback
       return false;
     }
   }

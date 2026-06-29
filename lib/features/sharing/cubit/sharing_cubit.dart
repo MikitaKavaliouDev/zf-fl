@@ -50,10 +50,11 @@ class SharingCubit extends Cubit<SharingState> {
     ));
   }
 
-  /// Save the current config to the API.
+  /// Save the current config to the API with optimistic UI + rollback.
   Future<bool> save() async {
     final s = state;
     if (s is! SharingLoaded) return false;
+    final snapshot = s;
 
     emit(const SharingState.saving());
     try {
@@ -71,7 +72,7 @@ class SharingCubit extends Cubit<SharingState> {
       return true;
     } catch (e) {
       developer.log('SharingCubit.save failed: $e', name: 'sharing');
-      emit(const SharingState.error('Failed to save sharing settings.'));
+      emit(snapshot); // rollback to pre-save state
       return false;
     }
   }

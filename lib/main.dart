@@ -15,7 +15,6 @@ import 'features/auth/cubit/auth_state.dart';
 import 'features/home/cubit/home_cubit.dart';
 import 'features/home/cubit/program_cubit.dart';
 import 'features/notifications/cubit/notifications_cubit.dart';
-import 'features/trainers/cubit/trainer_list_cubit.dart';
 import 'features/trainers/cubit/workout_session_cubit.dart';
 import 'features/voice_coach/cubit/voice_coach_cubit.dart';
 
@@ -53,7 +52,6 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
   late final AuthCubit _authCubit;
   late final HomeCubit _homeCubit;
   late final ProgramCubit _programCubit;
-  late final TrainerListCubit _trainerListCubit;
   late final WorkoutSessionCubit _workoutSessionCubit;
   late final NotificationsCubit _notificationsCubit;
   late final VoiceCoachCubit _voiceCoachCubit;
@@ -67,12 +65,10 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
     _authCubit = di.getIt<AuthCubit>();
     _homeCubit = di.getIt<HomeCubit>();
     _programCubit = di.getIt<ProgramCubit>();
-    _trainerListCubit = di.getIt<TrainerListCubit>();
     _workoutSessionCubit = di.getIt<WorkoutSessionCubit>();
     _notificationsCubit = di.getIt<NotificationsCubit>();
     _voiceCoachCubit = di.getIt<VoiceCoachCubit>();
-    _queryClient = QueryClient();
-    _queryClient.mount();
+    _queryClient = di.getIt<QueryClient>();
     _router = createAppRouter(_authCubit);
     // Check auth status on first frame.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -101,7 +97,6 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
     _authCubit.close();
     _homeCubit.close();
     _programCubit.close();
-    _trainerListCubit.close();
     _workoutSessionCubit.close();
     _notificationsCubit.close();
     _voiceCoachCubit.close();
@@ -116,7 +111,6 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
         BlocProvider.value(value: _authCubit),
         BlocProvider.value(value: _homeCubit),
         BlocProvider.value(value: _programCubit),
-        BlocProvider.value(value: _trainerListCubit),
         BlocProvider.value(value: _workoutSessionCubit),
         BlocProvider.value(value: _notificationsCubit),
         BlocProvider.value(value: _voiceCoachCubit),

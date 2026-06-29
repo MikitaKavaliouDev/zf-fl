@@ -125,12 +125,12 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<NotificationDto> notifications,  int unreadCount)?  loaded,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<NotificationDto> notifications,  int unreadCount,  bool isLoadingMore,  bool hasMore,  int currentPage)?  loaded,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case NotificationsInitial() when initial != null:
 return initial();case NotificationsLoading() when loading != null:
 return loading();case NotificationsLoaded() when loaded != null:
-return loaded(_that.notifications,_that.unreadCount);case NotificationsError() when error != null:
+return loaded(_that.notifications,_that.unreadCount,_that.isLoadingMore,_that.hasMore,_that.currentPage);case NotificationsError() when error != null:
 return error(_that.message);case _:
   return orElse();
 
@@ -149,12 +149,12 @@ return error(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<NotificationDto> notifications,  int unreadCount)  loaded,required TResult Function( String message)  error,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<NotificationDto> notifications,  int unreadCount,  bool isLoadingMore,  bool hasMore,  int currentPage)  loaded,required TResult Function( String message)  error,}) {final _that = this;
 switch (_that) {
 case NotificationsInitial():
 return initial();case NotificationsLoading():
 return loading();case NotificationsLoaded():
-return loaded(_that.notifications,_that.unreadCount);case NotificationsError():
+return loaded(_that.notifications,_that.unreadCount,_that.isLoadingMore,_that.hasMore,_that.currentPage);case NotificationsError():
 return error(_that.message);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -169,12 +169,12 @@ return error(_that.message);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<NotificationDto> notifications,  int unreadCount)?  loaded,TResult? Function( String message)?  error,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<NotificationDto> notifications,  int unreadCount,  bool isLoadingMore,  bool hasMore,  int currentPage)?  loaded,TResult? Function( String message)?  error,}) {final _that = this;
 switch (_that) {
 case NotificationsInitial() when initial != null:
 return initial();case NotificationsLoading() when loading != null:
 return loading();case NotificationsLoaded() when loaded != null:
-return loaded(_that.notifications,_that.unreadCount);case NotificationsError() when error != null:
+return loaded(_that.notifications,_that.unreadCount,_that.isLoadingMore,_that.hasMore,_that.currentPage);case NotificationsError() when error != null:
 return error(_that.message);case _:
   return null;
 
@@ -251,7 +251,7 @@ String toString() {
 
 
 class NotificationsLoaded implements NotificationsState {
-  const NotificationsLoaded({required final  List<NotificationDto> notifications, this.unreadCount = 0}): _notifications = notifications;
+  const NotificationsLoaded({required final  List<NotificationDto> notifications, this.unreadCount = 0, this.isLoadingMore = false, this.hasMore = true, this.currentPage = 1}): _notifications = notifications;
   
 
  final  List<NotificationDto> _notifications;
@@ -262,6 +262,9 @@ class NotificationsLoaded implements NotificationsState {
 }
 
 @JsonKey() final  int unreadCount;
+@JsonKey() final  bool isLoadingMore;
+@JsonKey() final  bool hasMore;
+@JsonKey() final  int currentPage;
 
 /// Create a copy of NotificationsState
 /// with the given fields replaced by the non-null parameter values.
@@ -273,16 +276,16 @@ $NotificationsLoadedCopyWith<NotificationsLoaded> get copyWith => _$Notification
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is NotificationsLoaded&&const DeepCollectionEquality().equals(other._notifications, _notifications)&&(identical(other.unreadCount, unreadCount) || other.unreadCount == unreadCount));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is NotificationsLoaded&&const DeepCollectionEquality().equals(other._notifications, _notifications)&&(identical(other.unreadCount, unreadCount) || other.unreadCount == unreadCount)&&(identical(other.isLoadingMore, isLoadingMore) || other.isLoadingMore == isLoadingMore)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.currentPage, currentPage) || other.currentPage == currentPage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_notifications),unreadCount);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_notifications),unreadCount,isLoadingMore,hasMore,currentPage);
 
 @override
 String toString() {
-  return 'NotificationsState.loaded(notifications: $notifications, unreadCount: $unreadCount)';
+  return 'NotificationsState.loaded(notifications: $notifications, unreadCount: $unreadCount, isLoadingMore: $isLoadingMore, hasMore: $hasMore, currentPage: $currentPage)';
 }
 
 
@@ -293,7 +296,7 @@ abstract mixin class $NotificationsLoadedCopyWith<$Res> implements $Notification
   factory $NotificationsLoadedCopyWith(NotificationsLoaded value, $Res Function(NotificationsLoaded) _then) = _$NotificationsLoadedCopyWithImpl;
 @useResult
 $Res call({
- List<NotificationDto> notifications, int unreadCount
+ List<NotificationDto> notifications, int unreadCount, bool isLoadingMore, bool hasMore, int currentPage
 });
 
 
@@ -310,10 +313,13 @@ class _$NotificationsLoadedCopyWithImpl<$Res>
 
 /// Create a copy of NotificationsState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? notifications = null,Object? unreadCount = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? notifications = null,Object? unreadCount = null,Object? isLoadingMore = null,Object? hasMore = null,Object? currentPage = null,}) {
   return _then(NotificationsLoaded(
 notifications: null == notifications ? _self._notifications : notifications // ignore: cast_nullable_to_non_nullable
 as List<NotificationDto>,unreadCount: null == unreadCount ? _self.unreadCount : unreadCount // ignore: cast_nullable_to_non_nullable
+as int,isLoadingMore: null == isLoadingMore ? _self.isLoadingMore : isLoadingMore // ignore: cast_nullable_to_non_nullable
+as bool,hasMore: null == hasMore ? _self.hasMore : hasMore // ignore: cast_nullable_to_non_nullable
+as bool,currentPage: null == currentPage ? _self.currentPage : currentPage // ignore: cast_nullable_to_non_nullable
 as int,
   ));
 }

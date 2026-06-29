@@ -25,6 +25,7 @@ import '../../features/explore/presentation/events_list_screen.dart';
 import '../../features/explore/presentation/explore_screen.dart';
 import '../../features/explore/presentation/trainer_discovery_screen.dart';
 import '../../features/fitness_goals/presentation/fitness_goals_screen.dart';
+import '../../features/home/data/models/active_program_response.dart';
 import '../../features/home/data/models/program_detail_response.dart';
 import '../../features/home/data/models/program_dto.dart';
 import '../../features/home/presentation/home_screen.dart';
@@ -386,7 +387,16 @@ GoRouter createAppRouter(AuthCubit authCubit) {
                 : null,
             programDto: state.extra is ProgramDto
                 ? state.extra as ProgramDto
-                : null,
+                : state.extra is ActiveProgramResponse
+                    ? ProgramDto(
+                        id: (state.extra as ActiveProgramResponse)
+                            .program
+                            .id,
+                        name: (state.extra as ActiveProgramResponse)
+                            .program
+                            .name,
+                      )
+                    : null,
           ),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return SlideTransition(

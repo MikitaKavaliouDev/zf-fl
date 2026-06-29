@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tanquery_flutter/tanquery_flutter.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../notifications/cubit/notifications_cubit.dart';
 import '../cubit/home_cubit.dart';
-import '../cubit/home_state.dart';
 import '../cubit/program_cubit.dart';
+import '../data/home_data.dart';
 import '../data/models/active_program_response.dart';
 import '../data/models/client_dashboard_response.dart';
 import '../data/models/client_recent_session.dart';
@@ -25,9 +26,8 @@ import 'widgets/ziro_header.dart';
 
 /// Main client-facing dashboard after login.
 ///
-/// Matches iOS PersonalHomeView — PersonalHomeView.swift lines 1-297.
-/// Structure: Stack with floating ZiroHeader on top and scrollable content below.
-/// Content sections follow the iOS order with 24pt spacing.
+/// Uses tanquery [QueryBuilder] for cache-first loading with background
+/// refresh. Pull-to-refresh calls [DartQuery.refetchQueries].
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -36,10 +36,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  @override
-  void initState() {
-    super.initState();
-    context.read<HomeCubit>().fetchDashboard();
+  Future<void> _onRefresh() async {
+    final client = DartQuery.of(context);
+    await client.refetchQueries(queryKey: QueryKey(['home']));
   }
 
   @override
@@ -48,20 +47,31 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          BlocBuilder<HomeCubit, HomeState>(
+          QueryBuilder<HomeData>(
+            queryKey: QueryKey(['home']),
+            queryFn: () => context.read<HomeCubit>().fetchDashboard(),
+            staleTime: const Duration(seconds: 30),
             builder: (context, state) {
-              return switch (state) {
-                HomeInitial() || HomeLoading() => const _LoadingIndicator(),
-                HomeError(:final message) => _ErrorView(message: message),
-                HomeLoaded(:final dashboard, :final activeProgram) =>
-                  BlocProvider.value(
-                    value: context.read<ProgramCubit>(),
-                    child: _DashboardContent(
-                      dashboard: dashboard,
-                      activeProgram: activeProgram,
-                    ),
+              if (state.isLoading && !state.isFetched) {
+                return const _LoadingIndicator();
+              }
+              if (state.data != null) {
+                return BlocProvider.value(
+                  value: context.read<ProgramCubit>(),
+                  child: _DashboardContent(
+                    dashboard: state.data!.dashboard,
+                    activeProgram: state.data!.activeProgram,
+                    onRefresh: _onRefresh,
                   ),
-              };
+                );
+              }
+              if (state.error != null) {
+                return _ErrorView(
+                  message: state.error.toString(),
+                  onRetry: _onRefresh,
+                );
+              }
+              return const SizedBox.shrink();
             },
           ),
           // Floating header on top of scroll content
@@ -95,8 +105,9 @@ class _LoadingIndicator extends StatelessWidget {
 /// Error state with retry button.
 class _ErrorView extends StatelessWidget {
   final String message;
+  final VoidCallback onRetry;
 
-  const _ErrorView({required this.message});
+  const _ErrorView({required this.message, required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -122,7 +133,7 @@ class _ErrorView extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: () => context.read<HomeCubit>().refresh(),
+              onPressed: onRetry,
               icon: const Icon(Icons.refresh_rounded, size: 18),
               label: const Text('Retry'),
             ),
@@ -150,10 +161,12 @@ class _ErrorView extends StatelessWidget {
 class _DashboardContent extends StatelessWidget {
   final ClientDashboardResponse dashboard;
   final ActiveProgramResponse? activeProgram;
+  final Future<void> Function() onRefresh;
 
   const _DashboardContent({
     required this.dashboard,
     this.activeProgram,
+    required this.onRefresh,
   });
 
   bool get _isCheckInComplete {
@@ -170,7 +183,6 @@ class _DashboardContent extends StatelessWidget {
   static int _computeStreak(List<ClientRecentSession> sessions) {
     if (sessions.isEmpty) return 0;
 
-    // Collect unique dates from completed sessions
     final uniqueDates = <DateTime>{};
     for (final session in sessions) {
       if (session.status == 'completed') {
@@ -192,10 +204,8 @@ class _DashboardContent extends StatelessWidget {
     final todayDate = DateTime(today.year, today.month, today.day);
     final mostRecent = sortedDates.first;
 
-    // Streak must include today or yesterday
     if (mostRecent.difference(todayDate).inDays > 1) return 0;
 
-    // Count consecutive days backwards
     int streak = 1;
     for (int i = 1; i < sortedDates.length; i++) {
       final diff = sortedDates[i - 1].difference(sortedDates[i]).inDays;
@@ -218,23 +228,21 @@ class _DashboardContent extends StatelessWidget {
     final streak = _computeStreak(sessions);
     final topPadding = MediaQuery.of(context).padding.top;
 
-    // Check for pending link requests via NotificationsCubit
     final notifCubit = context.watch<NotificationsCubit>();
     final pendingRequest = notifCubit.pendingLinkRequest;
 
     return RefreshIndicator(
-      onRefresh: () => context.read<HomeCubit>().refresh(),
+      onRefresh: onRefresh,
       color: AppColors.primary,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.only(
           left: 16,
           right: 16,
-          top: topPadding + 60,  // space for floating header and status bar
-          bottom: 100, // space for tab bar
+          top: topPadding + 60,
+          bottom: 100,
         ),
         children: [
-          // ── 1. Coach Card or Need Coach Banner ──
           if (trainer != null)
             CoachCard(trainer: trainer)
           else
@@ -242,20 +250,17 @@ class _DashboardContent extends StatelessWidget {
 
           const SizedBox(height: 24),
 
-          // ── 2. Credit Status (only when linked to a trainer) ──
           if (trainer != null && remainingCredits != null)
             CreditStatusWidget(remainingCredits: remainingCredits),
 
           if (trainer != null && remainingCredits != null)
             const SizedBox(height: 24),
 
-          // ── 3. Streak Motivation Card (if streak > 0) ──
           if (streak > 0)
             StreakMotivationCard(streak: streak),
 
           if (streak > 0) const SizedBox(height: 24),
 
-          // ── 4. Active Program or No Routine Placeholder ──
           if (activeProgram != null)
             _ActiveProgramCard(program: activeProgram!)
           else if (trainer != null)
@@ -264,12 +269,10 @@ class _DashboardContent extends StatelessWidget {
           if (activeProgram != null || (trainer != null))
             const SizedBox(height: 24),
 
-          // ── 5. Nutrition & Habits Link ──
           _NutritionHabitsCard(onTap: () => context.push('/nutrition-habits')),
 
           const SizedBox(height: 24),
 
-          // ── 6. Invitation Hero Card (if pending request) ──
           if (pendingRequest != null)
             InvitationHeroCard(
               message: pendingRequest.message,
@@ -279,7 +282,6 @@ class _DashboardContent extends StatelessWidget {
 
           if (pendingRequest != null) const SizedBox(height: 24),
 
-          // ── 7. Check-in Banner ──
           if (_hasCheckInBanner)
             CheckInBanner(
               isComplete: _isCheckInComplete,
@@ -291,7 +293,6 @@ class _DashboardContent extends StatelessWidget {
 
           if (_hasCheckInBanner) const SizedBox(height: 24),
 
-          // ── 8. Upcoming Sessions Carousel ──
           if (upcomingSessions.isNotEmpty)
             UpcomingSessionsCarousel(
               sessions: upcomingSessions,
@@ -300,7 +301,6 @@ class _DashboardContent extends StatelessWidget {
 
           if (upcomingSessions.isNotEmpty) const SizedBox(height: 24),
 
-          // ── 9. Daily Targets Section ──
           DailyTargetsSection(
             isEnabled: true,
             onTapSetTarget: () => context.push('/daily-targets'),
@@ -309,12 +309,10 @@ class _DashboardContent extends StatelessWidget {
 
           const SizedBox(height: 24),
 
-          // ── 10. Quick Actions ──
           const QuickActionsRow(),
 
           const SizedBox(height: 24),
 
-          // ── 11. Recent History ──
           RecentHistorySection(sessions: sessions),
         ],
       ),
@@ -323,8 +321,6 @@ class _DashboardContent extends StatelessWidget {
 }
 
 /// Card linking to Nutrition & Habits screen.
-///
-/// Matches iOS green fork.knife card — PersonalHomeView.
 class _NutritionHabitsCard extends StatelessWidget {
   final VoidCallback onTap;
 
@@ -342,7 +338,6 @@ class _NutritionHabitsCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Green circle with fork.knife icon
             Container(
               width: 50,
               height: 50,
@@ -418,7 +413,6 @@ class _ActiveProgramCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Program name
             Text(
               program.program.name,
               style: const TextStyle(
@@ -441,7 +435,6 @@ class _ActiveProgramCard extends StatelessWidget {
               ),
             ],
             const SizedBox(height: 16),
-            // Progress bar
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
@@ -469,4 +462,3 @@ class _ActiveProgramCard extends StatelessWidget {
     );
   }
 }
-      

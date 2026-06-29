@@ -43,6 +43,7 @@ class AnalyticsCubit extends Cubit<AnalyticsState> {
   final ConnectivityService _connectivity;
   final MeasurementsRepository _measurementsRepository;
   StreamSubscription<AppEvent>? _eventSub;
+  Timer? _eventDebounce;
 
   AnalyticsCubit(
     this._repository,
@@ -50,7 +51,18 @@ class AnalyticsCubit extends Cubit<AnalyticsState> {
     this._connectivity,
     this._measurementsRepository,
   ) : super(const AnalyticsState.initial()) {
-    _eventSub = getIt<EventBus>().on<AppEvent>().listen(_onAppEvent);
+    // Debounce check-in events so rapid consecutive submissions only
+    // trigger one refresh. Workout completions fire immediately (no debounce).
+    _eventSub = getIt<EventBus>().on<AppEvent>().listen((event) {
+      if (event is CheckInSubmittedEvent) {
+        _eventDebounce?.cancel();
+        _eventDebounce = Timer(const Duration(milliseconds: 500), () {
+          _onAppEvent(event);
+        });
+      } else {
+        _onAppEvent(event);
+      }
+    });
   }
 
   // ──────────────────────────────────────────────────────────────
@@ -491,6 +503,7 @@ class AnalyticsCubit extends Cubit<AnalyticsState> {
 
   @override
   Future<void> close() async {
+    _eventDebounce?.cancel();
     await _eventSub?.cancel();
     await super.close();
   }

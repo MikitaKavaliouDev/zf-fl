@@ -5,6 +5,7 @@ import 'package:injectable/injectable.dart';
 import 'package:intl/intl.dart';
 
 import '../data/models/daily_habit_dto.dart';
+import '../data/models/habit_log_dto.dart';
 import '../data/models/nutrition_plan_dto.dart';
 import '../data/nutrition_habits_repository.dart';
 import 'nutrition_habits_state.dart';
@@ -34,40 +35,61 @@ class NutritionHabitsCubit extends Cubit<NutritionHabitsState> {
     }
   }
 
-  /// Toggle a habit's completion for today.
+  /// Toggle a habit's completion for today with optimistic UI + rollback.
   Future<void> toggleHabit(String habitId, bool isCompleted) async {
+    final s = state;
+    if (s is! NutritionHabitsLoaded) return;
+    final snapshot = s;
+
+    // Optimistic local update
+    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final updatedHabits = s.habits.map((habit) {
+      if (habit.id != habitId) return habit;
+      // Create an optimistic log entry (server may add fields like id)
+      final existingLogs = habit.logs.toList();
+      final idx = existingLogs.indexWhere((l) => l.date == today);
+      if (idx >= 0) {
+        existingLogs[idx] = existingLogs[idx].copyWith(
+          isCompleted: isCompleted,
+        );
+      } else {
+        existingLogs.add(HabitLogDto(
+          id: '',
+          habitId: habitId,
+          clientId: '',
+          date: DateTime.now(),
+          isCompleted: isCompleted,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ));
+      }
+      return habit.copyWith(logs: existingLogs);
+    }).toList();
+    emit(NutritionHabitsState.loaded(plan: s.plan, habits: updatedHabits));
+
     try {
-      final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
       final log = await _repository.logHabit(
         habitId,
         date: today,
         isCompleted: isCompleted,
       );
-
-      // Optimistic local update — replace/add the log entry in the cached habits.
-      final s = state;
-      if (s is NutritionHabitsLoaded) {
-        final updatedHabits = s.habits.map((habit) {
-          if (habit.id != habitId) return habit;
-          final existingLogs = habit.logs.toList();
-          final idx = existingLogs.indexWhere((l) => l.date == log.date);
-          if (idx >= 0) {
-            existingLogs[idx] = log;
-          } else {
-            existingLogs.add(log);
-          }
-          return habit.copyWith(logs: existingLogs);
-        }).toList();
-        emit(NutritionHabitsState.loaded(
-          plan: s.plan,
-          habits: updatedHabits,
-        ));
-      }
+      // Confirmed — update with server response
+      final confirmed = updatedHabits.map((habit) {
+        if (habit.id != habitId) return habit;
+        final existingLogs = habit.logs.toList();
+        final idx = existingLogs.indexWhere((l) => l.date == log.date);
+        if (idx >= 0) {
+          existingLogs[idx] = log;
+        } else {
+          existingLogs.add(log);
+        }
+        return habit.copyWith(logs: existingLogs);
+      }).toList();
+      emit(NutritionHabitsState.loaded(plan: s.plan, habits: confirmed));
     } catch (e) {
       developer.log('NutritionHabitsCubit.toggleHabit failed: $e',
           name: 'nutrition_habits');
-      // Revert optimistic update by reloading
-      await loadData();
+      emit(snapshot); // rollback to pre-mutation state
     }
   }
 

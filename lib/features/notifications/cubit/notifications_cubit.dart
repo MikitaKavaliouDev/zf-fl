@@ -22,24 +22,50 @@ class NotificationsCubit extends Cubit<NotificationsState> {
   NotificationsCubit(this._repository, this._realtimeService)
       : super(const NotificationsState.initial());
 
-  /// Fetch all notifications and subscribe to real-time updates.
+  /// Fetch the first page of notifications and subscribe to real-time.
   Future<void> fetchNotifications() async {
     emit(const NotificationsState.loading());
     try {
-      final notifications = await _repository.fetchNotifications();
-      _seenIds.addAll(notifications.map((n) => n.id));
-      final unreadCount = notifications.where((n) => !n.readStatus).length;
+      final result = await _repository.fetchNotifications(page: 1);
+      _seenIds.addAll(result.notifications.map((n) => n.id));
+      final unreadCount = result.notifications.where((n) => !n.readStatus).length;
       emit(NotificationsState.loaded(
-        notifications: notifications,
+        notifications: result.notifications,
         unreadCount: unreadCount,
+        hasMore: result.hasMore,
+        currentPage: 1,
       ));
 
-      // Subscribe to real-time updates.
-      _subscribeToRealtime(notifications);
+      _subscribeToRealtime(result.notifications);
     } catch (e) {
       developer.log('NotificationsCubit.fetchNotifications failed: $e',
           name: 'notifications');
       emit(const NotificationsState.error('Failed to load notifications.'));
+    }
+  }
+
+  /// Load the next page of notifications and append to the list.
+  Future<void> loadMore() async {
+    final s = state;
+    if (s is! NotificationsLoaded || !s.hasMore || s.isLoadingMore) return;
+
+    emit(s.copyWith(isLoadingMore: true));
+    try {
+      final nextPage = s.currentPage + 1;
+      final result = await _repository.fetchNotifications(page: nextPage);
+      final updatedList = [...s.notifications, ...result.notifications];
+      _seenIds.addAll(result.notifications.map((n) => n.id));
+      final unreadCount = updatedList.where((n) => !n.readStatus).length;
+      emit(NotificationsState.loaded(
+        notifications: updatedList,
+        unreadCount: unreadCount,
+        hasMore: result.hasMore,
+        currentPage: nextPage,
+      ));
+    } catch (e) {
+      developer.log('NotificationsCubit.loadMore failed: $e',
+          name: 'notifications');
+      emit(s.copyWith(isLoadingMore: false));
     }
   }
 
@@ -51,7 +77,6 @@ class NotificationsCubit extends Cubit<NotificationsState> {
     final stream = _realtimeService.events;
     _realtimeSubscription = stream.listen(_handleRealtimeEvent);
 
-    // Find userId from the first notification (all belong to current user)
     final userId = initialNotifications.isNotEmpty
         ? initialNotifications.first.userId
         : null;
@@ -72,16 +97,9 @@ class NotificationsCubit extends Cubit<NotificationsState> {
         _handleUpdate(notification, currentState);
       case NotificationDeleted(:final id):
         _handleDelete(id, currentState);
-      case NotificationRealtimeConnectionChanged(
-          isConnected: false,
-        ):
-        // Polling fallback or reconnection signal — do a full re-fetch.
+      case NotificationRealtimeConnectionChanged(isConnected: false):
         fetchNotifications();
-      case NotificationRealtimeConnectionChanged(
-          isConnected: true,
-        ):
-        // Realtime reconnected; polling will be automatically stopped,
-        // so no action needed.
+      case NotificationRealtimeConnectionChanged(isConnected: true):
         break;
     }
   }
@@ -90,13 +108,12 @@ class NotificationsCubit extends Cubit<NotificationsState> {
     NotificationDto notification,
     NotificationsLoaded currentState,
   ) {
-    // Deduplicate: skip if we already have this ID.
     if (_seenIds.contains(notification.id)) return;
     _seenIds.add(notification.id);
 
     final updatedList = [notification, ...currentState.notifications];
     final unreadCount = updatedList.where((n) => !n.readStatus).length;
-    emit(NotificationsState.loaded(
+    emit(currentState.copyWith(
       notifications: updatedList,
       unreadCount: unreadCount,
     ));
@@ -111,79 +128,64 @@ class NotificationsCubit extends Cubit<NotificationsState> {
       return n;
     }).toList();
     final unreadCount = updatedList.where((n) => !n.readStatus).length;
-    emit(NotificationsState.loaded(
+    emit(currentState.copyWith(
       notifications: updatedList,
       unreadCount: unreadCount,
     ));
   }
 
-  void _handleDelete(
-    String id,
-    NotificationsLoaded currentState,
-  ) {
+  void _handleDelete(String id, NotificationsLoaded currentState) {
     _seenIds.remove(id);
     final updatedList =
         currentState.notifications.where((n) => n.id != id).toList();
     final unreadCount = updatedList.where((n) => !n.readStatus).length;
-    emit(NotificationsState.loaded(
+    emit(currentState.copyWith(
       notifications: updatedList,
       unreadCount: unreadCount,
     ));
   }
 
-  /// Mark a single notification as read (optimistic update + rollback on failure).
+  /// Mark a single notification as read (optimistic update + rollback).
   Future<void> markAsRead(String id) async {
     final currentState = state;
     if (currentState is! NotificationsLoaded) return;
 
-    // Optimistic update
+    final snapshot = currentState;
     final updatedList = currentState.notifications.map((n) {
       if (n.id == id && !n.readStatus) return n.copyWith(readStatus: true);
       return n;
     }).toList();
     final unreadCount = updatedList.where((n) => !n.readStatus).length;
-    emit(NotificationsState.loaded(
-      notifications: updatedList,
-      unreadCount: unreadCount,
-    ));
+    emit(currentState.copyWith(notifications: updatedList, unreadCount: unreadCount));
 
     try {
       await _repository.markAsRead(id);
     } catch (e) {
       developer.log('markAsRead failed: $e', name: 'notifications');
-      // Revert on failure
-      final reverted = currentState.notifications;
-      emit(NotificationsState.loaded(
-        notifications: reverted,
-        unreadCount: currentState.unreadCount,
-      ));
+      emit(snapshot);
     }
   }
 
-  /// Mark all notifications as read (optimistic update + rollback on failure).
+  /// Mark all notifications as read (optimistic update + rollback).
   Future<void> markAllAsRead() async {
     final currentState = state;
     if (currentState is! NotificationsLoaded) return;
 
-    // Optimistic update
+    final snapshot = currentState;
     final updatedList = currentState.notifications
         .map((n) => n.copyWith(readStatus: true))
         .toList();
-    emit(NotificationsState.loaded(notifications: updatedList));
+    emit(currentState.copyWith(notifications: updatedList));
 
     try {
       await _repository.markAllAsRead();
     } catch (e) {
       developer.log('markAllAsRead failed: $e', name: 'notifications');
-      final reverted = currentState.notifications;
-      emit(NotificationsState.loaded(
-        notifications: reverted,
-        unreadCount: currentState.unreadCount,
-      ));
+      emit(snapshot);
     }
   }
 
-  /// Accept a link request notification and remove it from the list.
+  /// Accept a link request notification.
   Future<void> acceptRequest(String id) async {
     try {
       await _repository.acceptRequest(id);
@@ -193,7 +195,7 @@ class NotificationsCubit extends Cubit<NotificationsState> {
             currentState.notifications.where((n) => n.id != id).toList();
         _seenIds.remove(id);
         final unreadCount = updatedList.where((n) => !n.readStatus).length;
-        emit(NotificationsState.loaded(
+        emit(currentState.copyWith(
           notifications: updatedList,
           unreadCount: unreadCount,
         ));
@@ -204,7 +206,7 @@ class NotificationsCubit extends Cubit<NotificationsState> {
     }
   }
 
-  /// Decline a link request notification and remove it from the list.
+  /// Decline a link request notification.
   Future<void> declineRequest(String id) async {
     try {
       await _repository.declineRequest(id);
@@ -214,7 +216,7 @@ class NotificationsCubit extends Cubit<NotificationsState> {
             currentState.notifications.where((n) => n.id != id).toList();
         _seenIds.remove(id);
         final unreadCount = updatedList.where((n) => !n.readStatus).length;
-        emit(NotificationsState.loaded(
+        emit(currentState.copyWith(
           notifications: updatedList,
           unreadCount: unreadCount,
         ));

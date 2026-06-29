@@ -4,13 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:tanquery_flutter/tanquery_flutter.dart';
 
 import '../../../core/di/injection.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/error_widget.dart';
 import '../cubit/workout_history_cubit.dart';
-import '../cubit/workout_history_state.dart';
 import '../data/models/workout_session_dto.dart';
+import '../data/models/workout_session_response.dart';
 
 class WorkoutHistoryScreen extends StatefulWidget {
   final bool showAppBar;
@@ -27,6 +28,8 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
   final _collapsedDates = <DateTime>{};
   final _searchFocusNode = FocusNode();
   Timer? _debounceTimer;
+  DateTime? _selectedDate;
+  void Function()? _fetchNextPage;
 
   @override
   void initState() {
@@ -46,21 +49,21 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
-      context.read<WorkoutHistoryCubit>().loadMore();
+      _fetchNextPage?.call();
     }
   }
 
   void _onSearchChanged(String value) {
     _debounceTimer?.cancel();
     _debounceTimer = Timer(const Duration(milliseconds: 300), () {
-      context.read<WorkoutHistoryCubit>().setSearchQuery(value);
+      setState(() {});
     });
   }
 
   void _clearSearch() {
     _searchController.clear();
-    context.read<WorkoutHistoryCubit>().setSearchQuery('');
     _searchFocusNode.unfocus();
+    setState(() {});
   }
 
   // ── Filter helpers ──
@@ -166,8 +169,9 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => getIt<WorkoutHistoryCubit>()..loadHistory(),
+    final cubit = getIt<WorkoutHistoryCubit>();
+    return BlocProvider.value(
+      value: cubit,
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: widget.showAppBar
@@ -189,43 +193,42 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
                 ),
               )
             : null,
-        body: BlocConsumer<WorkoutHistoryCubit, WorkoutHistoryState>(
-          listener: (context, state) {
-            if (state is WorkoutHistoryError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message),
-                  behavior: SnackBarBehavior.floating,
-                ),
+        body: InfiniteQueryBuilder<SessionHistoryResponse, String>(
+          queryKey: QueryKey(['workouts', 'history']),
+          queryFn: (cursor) => cubit.fetchHistory(
+                    cursor: cursor.isEmpty ? null : cursor,
+                  ),
+          initialPageParam: '',
+          getNextPageParam: (lastPage, allPages, lastParam, allParams) {
+            return lastPage.hasMore ? (lastPage.nextCursor ?? '') : null;
+          },
+          staleTime: const Duration(seconds: 30),
+          builder: (context, state, fetchNextPage, fetchPreviousPage) {
+            _fetchNextPage = fetchNextPage;
+
+            if (state.isLoading && !state.isFetched) {
+              return const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
               );
             }
-          },
-          builder: (context, state) {
-            return switch (state) {
-              WorkoutHistoryInitial() || WorkoutHistoryLoading() =>
-                const Center(
-                  child: CircularProgressIndicator(color: AppColors.primary),
-                ),
-              WorkoutHistoryLoaded(
-                :final sessions,
-                :final hasMore,
-                :final isLoadingMore,
-                :final isRefreshing,
-                :final searchQuery,
-                :final selectedDate,
-              ) =>
-                _buildLoaded(
-                  context,
-                  sessions,
-                  hasMore,
-                  isLoadingMore,
-                  isRefreshing,
-                  searchQuery,
-                  selectedDate,
-                ),
-              WorkoutHistoryError(:final message) =>
-                _buildError(context, message),
-            };
+
+            if (state.isLoadingError) {
+              return _buildError(context, state.error.toString());
+            }
+
+            final allSessions = state.data?.pages
+                    .expand((page) => page.sessions)
+                    .toList() ??
+                [];
+
+            return _buildLoaded(
+              context,
+              allSessions,
+              state.data?.pages.lastOrNull?.hasMore ?? false,
+              state.isFetching,
+              state.isRefetching,
+              _searchController.text,
+            );
           },
         ),
       ),
@@ -239,8 +242,8 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
     bool isLoadingMore,
     bool isRefreshing,
     String searchQuery,
-    DateTime? selectedDate,
   ) {
+    final selectedDate = _selectedDate;
     final filteredSessions = _filterSessions(
       allSessions,
       query: searchQuery,
@@ -249,7 +252,10 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
 
     if (allSessions.isEmpty) {
       return RefreshIndicator(
-        onRefresh: () => context.read<WorkoutHistoryCubit>().refresh(),
+        onRefresh: () async {
+          final client = DartQuery.of(context);
+          await client.refetchQueries(queryKey: QueryKey(['workouts', 'history']));
+        },
         child: ListView(
           children: [
             SizedBox(
@@ -265,7 +271,10 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
     final sortedDates = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
 
     return RefreshIndicator(
-      onRefresh: () => context.read<WorkoutHistoryCubit>().refresh(),
+      onRefresh: () async {
+        final client = DartQuery.of(context);
+        await client.refetchQueries(queryKey: QueryKey(['workouts', 'history']));
+      },
       child: NotificationListener<ScrollNotification>(
         onNotification: (notification) {
           if (notification is ScrollUpdateNotification && !hasMore) {
@@ -381,7 +390,7 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
           // Calendar filter button
           if (selectedDate != null) ...[
             GestureDetector(
-              onTap: () => context.read<WorkoutHistoryCubit>().clearSelectedDate(),
+              onTap: () => setState(() => _selectedDate = null),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
@@ -803,7 +812,6 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
   // ── Calendar picker ──
 
   Future<void> _showCalendarPicker(BuildContext outerContext) async {
-    final cubit = outerContext.read<WorkoutHistoryCubit>();
     final now = DateTime.now();
     final picked = await showDatePicker(
       context: outerContext,
@@ -823,7 +831,7 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
       },
     );
     if (picked != null) {
-      cubit.setSelectedDate(picked);
+      setState(() => _selectedDate = picked);
     }
   }
 
@@ -835,7 +843,10 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
       iconSize: 64,
       padding: const EdgeInsets.symmetric(horizontal: 32),
       messageFontSize: 16,
-      onRetry: () => context.read<WorkoutHistoryCubit>().loadHistory(),
+      onRetry: () async {
+        final client = DartQuery.of(context);
+        await client.refetchQueries(queryKey: QueryKey(['workouts', 'history']));
+      },
     );
   }
 

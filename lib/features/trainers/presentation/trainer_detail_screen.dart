@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tanquery_flutter/tanquery_flutter.dart';
+
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/di/injection.dart';
 import '../../../core/theme/app_theme.dart';
 import '../cubit/trainer_detail_cubit.dart';
 import '../cubit/trainer_detail_state.dart';
@@ -10,7 +13,6 @@ import '../data/models/trainer_detail_dto.dart';
 import '../data/models/trainer_package_dto.dart';
 import '../data/models/trainer_testimonial_dto.dart';
 import '../data/trainer_repository.dart';
-import '../../../core/di/injection.dart';
 import 'widgets/about_section.dart';
 import 'widgets/connect_button.dart';
 import 'widgets/custom_program_request_sheet.dart';
@@ -48,6 +50,7 @@ class TrainerDetailScreen extends StatelessWidget {
       create: (context) {
         final cubit = TrainerDetailCubit(
           getIt<TrainerRepository>(),
+          getIt<QueryClient>(),
         );
         cubit.load(username);
         return cubit;

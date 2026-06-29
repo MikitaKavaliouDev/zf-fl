@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:tanquery_flutter/tanquery_flutter.dart';
 
 import 'package:ziro_fit/features/trainers/cubit/trainer_detail_cubit.dart';
 import 'package:ziro_fit/features/trainers/cubit/trainer_detail_state.dart';
@@ -9,13 +10,17 @@ import 'package:ziro_fit/features/trainers/data/trainer_repository.dart';
 
 class MockTrainerRepository extends Mock implements TrainerRepository {}
 
+class MockQueryClient extends Mock implements QueryClient {}
+
 void main() {
   late TrainerRepository repository;
+  late QueryClient queryClient;
   late TrainerDetailCubit cubit;
 
   setUp(() {
     repository = MockTrainerRepository();
-    cubit = TrainerDetailCubit(repository);
+    queryClient = MockQueryClient();
+    cubit = TrainerDetailCubit(repository, queryClient);
   });
 
   tearDown(() {

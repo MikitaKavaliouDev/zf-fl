@@ -3,21 +3,54 @@ import 'package:injectable/injectable.dart';
 
 import '../models/notification_dto.dart';
 
+/// Response shape from the paginated GET /api/notifications endpoint.
+class NotificationListResponse {
+  final List<NotificationDto> notifications;
+  final int total;
+  final int page;
+  final int pageSize;
+  final bool hasMore;
+
+  const NotificationListResponse({
+    required this.notifications,
+    required this.total,
+    required this.page,
+    required this.pageSize,
+    required this.hasMore,
+  });
+
+  factory NotificationListResponse.fromJson(Map<String, dynamic> json) {
+    final list = (json['notifications'] as List<dynamic>?)
+            ?.map((e) => NotificationDto.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+        [];
+    return NotificationListResponse(
+      notifications: list,
+      total: json['total'] as int? ?? list.length,
+      page: json['page'] as int? ?? 1,
+      pageSize: json['pageSize'] as int? ?? 20,
+      hasMore: json['hasMore'] as bool? ?? false,
+    );
+  }
+}
+
 @injectable
 class NotificationApiService {
   final Dio _dio;
 
   NotificationApiService(this._dio);
 
-  /// GET /api/notifications — fetch all notifications for the current user.
-  Future<List<NotificationDto>> fetchNotifications() async {
-    final response = await _dio.get('/api/notifications');
-    final rawList = response.data['data'];
-    if (rawList == null) return [];
-    final list = rawList as List<dynamic>;
-    return list
-        .map((e) => NotificationDto.fromJson(e as Map<String, dynamic>))
-        .toList();
+  /// GET /api/notifications — fetch paginated notifications.
+  Future<NotificationListResponse> fetchNotifications({
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    final response = await _dio.get(
+      '/api/notifications',
+      queryParameters: {'page': page, 'pageSize': pageSize},
+    );
+    final rawData = response.data['data'] as Map<String, dynamic>? ?? {};
+    return NotificationListResponse.fromJson(rawData);
   }
 
   /// PUT /api/notifications/:id — mark a single notification as read.

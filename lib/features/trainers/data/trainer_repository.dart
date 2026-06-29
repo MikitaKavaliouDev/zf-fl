@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:injectable/injectable.dart';
 
+import '../../../core/connectivity/connectivity_service.dart';
+import '../../../core/network/response_cache.dart';
 import '../data/models/trainer_detail_dto.dart';
 import '../data/models/trainer_list_item_dto.dart';
 import '../data/models/trainer_preview_media_dto.dart';
@@ -9,8 +13,10 @@ import 'trainer_api_service.dart';
 @singleton
 class TrainerRepository {
   final TrainerApiService _api;
+  final ConnectivityService _connectivity;
+  final ResponseCache _cache;
 
-  TrainerRepository(this._api);
+  TrainerRepository(this._api, this._connectivity, this._cache);
 
   // ── Trainer List ──
 
@@ -58,7 +64,22 @@ class TrainerRepository {
   // Uses the single aggregated endpoint that returns everything.
 
   Future<TrainerDetailDto> getTrainerDetail(String username) async {
-    return _api.getTrainerDetail(username);
+    final cacheKey = 'trainer:detail:$username';
+    try {
+      final response = await _api.getTrainerDetail(username);
+      // Persist for offline fallback
+      unawaited(_cache.set(cacheKey, response.toJson()));
+      return response;
+    } catch (e) {
+      if (await _connectivity.checkConnectivity()) rethrow;
+      // Offline — return cached profile if available
+      final cached = await _cache.get<TrainerDetailDto>(
+        cacheKey,
+        TrainerDetailDto.fromJson,
+      );
+      if (cached != null) return cached;
+      rethrow;
+    }
   }
 
   // ── Schedule (on-demand) ──

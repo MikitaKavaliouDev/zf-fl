@@ -5,13 +5,17 @@ import 'package:injectable/injectable.dart';
 
 import 'api_logger_interceptor.dart';
 import 'auth_interceptor.dart';
+import 'cache_interceptor.dart';
+import 'retry_interceptor.dart';
 
 @module
 abstract class NetworkModule {
   @lazySingleton
   Dio provideDio(
     ApiLoggerInterceptor apiLogger,
+    CacheInterceptor cacheInterceptor,
     AuthInterceptor authInterceptor,
+    RetryInterceptor retryInterceptor,
   ) {
     final dio = Dio(
       BaseOptions(
@@ -28,9 +32,15 @@ abstract class NetworkModule {
       ),
     );
 
-    // Order matters: logger outermost (last added, first to see requests),
-    // auth interceptor innermost.
-    dio.interceptors.addAll([apiLogger, authInterceptor]);
+    // Order matters:
+    //   ApiLogger (outermost) → CacheInterceptor → AuthInterceptor
+    //   → RetryInterceptor (innermost) → Dio
+    dio.interceptors.addAll([
+      apiLogger,
+      cacheInterceptor,
+      authInterceptor,
+      retryInterceptor,
+    ]);
 
     return dio;
   }
