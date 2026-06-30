@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:tanquery_flutter/tanquery_flutter.dart';
@@ -42,6 +43,38 @@ class ExploreCubit extends Cubit<ExploreState> {
       return (lat: null, lng: null);
     } catch (_) {
       return (lat: null, lng: null);
+    }
+  }
+
+  /// Reverse geocode lat/lng to a short place name via Nominatim OSM.
+  ///
+  /// Returns the first part of the display name (e.g. "Le Pont-de-Claix")
+  /// or `null` if the request fails. Follows the same pattern as
+  /// [MapSearchBar]'s Nominatim forward geocoding.
+  Future<String?> reverseGeocode(double lat, double lng) async {
+    try {
+      final dio = Dio(BaseOptions(
+        baseUrl: 'https://nominatim.openstreetmap.org',
+        connectTimeout: const Duration(seconds: 5),
+        receiveTimeout: const Duration(seconds: 5),
+      ));
+      final response = await dio.get(
+        '/reverse',
+        queryParameters: {
+          'format': 'json',
+          'lat': lat,
+          'lon': lng,
+        },
+        options: Options(headers: {'User-Agent': 'fit.ziro.app'}),
+      );
+      final data = response.data as Map<String, dynamic>?;
+      if (data == null) return null;
+      final displayName = data['display_name'] as String?;
+      if (displayName == null || displayName.isEmpty) return null;
+      // Take the first (most specific) part of the address.
+      return displayName.split(',').first.trim();
+    } catch (_) {
+      return null;
     }
   }
 

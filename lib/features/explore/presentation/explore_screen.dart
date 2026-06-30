@@ -41,14 +41,18 @@ class _ExploreScreenState extends State<ExploreScreen> {
   double? _gpsLat;
   double? _gpsLng;
   bool _gpsAttempted = false;
+  bool _gpsLoading = false;
+
+  /// Reverse-geocoded place name from GPS coordinates
+  /// (e.g. "Le Pont-de-Claix" instead of generic "Current Location").
+  String? _locationName;
 
   /// Effective lat/lng: selected city's coords if a city is chosen,
   /// otherwise GPS coords if available, otherwise null.
   double? get _effectiveLat => _selectedCity?.latitude ?? _gpsLat;
   double? get _effectiveLng => _selectedCity?.longitude ?? _gpsLng;
 
-  /// Whether we have a real device location to show.
-  bool get _hasGpsLocation => _gpsLat != null && _gpsLng != null;
+
 
   @override
   void initState() {
@@ -61,13 +65,26 @@ class _ExploreScreenState extends State<ExploreScreen> {
   Future<void> _loadGpsLocation() async {
     if (_gpsAttempted) return;
     _gpsAttempted = true;
+    setState(() => _gpsLoading = true);
+
     final cubit = di.getIt<ExploreCubit>();
     final result = await cubit.loadUserLocation();
-    if (mounted && result.lat != null) {
-      setState(() {
-        _gpsLat = result.lat;
-        _gpsLng = result.lng;
-      });
+
+    if (!mounted) return;
+
+    if (result.lat != null && result.lng != null) {
+      // Try to reverse-geocode the coordinates for a friendly place name.
+      final name = await cubit.reverseGeocode(result.lat!, result.lng!);
+      if (mounted) {
+        setState(() {
+          _gpsLat = result.lat;
+          _gpsLng = result.lng;
+          _locationName = name;
+          _gpsLoading = false;
+        });
+      }
+    } else {
+      if (mounted) setState(() => _gpsLoading = false);
     }
   }
 
@@ -130,7 +147,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
               child: _CityHeaderSection(
                 selectedCity: _selectedCity,
                 onCitySelected: (city) => setState(() => _selectedCity = city),
-                gpsAvailable: _hasGpsLocation,
+                gpsLoading: _gpsLoading,
+                locationName: _locationName,
               ),
             ),
           ],
@@ -226,12 +244,14 @@ class _ExploreScreenState extends State<ExploreScreen> {
 class _CityHeaderSection extends StatelessWidget {
   final ExploreCity? selectedCity;
   final ValueChanged<ExploreCity?> onCitySelected;
-  final bool gpsAvailable;
+  final bool gpsLoading;
+  final String? locationName;
 
   const _CityHeaderSection({
     required this.selectedCity,
     required this.onCitySelected,
-    this.gpsAvailable = false,
+    this.gpsLoading = false,
+    this.locationName,
   });
 
   @override
@@ -246,7 +266,8 @@ class _CityHeaderSection extends StatelessWidget {
           cities: cities,
           selectedCity: selectedCity,
           onCitySelected: onCitySelected,
-          gpsAvailable: gpsAvailable,
+          gpsLoading: gpsLoading,
+          locationName: locationName,
         );
       },
     );
@@ -258,13 +279,15 @@ class _CityHeaderContent extends StatelessWidget {
   final List<ExploreCity> cities;
   final ExploreCity? selectedCity;
   final ValueChanged<ExploreCity?> onCitySelected;
-  final bool gpsAvailable;
+  final bool gpsLoading;
+  final String? locationName;
 
   const _CityHeaderContent({
     required this.cities,
     required this.selectedCity,
     required this.onCitySelected,
-    this.gpsAvailable = false,
+    this.gpsLoading = false,
+    this.locationName,
   });
 
   @override
@@ -295,34 +318,47 @@ class _CityHeaderContent extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: selectedCity == null
-                          ? AppColors.primary.withValues(alpha: 0.12)
-                          : Colors.red.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      selectedCity == null
-                          ? Icons.my_location_rounded
-                          : Icons.location_on_rounded,
-                      size: 18,
-                      color: selectedCity == null
-                          ? AppColors.primary
-                          : Colors.redAccent,
-                    ),
-                  ),
+                  // Show a small loading spinner while GPS is being acquired.
+                  gpsLoading
+                      ? const SizedBox(
+                          width: 38,
+                          height: 38,
+                          child: Center(
+                            child: SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            ),
+                          ),
+                        )
+                      : Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            color: selectedCity == null
+                                ? AppColors.primary.withValues(alpha: 0.12)
+                                : Colors.red.withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            selectedCity == null
+                                ? Icons.my_location_rounded
+                                : Icons.location_on_rounded,
+                            size: 18,
+                            color: selectedCity == null
+                                ? AppColors.primary
+                                : Colors.redAccent,
+                          ),
+                        ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          // When no city is selected, show "Current Location" if GPS is available,
-                          // otherwise fall back to the old default city label.
-                          selectedCity?.name ?? (gpsAvailable ? 'Current Location' : 'SF'),
+                          _headerTitle(),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -333,7 +369,7 @@ class _CityHeaderContent extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          selectedCity != null ? 'Active Region' : 'Current Location',
+                          _headerSubtitle(),
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
@@ -365,6 +401,21 @@ class _CityHeaderContent extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// Title for the city header — shows loading state, place name, city name, or fallback.
+  String _headerTitle() {
+    if (selectedCity != null) return selectedCity!.name;
+    if (gpsLoading) return 'Getting location…';
+    if (locationName != null) return locationName!;
+    return 'SF';
+  }
+
+  /// Subtitle for the city header.
+  String _headerSubtitle() {
+    if (selectedCity != null) return 'Active Region';
+    if (gpsLoading) return 'Detecting…';
+    return 'Current Location';
   }
 
   void _showCityPicker(BuildContext context) {

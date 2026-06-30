@@ -114,13 +114,21 @@ class MapFilterMenu extends StatelessWidget {
 }
 
 /// Filter trigger pill button (circular, ultraThinMaterial style).
+///
+/// When [selectedMode] is not [MapFilterMode.all], the pill shows the
+/// active filter's icon in accent blue instead of the default tune icon,
+/// giving the user immediate visual feedback that a filter is active.
 class MapFilterPill extends StatelessWidget {
   final VoidCallback onTap;
+  final MapFilterMode? selectedMode;
 
-  const MapFilterPill({super.key, required this.onTap});
+  const MapFilterPill({super.key, required this.onTap, this.selectedMode});
 
   @override
   Widget build(BuildContext context) {
+    final isActive =
+        selectedMode != null && selectedMode != MapFilterMode.all;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -129,23 +137,36 @@ class MapFilterPill extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-color: Colors.white.withValues(alpha: 0.7),
-             shape: BoxShape.circle,
-             boxShadow: [
-               BoxShadow(
-                 color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.white.withValues(alpha: 0.7),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
             ],
           ),
-          child: const Icon(
-            Icons.tune,
+          child: Icon(
+            isActive ? _iconForMode(selectedMode!) : Icons.tune,
             size: 20,
-            color: Colors.black,
+            color: isActive ? const Color(0xFF007aff) : Colors.black,
           ),
         ),
       ),
     );
+  }
+
+  IconData _iconForMode(MapFilterMode mode) {
+    switch (mode) {
+      case MapFilterMode.all:
+        return Icons.tune;
+      case MapFilterMode.trainers:
+        return Icons.group;
+      case MapFilterMode.events:
+        return Icons.calendar_month;
+      case MapFilterMode.yoga:
+        return Icons.self_improvement;
+    }
   }
 }

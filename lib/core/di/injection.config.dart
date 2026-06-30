@@ -63,6 +63,8 @@ import 'package:ziro_fit/features/explore/cubit/trainer_discovery_cubit.dart'
     as _i975;
 import 'package:ziro_fit/features/explore/data/explore_api_service.dart'
     as _i549;
+import 'package:ziro_fit/features/explore/data/explore_map_local_service.dart'
+    as _i273;
 import 'package:ziro_fit/features/fitness_goals/cubit/fitness_goals_cubit.dart'
     as _i413;
 import 'package:ziro_fit/features/fitness_goals/data/fitness_goals_api_service.dart'
@@ -166,6 +168,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.singleton<_i296.AnalyticsLocalService>(
       () => _i296.AnalyticsLocalService(gh<_i365.AppDatabase>()),
+    );
+    gh.singleton<_i273.ExploreMapLocalService>(
+      () => _i273.ExploreMapLocalService(gh<_i365.AppDatabase>()),
     );
     gh.singleton<_i783.LocalTemplateRepository>(
       () => _i783.LocalTemplateRepository(gh<_i365.AppDatabase>()),
@@ -310,12 +315,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i601.TokenStorage>(),
       ),
     );
-    gh.factory<_i377.ExploreMapCubit>(
-      () => _i377.ExploreMapCubit(
-        gh<_i549.ExploreApiService>(),
-        gh<_i467.LocationService>(),
-      ),
-    );
     gh.singleton<_i512.AnalyticsRepository>(
       () => _i512.AnalyticsRepository(
         gh<_i396.AnalyticsApiService>(),
@@ -341,6 +340,13 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i516.HomeRepository(
         gh<_i267.HomeApiService>(),
         gh<_i340.ResponseCache>(),
+      ),
+    );
+    gh.factory<_i377.ExploreMapCubit>(
+      () => _i377.ExploreMapCubit(
+        gh<_i549.ExploreApiService>(),
+        gh<_i467.LocationService>(),
+        gh<_i273.ExploreMapLocalService>(),
       ),
     );
     gh.singleton<_i875.ProgramRepository>(

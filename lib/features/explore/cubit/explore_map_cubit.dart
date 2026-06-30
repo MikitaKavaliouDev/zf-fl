@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:latlong2/latlong.dart' as latlong;
@@ -5,6 +7,7 @@ import 'package:ziro_fit/core/location/location_service.dart';
 import 'package:ziro_fit/core/models/trainer_list_item_dto.dart';
 import 'package:ziro_fit/features/explore/cubit/explore_map_state.dart';
 import 'package:ziro_fit/features/explore/data/explore_api_service.dart';
+import 'package:ziro_fit/features/explore/data/explore_map_local_service.dart';
 import 'package:ziro_fit/features/explore/data/models/explore_event_dto.dart';
 import 'package:ziro_fit/features/explore/data/models/paginated_events.dart';
 
@@ -16,6 +19,7 @@ import 'package:ziro_fit/features/explore/data/models/paginated_events.dart';
 class ExploreMapCubit extends Cubit<ExploreMapState> {
   final ExploreApiService _apiService;
   final LocationService _locationService;
+  final ExploreMapLocalService _localService;
 
   int _trainerPage = 1;
   int _eventPage = 1;
@@ -28,21 +32,42 @@ class ExploreMapCubit extends Cubit<ExploreMapState> {
   /// Keeps the current search query across state resets.
   String? _searchQuery;
 
-  ExploreMapCubit(this._apiService, this._locationService)
-      : super(const ExploreMapState.initial());
+  ExploreMapCubit(
+    this._apiService,
+    this._locationService,
+    this._localService,
+  ) : super(const ExploreMapState.initial());
 
   /// Load trainers and events in parallel (like iOS withThrowingTaskGroup).
   ///
   /// When [reset] is true, resets pagination and emits [ExploreMapLoading].
   /// The search query and filter mode are read from private fields to avoid
   /// losing them during the async gap after emitting [ExploreMapLoading].
-  Future<void> load({bool reset = true}) async {
+  ///
+  /// Cache-first behavior (unless [forceRefresh] is true):
+  ///   1. Try Drift cache → if hit, emit [ExploreMapLoaded] immediately
+  ///   2. Always fetch fresh data from the network in the background
+  ///   3. On network success → write to cache + emit updated state
+  ///   4. On network failure + had cached data → keep showing cached silently
+  Future<void> load({bool reset = true, bool forceRefresh = false}) async {
+    bool hasCachedData = false;
+
     if (reset) {
       _trainerPage = 1;
       _eventPage = 1;
-      emit(const ExploreMapState.loading());
+
+      // Step 1: Serve cached data immediately unless force-refreshing.
+      if (!forceRefresh) {
+        hasCachedData = await _tryLoadFromCache();
+      }
+
+      // Step 2: Show spinner only when there's no cached data to show.
+      if (!hasCachedData) {
+        emit(const ExploreMapState.loading());
+      }
     }
 
+    // Step 3: Always fetch from network in the background.
     try {
       final loc = await _locationService.getCurrentLocation();
       final userLat = loc?.latitude;
@@ -88,6 +113,9 @@ class ExploreMapCubit extends Cubit<ExploreMapState> {
       // Build clusters at default zoom 11.
       final clusters = _buildClusters(trainers, events, 11.0);
 
+      // Step 4: Write fresh data to Drift cache (fire-and-forget).
+      unawaited(_cacheResults(trainers, events, userLat, userLng));
+
       emit(ExploreMapState.loaded(
         trainers: trainers,
         events: events,
@@ -101,7 +129,64 @@ class ExploreMapCubit extends Cubit<ExploreMapState> {
         userLng: userLng,
       ));
     } catch (e) {
-      emit(ExploreMapState.error(e.toString()));
+      // Step 5: Only show error if we had no cached data to fall back on.
+      if (!hasCachedData) {
+        emit(ExploreMapState.error(e.toString()));
+      }
+      // If cached data was shown, silently keep it — the next load()
+      // attempt (e.g. pull-to-refresh) will try again.
+    }
+  }
+
+  /// Try to emit [ExploreMapLoaded] from Drift cached data.
+  ///
+  /// Returns `true` if cached data was found and emitted, `false` otherwise.
+  Future<bool> _tryLoadFromCache() async {
+    try {
+      final cachedTrainers = await _localService.cachedTrainers();
+      final cachedEvents = await _localService.cachedEvents();
+      final cachedLoc = await _localService.cachedLocation();
+
+      if (cachedTrainers == null || cachedEvents == null) return false;
+
+      // Rebuild clusters from cached data at default zoom 11.
+      final clusters = _buildClusters(cachedTrainers, cachedEvents, 11.0);
+
+      emit(ExploreMapState.loaded(
+        trainers: cachedTrainers,
+        events: cachedEvents,
+        clusters: clusters,
+        filterMode: _currentFilterMode,
+        searchQuery: _searchQuery,
+        // We don't know pagination from cache, so assume no more pages.
+        hasMoreTrainers: false,
+        hasMoreEvents: false,
+        userLat: cachedLoc?.lat,
+        userLng: cachedLoc?.lng,
+      ));
+
+      return true;
+    } catch (e) {
+      // Cache read/parse failure is non-fatal — fall through to network.
+      return false;
+    }
+  }
+
+  /// Persist fresh data to Drift cache (fire-and-forget).
+  Future<void> _cacheResults(
+    List<TrainerListItemDto> trainers,
+    List<ExploreEventDto> events,
+    double? userLat,
+    double? userLng,
+  ) async {
+    try {
+      await _localService.cacheTrainers(trainers);
+      await _localService.cacheEvents(events);
+      if (userLat != null && userLng != null) {
+        await _localService.cacheLocation(userLat, userLng);
+      }
+    } catch (_) {
+      // Cache write failure is non-fatal.
     }
   }
 
@@ -169,8 +254,9 @@ class ExploreMapCubit extends Cubit<ExploreMapState> {
     // Yoga mode requires a server reload (specialty filter).
     // The private [_currentFilterMode] is already updated above so [load]
     // will use the correct filter when emitting the new state.
+    // Force-refresh because cached data is never yoga-filtered.
     if (mode == MapFilterMode.yoga || current.filterMode == MapFilterMode.yoga) {
-      load();
+      load(reset: true, forceRefresh: true);
       return;
     }
 
@@ -213,9 +299,11 @@ class ExploreMapCubit extends Cubit<ExploreMapState> {
   }
 
   /// Set search query and reload from backend with the query param.
+  ///
+  /// Always force-refreshes because cached data has no search query applied.
   void search(String query) {
     _searchQuery = query.isEmpty ? null : query;
-    load();
+    load(reset: true, forceRefresh: true);
   }
 
   /// Select a cluster by its ID (shows cluster detail popup).

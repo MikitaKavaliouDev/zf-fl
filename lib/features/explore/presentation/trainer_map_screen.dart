@@ -134,7 +134,40 @@ class _TrainerMapScreenState extends State<TrainerMapScreen> {
           ],
         ),
 
-        // 2. Dismiss overlay (taps outside filter menu close it)
+        // 2. Empty-state overlay when filter yields no markers
+        if (state.clusters.isEmpty)
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 100,
+            left: 16,
+            right: 16,
+            child: Center(
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  _emptyStateMessage(state.filterMode),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF8E8E93),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+        // 3. Dismiss overlay (taps outside filter menu close it)
         if (_showFilterMenu)
           GestureDetector(
             onTap: () {
@@ -187,6 +220,7 @@ class _TrainerMapScreenState extends State<TrainerMapScreen> {
                   Stack(
                     children: [
                       MapFilterPill(
+                        selectedMode: state.filterMode,
                         onTap: () {
                           setState(
                               () => _showFilterMenu = !_showFilterMenu);
@@ -319,6 +353,20 @@ class _TrainerMapScreenState extends State<TrainerMapScreen> {
         ),
       );
     }).toList();
+  }
+
+  /// Returns a human-readable empty-state message based on the active filter.
+  String _emptyStateMessage(MapFilterMode mode) {
+    switch (mode) {
+      case MapFilterMode.trainers:
+        return 'No trainers in this area';
+      case MapFilterMode.events:
+        return 'No events in this area';
+      case MapFilterMode.yoga:
+        return 'No yoga coaches in this area';
+      case MapFilterMode.all:
+        return 'No trainers or events in this area';
+    }
   }
 
   /// Handles map camera events.
