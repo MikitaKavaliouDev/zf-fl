@@ -108,23 +108,23 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
     }
     emit(const WorkoutSessionState.loading());
     try {
+      // Invalidate stale live-session cache before starting a new one.
+      await _repository.clearLiveSessionCache();
       final result = await _repository.startSession(
         clientId: clientId,
         plannedSessionId: plannedSessionId,
         templateId: templateId,
         clientPackageId: clientPackageId,
       );
-      // Use a local DateTime.now() as the timer reference point to avoid
-      // cross-timezone issues comparing DateTime.now() (local) with the
-      // server's UTC string. The initial elapsed is computed once from the
-      // server startTime for correctness, then accumulated locally.
+      // Parse the server's UTC startTime and use UTC on both sides of the
+      // difference so timezone offset (e.g. UTC+2) is not baked into elapsed.
       final serverStartTime = DateTime.parse(result.session.startTime);
-      final localTimerStart = DateTime.now();
+      final timerAnchor = DateTime.now().toUtc();
       emit(WorkoutSessionState.active(
         session: result.session,
         logs: result.logs,
-        elapsed: localTimerStart.difference(serverStartTime),
-        startTime: localTimerStart,
+        elapsed: timerAnchor.difference(serverStartTime),
+        startTime: timerAnchor,
       ));
       _startTimer();
       developer.log('workout_started | exerciseCount=${result.logs.length}', name: 'analytics');
@@ -148,12 +148,21 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
         // Auto-minimize when resuming from cold start so the user
         // isn't thrown into a full-screen workout unexpectedly.
         final serverStartTime = DateTime.parse(result.session!.startTime);
-        final localTimerStart = DateTime.now();
+        final timerAnchor = DateTime.now().toUtc();
+        final computedElapsed = timerAnchor.difference(serverStartTime);
+        developer.log(
+          'loadCurrent | startTime=${result.session!.startTime} '
+          '| serverParsed=${serverStartTime.toIso8601String()} '
+          '| nowUtc=${timerAnchor.toIso8601String()} '
+          '| computedElapsed=${computedElapsed.inSeconds}s '
+          '| nowLocalHour=${DateTime.now().hour}',
+          name: 'workout',
+        );
         emit(WorkoutSessionState.active(
           session: result.session!,
           logs: result.logs,
-          elapsed: localTimerStart.difference(serverStartTime),
-          startTime: localTimerStart,
+          elapsed: computedElapsed,
+          startTime: timerAnchor,
           isMinimized: isMinimized,
         ));
         _startTimer();
@@ -192,12 +201,12 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
                 : null)) {
           final serverStartTime =
               DateTime.parse(result.session!.startTime);
-          final localTimerStart = DateTime.now();
+          final timerAnchor = DateTime.now().toUtc();
           emit(WorkoutSessionState.active(
             session: result.session!,
             logs: result.logs,
-            elapsed: localTimerStart.difference(serverStartTime),
-            startTime: localTimerStart,
+            elapsed: timerAnchor.difference(serverStartTime),
+            startTime: timerAnchor,
             isMinimized: isMinimized,
           ));
           _startTimer();
@@ -476,6 +485,9 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
         notes: notes,
         completeUnfinished: completeUnfinished,
       );
+      // Invalidate the cached live session so a restart doesn't return
+      // stale data for a completed session.
+      await _repository.clearLiveSessionCache();
       final sessionNewRecords = current.sessionNewRecords;
       emit(WorkoutSessionState.completed(
         session: result.session,
@@ -581,20 +593,32 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
   }
 
   /// Cancel the active workout session.
+  ///
+  /// The local state (timer + UI) resets immediately. The API call fires in
+  /// the background — if the device is offline it silently fails rather than
+  /// blocking the UI. The sync engine will reconcile on reconnect.
   Future<void> cancelSession() async {
     final current = state;
     if (current is! WorkoutSessionActive) return;
+    _timer?.cancel();
+    final sessionId = current.session.id;
+    final elapsedSeconds = current.elapsed.inSeconds;
+    // Reset local state immediately — never block UI for a cancel.
+    emit(const WorkoutSessionState.initial());
+    developer.log(
+      'cancelSession | sessionId=$sessionId | duration=${elapsedSeconds}s',
+      name: 'workout',
+    );
+    // Background API call — fire-and-forget.
+    // Errors are logged but never block the UI or emit an error state.
     try {
-      _timer?.cancel();
-      await _repository.cancelSession(current.session.id);
-      emit(const WorkoutSessionState.initial());
+      await _repository.cancelSession(sessionId);
+      await _repository.clearLiveSessionCache();
+    } catch (e) {
       developer.log(
-        'cancelSession | sessionId=${current.session.id} '
-        '| duration=${current.elapsed.inSeconds}s',
+        'cancelSession background failed: $e | sessionId=$sessionId',
         name: 'workout',
       );
-    } catch (e) {
-      emit(const WorkoutSessionState.error('Failed to cancel session.'));
     }
   }
 

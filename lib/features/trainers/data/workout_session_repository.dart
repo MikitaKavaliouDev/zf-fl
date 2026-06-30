@@ -51,6 +51,11 @@ class WorkoutSessionRepository {
     return (session: response.session, logs: response.exerciseLogs);
   }
 
+  /// Invalidate the cached live session so the next [getLiveSession] call
+  /// hits the API instead of returning stale data.
+  Future<void> clearLiveSessionCache() =>
+      _cache.remove('workout:live-session');
+
   Future<LogExerciseResponse> logExercise({
     String? logId,
     required String workoutSessionId,

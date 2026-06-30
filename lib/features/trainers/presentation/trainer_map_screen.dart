@@ -61,14 +61,20 @@ class _TrainerMapScreenState extends State<TrainerMapScreen> {
         listener: (context, state) {
           if (state is ExploreMapLoaded) {
             // Auto-zoom to user location on first successful load.
+            // Must use addPostFrameCallback because FlutterMap needs to
+            // be rendered at least once before MapController.move() works.
             if (!_hasZoomedToUser &&
                 state.userLat != null &&
                 state.userLng != null) {
-              _mapController.move(
-                latlong.LatLng(state.userLat!, state.userLng!),
-                12.0,
-              );
               _hasZoomedToUser = true;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  _mapController.move(
+                    latlong.LatLng(state.userLat!, state.userLng!),
+                    12.0,
+                  );
+                }
+              });
             }
           } else if (state is ExploreMapError) {
             ScaffoldMessenger.of(context).showSnackBar(

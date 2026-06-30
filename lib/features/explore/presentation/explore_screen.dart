@@ -37,10 +37,44 @@ class _ExploreScreenState extends State<ExploreScreen> {
   ExploreCity? _selectedCity;
   ExploreCategory? _selectedCategory;
 
+  /// GPS coordinates loaded from device (for "Current Location" mode).
+  double? _gpsLat;
+  double? _gpsLng;
+  bool _gpsAttempted = false;
+
+  /// Effective lat/lng: selected city's coords if a city is chosen,
+  /// otherwise GPS coords if available, otherwise null.
+  double? get _effectiveLat => _selectedCity?.latitude ?? _gpsLat;
+  double? get _effectiveLng => _selectedCity?.longitude ?? _gpsLng;
+
+  /// Whether we have a real device location to show.
+  bool get _hasGpsLocation => _gpsLat != null && _gpsLng != null;
+
+  @override
+  void initState() {
+    super.initState();
+    // Request GPS location permission on first load so the explore screen
+    // can use device location for proximity-based results.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadGpsLocation());
+  }
+
+  Future<void> _loadGpsLocation() async {
+    if (_gpsAttempted) return;
+    _gpsAttempted = true;
+    final cubit = di.getIt<ExploreCubit>();
+    final result = await cubit.loadUserLocation();
+    if (mounted && result.lat != null) {
+      setState(() {
+        _gpsLat = result.lat;
+        _gpsLng = result.lng;
+      });
+    }
+  }
+
   Future<void> _refresh() async {
     // Bust ResponseCache first so the queryFn hits the API,
     // then invalidate and refetch via tanquery.
-    await context.read<ExploreCubit>().invalidateResponseCache();
+    await di.getIt<ExploreCubit>().invalidateResponseCache();
     final client = DartQuery.of(context);
     await Future.wait([
       client.invalidateQueries(queryKey: QueryKey(['explore'])),
@@ -96,6 +130,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
               child: _CityHeaderSection(
                 selectedCity: _selectedCity,
                 onCitySelected: (city) => setState(() => _selectedCity = city),
+                gpsAvailable: _hasGpsLocation,
               ),
             ),
           ],
@@ -111,8 +146,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
       // 0. Spotlight Hero — from featured content
       _SpotlightSection(
         cityId: _selectedCity?.id,
-        lat: _selectedCity?.latitude,
-        lng: _selectedCity?.longitude,
+        lat: _effectiveLat,
+        lng: _effectiveLng,
         key: ValueKey('spotlight_${_selectedCity?.id ?? ''}'),
       ),
 
@@ -136,8 +171,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
         title: 'Trainers Near You',
         key: ValueKey('nearby_${_selectedCity?.id ?? ''}'),
         cityId: _selectedCity?.id,
-        lat: _selectedCity?.latitude,
-        lng: _selectedCity?.longitude,
+        lat: _effectiveLat,
+        lng: _effectiveLng,
         source: 'algorithm',
       ),
 
@@ -147,8 +182,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
         promotionLabel: 'Featured',
         key: ValueKey('featured_${_selectedCity?.id ?? ''}'),
         cityId: _selectedCity?.id,
-        lat: _selectedCity?.latitude,
-        lng: _selectedCity?.longitude,
+        lat: _effectiveLat,
+        lng: _effectiveLng,
       ),
 
       // 5. Ziro Recommends — from promoted trainers
@@ -175,8 +210,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
       // Events from featured content
       _EventsSection(
         cityId: _selectedCity?.id,
-        lat: _selectedCity?.latitude,
-        lng: _selectedCity?.longitude,
+        lat: _effectiveLat,
+        lng: _effectiveLng,
         key: ValueKey('events_${_selectedCity?.id ?? ''}'),
       ),
     ];
@@ -191,10 +226,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
 class _CityHeaderSection extends StatelessWidget {
   final ExploreCity? selectedCity;
   final ValueChanged<ExploreCity?> onCitySelected;
+  final bool gpsAvailable;
 
   const _CityHeaderSection({
     required this.selectedCity,
     required this.onCitySelected,
+    this.gpsAvailable = false,
   });
 
   @override
@@ -209,6 +246,7 @@ class _CityHeaderSection extends StatelessWidget {
           cities: cities,
           selectedCity: selectedCity,
           onCitySelected: onCitySelected,
+          gpsAvailable: gpsAvailable,
         );
       },
     );
@@ -220,11 +258,13 @@ class _CityHeaderContent extends StatelessWidget {
   final List<ExploreCity> cities;
   final ExploreCity? selectedCity;
   final ValueChanged<ExploreCity?> onCitySelected;
+  final bool gpsAvailable;
 
   const _CityHeaderContent({
     required this.cities,
     required this.selectedCity,
     required this.onCitySelected,
+    this.gpsAvailable = false,
   });
 
   @override
@@ -280,7 +320,9 @@ class _CityHeaderContent extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          selectedCity?.name ?? 'SF',
+                          // When no city is selected, show "Current Location" if GPS is available,
+                          // otherwise fall back to the old default city label.
+                          selectedCity?.name ?? (gpsAvailable ? 'Current Location' : 'SF'),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:tanquery_flutter/tanquery_flutter.dart';
 
+import '../../../core/location/location_service.dart';
 import '../../../core/network/response_cache.dart';
 import '../data/explore_api_service.dart';
 import '../data/models/explore_metadata.dart';
@@ -21,11 +22,28 @@ import '../data/models/paginated_events.dart';
 @injectable
 class ExploreCubit extends Cubit<ExploreState> {
   final ExploreApiService _api;
+  final LocationService _locationService;
   final ResponseCache _cache;
   final QueryClient _queryClient;
 
-  ExploreCubit(this._api, this._cache, this._queryClient)
+  ExploreCubit(this._api, this._locationService, this._cache, this._queryClient)
       : super(ExploreState.initial);
+
+  /// Request location permission and get the user's current GPS position.
+  ///
+  /// Returns `(latitude, longitude)` if granted and available, `(null, null)` otherwise.
+  /// The screen stores these values locally and passes them to data methods.
+  Future<({double? lat, double? lng})> loadUserLocation() async {
+    try {
+      final loc = await _locationService.getCurrentLocation();
+      if (loc != null) {
+        return (lat: loc.latitude, lng: loc.longitude);
+      }
+      return (lat: null, lng: null);
+    } catch (_) {
+      return (lat: null, lng: null);
+    }
+  }
 
   static const _metadataCacheKey = 'explore:metadata';
   static const _featuredCacheKey = 'explore:featured';

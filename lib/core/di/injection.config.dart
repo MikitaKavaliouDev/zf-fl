@@ -248,6 +248,14 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i340.ResponseCache>(),
       ),
     );
+    gh.factory<_i64.ExploreCubit>(
+      () => _i64.ExploreCubit(
+        gh<_i549.ExploreApiService>(),
+        gh<_i467.LocationService>(),
+        gh<_i340.ResponseCache>(),
+        gh<_i448.QueryClient>(),
+      ),
+    );
     gh.factory<_i28.SharingCubit>(
       () => _i28.SharingCubit(gh<_i742.SharingRepository>()),
     );
@@ -318,13 +326,6 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i861.NotificationsCubit(
         gh<_i329.NotificationRepository>(),
         gh<_i115.NotificationRealtimeService>(),
-      ),
-    );
-    gh.factory<_i64.ExploreCubit>(
-      () => _i64.ExploreCubit(
-        gh<_i549.ExploreApiService>(),
-        gh<_i340.ResponseCache>(),
-        gh<_i448.QueryClient>(),
       ),
     );
     gh.factory<_i514.AuthCubit>(
