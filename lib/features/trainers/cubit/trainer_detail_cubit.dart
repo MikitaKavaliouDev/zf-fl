@@ -139,6 +139,7 @@ class TrainerDetailCubit extends Cubit<TrainerDetailState> {
     emit(current.copyWith(isLinking: true, linkError: null));
     try {
       await _repository.linkTrainer(trainerUsername);
+      _repository.invalidateCache(trainerUsername);
       // Reload the full profile to get updated isLinked status
       final trainer = await _repository.getTrainerDetail(trainerUsername);
       emit(current.copyWith(
@@ -164,6 +165,7 @@ class TrainerDetailCubit extends Cubit<TrainerDetailState> {
     emit(current.copyWith(isUnlinking: true, linkError: null));
     try {
       await _repository.unlinkTrainer();
+      _repository.invalidateCache(trainerUsername);
       final trainer = await _repository.getTrainerDetail(trainerUsername);
       emit(current.copyWith(
         trainer: trainer,

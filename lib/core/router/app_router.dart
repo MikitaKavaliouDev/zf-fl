@@ -42,6 +42,7 @@ import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/profile/presentation/settings_screens/contact_support_screen.dart';
 import '../../features/profile/presentation/settings_screens/profile_config_screen.dart';
 import '../../features/sharing/presentation/sharing_screen.dart';
+import '../../features/trainers/cubit/exercise_detail_cubit.dart';
 import '../../features/trainers/cubit/workout_session_cubit.dart';
 import '../../features/trainers/cubit/workout_session_state.dart';
 import '../../features/trainers/data/models/template_dto.dart';
@@ -71,12 +72,20 @@ class GoRouterRefreshStream extends ChangeNotifier {
 }
 
 GoRouter createAppRouter(AuthCubit authCubit) {
+  var hasCheckedAuth = false;
+  authCubit.stream.listen((state) {
+    if (state is! AuthInitial) hasCheckedAuth = true;
+  });
+
   return GoRouter(
     refreshListenable: GoRouterRefreshStream(authCubit.stream),
     initialLocation: '/login',
     redirect: (context, state) {
       final authState = authCubit.state;
       final location = state.matchedLocation;
+
+      // Don't redirect during initial auth check — prevents login flash
+      if (authState is AuthInitial && !hasCheckedAuth) return null;
 
       final loggedIn =
           authState is AuthAuthenticated ||
@@ -336,9 +345,12 @@ GoRouter createAppRouter(AuthCubit authCubit) {
         path: '/workout/exercise/:id',
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
-          child: ExerciseDetailScreen(
-            exerciseId: state.pathParameters['id'] ?? '',
-            exerciseName: state.extra is String ? state.extra as String : '',
+          child: BlocProvider<ExerciseDetailCubit>(
+            create: (_) => getIt<ExerciseDetailCubit>(),
+            child: ExerciseDetailScreen(
+              exerciseId: state.pathParameters['id'] ?? '',
+              exerciseName: state.extra is String ? state.extra as String : '',
+            ),
           ),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return SlideTransition(

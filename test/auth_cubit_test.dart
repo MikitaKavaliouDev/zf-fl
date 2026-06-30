@@ -33,6 +33,8 @@ void main() {
       build: () {
         when(() => repository.getCurrentUser())
             .thenAnswer((_) async => null);
+        when(() => repository.getCachedUser())
+            .thenAnswer((_) async => null);
         return cubit;
       },
       act: (cubit) => cubit.checkAuthStatus(),

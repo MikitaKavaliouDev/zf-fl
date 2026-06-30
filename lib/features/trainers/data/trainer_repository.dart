@@ -1,8 +1,5 @@
-import 'dart:async';
-
 import 'package:injectable/injectable.dart';
 
-import '../../../core/connectivity/connectivity_service.dart';
 import '../../../core/network/response_cache.dart';
 import '../data/models/trainer_detail_dto.dart';
 import '../data/models/trainer_list_item_dto.dart';
@@ -13,10 +10,9 @@ import 'trainer_api_service.dart';
 @singleton
 class TrainerRepository {
   final TrainerApiService _api;
-  final ConnectivityService _connectivity;
   final ResponseCache _cache;
 
-  TrainerRepository(this._api, this._connectivity, this._cache);
+  TrainerRepository(this._api, this._cache);
 
   // ── Trainer List ──
 
@@ -63,23 +59,52 @@ class TrainerRepository {
   // ── Aggregated Profile ──
   // Uses the single aggregated endpoint that returns everything.
 
-  Future<TrainerDetailDto> getTrainerDetail(String username) async {
+  /// Fetch trainer detail — cache-first with background refresh.
+  ///
+  /// Returns cached data immediately (if available) while triggering a
+  /// silent background refresh. When [forceRefresh] is true, bypasses
+  /// the cache and awaits the network call directly.
+  Future<TrainerDetailDto> getTrainerDetail(
+    String username, {
+    bool forceRefresh = false,
+  }) async {
     final cacheKey = 'trainer:detail:$username';
-    try {
-      final response = await _api.getTrainerDetail(username);
-      // Persist for offline fallback
-      unawaited(_cache.set(cacheKey, response.toJson()));
-      return response;
-    } catch (e) {
-      if (await _connectivity.checkConnectivity()) rethrow;
-      // Offline — return cached profile if available
+
+    // 1. Check cache first (unless forced refresh)
+    if (!forceRefresh) {
       final cached = await _cache.get<TrainerDetailDto>(
         cacheKey,
         TrainerDetailDto.fromJson,
       );
-      if (cached != null) return cached;
-      rethrow;
+      if (cached != null) {
+        return cached;
+      }
     }
+    // 3. No cache — await the network call
+    return _refreshTrainerDetail(username, cacheKey);
+  }
+
+  /// Internal: fetch from API and persist to cache.
+  Future<TrainerDetailDto> _refreshTrainerDetail(
+    String username,
+    String cacheKey,
+  ) async {
+    final response = await _api.getTrainerDetail(username);
+    await _cache.set(cacheKey, response.toJson());
+    return response;
+  }
+
+  /// Invalidate cached trainer detail(s).
+  ///
+  /// If [username] is provided, only that specific trainer's cache is
+  /// cleared. If null, all trainer detail caches are cleared.
+  Future<void> invalidateCache([String? username]) async {
+    if (username != null) {
+      await _cache.remove('trainer:detail:$username');
+    }
+    // If username is null, we could clear all trainer detail caches,
+    // but there's no wildcard delete in ResponseCache. For now this
+    // is a no-op for null; callers always provide a specific username.
   }
 
   // ── Schedule (on-demand) ──

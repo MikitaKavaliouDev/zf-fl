@@ -114,7 +114,9 @@ class _NotificationList extends StatelessWidget {
     final topPadding = MediaQuery.of(context).padding.top;
 
     return RefreshIndicator(
-      onRefresh: () => cubit.fetchNotifications(),
+      onRefresh: () async {
+        await cubit.refreshFromPull();
+      },
       color: AppColors.primary,
       child: ListView.builder(
         controller: scrollController,

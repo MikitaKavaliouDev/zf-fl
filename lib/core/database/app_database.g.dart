@@ -475,6 +475,325 @@ class SyncMetadataCompanion extends UpdateCompanion<SyncMetadataData> {
   }
 }
 
+class $PendingActionRecordsTable extends PendingActionRecords
+    with TableInfo<$PendingActionRecordsTable, PendingActionRecord> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PendingActionRecordsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sourceTableMeta = const VerificationMeta(
+    'sourceTable',
+  );
+  @override
+  late final GeneratedColumn<String> sourceTable = GeneratedColumn<String>(
+    'source_table',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _actionMeta = const VerificationMeta('action');
+  @override
+  late final GeneratedColumn<String> action = GeneratedColumn<String>(
+    'action',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, sourceTable, action, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'pending_action_records';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PendingActionRecord> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('source_table')) {
+      context.handle(
+        _sourceTableMeta,
+        sourceTable.isAcceptableOrUnknown(
+          data['source_table']!,
+          _sourceTableMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_sourceTableMeta);
+    }
+    if (data.containsKey('action')) {
+      context.handle(
+        _actionMeta,
+        action.isAcceptableOrUnknown(data['action']!, _actionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_actionMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id, sourceTable};
+  @override
+  PendingActionRecord map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PendingActionRecord(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      sourceTable: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_table'],
+      )!,
+      action: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}action'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $PendingActionRecordsTable createAlias(String alias) {
+    return $PendingActionRecordsTable(attachedDatabase, alias);
+  }
+}
+
+class PendingActionRecord extends DataClass
+    implements Insertable<PendingActionRecord> {
+  final String id;
+
+  /// The wire-level sync table name (e.g. `'workout_sessions'`).
+  final String sourceTable;
+
+  /// One of `'create'`, `'update'`, or `'delete'`.
+  final String action;
+  final int createdAt;
+  const PendingActionRecord({
+    required this.id,
+    required this.sourceTable,
+    required this.action,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['source_table'] = Variable<String>(sourceTable);
+    map['action'] = Variable<String>(action);
+    map['created_at'] = Variable<int>(createdAt);
+    return map;
+  }
+
+  PendingActionRecordsCompanion toCompanion(bool nullToAbsent) {
+    return PendingActionRecordsCompanion(
+      id: Value(id),
+      sourceTable: Value(sourceTable),
+      action: Value(action),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory PendingActionRecord.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PendingActionRecord(
+      id: serializer.fromJson<String>(json['id']),
+      sourceTable: serializer.fromJson<String>(json['sourceTable']),
+      action: serializer.fromJson<String>(json['action']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'sourceTable': serializer.toJson<String>(sourceTable),
+      'action': serializer.toJson<String>(action),
+      'createdAt': serializer.toJson<int>(createdAt),
+    };
+  }
+
+  PendingActionRecord copyWith({
+    String? id,
+    String? sourceTable,
+    String? action,
+    int? createdAt,
+  }) => PendingActionRecord(
+    id: id ?? this.id,
+    sourceTable: sourceTable ?? this.sourceTable,
+    action: action ?? this.action,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  PendingActionRecord copyWithCompanion(PendingActionRecordsCompanion data) {
+    return PendingActionRecord(
+      id: data.id.present ? data.id.value : this.id,
+      sourceTable: data.sourceTable.present
+          ? data.sourceTable.value
+          : this.sourceTable,
+      action: data.action.present ? data.action.value : this.action,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PendingActionRecord(')
+          ..write('id: $id, ')
+          ..write('sourceTable: $sourceTable, ')
+          ..write('action: $action, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, sourceTable, action, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PendingActionRecord &&
+          other.id == this.id &&
+          other.sourceTable == this.sourceTable &&
+          other.action == this.action &&
+          other.createdAt == this.createdAt);
+}
+
+class PendingActionRecordsCompanion
+    extends UpdateCompanion<PendingActionRecord> {
+  final Value<String> id;
+  final Value<String> sourceTable;
+  final Value<String> action;
+  final Value<int> createdAt;
+  final Value<int> rowid;
+  const PendingActionRecordsCompanion({
+    this.id = const Value.absent(),
+    this.sourceTable = const Value.absent(),
+    this.action = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PendingActionRecordsCompanion.insert({
+    required String id,
+    required String sourceTable,
+    required String action,
+    required int createdAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       sourceTable = Value(sourceTable),
+       action = Value(action),
+       createdAt = Value(createdAt);
+  static Insertable<PendingActionRecord> custom({
+    Expression<String>? id,
+    Expression<String>? sourceTable,
+    Expression<String>? action,
+    Expression<int>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (sourceTable != null) 'source_table': sourceTable,
+      if (action != null) 'action': action,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PendingActionRecordsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? sourceTable,
+    Value<String>? action,
+    Value<int>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return PendingActionRecordsCompanion(
+      id: id ?? this.id,
+      sourceTable: sourceTable ?? this.sourceTable,
+      action: action ?? this.action,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (sourceTable.present) {
+      map['source_table'] = Variable<String>(sourceTable.value);
+    }
+    if (action.present) {
+      map['action'] = Variable<String>(action.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PendingActionRecordsCompanion(')
+          ..write('id: $id, ')
+          ..write('sourceTable: $sourceTable, ')
+          ..write('action: $action, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $ClientsTableTable extends ClientsTable
     with TableInfo<$ClientsTableTable, ClientEntity> {
   @override
@@ -14921,6 +15240,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $AnalyticsCacheTable analyticsCache = $AnalyticsCacheTable(this);
   late final $SyncMetadataTable syncMetadata = $SyncMetadataTable(this);
+  late final $PendingActionRecordsTable pendingActionRecords =
+      $PendingActionRecordsTable(this);
   late final $ClientsTableTable clientsTable = $ClientsTableTable(this);
   late final $ProfilesTableTable profilesTable = $ProfilesTableTable(this);
   late final $WorkoutSessionsTableTable workoutSessionsTable =
@@ -14954,6 +15275,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     analyticsCache,
     syncMetadata,
+    pendingActionRecords,
     clientsTable,
     profilesTable,
     workoutSessionsTable,
@@ -15279,6 +15601,205 @@ typedef $$SyncMetadataTableProcessedTableManager =
         BaseReferences<_$AppDatabase, $SyncMetadataTable, SyncMetadataData>,
       ),
       SyncMetadataData,
+      PrefetchHooks Function()
+    >;
+typedef $$PendingActionRecordsTableCreateCompanionBuilder =
+    PendingActionRecordsCompanion Function({
+      required String id,
+      required String sourceTable,
+      required String action,
+      required int createdAt,
+      Value<int> rowid,
+    });
+typedef $$PendingActionRecordsTableUpdateCompanionBuilder =
+    PendingActionRecordsCompanion Function({
+      Value<String> id,
+      Value<String> sourceTable,
+      Value<String> action,
+      Value<int> createdAt,
+      Value<int> rowid,
+    });
+
+class $$PendingActionRecordsTableFilterComposer
+    extends Composer<_$AppDatabase, $PendingActionRecordsTable> {
+  $$PendingActionRecordsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceTable => $composableBuilder(
+    column: $table.sourceTable,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get action => $composableBuilder(
+    column: $table.action,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PendingActionRecordsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PendingActionRecordsTable> {
+  $$PendingActionRecordsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceTable => $composableBuilder(
+    column: $table.sourceTable,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get action => $composableBuilder(
+    column: $table.action,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PendingActionRecordsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PendingActionRecordsTable> {
+  $$PendingActionRecordsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get sourceTable => $composableBuilder(
+    column: $table.sourceTable,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get action =>
+      $composableBuilder(column: $table.action, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$PendingActionRecordsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PendingActionRecordsTable,
+          PendingActionRecord,
+          $$PendingActionRecordsTableFilterComposer,
+          $$PendingActionRecordsTableOrderingComposer,
+          $$PendingActionRecordsTableAnnotationComposer,
+          $$PendingActionRecordsTableCreateCompanionBuilder,
+          $$PendingActionRecordsTableUpdateCompanionBuilder,
+          (
+            PendingActionRecord,
+            BaseReferences<
+              _$AppDatabase,
+              $PendingActionRecordsTable,
+              PendingActionRecord
+            >,
+          ),
+          PendingActionRecord,
+          PrefetchHooks Function()
+        > {
+  $$PendingActionRecordsTableTableManager(
+    _$AppDatabase db,
+    $PendingActionRecordsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PendingActionRecordsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PendingActionRecordsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$PendingActionRecordsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> sourceTable = const Value.absent(),
+                Value<String> action = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PendingActionRecordsCompanion(
+                id: id,
+                sourceTable: sourceTable,
+                action: action,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String sourceTable,
+                required String action,
+                required int createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => PendingActionRecordsCompanion.insert(
+                id: id,
+                sourceTable: sourceTable,
+                action: action,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PendingActionRecordsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PendingActionRecordsTable,
+      PendingActionRecord,
+      $$PendingActionRecordsTableFilterComposer,
+      $$PendingActionRecordsTableOrderingComposer,
+      $$PendingActionRecordsTableAnnotationComposer,
+      $$PendingActionRecordsTableCreateCompanionBuilder,
+      $$PendingActionRecordsTableUpdateCompanionBuilder,
+      (
+        PendingActionRecord,
+        BaseReferences<
+          _$AppDatabase,
+          $PendingActionRecordsTable,
+          PendingActionRecord
+        >,
+      ),
+      PendingActionRecord,
       PrefetchHooks Function()
     >;
 typedef $$ClientsTableTableCreateCompanionBuilder =
@@ -22041,6 +22562,8 @@ class $AppDatabaseManager {
       $$AnalyticsCacheTableTableManager(_db, _db.analyticsCache);
   $$SyncMetadataTableTableManager get syncMetadata =>
       $$SyncMetadataTableTableManager(_db, _db.syncMetadata);
+  $$PendingActionRecordsTableTableManager get pendingActionRecords =>
+      $$PendingActionRecordsTableTableManager(_db, _db.pendingActionRecords);
   $$ClientsTableTableTableManager get clientsTable =>
       $$ClientsTableTableTableManager(_db, _db.clientsTable);
   $$ProfilesTableTableTableManager get profilesTable =>

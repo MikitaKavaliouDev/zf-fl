@@ -68,6 +68,7 @@ class SharingCubit extends Cubit<SharingState> {
         },
       };
       await _repository.updateConfig(body);
+      _repository.invalidateCache();
       emit(SharingState.loaded(config: s.config));
       return true;
     } catch (e) {

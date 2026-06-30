@@ -6,14 +6,13 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/cached_exercise_image.dart';
 import '../../../core/widgets/error_widget.dart';
-import '../cubit/workout_session_cubit.dart';
-import '../cubit/workout_session_state.dart';
+import '../cubit/exercise_detail_cubit.dart';
+import '../cubit/exercise_detail_state.dart';
 import '../data/models/exercise_dto.dart';
 import '../data/models/exercise_log_dto.dart';
 import '../data/models/workout_session_dto.dart';
 
-
-class ExerciseDetailScreen extends StatelessWidget {
+class ExerciseDetailScreen extends StatefulWidget {
   final String exerciseId;
   final String exerciseName;
   final void Function(String? videoUrl)? onPlayVideo;
@@ -26,8 +25,26 @@ class ExerciseDetailScreen extends StatelessWidget {
   });
 
   @override
+  State<ExerciseDetailScreen> createState() => _ExerciseDetailScreenState();
+}
+
+class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
+  bool _initialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _initialized = true;
+      context
+          .read<ExerciseDetailCubit>()
+          .loadExerciseDetail(widget.exerciseId);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocConsumer<WorkoutSessionCubit, WorkoutSessionState>(
+    return BlocConsumer<ExerciseDetailCubit, ExerciseDetailState>(
       listener: (context, state) {},
       builder: (context, state) {
         return DefaultTabController(
@@ -35,7 +52,7 @@ class ExerciseDetailScreen extends StatelessWidget {
           child: Scaffold(
             appBar: AppBar(
               title: Text(
-                exerciseName,
+                widget.exerciseName,
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -45,7 +62,8 @@ class ExerciseDetailScreen extends StatelessWidget {
                 labelColor: AppColors.primary,
                 unselectedLabelColor: AppColors.mutedText,
                 indicatorColor: AppColors.primary,
-                labelStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                labelStyle:
+                    TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                 tabs: [
                   Tab(text: 'About'),
                   Tab(text: 'History'),
@@ -62,33 +80,33 @@ class ExerciseDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBody(BuildContext context, WorkoutSessionState state) {
-    if (state is WorkoutSessionExerciseDetailLoading) {
+  Widget _buildBody(BuildContext context, ExerciseDetailState state) {
+    if (state is ExerciseDetailLoading) {
       return const Center(
         child: CircularProgressIndicator(color: AppColors.primary),
       );
     }
 
-    if (state is WorkoutSessionExerciseDetailError) {
+    if (state is ExerciseDetailError) {
       return _buildError(context, state.message);
     }
 
-    if (state is! WorkoutSessionExerciseDetailLoaded) {
+    if (state is! ExerciseDetailLoaded) {
       return const SizedBox.shrink();
     }
 
-    final exercise = state.exercise;
-    final sessions = state.sessions;
-    final filteredSessions = _sessionsWithExercise(sessions)..sort(
-      (a, b) => b.startTime.compareTo(a.startTime),
-    );
+    final loaded = state;
+    final exercise = loaded.exercise;
+    final sessions =
+        _sessionsWithExercise(loaded.sessions, exercise.id)
+          ..sort((a, b) => b.startTime.compareTo(a.startTime));
 
     return TabBarView(
       children: [
         _buildAboutTab(exercise),
-        _buildHistoryTab(filteredSessions),
-        _buildChartsTab(filteredSessions, exercise.id),
-        _buildRecordsTab(filteredSessions, exercise.id),
+        _buildHistoryTab(sessions, exercise.id),
+        _buildChartsTab(loaded.volumeHistory),
+        _buildRecordsTab(loaded, exercise.id),
       ],
     );
   }
@@ -99,7 +117,10 @@ class ExerciseDetailScreen extends StatelessWidget {
       iconSize: 64,
       padding: const EdgeInsets.symmetric(horizontal: 32),
       messageFontSize: 16,
-      onRetry: () => context.read<WorkoutSessionCubit>().loadExerciseDetail(exerciseId),
+      onRetry: () =>
+          context.read<ExerciseDetailCubit>().loadExerciseDetail(
+                widget.exerciseId,
+              ),
     );
   }
 
@@ -109,7 +130,8 @@ class ExerciseDetailScreen extends StatelessWidget {
 
   Widget _buildAboutTab(ExerciseDto exercise) {
     final mediaUrl = exercise.imageUrl ?? exercise.videoUrl;
-    final isYT = mediaUrl != null && CachedExerciseImage.isYouTubeUrl(mediaUrl);
+    final isYT =
+        mediaUrl != null && CachedExerciseImage.isYouTubeUrl(mediaUrl);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -123,9 +145,10 @@ class ExerciseDetailScreen extends StatelessWidget {
             height: 260,
             borderRadius: 16,
             fit: BoxFit.contain,
-            onTap: isYT && onPlayVideo != null
-                ? () => onPlayVideo!(mediaUrl)
-                : null,
+            onTap:
+                isYT && widget.onPlayVideo != null
+                    ? () => widget.onPlayVideo!(mediaUrl)
+                    : null,
           ),
           const SizedBox(height: 20),
           Text(
@@ -254,7 +277,10 @@ class ExerciseDetailScreen extends StatelessWidget {
   //  TAB 2 – History
   // ═══════════════════════════════════════════════════════════════
 
-  Widget _buildHistoryTab(List<WorkoutSessionDto> sessions) {
+  Widget _buildHistoryTab(
+    List<WorkoutSessionDto> sessions,
+    String exerciseId,
+  ) {
     if (sessions.isEmpty) {
       return _buildEmptyState(
         icon: Icons.history_rounded,
@@ -266,7 +292,8 @@ class ExerciseDetailScreen extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       itemCount: sessions.length,
       separatorBuilder: (_, _) => const SizedBox(height: 8),
-      itemBuilder: (context, index) => _buildHistoryCard(sessions[index], exerciseId),
+      itemBuilder: (context, index) =>
+          _buildHistoryCard(sessions[index], exerciseId),
     );
   }
 
@@ -313,7 +340,8 @@ class ExerciseDetailScreen extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(99),
@@ -409,34 +437,24 @@ class ExerciseDetailScreen extends StatelessWidget {
   }
 
   // ═══════════════════════════════════════════════════════════════
-  //  TAB 3 – Charts
+  //  TAB 3 – Charts (uses backend stats volume data)
   // ═══════════════════════════════════════════════════════════════
 
-  Widget _buildChartsTab(List<WorkoutSessionDto> sessions, String exerciseId) {
-    final chartPoints = <_ChartPoint>[];
-    for (final session in sessions) {
-      final volume = _totalVolumeForSession(session, exerciseId);
-      if (volume > 0) {
-        chartPoints.add(_ChartPoint(
-          date: _parseDateTime(session.startTime),
-          volume: volume,
-        ));
-      }
-    }
-
-    if (chartPoints.length < 2) {
+  Widget _buildChartsTab(List<ExerciseStatPoint> volumeHistory) {
+    if (volumeHistory.length < 2) {
       return _buildEmptyState(
         icon: Icons.show_chart_rounded,
-        message: chartPoints.isEmpty
+        message: volumeHistory.isEmpty
             ? 'No volume data for this exercise yet.'
             : 'At least 2 data points needed for a chart.\nComplete more sessions to see your progress.',
       );
     }
 
-    final points = chartPoints.reversed.toList();
-    final maxY = points.fold<double>(0, (max, p) => p.volume > max ? p.volume : max);
+    final points = volumeHistory;
+    final maxY =
+        points.fold<double>(0, (max, p) => p.value > max ? p.value : max);
     final spots = points.asMap().entries.map((entry) {
-      return FlSpot(entry.key.toDouble(), entry.value.volume);
+      return FlSpot(entry.key.toDouble(), entry.value.value);
     }).toList();
 
     return Padding(
@@ -568,13 +586,17 @@ class ExerciseDetailScreen extends StatelessWidget {
   }
 
   // ═══════════════════════════════════════════════════════════════
-  //  TAB 4 – Records
+  //  TAB 4 – Records (uses backend stats data)
   // ═══════════════════════════════════════════════════════════════
 
-  Widget _buildRecordsTab(List<WorkoutSessionDto> sessions, String exerciseId) {
-    final est1rm = _computeEstimated1Rm(sessions, exerciseId);
-    final maxWeight = _computeMaxWeight(sessions, exerciseId);
-    final maxVolume = _computeMaxVolume(sessions, exerciseId);
+  Widget _buildRecordsTab(
+    ExerciseDetailLoaded loaded,
+    String exerciseId,
+  ) {
+    final sessions = _sessionsWithExercise(loaded.sessions, exerciseId);
+    final est1rm = _bestValue(loaded.e1rmHistory);
+    final maxWeight = _bestValue(loaded.bestSetVolumeHistory);
+    final maxVolume = _bestValue(loaded.volumeHistory);
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -606,19 +628,24 @@ class ExerciseDetailScreen extends StatelessWidget {
               _buildRecordCard(
                 icon: Icons.trending_up_rounded,
                 label: 'Est. 1RM',
-                value: est1rm != null ? '${est1rm.toStringAsFixed(1)} kg' : '\u2014',
+                value:
+                    est1rm != null ? '${est1rm.value.toStringAsFixed(1)} kg' : '\u2014',
                 color: const Color(0xFF007AFF),
               ),
               _buildRecordCard(
                 icon: Icons.monitor_weight_outlined,
                 label: 'Max Weight',
-                value: maxWeight != null ? '${maxWeight.toStringAsFixed(1)} kg' : '\u2014',
+                value: maxWeight != null
+                    ? '${maxWeight.value.toStringAsFixed(1)} kg'
+                    : '\u2014',
                 color: Colors.orange,
               ),
               _buildRecordCard(
                 icon: Icons.height_rounded,
                 label: 'Max Volume',
-                value: maxVolume != null ? '${maxVolume.toStringAsFixed(0)} kg' : '\u2014',
+                value: maxVolume != null
+                    ? '${maxVolume.value.toStringAsFixed(0)} kg'
+                    : '\u2014',
                 color: Colors.green,
               ),
               _buildRecordCard(
@@ -707,14 +734,20 @@ class ExerciseDetailScreen extends StatelessWidget {
 
   // ── Helpers ──
 
-  List<WorkoutSessionDto> _sessionsWithExercise(List<WorkoutSessionDto> sessions) {
+  List<WorkoutSessionDto> _sessionsWithExercise(
+    List<WorkoutSessionDto> sessions,
+    String exerciseId,
+  ) {
     return sessions.where((s) {
       final logs = s.exerciseLogs ?? [];
       return logs.any((l) => l.exerciseId == exerciseId);
     }).toList();
   }
 
-  List<ExerciseLogDto> _logsForSession(WorkoutSessionDto session, String exerciseId) {
+  List<ExerciseLogDto> _logsForSession(
+    WorkoutSessionDto session,
+    String exerciseId,
+  ) {
     return (session.exerciseLogs ?? [])
         .where((l) => l.exerciseId == exerciseId)
         .toList();
@@ -724,68 +757,16 @@ class ExerciseDetailScreen extends StatelessWidget {
     return (log.weight ?? 0) * (log.reps ?? 0);
   }
 
-  double _totalVolumeForSession(WorkoutSessionDto session, String exerciseId) {
-    return _logsForSession(session, exerciseId)
-        .fold<double>(0, (sum, l) => sum + _volumeForSet(l));
-  }
-
-  double _estimated1Rm(double weight, int reps) {
-    if (weight <= 0 || reps <= 0) return 0;
-    return weight / (1.0278 - 0.0278 * reps);
-  }
-
   DateTime _parseDateTime(String iso) {
     return DateTime.tryParse(iso) ?? DateTime.now();
   }
 
-  double? _computeEstimated1Rm(List<WorkoutSessionDto> sessions, String exerciseId) {
-    double? max1rm;
-    for (final session in sessions) {
-      for (final log in _logsForSession(session, exerciseId)) {
-        final weight = log.weight ?? 0;
-        final reps = log.reps ?? 0;
-        if (weight > 0 && reps > 0) {
-          final rm = _estimated1Rm(weight, reps);
-          if (max1rm == null || rm > max1rm) {
-            max1rm = rm;
-          }
-        }
-      }
-    }
-    return max1rm;
+  /// Return the stat point with the highest value (used for records).
+  ExerciseStatPoint? _bestValue(List<ExerciseStatPoint> points) {
+    if (points.isEmpty) return null;
+    return points.fold<ExerciseStatPoint>(
+      points.first,
+      (best, p) => p.value > best.value ? p : best,
+    );
   }
-
-  double? _computeMaxWeight(List<WorkoutSessionDto> sessions, String exerciseId) {
-    double? maxW;
-    for (final session in sessions) {
-      for (final log in _logsForSession(session, exerciseId)) {
-        final w = log.weight ?? 0;
-        if (w > 0 && (maxW == null || w > maxW)) {
-          maxW = w;
-        }
-      }
-    }
-    return maxW;
-  }
-
-  double? _computeMaxVolume(List<WorkoutSessionDto> sessions, String exerciseId) {
-    double? maxV;
-    for (final session in sessions) {
-      for (final log in _logsForSession(session, exerciseId)) {
-        final v = _volumeForSet(log);
-        if (v > 0 && (maxV == null || v > maxV)) {
-          maxV = v;
-        }
-      }
-    }
-    return maxV;
-  }
-}
-
-/// Internal data point for chart rendering.
-class _ChartPoint {
-  final DateTime date;
-  final double volume;
-
-  const _ChartPoint({required this.date, required this.volume});
 }

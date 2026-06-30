@@ -268,6 +268,21 @@ class WorkoutSessionApiService {
     return LiveSessionResponse.fromJson(data);
   }
 
+  /// Fetch exercise performance stats (e1RM, volume, bestSetVolume).
+  Future<Map<String, dynamic>> getExerciseStats({
+    required String exerciseId,
+    String metric = 'e1rm',
+  }) async {
+    final response = await _dio.get(
+      '/api/client/stats/exercise',
+      queryParameters: {
+        'exerciseId': exerciseId,
+        'metric': metric,
+      },
+    );
+    return response.data['data'] as Map<String, dynamic>;
+  }
+
   /// Get all templates for the current user's active program.
   Future<List<TemplateDto>> getTemplates() async {
     final response = await _dio.get('/api/client/program/active');

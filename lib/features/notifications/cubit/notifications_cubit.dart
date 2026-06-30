@@ -23,8 +23,11 @@ class NotificationsCubit extends Cubit<NotificationsState> {
       : super(const NotificationsState.initial());
 
   /// Fetch the first page of notifications and subscribe to real-time.
+  ///
+  /// Cache-first — shows cached data immediately (no loading flash), then
+  /// silently refreshes from the API. On pull-to-refresh the screen shows
+  /// a [RefreshIndicator] so we skip the loading state entirely.
   Future<void> fetchNotifications() async {
-    emit(const NotificationsState.loading());
     try {
       final result = await _repository.fetchNotifications(page: 1);
       _seenIds.addAll(result.notifications.map((n) => n.id));
@@ -37,10 +40,38 @@ class NotificationsCubit extends Cubit<NotificationsState> {
       ));
 
       _subscribeToRealtime(result.notifications);
+
+      // Silent background revalidation — refresh cached data without UI flash
+      _silentRefresh();
     } catch (e) {
       developer.log('NotificationsCubit.fetchNotifications failed: $e',
           name: 'notifications');
-      emit(const NotificationsState.error('Failed to load notifications.'));
+      // Only emit error if we have no prior data to show
+      if (state is NotificationsInitial) {
+        emit(const NotificationsState.error('Failed to load notifications.'));
+      }
+    }
+  }
+
+  /// Silent background refresh of notification data.
+  Future<void> _silentRefresh() async {
+    try {
+      final result = await _repository.fetchNotifications(page: 1, forceRefresh: true);
+      if (!isClosed) {
+        _seenIds.addAll(result.notifications.map((n) => n.id));
+        final unreadCount = result.notifications.where((n) => !n.readStatus).length;
+        emit(NotificationsState.loaded(
+          notifications: result.notifications,
+          unreadCount: unreadCount,
+          hasMore: result.hasMore,
+          currentPage: 1,
+        ));
+        _subscribeToRealtime(result.notifications);
+      }
+    } catch (e) {
+      developer.log('NotificationsCubit._silentRefresh failed: $e',
+          name: 'notifications');
+      // Silent failure — cached data is already showing
     }
   }
 
@@ -160,6 +191,7 @@ class NotificationsCubit extends Cubit<NotificationsState> {
 
     try {
       await _repository.markAsRead(id);
+      _repository.invalidateCache();
     } catch (e) {
       developer.log('markAsRead failed: $e', name: 'notifications');
       emit(snapshot);
@@ -179,6 +211,7 @@ class NotificationsCubit extends Cubit<NotificationsState> {
 
     try {
       await _repository.markAllAsRead();
+      _repository.invalidateCache();
     } catch (e) {
       developer.log('markAllAsRead failed: $e', name: 'notifications');
       emit(snapshot);
@@ -189,6 +222,7 @@ class NotificationsCubit extends Cubit<NotificationsState> {
   Future<void> acceptRequest(String id) async {
     try {
       await _repository.acceptRequest(id);
+      _repository.invalidateCache();
       final currentState = state;
       if (currentState is NotificationsLoaded) {
         final updatedList =
@@ -210,6 +244,7 @@ class NotificationsCubit extends Cubit<NotificationsState> {
   Future<void> declineRequest(String id) async {
     try {
       await _repository.declineRequest(id);
+      _repository.invalidateCache();
       final currentState = state;
       if (currentState is NotificationsLoaded) {
         final updatedList =
@@ -225,6 +260,12 @@ class NotificationsCubit extends Cubit<NotificationsState> {
       developer.log('declineRequest failed: $e', name: 'notifications');
       emit(const NotificationsState.error('Failed to decline request.'));
     }
+  }
+
+  /// Pull-to-refresh: bust ResponseCache, then force-fetch from API.
+  Future<void> refreshFromPull() async {
+    await _repository.invalidateCache();
+    await fetchNotifications();
   }
 
   /// Convenience accessor: returns the first pending link request notification.

@@ -1,6 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../data/models/exercise_dto.dart';
 import '../data/models/exercise_log_dto.dart';
 import '../data/models/workout_session_dto.dart';
 
@@ -16,18 +15,6 @@ sealed class WorkoutSessionState with _$WorkoutSessionState {
 
   /// Conflict: another session already active
   const factory WorkoutSessionState.conflict({required String existingSessionId}) = WorkoutSessionConflict;
-
-  /// Loading exercise detail data (from library + session history)
-  const factory WorkoutSessionState.exerciseDetailLoading() = WorkoutSessionExerciseDetailLoading;
-
-  /// Exercise detail data loaded from library and session history
-  const factory WorkoutSessionState.exerciseDetailLoaded({
-    required ExerciseDto exercise,
-    required List<WorkoutSessionDto> sessions,
-  }) = WorkoutSessionExerciseDetailLoaded;
-
-  /// Failed to load exercise detail data
-  const factory WorkoutSessionState.exerciseDetailError(String message) = WorkoutSessionExerciseDetailError;
 
   /// Active workout session in progress.
   /// Contains the session details and exercise logs.

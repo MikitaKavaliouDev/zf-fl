@@ -59,12 +59,25 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       final user = await _repository.getCurrentUser();
       if (user == null) {
+        // Check for cached user before giving up
+        final cachedUser = await _repository.getCachedUser();
+        if (cachedUser != null) {
+          developer.log('checkAuthStatus: using cached user (offline)', name: 'auth');
+          emit(AuthState.authenticated(user: cachedUser, isOffline: true));
+          return;
+        }
         emit(const AuthState.unauthenticated());
         return;
       }
       _routeByUserState(user);
     } catch (e, s) {
       developer.log('checkAuthStatus failed', name: 'auth', error: e, stackTrace: s);
+      // Try cached user as last resort
+      final cachedUser = await _repository.getCachedUser();
+      if (cachedUser != null) {
+        emit(AuthState.authenticated(user: cachedUser, isOffline: true));
+        return;
+      }
       emit(const AuthState.unauthenticated());
     }
   }

@@ -1,8 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../features/auth/data/models/user.dart';
+
 const _accessTokenKey = 'access_token';
 const _refreshTokenKey = 'refresh_token';
+const _cachedUserKey = 'cached_user';
 
 /// Wraps [FlutterSecureStorage] for JWT token persistence.
 @singleton
@@ -26,10 +31,26 @@ class TokenStorage {
 
   Future<String?> getRefreshToken() => _storage.read(key: _refreshTokenKey);
 
+  Future<void> saveUser(User user) async {
+    final json = jsonEncode(user.toJson());
+    await _storage.write(key: _cachedUserKey, value: json);
+  }
+
+  Future<User?> getCachedUser() async {
+    final json = await _storage.read(key: _cachedUserKey);
+    if (json == null) return null;
+    try {
+      return User.fromJson(jsonDecode(json) as Map<String, dynamic>);
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> clearTokens() async {
     await Future.wait([
       _storage.delete(key: _accessTokenKey),
       _storage.delete(key: _refreshTokenKey),
+      _storage.delete(key: _cachedUserKey),
     ]);
   }
 }

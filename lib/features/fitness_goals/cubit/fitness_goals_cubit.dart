@@ -35,6 +35,7 @@ class FitnessGoalsCubit extends Cubit<FitnessGoalsState> {
   Future<bool> createGoal(Map<String, dynamic> body) async {
     try {
       await _repository.createGoal(body);
+      _repository.invalidateCache();
       await loadGoals(forceRefresh: true);
       return true;
     } catch (e) {
@@ -54,6 +55,7 @@ class FitnessGoalsCubit extends Cubit<FitnessGoalsState> {
     try {
       await _repository.updateGoal(id,
           targetValue: targetValue, currentValue: currentValue);
+      _repository.invalidateCache();
       await loadGoals(forceRefresh: true);
       return true;
     } catch (e) {
@@ -68,6 +70,7 @@ class FitnessGoalsCubit extends Cubit<FitnessGoalsState> {
   Future<bool> deleteGoal(String id) async {
     try {
       await _repository.deleteGoal(id);
+      _repository.invalidateCache();
       await loadGoals(forceRefresh: true);
       return true;
     } catch (e) {

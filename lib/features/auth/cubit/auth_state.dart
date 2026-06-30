@@ -20,6 +20,7 @@ sealed class AuthState with _$AuthState {
   /// needsOnboarding when onboarding is incomplete.
   const factory AuthState.authenticated({
     required User user,
+    @Default(false) bool isOffline,
   }) = AuthAuthenticated;
 
   /// User registered but role is "pending" — email not yet verified.

@@ -4,6 +4,8 @@ import 'package:drift/drift.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../core/database/app_database.dart';
+import '../../../core/database/sync_converter.dart';
+import '../../../core/database/sync_tables_registry.dart';
 import '../data/sync_api_service.dart';
 
 /// Orchestrates pull-then-push sync against the backend.
@@ -20,14 +22,18 @@ import '../data/sync_api_service.dart';
 /// every row written during pull.
 ///
 /// **Push phase:** collects locally created/updated/deleted rows
-/// (identified by `syncStatus != 'synced'`) and sends them to the
-/// backend.
+/// (identified by `syncStatus = 'pending'`) and sends them to the
+/// backend. After push succeeds, pushed rows are marked `synced`.
 @singleton
 class SyncRepository {
   final SyncApiService _api;
   final AppDatabase _db;
 
   SyncRepository(this._api, this._db);
+
+  /// Tables that have no `deleted_at` column in the local schema.
+  /// The push phase skips soft-delete queries for these tables.
+  static const _tablesWithoutDeletedAt = {'calendar_events'};
 
   /// Runs a full sync cycle: pull → store → push.
   /// Returns the new server timestamp.
@@ -44,6 +50,8 @@ class SyncRepository {
     final pushChanges = await _collectPendingChanges();
     if (pushChanges.isNotEmpty) {
       await _api.push(pushChanges);
+      // Mark all pushed rows as synced
+      await _markPushedAsSynced(pushChanges);
     }
 
     // Step 4: Update last sync timestamp
@@ -143,11 +151,195 @@ class SyncRepository {
     };
   }
 
+  /// Maps Drift SQL table names back to wire sync table names.
+  ///
+  /// This is the reverse of `_wireToDriftTableName`. Most names are
+  /// identical on both sides; only mismatches need explicit mapping.
+  // ignore: unused_element — public API helper for mutation sites
+  String _driftToWireTableName(String driftName) {
+    return switch (driftName) {
+      'services' => 'trainer_services',
+      'package' => 'trainer_packages',
+      'testimonial' => 'trainer_testimonials',
+      'programs' => 'trainer_programs',
+      'booking' => 'bookings',
+      _ => driftName,
+    };
+  }
+
   /// Collects locally created/updated/deleted rows that haven't been
-  /// synced (sync_status != 'synced').
+  /// synced (sync_status = 'pending').
+  ///
+  /// Iterates all 17 sync tables, querying for:
+  /// - Rows with `sync_status = 'pending' AND deleted_at IS NULL`
+  ///   (rows created or updated locally, still active)
+  /// - Rows with `sync_status = 'pending' AND deleted_at IS NOT NULL`
+  ///   (rows soft-deleted locally, not yet synced)
+  ///
+  /// Returns a map keyed by wire table name, each containing:
+  /// `{ created: [...], updated: [...], deleted: [id, ...] }`.
+  ///
+  /// **Action resolution order:**
+  /// 1. Look up the row in `PendingActionRecords` for an explicit action.
+  /// 2. If no record exists (legacy data), use the fallback heuristic:
+  ///    `created_at == updated_at` → "created", otherwise "updated".
+  ///
+  /// **Internal columns** (`sync_status`) are stripped from the payload.
   Future<Map<String, dynamic>> _collectPendingChanges() async {
-    // Phase 3 MVP: always returns empty until push collection is
-    // implemented per-table.
-    return {};
+    final result = <String, dynamic>{};
+
+    for (final wireName in SyncTables.all) {
+      final driftName = _wireToDriftTableName(wireName) ?? wireName;
+      final hasDeletedAt = !_tablesWithoutDeletedAt.contains(driftName);
+
+      // ── Query active pending rows (created or updated, not soft-deleted) ──
+      final pendingQuery = hasDeletedAt
+          ? 'SELECT * FROM "$driftName" WHERE sync_status = \'pending\' AND deleted_at IS NULL'
+          : 'SELECT * FROM "$driftName" WHERE sync_status = \'pending\'';
+      final pendingRows = await _db.customSelect(pendingQuery).get();
+
+      // ── Query soft-deleted rows ──
+      final deletedIds = <String>[];
+      if (hasDeletedAt) {
+        final deletedResult = await _db.customSelect(
+          'SELECT id FROM "$driftName" WHERE sync_status = \'pending\' AND deleted_at IS NOT NULL',
+        ).get();
+        deletedIds.addAll(deletedResult.map((r) => r.data['id'] as String));
+      }
+
+      if (pendingRows.isEmpty && deletedIds.isEmpty) continue;
+
+      // ── Load explicit actions from PendingActionRecords ──
+      final pendingIds = <String>{
+        for (final row in pendingRows) row.data['id'] as String,
+      };
+
+      final actionRecords = <String, String>{};
+      if (pendingIds.isNotEmpty) {
+        final records = await (_db.select(_db.pendingActionRecords)
+          ..where((t) => t.sourceTable.equals(wireName))).get();
+        for (final r in records) {
+          if (pendingIds.contains(r.id)) {
+            actionRecords[r.id] = r.action;
+          }
+        }
+      }
+
+      // ── Distinguish created vs updated ──
+      final created = <Map<String, dynamic>>[];
+      final updated = <Map<String, dynamic>>[];
+
+      for (final row in pendingRows) {
+        final map = Map<String, dynamic>.from(row.data);
+        final rowId = map['id'] as String;
+
+        // Remove internal sync columns — they don't belong in the payload
+        map.remove('sync_status');
+
+        // Convert keys to snake_case for the wire
+        // (already snake_case from SQL, but this ensures consistency)
+        final wireRow = SyncConverter.localToWire(map);
+
+        // Resolve action: explicit record takes precedence
+        final action = actionRecords[rowId];
+        if (action == 'create') {
+          created.add(wireRow);
+        } else if (action == 'update') {
+          updated.add(wireRow);
+        } else if (action == null) {
+          // Legacy fallback: timestamp heuristic
+          final createdAt = map['created_at'] as int? ?? 0;
+          final updatedAt = map['updated_at'] as int? ?? 0;
+          if (createdAt == updatedAt) {
+            created.add(wireRow);
+          } else {
+            updated.add(wireRow);
+          }
+        }
+        // 'delete' action is handled separately via deletedIds
+      }
+
+      result[wireName] = {
+        'created': created,
+        'updated': updated,
+        'deleted': deletedIds,
+      };
+    }
+
+    return result;
+  }
+
+  /// Mark a local row as needing sync after a local mutation.
+  ///
+  /// [action] describes the intended sync operation: `'create'` for new
+  /// local rows, `'update'` for modifications to existing rows, or
+  /// `'delete'` for soft-deleted rows.
+  Future<void> markPending(
+    String wireTableName,
+    String id, {
+    String action = 'update',
+  }) async {
+    final driftName = _wireToDriftTableName(wireTableName) ?? wireTableName;
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    await _db.customStatement(
+      'UPDATE "$driftName" SET sync_status = \'pending\', '
+      'updated_at = ? WHERE id = ?',
+      [now, id],
+    );
+
+    // Record the intended action in PendingActionRecords.
+    await _db.into(_db.pendingActionRecords).insertOnConflictUpdate(
+          PendingActionRecordsCompanion(
+            id: Value(id),
+            sourceTable: Value(wireTableName),
+            action: Value(action),
+            createdAt: Value(now),
+          ),
+        );
+  }
+
+  /// Mark a local row as synced after a successful direct API mutation.
+  Future<void> markSynced(String wireTableName, String id) async {
+    final driftName = _wireToDriftTableName(wireTableName) ?? wireTableName;
+    await _db.customStatement(
+      'UPDATE "$driftName" SET sync_status = \'synced\', '
+      'updated_at = ? WHERE id = ?',
+      [DateTime.now().millisecondsSinceEpoch, id],
+    );
+
+    // Clean up the pending action record.
+    await (_db.delete(_db.pendingActionRecords)
+      ..where((t) => t.id.equals(id))
+      ..where((t) => t.sourceTable.equals(wireTableName))).go();
+  }
+
+  /// Mark ALL pending rows in a table as synced (post-push).
+  Future<void> markAllSynced(String wireTableName) async {
+    final driftName = _wireToDriftTableName(wireTableName) ?? wireTableName;
+    await _db.customStatement(
+      'UPDATE "$driftName" SET sync_status = \'synced\' WHERE sync_status = \'pending\'',
+    );
+  }
+
+  /// After push succeeds, mark all pushed rows as synced and clean up
+  /// their [PendingActionRecords].
+  Future<void> _markPushedAsSynced(Map<String, dynamic> pushChanges) async {
+    for (final wireName in pushChanges.keys) {
+      final operations = pushChanges[wireName] as Map<String, dynamic>;
+      final hadChanges = (operations['created'] as List).isNotEmpty ||
+          (operations['updated'] as List).isNotEmpty ||
+          (operations['deleted'] as List).isNotEmpty;
+      if (!hadChanges) continue;
+
+      final driftName = _wireToDriftTableName(wireName) ?? wireName;
+      await _db.customStatement(
+        'UPDATE "$driftName" SET sync_status = \'synced\' WHERE sync_status = \'pending\'',
+      );
+
+      // Clean up pending action records for this table.
+      await (_db.delete(_db.pendingActionRecords)
+        ..where((t) => t.sourceTable.equals(wireName))).go();
+    }
   }
 }

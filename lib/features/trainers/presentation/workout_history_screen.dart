@@ -617,7 +617,7 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: GestureDetector(
         onTap: () {
-          context.go('/workout/history/${session.id}');
+          context.push('/workout/history/${session.id}');
         },
         onLongPressStart: (details) {
           _showSessionContextMenu(context, details, session);

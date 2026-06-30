@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../core/di/injection.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/error_widget.dart';
 import '../cubit/workout_session_cubit.dart';
-import '../cubit/workout_session_state.dart';
 import '../data/models/exercise_log_dto.dart';
 import '../data/models/workout_session_dto.dart';
 
-class CompletedSessionDetailScreen extends StatelessWidget {
+class CompletedSessionDetailScreen extends StatefulWidget {
   final String sessionId;
 
   const CompletedSessionDetailScreen({
@@ -17,75 +17,106 @@ class CompletedSessionDetailScreen extends StatelessWidget {
   });
 
   @override
+  State<CompletedSessionDetailScreen> createState() =>
+      _CompletedSessionDetailScreenState();
+}
+
+class _CompletedSessionDetailScreenState
+    extends State<CompletedSessionDetailScreen> {
+  final WorkoutSessionCubit _cubit = getIt<WorkoutSessionCubit>();
+
+  bool _isLoading = true;
+  String? _error;
+  WorkoutSessionDto? _session;
+  List<ExerciseLogDto> _logs = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDetails();
+  }
+
+  Future<void> _loadDetails() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final result = await _cubit.fetchSessionDetails(widget.sessionId);
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _session = result.session;
+        _logs = result.logs;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _error = 'Failed to load session details.';
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocConsumer<WorkoutSessionCubit, WorkoutSessionState>(
-      listener: (context, state) {},
-      builder: (context, state) {
-        WorkoutSessionDto? session;
-        List<ExerciseLogDto> logs = [];
-        String? error;
-
-        if (state is WorkoutSessionCompleted) {
-          if (state.session.id == sessionId) {
-            session = state.session;
-            logs = state.logs;
-          }
-        } else if (state is WorkoutSessionExerciseDetailError) {
-          error = state.message;
-        }
-
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Session Details'),
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded,
+              color: AppColors.foreground),
+          onPressed: () => context.pop(),
+        ),
+        title: const Text(
+          'Session Details',
+          style: TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            color: AppColors.foreground,
           ),
-          body: _buildBody(context, session, logs, error),
-        );
-      },
+        ),
+      ),
+      body: _buildBody(),
     );
   }
 
-  Widget _buildBody(
-    BuildContext context,
-    WorkoutSessionDto? session,
-    List<ExerciseLogDto> logs,
-    String? error,
-  ) {
-    if (session == null && error == null) {
+  Widget _buildBody() {
+    if (_isLoading) {
       return const Center(
         child: CircularProgressIndicator(color: AppColors.primary),
       );
     }
 
-    if (error != null) {
+    if (_error != null) {
       return ZiroErrorWidget(
-        message: error,
+        message: _error!,
         iconSize: 64,
         padding: const EdgeInsets.symmetric(horizontal: 32),
         messageFontSize: 16,
-        onRetry: () =>
-            context.read<WorkoutSessionCubit>().fetchSessionDetails(sessionId),
+        onRetry: _loadDetails,
       );
     }
 
-    if (session == null) {
+    if (_session == null) {
       return ZiroErrorWidget(
         message: 'Session not found.',
         iconSize: 64,
         padding: const EdgeInsets.symmetric(horizontal: 32),
         messageFontSize: 16,
-        onRetry: () =>
-            context.read<WorkoutSessionCubit>().fetchSessionDetails(sessionId),
+        onRetry: _loadDetails,
       );
     }
 
-    return _buildContent(context, session, logs);
+    return _buildContent(context, _session!, _logs);
   }
 
-  Widget _buildContent(BuildContext context, WorkoutSessionDto session, List<ExerciseLogDto> logs) {
+  Widget _buildContent(
+      BuildContext context, WorkoutSessionDto session, List<ExerciseLogDto> logs) {
     final startTime = _parseDateTime(session.startTime);
-    final endTime = session.endTime != null
-        ? _parseDateTime(session.endTime!)
-        : null;
+    final endTime =
+        session.endTime != null ? _parseDateTime(session.endTime!) : null;
 
     final durationStr = _computeDuration(startTime, endTime);
     final formattedDate = _formatDate(startTime);
@@ -187,7 +218,9 @@ class CompletedSessionDetailScreen extends StatelessWidget {
   Widget _buildStatsRow(String? duration, double volume, int sets) {
     return Row(
       children: [
-        Expanded(child: _buildStatCard('Duration', duration ?? '—', Icons.timer_outlined, AppColors.primary)),
+        Expanded(
+            child: _buildStatCard(
+                'Duration', duration ?? '—', Icons.timer_outlined, AppColors.primary)),
         const SizedBox(width: 8),
         Expanded(
           child: _buildStatCard(
@@ -210,7 +243,8 @@ class CompletedSessionDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+      String label, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
       decoration: BoxDecoration(
@@ -310,7 +344,8 @@ class CompletedSessionDetailScreen extends StatelessWidget {
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(99),
@@ -389,9 +424,8 @@ class CompletedSessionDetailScreen extends StatelessWidget {
             ? log.weight!.toInt().toString()
             : log.weight!.toStringAsFixed(1))
         : '—';
-    final repsStr = log.reps != null && log.reps! > 0
-        ? log.reps.toString()
-        : '—';
+    final repsStr =
+        log.reps != null && log.reps! > 0 ? log.reps.toString() : '—';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: const BoxDecoration(
@@ -457,8 +491,7 @@ class CompletedSessionDetailScreen extends StatelessWidget {
                   : Border.all(color: AppColors.borderMuted),
             ),
             child: log.isCompleted
-                ? const Icon(Icons.check_rounded,
-                    size: 14, color: Colors.white)
+                ? const Icon(Icons.check_rounded, size: 14, color: Colors.white)
                 : null,
           ),
         ],
@@ -510,12 +543,27 @@ class CompletedSessionDetailScreen extends StatelessWidget {
 
   String _formatDate(DateTime dt) {
     const weekdays = [
-      'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
       'Sunday',
     ];
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December',
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return '${weekdays[dt.weekday - 1]}, ${months[dt.month - 1]} ${dt.day}, ${dt.year}';
   }

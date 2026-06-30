@@ -15,12 +15,18 @@ import '../data/models/client_dashboard_response.dart';
 /// Thin cubit — tanquery manages loading/error states via QueryBuilder.
 ///
 /// Mutations (called from UI) remain here; reads go through tanquery.
+///
+/// The dashboard queryFn is cache-first — [ResponseCache] provides instant
+/// data on cold start (survives tanquery's in-memory loss). After the
+/// initial render, a one-shot silent refresh fetches fresh data from the
+/// API and updates the tanquery cache via [QueryClient.setQueryData].
 @injectable
 class HomeCubit extends Cubit<HomeState> {
   final HomeRepository _repository;
   final QueryClient _queryClient;
   StreamSubscription<CheckInSubmittedEvent>? _checkInSub;
   Timer? _checkInDebounce;
+  bool _initialRefreshDone = false;
 
   HomeCubit(this._repository, this._queryClient)
       : super(const HomeState._()) {
@@ -30,11 +36,15 @@ class HomeCubit extends Cubit<HomeState> {
       _checkInDebounce?.cancel();
       _checkInDebounce = Timer(const Duration(milliseconds: 500), () {
         _queryClient.invalidateQueries(queryKey: QueryKey(['home']));
+        _repository.invalidateCache();
       });
     });
   }
 
   /// Fetch dashboard data and active program in parallel.
+  ///
+  /// This is the tanquery queryFn. It returns cached data immediately,
+  /// then fires a one-shot background refresh to revalidate.
   Future<HomeData> fetchDashboard() async {
     try {
       final results = await Future.wait([
@@ -42,14 +52,55 @@ class HomeCubit extends Cubit<HomeState> {
         _repository.getActiveProgram(),
       ]);
 
-      return HomeData(
+      final data = HomeData(
         dashboard: results[0] as ClientDashboardResponse,
         activeProgram: results[1] as ActiveProgramResponse?,
       );
+
+      // One-shot silent refresh on first call (cold start)
+      if (!_initialRefreshDone) {
+        _initialRefreshDone = true;
+        unawaited(_silentRefreshDashboard());
+      }
+
+      return data;
     } catch (e) {
       developer.log('HomeCubit.fetchDashboard failed: $e', name: 'home');
       rethrow;
     }
+  }
+
+  /// Silent background refresh of dashboard data.
+  ///
+  /// Fetches fresh data from the API and updates the tanquery cache
+  /// so the UI re-renders silently without any loading indicator.
+  Future<void> _silentRefreshDashboard() async {
+    try {
+      final results = await Future.wait([
+        _repository.getDashboard(forceRefresh: true),
+        _repository.getActiveProgram(forceRefresh: true),
+      ]);
+
+      final freshData = HomeData(
+        dashboard: results[0] as ClientDashboardResponse,
+        activeProgram: results[1] as ActiveProgramResponse?,
+      );
+
+      if (!isClosed) {
+        _queryClient.setQueryData(QueryKey(['home']), freshData);
+      }
+    } catch (e) {
+      developer.log('HomeCubit._silentRefreshDashboard failed: $e',
+          name: 'home');
+    }
+  }
+
+  /// Invalidate both tanquery and ResponseCache for dashboard data.
+  ///
+  /// Call before pull-to-refresh so the queryFn fetches from the API
+  /// instead of returning stale ResponseCache data.
+  Future<void> invalidateResponseCache() async {
+    await _repository.invalidateCache();
   }
 
   @override

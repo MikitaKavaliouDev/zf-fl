@@ -20,6 +20,7 @@ import 'tables/clients_table.dart';
 import 'tables/exercises_table.dart';
 import 'tables/notifications_table.dart';
 import 'tables/packages_table.dart';
+import 'tables/pending_action_records.dart';
 import 'tables/profiles_table.dart';
 import 'tables/programs_table.dart';
 import 'tables/services_table.dart';
@@ -35,6 +36,7 @@ part 'app_database.g.dart';
   tables: [
     AnalyticsCache,
     SyncMetadata,
+    PendingActionRecords,
     ClientsTable,
     ProfilesTable,
     WorkoutSessionsTable,
@@ -62,7 +64,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration {
@@ -76,6 +78,9 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 3) {
           await m.createTable(analyticsCache);
+        }
+        if (from < 4) {
+          await m.createTable(pendingActionRecords);
         }
       },
     );

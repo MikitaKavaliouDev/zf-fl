@@ -107,6 +107,8 @@ import 'package:ziro_fit/features/sync/cubit/sync_cubit.dart' as _i796;
 import 'package:ziro_fit/features/sync/data/sync_api_service.dart' as _i93;
 import 'package:ziro_fit/features/sync/data/sync_repository.dart' as _i813;
 import 'package:ziro_fit/features/sync/workout_realtime_service.dart' as _i197;
+import 'package:ziro_fit/features/trainers/cubit/exercise_detail_cubit.dart'
+    as _i109;
 import 'package:ziro_fit/features/trainers/cubit/workout_history_cubit.dart'
     as _i195;
 import 'package:ziro_fit/features/trainers/cubit/workout_session_cubit.dart'
@@ -240,21 +242,29 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i315.VoiceSettingsApiService>(
       () => _i315.VoiceSettingsApiService(gh<_i361.Dio>()),
     );
+    gh.singleton<_i742.SharingRepository>(
+      () => _i742.SharingRepository(
+        gh<_i796.SharingApiService>(),
+        gh<_i340.ResponseCache>(),
+      ),
+    );
+    gh.factory<_i28.SharingCubit>(
+      () => _i28.SharingCubit(gh<_i742.SharingRepository>()),
+    );
     gh.singleton<_i1035.FitnessGoalsRepository>(
-      () => _i1035.FitnessGoalsRepository(gh<_i1029.FitnessGoalsApiService>()),
-    );
-    gh.singleton<_i979.CheckInRepository>(
-      () => _i979.CheckInRepository(gh<_i207.CheckInApiService>()),
-    );
-    gh.factory<_i465.CheckInCubit>(
-      () => _i465.CheckInCubit(gh<_i979.CheckInRepository>()),
+      () => _i1035.FitnessGoalsRepository(
+        gh<_i1029.FitnessGoalsApiService>(),
+        gh<_i340.ResponseCache>(),
+      ),
     );
     gh.singleton<_i514.MeasurementsRepository>(
       () => _i514.MeasurementsRepository(gh<_i181.MeasurementsApiService>()),
     );
-    gh.singleton<_i459.WorkoutSessionRepository>(
-      () =>
-          _i459.WorkoutSessionRepository(gh<_i662.WorkoutSessionApiService>()),
+    gh.singleton<_i979.CheckInRepository>(
+      () => _i979.CheckInRepository(
+        gh<_i207.CheckInApiService>(),
+        gh<_i340.ResponseCache>(),
+      ),
     );
     gh.singleton<_i549.BookingRepository>(
       () => _i549.BookingRepository(gh<_i637.BookingApiService>()),
@@ -265,29 +275,21 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i365.AppDatabase>(),
       ),
     );
-    gh.singleton<_i329.NotificationRepository>(
-      () => _i329.NotificationRepository(gh<_i781.NotificationApiService>()),
-    );
-    gh.singleton<_i1063.TrainerRepository>(
-      () => _i1063.TrainerRepository(
-        gh<_i680.TrainerApiService>(),
-        gh<_i124.ConnectivityService>(),
+    gh.singleton<_i982.NutritionHabitsRepository>(
+      () => _i982.NutritionHabitsRepository(
+        gh<_i416.NutritionHabitsApiService>(),
         gh<_i340.ResponseCache>(),
       ),
     );
     gh.factory<_i803.EventDetailCubit>(
       () => _i803.EventDetailCubit(gh<_i549.ExploreApiService>()),
     );
-    gh.factory<_i64.ExploreCubit>(
-      () => _i64.ExploreCubit(gh<_i549.ExploreApiService>()),
-    );
     gh.factory<_i975.TrainerDiscoveryCubit>(
       () => _i975.TrainerDiscoveryCubit(gh<_i549.ExploreApiService>()),
     );
-    gh.singleton<_i516.HomeRepository>(
-      () => _i516.HomeRepository(
-        gh<_i267.HomeApiService>(),
-        gh<_i124.ConnectivityService>(),
+    gh.singleton<_i329.NotificationRepository>(
+      () => _i329.NotificationRepository(
+        gh<_i781.NotificationApiService>(),
         gh<_i340.ResponseCache>(),
       ),
     );
@@ -306,14 +308,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i467.LocationService>(),
       ),
     );
-    gh.factory<_i13.HomeCubit>(
-      () => _i13.HomeCubit(gh<_i516.HomeRepository>(), gh<_i448.QueryClient>()),
-    );
-    gh.singleton<_i982.NutritionHabitsRepository>(
-      () => _i982.NutritionHabitsRepository(
-        gh<_i416.NutritionHabitsApiService>(),
-      ),
-    );
     gh.singleton<_i512.AnalyticsRepository>(
       () => _i512.AnalyticsRepository(
         gh<_i396.AnalyticsApiService>(),
@@ -326,38 +320,50 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i115.NotificationRealtimeService>(),
       ),
     );
-    gh.singleton<_i742.SharingRepository>(
-      () => _i742.SharingRepository(gh<_i796.SharingApiService>()),
-    );
-    gh.factory<_i195.WorkoutHistoryCubit>(
-      () => _i195.WorkoutHistoryCubit(
-        gh<_i459.WorkoutSessionRepository>(),
+    gh.factory<_i64.ExploreCubit>(
+      () => _i64.ExploreCubit(
+        gh<_i549.ExploreApiService>(),
+        gh<_i340.ResponseCache>(),
         gh<_i448.QueryClient>(),
       ),
     );
     gh.factory<_i514.AuthCubit>(
       () => _i514.AuthCubit(gh<_i736.AuthRepository>()),
     );
-    gh.singleton<_i607.DailyTargetsRepository>(
-      () => _i607.DailyTargetsRepository(gh<_i1058.DailyTargetsApiService>()),
+    gh.singleton<_i459.WorkoutSessionRepository>(
+      () => _i459.WorkoutSessionRepository(
+        gh<_i662.WorkoutSessionApiService>(),
+        gh<_i340.ResponseCache>(),
+      ),
     );
-    gh.factory<_i501.DailyTargetsCubit>(
-      () => _i501.DailyTargetsCubit(gh<_i607.DailyTargetsRepository>()),
+    gh.singleton<_i516.HomeRepository>(
+      () => _i516.HomeRepository(
+        gh<_i267.HomeApiService>(),
+        gh<_i340.ResponseCache>(),
+      ),
     );
     gh.singleton<_i875.ProgramRepository>(
       () => _i875.ProgramRepository(gh<_i755.ProgramApiService>()),
     );
+    gh.singleton<_i1063.TrainerRepository>(
+      () => _i1063.TrainerRepository(
+        gh<_i680.TrainerApiService>(),
+        gh<_i340.ResponseCache>(),
+      ),
+    );
     gh.factory<_i137.TemplateDetailCubit>(
       () => _i137.TemplateDetailCubit(gh<_i459.WorkoutSessionRepository>()),
-    );
-    gh.factory<_i19.MoreCubit>(
-      () =>
-          _i19.MoreCubit(gh<_i768.ProfileApiService>(), gh<_i514.AuthCubit>()),
     );
     gh.factory<_i851.ProfileConfigCubit>(
       () => _i851.ProfileConfigCubit(
         gh<_i768.ProfileApiService>(),
         gh<_i514.AuthCubit>(),
+      ),
+    );
+    gh.singleton<_i607.DailyTargetsRepository>(
+      () => _i607.DailyTargetsRepository(
+        gh<_i1058.DailyTargetsApiService>(),
+        gh<_i340.ResponseCache>(),
       ),
     );
     gh.singleton<_i796.SyncCubit>(
@@ -366,14 +372,24 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i124.ConnectivityService>(),
       ),
     );
-    gh.factory<_i28.SharingCubit>(
-      () => _i28.SharingCubit(gh<_i742.SharingRepository>()),
+    gh.factory<_i465.CheckInCubit>(
+      () => _i465.CheckInCubit(gh<_i979.CheckInRepository>()),
+    );
+    gh.factory<_i109.ExerciseDetailCubit>(
+      () => _i109.ExerciseDetailCubit(gh<_i459.WorkoutSessionRepository>()),
     );
     gh.factory<_i871.WorkoutSessionCubit>(
       () => _i871.WorkoutSessionCubit(gh<_i459.WorkoutSessionRepository>()),
     );
     gh.factory<_i560.NutritionHabitsCubit>(
       () => _i560.NutritionHabitsCubit(gh<_i982.NutritionHabitsRepository>()),
+    );
+    gh.factory<_i19.MoreCubit>(
+      () => _i19.MoreCubit(
+        gh<_i768.ProfileApiService>(),
+        gh<_i514.AuthCubit>(),
+        gh<_i340.ResponseCache>(),
+      ),
     );
     gh.factory<_i899.AnalyticsCubit>(
       () => _i899.AnalyticsCubit(
@@ -383,12 +399,24 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i514.MeasurementsRepository>(),
       ),
     );
+    gh.factory<_i13.HomeCubit>(
+      () => _i13.HomeCubit(gh<_i516.HomeRepository>(), gh<_i448.QueryClient>()),
+    );
+    gh.factory<_i195.WorkoutHistoryCubit>(
+      () => _i195.WorkoutHistoryCubit(
+        gh<_i459.WorkoutSessionRepository>(),
+        gh<_i448.QueryClient>(),
+      ),
+    );
     gh.factory<_i727.ProgramCubit>(
       () => _i727.ProgramCubit(
         gh<_i875.ProgramRepository>(),
         gh<_i783.LocalTemplateRepository>(),
         gh<_i459.WorkoutSessionRepository>(),
       ),
+    );
+    gh.factory<_i501.DailyTargetsCubit>(
+      () => _i501.DailyTargetsCubit(gh<_i607.DailyTargetsRepository>()),
     );
     return this;
   }

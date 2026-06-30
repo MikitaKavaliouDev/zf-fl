@@ -76,7 +76,9 @@ class AuthRepository {
     final accessToken = await _tokenStorage.getAccessToken();
     if (accessToken != null) {
       try {
-        return await _api.getMe();
+        final user = await _api.getMe();
+        await _tokenStorage.saveUser(user);  // Cache for offline use
+        return user;
       } on DioException catch (e) {
         developer.log(
           'getCurrentUser: getMe failed (${e.response?.statusCode}), '
@@ -104,23 +106,40 @@ class AuthRepository {
         accessToken: response.accessToken,
         refreshToken: response.refreshToken,
       );
+      await _tokenStorage.saveUser(response.user);  // Cache for offline use
       developer.log(
         'getCurrentUser: session restored via refresh token',
         name: 'auth',
       );
       return response.user;
     } catch (e) {
-      developer.log(
-        'getCurrentUser: refresh failed — clearing tokens',
-        name: 'auth',
-        error: e,
-      );
-      await _tokenStorage.clearTokens();
+      final isAuthRejection = e is DioException &&
+          e.type == DioExceptionType.badResponse &&
+          e.response?.statusCode == 401;
+
+      if (isAuthRejection) {
+        // Refresh token was explicitly rejected — invalid session
+        developer.log(
+          'getCurrentUser: refresh rejected, clearing tokens',
+          name: 'auth',
+        );
+        await _tokenStorage.clearTokens();
+      } else {
+        // Network/transient error — tokens are still valid
+        developer.log(
+          'getCurrentUser: refresh failed — preserving tokens '
+          '(${e is DioException ? e.type : e.runtimeType})',
+          name: 'auth',
+          error: e,
+        );
+      }
       return null;
     }
   }
 
   Future<String?> getAccessToken() => _tokenStorage.getAccessToken();
+
+  Future<User?> getCachedUser() => _tokenStorage.getCachedUser();
 
   Future<bool> isLoggedIn() async {
     final token = await _tokenStorage.getAccessToken();

@@ -138,16 +138,15 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
   }
 
   /// Load the current live session if one exists.
+  ///
+  /// Cache-first — shows cached data immediately (no loading flash), then
+  /// silently refreshes. Called on app startup from [main.dart].
   Future<void> loadCurrent({bool isMinimized = true}) async {
-    emit(const WorkoutSessionState.loading());
     try {
       final result = await _repository.getLiveSession();
       if (result.session != null) {
         // Auto-minimize when resuming from cold start so the user
         // isn't thrown into a full-screen workout unexpectedly.
-        // Compute initial elapsed from the server's startTime once,
-        // then use a local timer reference for ongoing ticks to avoid
-        // cross-timezone calculation issues.
         final serverStartTime = DateTime.parse(result.session!.startTime);
         final localTimerStart = DateTime.now();
         emit(WorkoutSessionState.active(
@@ -164,12 +163,48 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
           '| serverStartTime=${result.session!.startTime}',
           name: 'workout',
         );
+
+        // Silent background refresh to revalidate the live session
+        _silentRefreshLiveSession(isMinimized: isMinimized);
       } else {
         emit(const WorkoutSessionState.initial());
+        _silentRefreshLiveSession(isMinimized: isMinimized);
         developer.log('loadCurrent | no active session', name: 'workout');
       }
     } catch (e) {
-      emit(const WorkoutSessionState.error('Failed to load session.'));
+      developer.log('loadCurrent failed: $e', name: 'workout');
+      // Only emit error if we had no prior data
+      if (state is WorkoutSessionInitial) {
+        emit(const WorkoutSessionState.error('Failed to load session.'));
+      }
+    }
+  }
+
+  /// Silent background refresh of the live session state.
+  Future<void> _silentRefreshLiveSession({bool isMinimized = true}) async {
+    try {
+      final result =
+          await _repository.getLiveSession(forceRefresh: true);
+      if (!isClosed && result.session != null) {
+        if (result.session!.id !=
+            (state is WorkoutSessionActive
+                ? (state as WorkoutSessionActive).session.id
+                : null)) {
+          final serverStartTime =
+              DateTime.parse(result.session!.startTime);
+          final localTimerStart = DateTime.now();
+          emit(WorkoutSessionState.active(
+            session: result.session!,
+            logs: result.logs,
+            elapsed: localTimerStart.difference(serverStartTime),
+            startTime: localTimerStart,
+            isMinimized: isMinimized,
+          ));
+          _startTimer();
+        }
+      }
+    } catch (e) {
+      developer.log('_silentRefreshLiveSession failed: $e', name: 'workout');
     }
   }
 
@@ -200,33 +235,6 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
   /// Fetch session history (paginated).
   Future<SessionHistoryResponse> fetchHistory({int limit = 20, String? cursor}) =>
       _repository.getHistory(limit: limit, cursor: cursor);
-
-  /// Load exercise detail (from exercise library) plus session history for a given exercise.
-  Future<void> loadExerciseDetail(String exerciseId) async {
-    emit(const WorkoutSessionState.exerciseDetailLoading());
-    try {
-      final results = await Future.wait([
-        _repository.getExerciseLibrary(),
-        _repository.getHistory(limit: 100),
-      ]);
-      final library = results[0] as List<ExerciseDto>;
-      final historyResponse = results[1] as SessionHistoryResponse;
-      final exercise = library.cast<ExerciseDto?>().firstWhere(
-            (e) => e?.id == exerciseId,
-            orElse: () => null,
-          );
-      if (exercise == null) {
-        emit(const WorkoutSessionState.exerciseDetailError('Exercise not found in library.'));
-        return;
-      }
-      emit(WorkoutSessionState.exerciseDetailLoaded(
-        exercise: exercise,
-        sessions: historyResponse.sessions,
-      ));
-    } catch (e) {
-      emit(const WorkoutSessionState.exerciseDetailError('Failed to load exercise details.'));
-    }
-  }
 
   // ── Session Detail ──
 

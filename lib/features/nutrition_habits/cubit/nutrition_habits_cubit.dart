@@ -73,6 +73,7 @@ class NutritionHabitsCubit extends Cubit<NutritionHabitsState> {
         date: today,
         isCompleted: isCompleted,
       );
+      _repository.invalidateCache();
       // Confirmed — update with server response
       final confirmed = updatedHabits.map((habit) {
         if (habit.id != habitId) return habit;

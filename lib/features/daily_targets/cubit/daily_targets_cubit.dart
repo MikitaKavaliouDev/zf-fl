@@ -40,6 +40,7 @@ class DailyTargetsCubit extends Cubit<DailyTargetsState> {
 
     try {
       await _repository.updateTarget(id, isCompleted: isCompleted);
+      _repository.invalidateCache();
       return true;
     } catch (e) {
       developer.log('DailyTargetsCubit.toggleComplete failed: $e',
@@ -64,6 +65,7 @@ class DailyTargetsCubit extends Cubit<DailyTargetsState> {
 
     try {
       await _repository.updateTarget(id, currentValue: currentValue);
+      _repository.invalidateCache();
       return true;
     } catch (e) {
       developer.log('DailyTargetsCubit.updateProgress failed: $e',
@@ -77,6 +79,7 @@ class DailyTargetsCubit extends Cubit<DailyTargetsState> {
   Future<bool> createTarget(Map<String, dynamic> body) async {
     try {
       await _repository.createTarget(body);
+      await _repository.invalidateCache();
       await loadTargets(date: body['date'] as String?);
       return true;
     } catch (e) {

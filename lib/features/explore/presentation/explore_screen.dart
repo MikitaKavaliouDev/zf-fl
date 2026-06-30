@@ -38,6 +38,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
   ExploreCategory? _selectedCategory;
 
   Future<void> _refresh() async {
+    // Bust ResponseCache first so the queryFn hits the API,
+    // then invalidate and refetch via tanquery.
+    await context.read<ExploreCubit>().invalidateResponseCache();
     final client = DartQuery.of(context);
     await Future.wait([
       client.invalidateQueries(queryKey: QueryKey(['explore'])),

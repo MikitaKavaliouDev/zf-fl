@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
@@ -70,8 +72,22 @@ class AuthInterceptor extends QueuedInterceptor {
       err.requestOptions.headers['Authorization'] = 'Bearer $newAccess';
       final retryResponse = await dio.fetch(err.requestOptions);
       handler.resolve(retryResponse);
-    } catch (_) {
-      await _tokenStorage.clearTokens();
+    } catch (e) {
+      final isAuthRejection = e is DioException &&
+          e.type == DioExceptionType.badResponse &&
+          e.response?.statusCode == 401;
+
+      if (isAuthRejection) {
+        // Server explicitly rejected the refresh token
+        await _tokenStorage.clearTokens();
+      } else {
+        // Network error, timeout, server error — keep tokens
+        developer.log(
+          'AuthInterceptor: refresh failed — preserving tokens '
+          '(${e is DioException ? e.type : e.runtimeType})',
+          name: 'auth',
+        );
+      }
       handler.next(err);
     }
   }

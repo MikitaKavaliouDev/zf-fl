@@ -149,6 +149,7 @@ class CheckInCubit extends Cubit<CheckInState> {
 
       // 3. Submit the check-in.
       final response = await _repository.submitCheckIn(finalSubmission);
+      _repository.invalidateCache();
       emit(CheckInState.success(response));
     } catch (e) {
       developer.log('CheckInCubit.submit failed: $e', name: 'check_in');

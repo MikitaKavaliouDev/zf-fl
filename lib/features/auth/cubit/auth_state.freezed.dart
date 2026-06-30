@@ -137,13 +137,13 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function()?  unauthenticated,TResult Function( User user)?  authenticated,TResult Function( User user)?  pendingRole,TResult Function( User user)?  needsOnboarding,TResult Function( RegisterResponse response)?  registerSuccess,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function()?  unauthenticated,TResult Function( User user,  bool isOffline)?  authenticated,TResult Function( User user)?  pendingRole,TResult Function( User user)?  needsOnboarding,TResult Function( RegisterResponse response)?  registerSuccess,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case AuthInitial() when initial != null:
 return initial();case AuthLoading() when loading != null:
 return loading();case AuthUnauthenticated() when unauthenticated != null:
 return unauthenticated();case AuthAuthenticated() when authenticated != null:
-return authenticated(_that.user);case AuthPendingRole() when pendingRole != null:
+return authenticated(_that.user,_that.isOffline);case AuthPendingRole() when pendingRole != null:
 return pendingRole(_that.user);case AuthNeedsOnboarding() when needsOnboarding != null:
 return needsOnboarding(_that.user);case AuthRegisterSuccess() when registerSuccess != null:
 return registerSuccess(_that.response);case AuthError() when error != null:
@@ -165,13 +165,13 @@ return error(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function()  unauthenticated,required TResult Function( User user)  authenticated,required TResult Function( User user)  pendingRole,required TResult Function( User user)  needsOnboarding,required TResult Function( RegisterResponse response)  registerSuccess,required TResult Function( String message)  error,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function()  unauthenticated,required TResult Function( User user,  bool isOffline)  authenticated,required TResult Function( User user)  pendingRole,required TResult Function( User user)  needsOnboarding,required TResult Function( RegisterResponse response)  registerSuccess,required TResult Function( String message)  error,}) {final _that = this;
 switch (_that) {
 case AuthInitial():
 return initial();case AuthLoading():
 return loading();case AuthUnauthenticated():
 return unauthenticated();case AuthAuthenticated():
-return authenticated(_that.user);case AuthPendingRole():
+return authenticated(_that.user,_that.isOffline);case AuthPendingRole():
 return pendingRole(_that.user);case AuthNeedsOnboarding():
 return needsOnboarding(_that.user);case AuthRegisterSuccess():
 return registerSuccess(_that.response);case AuthError():
@@ -189,13 +189,13 @@ return error(_that.message);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function()?  unauthenticated,TResult? Function( User user)?  authenticated,TResult? Function( User user)?  pendingRole,TResult? Function( User user)?  needsOnboarding,TResult? Function( RegisterResponse response)?  registerSuccess,TResult? Function( String message)?  error,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function()?  unauthenticated,TResult? Function( User user,  bool isOffline)?  authenticated,TResult? Function( User user)?  pendingRole,TResult? Function( User user)?  needsOnboarding,TResult? Function( RegisterResponse response)?  registerSuccess,TResult? Function( String message)?  error,}) {final _that = this;
 switch (_that) {
 case AuthInitial() when initial != null:
 return initial();case AuthLoading() when loading != null:
 return loading();case AuthUnauthenticated() when unauthenticated != null:
 return unauthenticated();case AuthAuthenticated() when authenticated != null:
-return authenticated(_that.user);case AuthPendingRole() when pendingRole != null:
+return authenticated(_that.user,_that.isOffline);case AuthPendingRole() when pendingRole != null:
 return pendingRole(_that.user);case AuthNeedsOnboarding() when needsOnboarding != null:
 return needsOnboarding(_that.user);case AuthRegisterSuccess() when registerSuccess != null:
 return registerSuccess(_that.response);case AuthError() when error != null:
@@ -307,10 +307,11 @@ String toString() {
 
 
 class AuthAuthenticated implements AuthState {
-  const AuthAuthenticated({required this.user});
+  const AuthAuthenticated({required this.user, this.isOffline = false});
   
 
  final  User user;
+@JsonKey() final  bool isOffline;
 
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
@@ -322,16 +323,16 @@ $AuthAuthenticatedCopyWith<AuthAuthenticated> get copyWith => _$AuthAuthenticate
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthAuthenticated&&(identical(other.user, user) || other.user == user));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthAuthenticated&&(identical(other.user, user) || other.user == user)&&(identical(other.isOffline, isOffline) || other.isOffline == isOffline));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,user);
+int get hashCode => Object.hash(runtimeType,user,isOffline);
 
 @override
 String toString() {
-  return 'AuthState.authenticated(user: $user)';
+  return 'AuthState.authenticated(user: $user, isOffline: $isOffline)';
 }
 
 
@@ -342,7 +343,7 @@ abstract mixin class $AuthAuthenticatedCopyWith<$Res> implements $AuthStateCopyW
   factory $AuthAuthenticatedCopyWith(AuthAuthenticated value, $Res Function(AuthAuthenticated) _then) = _$AuthAuthenticatedCopyWithImpl;
 @useResult
 $Res call({
- User user
+ User user, bool isOffline
 });
 
 
@@ -359,10 +360,11 @@ class _$AuthAuthenticatedCopyWithImpl<$Res>
 
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? user = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? user = null,Object? isOffline = null,}) {
   return _then(AuthAuthenticated(
 user: null == user ? _self.user : user // ignore: cast_nullable_to_non_nullable
-as User,
+as User,isOffline: null == isOffline ? _self.isOffline : isOffline // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

@@ -37,6 +37,9 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   Future<void> _onRefresh() async {
+    // Bust ResponseCache first so the queryFn hits the API,
+    // then refetch via tanquery to update the UI.
+    await context.read<HomeCubit>().invalidateResponseCache();
     final client = DartQuery.of(context);
     await client.refetchQueries(queryKey: QueryKey(['home']));
   }
@@ -302,8 +305,6 @@ class _DashboardContent extends StatelessWidget {
           if (upcomingSessions.isNotEmpty) const SizedBox(height: 24),
 
           DailyTargetsSection(
-            isEnabled: true,
-            onTapSetTarget: () => context.push('/daily-targets'),
             onTapAddTarget: () => context.push('/daily-targets'),
           ),
 
