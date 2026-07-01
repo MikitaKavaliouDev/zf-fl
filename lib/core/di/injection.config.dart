@@ -26,6 +26,8 @@ import 'package:ziro_fit/core/network/dio_client.dart' as _i488;
 import 'package:ziro_fit/core/network/response_cache.dart' as _i340;
 import 'package:ziro_fit/core/network/retry_interceptor.dart' as _i578;
 import 'package:ziro_fit/core/security/token_storage.dart' as _i601;
+import 'package:ziro_fit/core/settings/appearance_settings_service.dart'
+    as _i394;
 import 'package:ziro_fit/features/analytics/cubit/analytics_cubit.dart'
     as _i899;
 import 'package:ziro_fit/features/analytics/data/analytics_api_service.dart'
@@ -95,6 +97,7 @@ import 'package:ziro_fit/features/nutrition_habits/data/nutrition_habits_api_ser
     as _i416;
 import 'package:ziro_fit/features/nutrition_habits/data/nutrition_habits_repository.dart'
     as _i982;
+import 'package:ziro_fit/features/profile/cubit/appearance_cubit.dart' as _i652;
 import 'package:ziro_fit/features/profile/cubit/more_cubit.dart' as _i19;
 import 'package:ziro_fit/features/profile/cubit/profile_config_cubit.dart'
     as _i851;
@@ -155,6 +158,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.singleton<_i340.ResponseCache>(() => _i340.ResponseCache());
     gh.singleton<_i578.RetryInterceptor>(() => _i578.RetryInterceptor());
     gh.singleton<_i601.TokenStorage>(() => _i601.TokenStorage());
+    gh.singleton<_i394.AppearanceSettingsService>(
+      () => _i394.AppearanceSettingsService(),
+    );
     gh.singleton<_i115.NotificationRealtimeService>(
       () => _i115.NotificationRealtimeService(),
     );
@@ -165,6 +171,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.singleton<_i124.ConnectivityService>(
       () => _i124.ConnectivityService(connectivity: gh<_i895.Connectivity>()),
       dispose: (i) => i.dispose(),
+    );
+    gh.factory<_i652.AppearanceCubit>(
+      () => _i652.AppearanceCubit(gh<_i394.AppearanceSettingsService>()),
     );
     gh.singleton<_i296.AnalyticsLocalService>(
       () => _i296.AnalyticsLocalService(gh<_i365.AppDatabase>()),

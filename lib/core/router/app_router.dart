@@ -38,6 +38,7 @@ import '../../features/home/presentation/templates_library_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/nutrition_habits/cubit/nutrition_habits_cubit.dart';
 import '../../features/nutrition_habits/presentation/nutrition_habits_screen.dart';
+import '../../features/profile/cubit/profile_config_cubit.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/profile/presentation/settings_screens/contact_support_screen.dart';
 import '../../features/profile/presentation/settings_screens/profile_config_screen.dart';
@@ -584,7 +585,10 @@ GoRouter createAppRouter(AuthCubit authCubit) {
         path: '/profile/config',
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
-          child: const ProfileConfigScreen(),
+          child: BlocProvider(
+            create: (_) => getIt<ProfileConfigCubit>(),
+            child: const ProfileConfigScreen(),
+          ),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return SlideTransition(
               position: Tween<Offset>(

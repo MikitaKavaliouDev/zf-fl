@@ -10,6 +10,7 @@ import 'core/di/injection.dart' as di;
 import 'core/logging/state_logger.dart';
 import 'core/refresh/refresh_tracker.dart';
 import 'core/router/app_router.dart';
+import 'core/settings/appearance_settings_service.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/cubit/auth_cubit.dart';
 import 'features/auth/cubit/auth_state.dart';
@@ -17,6 +18,8 @@ import 'features/daily_targets/cubit/daily_targets_cubit.dart';
 import 'features/home/cubit/home_cubit.dart';
 import 'features/home/cubit/program_cubit.dart';
 import 'features/notifications/cubit/notifications_cubit.dart';
+import 'features/profile/cubit/appearance_cubit.dart';
+import 'features/profile/cubit/appearance_state.dart';
 import 'features/sync/cubit/sync_cubit.dart';
 import 'features/sync/cubit/sync_state.dart';
 import 'features/trainers/cubit/workout_session_cubit.dart';
@@ -61,6 +64,7 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
   late final NotificationsCubit _notificationsCubit;
   late final SyncCubit _syncCubit;
   late final VoiceCoachCubit _voiceCoachCubit;
+  late final AppearanceCubit _appearanceCubit;
   late final QueryClient _queryClient;
   late final GoRouter _router;
   StreamSubscription<AuthState>? _authSubscription;
@@ -76,11 +80,14 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
     _notificationsCubit = di.getIt<NotificationsCubit>();
     _syncCubit = di.getIt<SyncCubit>();
     _voiceCoachCubit = di.getIt<VoiceCoachCubit>();
+    _appearanceCubit = di.getIt<AppearanceCubit>();
     _queryClient = di.getIt<QueryClient>();
     _router = createAppRouter(_authCubit);
     // Check auth status on first frame.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _authCubit.checkAuthStatus();
+      // Load persisted appearance preferences (theme, text size, reduce motion).
+      _appearanceCubit.load();
     });
     // Fetch notifications only after auth state is resolved.
     _authSubscription = _authCubit.stream.listen((state) {
@@ -110,6 +117,7 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
     _notificationsCubit.close();
     _syncCubit.close();
     _voiceCoachCubit.close();
+    _appearanceCubit.close();
     _queryClient.unmount();
     super.dispose();
   }
@@ -126,45 +134,65 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
         BlocProvider.value(value: _notificationsCubit),
         BlocProvider.value(value: _syncCubit),
         BlocProvider.value(value: _voiceCoachCubit),
+        BlocProvider.value(value: _appearanceCubit),
       ],
       child: DartQueryProvider(
         client: _queryClient,
-        child: MaterialApp.router(
-        title: 'ZIRO.FIT',
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.lightTheme,
-        themeMode: ThemeMode.light,
-        debugShowCheckedModeBanner: false,
-        routerConfig: _router,
-        builder: (context, child) {
-          return BlocBuilder<SyncCubit, SyncState>(
-            builder: (context, syncState) {
-              return ListenableBuilder(
-                listenable: RefreshTracker.instance,
-                builder: (context, _) {
-                  return Stack(
-                    children: [
-                      child!,
-                      if (!syncState.isOnline)
-                        const Positioned(
-                          top: 0, left: 0, right: 0,
-                          child: _ConnectivityBanner(),
-                        ),
-                      // Subtle syncing indicator when background refresh
-                      // is in progress but we're not offline.
-                      if (syncState.isOnline && RefreshTracker.instance.isRefreshing)
-                        const Positioned(
-                          top: 0, left: 0, right: 0,
-                          child: _RefreshIndicator(),
-                        ),
-                    ],
+        child: BlocBuilder<AppearanceCubit, AppearanceState>(
+          builder: (context, appearance) {
+            return MaterialApp.router(
+            title: 'ZIRO.FIT',
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.lightTheme,
+            themeMode: appearance.themeMode == AppThemeOption.system
+                ? ThemeMode.system
+                : ThemeMode.light,
+            debugShowCheckedModeBanner: false,
+            routerConfig: _router,
+            builder: (context, child) {
+              // Apply text scale factor and reduce motion globally.
+              final textScale = switch (appearance.textScale) {
+                TextScaleOption.small => 0.85,
+                TextScaleOption.defaultScale => 1.0,
+                TextScaleOption.large => 1.15,
+              };
+              child = MediaQuery(
+                data: MediaQuery.of(context).copyWith(
+                  textScaler: TextScaler.linear(textScale),
+                  disableAnimations: appearance.reduceMotion,
+                ),
+                child: child!,
+              );
+              return BlocBuilder<SyncCubit, SyncState>(
+                builder: (context, syncState) {
+                  return ListenableBuilder(
+                    listenable: RefreshTracker.instance,
+                    builder: (context, _) {
+                      return Stack(
+                        children: [
+                          child!,
+                          if (!syncState.isOnline)
+                            const Positioned(
+                              top: 0, left: 0, right: 0,
+                              child: _ConnectivityBanner(),
+                            ),
+                          // Subtle syncing indicator when background refresh
+                          // is in progress but we're not offline.
+                          if (syncState.isOnline && RefreshTracker.instance.isRefreshing)
+                            const Positioned(
+                              top: 0, left: 0, right: 0,
+                              child: _RefreshIndicator(),
+                            ),
+                        ],
+                      );
+                    },
                   );
                 },
               );
             },
           );
-        },
-      ),
+          },
+        ),
       ),
     );
   }
