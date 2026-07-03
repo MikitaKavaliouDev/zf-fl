@@ -7,10 +7,13 @@ import 'package:tanquery_flutter/tanquery_flutter.dart';
 import 'package:ziro_fit/core/di/injection.dart';
 import 'package:ziro_fit/core/events/event_bus.dart';
 
+import '../../auth/cubit/auth_cubit.dart';
+import '../../auth/cubit/auth_state.dart';
 import '../data/home_data.dart';
 import '../data/home_repository.dart';
 import '../data/models/active_program_response.dart';
 import '../data/models/client_dashboard_response.dart';
+import '../data/models/client_profile_data.dart';
 
 /// Thin cubit — tanquery manages loading/error states via QueryBuilder.
 ///
@@ -24,11 +27,12 @@ import '../data/models/client_dashboard_response.dart';
 class HomeCubit extends Cubit<HomeState> {
   final HomeRepository _repository;
   final QueryClient _queryClient;
+  final AuthCubit _authCubit;
   StreamSubscription<CheckInSubmittedEvent>? _checkInSub;
   Timer? _checkInDebounce;
   bool _initialRefreshDone = false;
 
-  HomeCubit(this._repository, this._queryClient)
+  HomeCubit(this._repository, this._queryClient, this._authCubit)
       : super(const HomeState._()) {
     // Debounce CheckInSubmittedEvent → invalidate tanquery cache
     _checkInSub =
@@ -45,7 +49,28 @@ class HomeCubit extends Cubit<HomeState> {
   ///
   /// This is the tanquery queryFn. It returns cached data immediately,
   /// then fires a one-shot background refresh to revalidate.
+  ///
+  /// When the authenticated user is a trainer, returns empty/default data
+  /// without making any client API calls.
   Future<HomeData> fetchDashboard() async {
+    // Skip client API calls when auth hasn't resolved yet (cold start)
+    // or when the user is a trainer (router redirect may not have fired yet).
+    final authState = _authCubit.state;
+    if (authState is! AuthAuthenticated || authState.isTrainer) {
+      return HomeData(
+        dashboard: ClientDashboardResponse(
+          clientData: ClientProfileData(
+            id: '',
+            userId: '',
+            name: '',
+            email: '',
+          ),
+          weightUnit: 'KG',
+          upcomingClientSessions: const [],
+        ),
+      );
+    }
+
     try {
       final results = await Future.wait([
         _repository.getDashboard(),

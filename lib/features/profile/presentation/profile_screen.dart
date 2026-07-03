@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/widgets/error_widget.dart';
 
 import '../../../core/di/injection.dart';
+import '../../../core/models/app_mode.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../auth/data/models/user.dart';
 import '../../check_in/presentation/check_in_history_screen.dart';
@@ -13,6 +14,8 @@ import '../../daily_targets/presentation/daily_targets_screen.dart';
 import '../../fitness_goals/presentation/fitness_goals_screen.dart';
 import '../../onboarding/presentation/educational_onboarding_screen.dart';
 import '../../sharing/presentation/sharing_screen.dart';
+import '../../auth/cubit/auth_cubit.dart';
+import '../../auth/cubit/auth_state.dart';
 import '../cubit/more_cubit.dart';
 import '../cubit/more_state.dart';
 import 'settings_screens/ai_coach_settings_screen.dart';
@@ -109,11 +112,15 @@ class _MoreScreenBodyState extends State<_MoreScreenBody> {
           _buildLegalSection(context),
           const SizedBox(height: 24),
 
-          // ── 5. Sign Out ──
+          // ── 5. Mode Switch ──
+          _buildModeSwitchSection(context),
+          const SizedBox(height: 24),
+
+          // ── 6. Sign Out ──
           _buildSignOutSection(context),
           const SizedBox(height: 40),
 
-          // ── 6. Brand Footer ──
+          // ── 7. Brand Footer ──
           _buildBrandFooter(),
 
           const SizedBox(height: 60),
@@ -442,6 +449,64 @@ class _MoreScreenBodyState extends State<_MoreScreenBody> {
     ]);
   }
 
+  // ── Mode Switch Section ──
+
+  Widget _buildModeSwitchSection(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: InkWell(
+        onTap: () {
+          final auth = context.read<AuthCubit>();
+          final state = auth.state;
+          final user = state is AuthAuthenticated ? state.user : null;
+          final isTrainerRole = user?.role == 'trainer';
+
+          if (isTrainerRole) {
+            // Already a trainer — just switch views
+            auth.switchMode();
+          } else {
+            // Client trying to access trainer mode — prompt for login
+            _confirmTrainerSwitch(context, auth);
+          }
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: AppColors.card,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.borderMuted),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.swap_horiz_rounded,
+                  size: 18,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Switch to Trainer View',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   // ── Sign Out Section ──
 
   Widget _buildSignOutSection(BuildContext context) {
@@ -484,6 +549,106 @@ class _MoreScreenBodyState extends State<_MoreScreenBody> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _confirmTrainerSwitch(BuildContext context, AuthCubit auth) {
+    final emailCtrl = TextEditingController();
+    final passwordCtrl = TextEditingController();
+    final isLoading = ValueNotifier(false);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.card,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Icon(Icons.swap_horiz_rounded,
+                size: 22, color: AppColors.primary),
+            const SizedBox(width: 8),
+            const Expanded(
+              child: Text('Switch to Trainer',
+                  style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600)),
+            ),
+          ],
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Sign in with your trainer account to switch modes. '
+                'Your current session will be preserved.',
+                style: TextStyle(fontSize: 14, color: AppColors.mutedText),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: emailCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  hintText: 'trainer@example.com',
+                ),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: passwordCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Password',
+                ),
+                obscureText: true,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          ValueListenableBuilder<bool>(
+            valueListenable: isLoading,
+            builder: (_, loading, __) => TextButton(
+              onPressed: loading ? null : () => Navigator.of(ctx).pop(),
+              child: const Text('Cancel'),
+            ),
+          ),
+          ValueListenableBuilder<bool>(
+            valueListenable: isLoading,
+            builder: (_, loading, __) => FilledButton(
+              onPressed: loading
+                  ? null
+                  : () async {
+                      final email = emailCtrl.text.trim();
+                      final password = passwordCtrl.text.trim();
+                      if (email.isEmpty || password.isEmpty) return;
+                      isLoading.value = true;
+                      final ok = await auth.loginAs(
+                        email: email,
+                        password: password,
+                        targetMode: AppMode.trainer,
+                      );
+                      isLoading.value = false;
+                      if (ctx.mounted) Navigator.of(ctx).pop();
+                      if (!ok && ctx.mounted) {
+                        ScaffoldMessenger.of(ctx).showSnackBar(
+                          const SnackBar(
+                              content: Text('Invalid credentials. Please try again.')),
+                        );
+                      }
+                    },
+              child: loading
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Sign In'),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -112,6 +112,7 @@ class _DailyTargetsBodyState extends State<_DailyTargetsBody> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'daily_targets_fab',
         onPressed: () => _showCreateDialog(context),
         backgroundColor: AppColors.primary,
         child: const Icon(Icons.add, color: Colors.white),

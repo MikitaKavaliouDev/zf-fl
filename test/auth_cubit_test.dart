@@ -1,7 +1,10 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:ziro_fit/core/models/app_mode.dart';
+import 'package:ziro_fit/core/security/active_mode_holder.dart';
 import 'package:ziro_fit/features/auth/cubit/auth_cubit.dart';
 import 'package:ziro_fit/features/auth/cubit/auth_state.dart';
 import 'package:ziro_fit/features/auth/data/auth_repository.dart';
@@ -12,11 +15,18 @@ class MockAuthRepository extends Mock implements AuthRepository {}
 
 void main() {
   late AuthRepository repository;
+  late ActiveModeHolder modeHolder;
   late AuthCubit cubit;
 
-  setUp(() {
+  setUpAll(() {
+    registerFallbackValue(AppMode.client);
+  });
+
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
     repository = MockAuthRepository();
-    cubit = AuthCubit(repository);
+    modeHolder = ActiveModeHolder();
+    cubit = AuthCubit(repository, modeHolder);
   });
 
   tearDown(() {
@@ -31,9 +41,9 @@ void main() {
     blocTest<AuthCubit, AuthState>(
       'emits [loading, unauthenticated] when getCurrentUser returns null',
       build: () {
-        when(() => repository.getCurrentUser())
+        when(() => repository.getCurrentUser(mode: any(named: 'mode')))
             .thenAnswer((_) async => null);
-        when(() => repository.getCachedUser())
+        when(() => repository.getCachedUser(mode: any(named: 'mode')))
             .thenAnswer((_) async => null);
         return cubit;
       },
@@ -50,6 +60,7 @@ void main() {
         when(() => repository.login(
               email: any(named: 'email'),
               password: any(named: 'password'),
+              mode: any(named: 'mode'),
             )).thenAnswer((_) async => const AuthResponse(
               message: 'ok',
               role: 'client',
@@ -81,6 +92,7 @@ void main() {
         when(() => repository.login(
               email: any(named: 'email'),
               password: any(named: 'password'),
+              mode: any(named: 'mode'),
             )).thenThrow(Exception('Invalid credentials'));
         return cubit;
       },
@@ -117,14 +129,18 @@ void main() {
     blocTest<AuthCubit, AuthState>(
       'emits [needsOnboarding] when user has not completed onboarding',
       build: () {
-        when(() => repository.getCurrentUser()).thenAnswer((_) async =>
-            const User(
-              id: '1',
-              email: 'a@b.com',
-              role: 'client',
-              username: 'testuser',
-              hasCompletedOnboarding: false,
-            ));
+        when(() => repository.getCurrentUser(mode: AppMode.client))
+            .thenAnswer((_) async => const User(
+                  id: '1',
+                  email: 'a@b.com',
+                  role: 'client',
+                  username: 'testuser',
+                  hasCompletedOnboarding: false,
+                ));
+        when(() => repository.getCurrentUser(mode: AppMode.trainer))
+            .thenAnswer((_) async => null);
+        when(() => repository.getCachedUser(mode: any(named: 'mode')))
+            .thenAnswer((_) async => null);
         return cubit;
       },
       act: (cubit) => cubit.checkAuthStatus(),

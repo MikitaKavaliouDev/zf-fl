@@ -95,9 +95,7 @@ class NotificationRealtimeService {
 
     _userId = userId;
     _subscribed = true;
-    _controller = StreamController<NotificationRealtimeEvent>.broadcast(
-      onCancel: () => _controller?.close(),
-    );
+    _controller = StreamController<NotificationRealtimeEvent>.broadcast();
 
     _tryRealtimeSubscription(userId);
   }
@@ -169,6 +167,7 @@ class NotificationRealtimeService {
 
       // Subscribe with status callback
       channel.subscribe((status, error) {
+        if (!_subscribed) return; // Stale callback after unsubscribe
         if (status == RealtimeSubscribeStatus.subscribed) {
           developer.log(
             '[NotificationRealtime] Subscribed to $userId',
@@ -214,10 +213,11 @@ class NotificationRealtimeService {
   // ─── Event Handlers ────────────────────────────────────────────
 
   void _handleInsert(PostgresChangePayload payload) {
+    if (_controller == null || _controller!.isClosed) return;
     try {
       final dto = _recordToDto(payload.newRecord);
       if (dto != null) {
-        _controller?.add(NotificationInserted(dto));
+        _controller!.add(NotificationInserted(dto));
       }
     } catch (e) {
       developer.log(
@@ -228,10 +228,11 @@ class NotificationRealtimeService {
   }
 
   void _handleUpdate(PostgresChangePayload payload) {
+    if (_controller == null || _controller!.isClosed) return;
     try {
       final dto = _recordToDto(payload.newRecord);
       if (dto != null) {
-        _controller?.add(NotificationUpdated(dto));
+        _controller!.add(NotificationUpdated(dto));
       }
     } catch (e) {
       developer.log(
@@ -242,10 +243,11 @@ class NotificationRealtimeService {
   }
 
   void _handleDelete(PostgresChangePayload payload) {
+    if (_controller == null || _controller!.isClosed) return;
     try {
       final id = payload.oldRecord['id'] as String?;
       if (id != null) {
-        _controller?.add(NotificationDeleted(id));
+        _controller!.add(NotificationDeleted(id));
       }
     } catch (e) {
       developer.log(
@@ -316,7 +318,8 @@ class NotificationRealtimeService {
   // ─── Helpers ───────────────────────────────────────────────────
 
   void _emitConnectionChanged(bool connected, {String? error}) {
-    _controller?.add(NotificationRealtimeConnectionChanged(
+    if (_controller == null || _controller!.isClosed) return;
+    _controller!.add(NotificationRealtimeConnectionChanged(
       isConnected: connected,
       error: error,
     ));

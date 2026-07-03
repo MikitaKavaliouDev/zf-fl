@@ -46,6 +46,7 @@ class _FitnessGoalsBody extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'fitness_goals_fab',
         onPressed: () => _showCreateDialog(context),
         backgroundColor: AppColors.primary,
         child: const Icon(Icons.add, color: Colors.white),

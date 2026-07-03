@@ -5,7 +5,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/models/app_mode.dart';
+import '../../../core/security/active_mode_holder.dart';
 import '../data/auth_repository.dart';
 import '../data/models/user.dart';
 import 'auth_state.dart';
@@ -14,16 +17,13 @@ part 'auth_cubit.freezed.dart';
 
 @freezed
 sealed class AuthEvent with _$AuthEvent {
-  /// Check stored tokens and call /api/auth/me on app start.
   const factory AuthEvent.checkAuthStatus() = CheckAuthStatus;
 
-  /// Login with email + password.
   const factory AuthEvent.login({
     required String email,
     required String password,
   }) = LoginSubmitted;
 
-  /// Register new account.
   const factory AuthEvent.register({
     required String email,
     required String password,
@@ -31,7 +31,6 @@ sealed class AuthEvent with _$AuthEvent {
     String? trainerId,
   }) = RegisterSubmitted;
 
-  /// Complete the full onboarding flow (role selection + details).
   const factory AuthEvent.completeOnboarding({
     required String role,
     required String name,
@@ -39,43 +38,100 @@ sealed class AuthEvent with _$AuthEvent {
     String? location,
   }) = CompleteOnboarding;
 
-  /// Log out — clear session.
   const factory AuthEvent.logout() = LogoutRequested;
 
-  /// Dismiss error and return to previous state.
   const factory AuthEvent.clearError() = ClearError;
 }
 
-@injectable
+@singleton
 class AuthCubit extends Cubit<AuthState> {
   final AuthRepository _repository;
+  final ActiveModeHolder _modeHolder;
 
-  AuthCubit(this._repository) : super(const AuthState.initial());
+  /// Cached user for the non-active mode (preserved during switches).
+  User? _trainerUser;
+  User? _clientUser;
+
+  AuthCubit(this._repository, this._modeHolder)
+      : super(const AuthState.initial());
 
   // ── Event handlers ──
 
+  /// On startup, try to restore BOTH client and trainer sessions.
+  /// The active mode is determined by "lastUsedAppMode" preference.
   Future<void> checkAuthStatus() async {
     emit(const AuthState.loading());
     try {
-      final user = await _repository.getCurrentUser();
-      if (user == null) {
-        // Check for cached user before giving up
-        final cachedUser = await _repository.getCachedUser();
-        if (cachedUser != null) {
-          developer.log('checkAuthStatus: using cached user (offline)', name: 'auth');
-          emit(AuthState.authenticated(user: cachedUser, isOffline: true));
-          return;
-        }
+      // Try client session first
+      final clientUser =
+          await _repository.getCurrentUser(mode: AppMode.client);
+      if (clientUser != null) _clientUser = clientUser;
+
+      // Then try trainer session (independent of client)
+      final trainerUser =
+          await _repository.getCurrentUser(mode: AppMode.trainer);
+      if (trainerUser != null) _trainerUser = trainerUser;
+
+      // Determine which mode should be active
+      final preferredMode = await _resolvePreferredMode();
+      final activeUser = preferredMode == AppMode.trainer
+          ? (_trainerUser ?? _clientUser)
+          : (_clientUser ?? _trainerUser);
+
+      if (activeUser == null) {
         emit(const AuthState.unauthenticated());
         return;
       }
-      _routeByUserState(user);
+
+      _modeHolder.currentMode =
+          activeUser.role == 'trainer' ? AppMode.trainer : AppMode.client;
+
+      // If the user's role doesn't match the storage that has the tokens,
+      // migrate them so the AuthInterceptor can find them. This happens
+      // when login() stores tokens under the default currentMode (client)
+      // before _routeByUserState corrects the role.
+      if (_modeHolder.currentMode == AppMode.trainer &&
+          _trainerUser == null &&
+          _clientUser != null) {
+        await _repository.migrateTokens(
+          source: AppMode.client,
+          target: AppMode.trainer,
+        );
+        // Also copy user cache so _trainerUser is available next cold start
+        _trainerUser = _clientUser;
+      }
+
+      if (activeUser.role == 'pending') {
+        emit(AuthState.pendingRole(user: activeUser));
+      } else if (!activeUser.hasCompletedOnboarding) {
+        emit(AuthState.needsOnboarding(user: activeUser));
+      } else {
+        emit(AuthState.authenticated(
+          user: activeUser,
+          isTrainer: activeUser.role == 'trainer',
+        ));
+      }
     } catch (e, s) {
       developer.log('checkAuthStatus failed', name: 'auth', error: e, stackTrace: s);
-      // Try cached user as last resort
-      final cachedUser = await _repository.getCachedUser();
-      if (cachedUser != null) {
-        emit(AuthState.authenticated(user: cachedUser, isOffline: true));
+      // Fallback: try cached users
+      final cachedClient = await _repository.getCachedUser(mode: AppMode.client);
+      final cachedTrainer =
+          await _repository.getCachedUser(mode: AppMode.trainer);
+      final preferredMode = await _resolvePreferredMode();
+      final activeUser = preferredMode == AppMode.trainer
+          ? (cachedTrainer ?? cachedClient)
+          : (cachedClient ?? cachedTrainer);
+
+      if (activeUser != null) {
+        if (preferredMode == AppMode.trainer) _trainerUser = activeUser;
+        else _clientUser = activeUser;
+      _modeHolder.currentMode =
+          activeUser.role == 'trainer' ? AppMode.trainer : AppMode.client;
+        emit(AuthState.authenticated(
+          user: activeUser,
+          isTrainer: activeUser.role == 'trainer',
+          isOffline: true,
+        ));
         return;
       }
       emit(const AuthState.unauthenticated());
@@ -88,16 +144,61 @@ class AuthCubit extends Cubit<AuthState> {
   }) async {
     emit(const AuthState.loading());
     try {
+      // Determine which mode this login is for by trying to detect the role.
+      // We don't know the role until the response comes back, so we store
+      // under the current mode and correct it in _routeByUserState.
+      final mode = _modeHolder.currentMode;
       final response = await _repository.login(
         email: email,
         password: password,
+        mode: mode,
       );
-      _routeByUserState(response.user);
+      await _routeByUserState(response.user);
     } on DioException catch (e) {
       final message = _extractErrorMessage(e);
       emit(AuthState.error(message: message));
     } catch (e) {
       emit(AuthState.error(message: _fallbackError(e)));
+    }
+  }
+
+  /// Login for a specific mode (used during mode switch flow).
+  /// Stores tokens under [targetMode] and switches to it on success.
+  Future<bool> loginAs({
+    required String email,
+    required String password,
+    required AppMode targetMode,
+  }) async {
+    try {
+      final response = await _repository.login(
+        email: email,
+        password: password,
+        mode: targetMode,
+      );
+      final user = response.user;
+
+      // Cache the user for this mode
+      if (targetMode.isTrainer) {
+        _trainerUser = user;
+      } else {
+        _clientUser = user;
+      }
+
+      _modeHolder.currentMode = targetMode;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('lastUsedAppMode', targetMode.isTrainer);
+
+      emit(AuthState.authenticated(
+        user: user,
+        isTrainer: targetMode.isTrainer,
+      ));
+      return true;
+    } on DioException catch (e) {
+      developer.log('loginAs($targetMode) failed', name: 'auth', error: e);
+      return false;
+    } catch (e) {
+      developer.log('loginAs($targetMode) failed', name: 'auth', error: e);
+      return false;
     }
   }
 
@@ -133,7 +234,6 @@ class AuthCubit extends Cubit<AuthState> {
     emit(const AuthState.loading());
     try {
       await _repository.completeOnboarding();
-      // Re-fetch user to reflect updated state
       await checkAuthStatus();
     } on DioException catch (e) {
       final message = _extractErrorMessage(e);
@@ -143,17 +243,67 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  /// Log out ONLY the currently active mode.
+  /// The other mode's session is preserved.
   Future<void> logout() async {
+    final mode = _modeHolder.currentMode;
+    if (mode == AppMode.trainer) _trainerUser = null;
+    else _clientUser = null;
     await _repository.logout();
-    emit(const AuthState.unauthenticated());
+
+    // If the other mode still has a cached session, switch to it
+    final otherUser = mode == AppMode.trainer ? _clientUser : _trainerUser;
+    if (otherUser != null) {
+      final otherMode = mode == AppMode.trainer ? AppMode.client : AppMode.trainer;
+      _modeHolder.currentMode = otherMode;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('lastUsedAppMode', otherMode.isTrainer);
+      emit(AuthState.authenticated(
+        user: otherUser,
+        isTrainer: otherMode.isTrainer,
+      ));
+    } else {
+      emit(const AuthState.unauthenticated());
+    }
   }
 
-  /// Refresh user data from server without showing loading state.
+  /// Switch between client and trainer modes instantly.
+  /// Requires both modes to have cached sessions.
+  Future<void> switchMode() async {
+    final current = state;
+    if (current is! AuthAuthenticated) return;
+
+    final newMode = _modeHolder.currentMode == AppMode.trainer
+        ? AppMode.client
+        : AppMode.trainer;
+
+    final user = newMode == AppMode.trainer ? _trainerUser : _clientUser;
+    if (user == null) {
+      developer.log('switchMode: no cached user for $newMode', name: 'auth');
+      return;
+    }
+
+    _modeHolder.currentMode = newMode;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('lastUsedAppMode', newMode.isTrainer);
+
+    emit(AuthState.authenticated(
+      user: user,
+      isTrainer: newMode.isTrainer,
+    ));
+  }
+
+  /// Re-fetch the current user from the server and re-emit auth state.
   Future<void> refreshUser() async {
     try {
-      final user = await _repository.getCurrentUser();
+      final user = await _repository.getCurrentUser(mode: _modeHolder.currentMode);
       if (user != null) {
-        _routeByUserState(user);
+        if (_modeHolder.currentMode.isTrainer) _trainerUser = user;
+        else _clientUser = user;
+        emit(AuthState.authenticated(
+          user: user,
+          isTrainer: _modeHolder.currentMode.isTrainer,
+        ));
       }
     } catch (e, s) {
       developer.log('refreshUser failed', name: 'auth', error: e, stackTrace: s);
@@ -161,25 +311,68 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   void clearError() {
-    // Go back to unauthenticated — the caller was either login or register.
     emit(const AuthState.unauthenticated());
   }
 
   // ── Helpers ──
 
-  /// Determine the correct state based on user role and onboarding status.
-  void _routeByUserState(User user) {
+  /// Read the persisted "lastUsedAppMode" and resolve which mode to use,
+  /// falling back to whichever has an available session.
+  Future<AppMode> _resolvePreferredMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getBool('lastUsedAppMode');
+    if (saved == true && _trainerUser != null) return AppMode.trainer;
+    if (saved == false && _clientUser != null) return AppMode.client;
+    // lastUsedAppMode is trainer but tokens were stored under client prefix
+    if (saved == true && _clientUser?.role == 'trainer') return AppMode.trainer;
+    // Fallback: prefer trainer if both exist
+    if (_trainerUser?.role == 'trainer') return AppMode.trainer;
+    if (_clientUser?.role == 'trainer') return AppMode.trainer;
+    return AppMode.client;
+  }
+
+  Future<void> _routeByUserState(User user) async {
     if (user.role == 'pending') {
       emit(AuthState.pendingRole(user: user));
     } else if (!user.hasCompletedOnboarding) {
       emit(AuthState.needsOnboarding(user: user));
     } else {
-      emit(AuthState.authenticated(user: user));
+      final roleIsTrainer = user.role == 'trainer';
+      final mode = roleIsTrainer ? AppMode.trainer : AppMode.client;
+
+      // Cache user for this mode
+      if (mode.isTrainer) _trainerUser = user;
+      else _clientUser = user;
+
+      _modeHolder.currentMode = mode;
+
+      // If the user's role differs from the storage mode the tokens were
+      // saved under (login() uses currentMode which defaults to client),
+      // migrate them so the AuthInterceptor can find them.
+      if (mode == AppMode.trainer) {
+        await _repository.migrateTokens(
+          source: AppMode.client,
+          target: AppMode.trainer,
+        );
+      }
+
+      // Check persisted mode override
+      final prefs = await SharedPreferences.getInstance();
+      final savedIsTrainer = prefs.getBool('lastUsedAppMode');
+      final effectiveIsTrainer =
+          savedIsTrainer ?? roleIsTrainer;
+
+      // Persist the active mode so cold start recovery works correctly
+      await prefs.setBool('lastUsedAppMode', effectiveIsTrainer);
+
+      emit(AuthState.authenticated(
+        user: user,
+        isTrainer: effectiveIsTrainer,
+      ));
     }
   }
 
   String _extractErrorMessage(DioException e) {
-    // Network-level errors (no response received)
     switch (e.type) {
       case DioExceptionType.connectionTimeout:
         return 'Connection timed out. Please check your network.';
@@ -190,7 +383,6 @@ class AuthCubit extends Cubit<AuthState> {
       case DioExceptionType.connectionError:
         return 'Network error. Please check your connection.';
       case DioExceptionType.badResponse:
-        // Try to extract a meaningful error from the response body
         final data = e.response?.data;
         if (data is Map<String, dynamic>) {
           final error = data['error'];
@@ -213,4 +405,3 @@ class AuthCubit extends Cubit<AuthState> {
     return 'An unexpected error occurred. Please try again.';
   }
 }
-

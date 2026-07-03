@@ -18,9 +18,12 @@ sealed class AuthState with _$AuthState {
 
   /// Valid session — every state after loading transitions here through
   /// needsOnboarding when onboarding is incomplete.
+  /// [isTrainer] is derived from [User.role] — `"trainer"` routes to the
+  /// trainer shell, everything else to the client shell.
   const factory AuthState.authenticated({
     required User user,
     @Default(false) bool isOffline,
+    @Default(false) bool isTrainer,
   }) = AuthAuthenticated;
 
   /// User registered but role is "pending" — email not yet verified.

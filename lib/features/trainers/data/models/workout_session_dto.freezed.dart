@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$WorkoutSessionDto {
 
- String get id; String get clientId; String get startTime; String? get endTime; String? get status; String? get name; String? get notes; String? get restStartedAt; String? get workoutTemplateId; String? get clientPackageId; bool get isTrainerLed; List<ExerciseLogDto>? get exerciseLogs;
+ String get id; String get clientId; String get startTime; String? get endTime; String? get status; String? get name; String? get notes; String? get restStartedAt; String? get workoutTemplateId; String? get clientPackageId; bool get isTrainerLed; String? get clientName; String? get clientAvatarUrl; List<ExerciseLogDto>? get exerciseLogs;
 /// Create a copy of WorkoutSessionDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $WorkoutSessionDtoCopyWith<WorkoutSessionDto> get copyWith => _$WorkoutSessionDt
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WorkoutSessionDto&&(identical(other.id, id) || other.id == id)&&(identical(other.clientId, clientId) || other.clientId == clientId)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.status, status) || other.status == status)&&(identical(other.name, name) || other.name == name)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.restStartedAt, restStartedAt) || other.restStartedAt == restStartedAt)&&(identical(other.workoutTemplateId, workoutTemplateId) || other.workoutTemplateId == workoutTemplateId)&&(identical(other.clientPackageId, clientPackageId) || other.clientPackageId == clientPackageId)&&(identical(other.isTrainerLed, isTrainerLed) || other.isTrainerLed == isTrainerLed)&&const DeepCollectionEquality().equals(other.exerciseLogs, exerciseLogs));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WorkoutSessionDto&&(identical(other.id, id) || other.id == id)&&(identical(other.clientId, clientId) || other.clientId == clientId)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.status, status) || other.status == status)&&(identical(other.name, name) || other.name == name)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.restStartedAt, restStartedAt) || other.restStartedAt == restStartedAt)&&(identical(other.workoutTemplateId, workoutTemplateId) || other.workoutTemplateId == workoutTemplateId)&&(identical(other.clientPackageId, clientPackageId) || other.clientPackageId == clientPackageId)&&(identical(other.isTrainerLed, isTrainerLed) || other.isTrainerLed == isTrainerLed)&&(identical(other.clientName, clientName) || other.clientName == clientName)&&(identical(other.clientAvatarUrl, clientAvatarUrl) || other.clientAvatarUrl == clientAvatarUrl)&&const DeepCollectionEquality().equals(other.exerciseLogs, exerciseLogs));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,clientId,startTime,endTime,status,name,notes,restStartedAt,workoutTemplateId,clientPackageId,isTrainerLed,const DeepCollectionEquality().hash(exerciseLogs));
+int get hashCode => Object.hash(runtimeType,id,clientId,startTime,endTime,status,name,notes,restStartedAt,workoutTemplateId,clientPackageId,isTrainerLed,clientName,clientAvatarUrl,const DeepCollectionEquality().hash(exerciseLogs));
 
 @override
 String toString() {
-  return 'WorkoutSessionDto(id: $id, clientId: $clientId, startTime: $startTime, endTime: $endTime, status: $status, name: $name, notes: $notes, restStartedAt: $restStartedAt, workoutTemplateId: $workoutTemplateId, clientPackageId: $clientPackageId, isTrainerLed: $isTrainerLed, exerciseLogs: $exerciseLogs)';
+  return 'WorkoutSessionDto(id: $id, clientId: $clientId, startTime: $startTime, endTime: $endTime, status: $status, name: $name, notes: $notes, restStartedAt: $restStartedAt, workoutTemplateId: $workoutTemplateId, clientPackageId: $clientPackageId, isTrainerLed: $isTrainerLed, clientName: $clientName, clientAvatarUrl: $clientAvatarUrl, exerciseLogs: $exerciseLogs)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $WorkoutSessionDtoCopyWith<$Res>  {
   factory $WorkoutSessionDtoCopyWith(WorkoutSessionDto value, $Res Function(WorkoutSessionDto) _then) = _$WorkoutSessionDtoCopyWithImpl;
 @useResult
 $Res call({
- String id, String clientId, String startTime, String? endTime, String? status, String? name, String? notes, String? restStartedAt, String? workoutTemplateId, String? clientPackageId, bool isTrainerLed, List<ExerciseLogDto>? exerciseLogs
+ String id, String clientId, String startTime, String? endTime, String? status, String? name, String? notes, String? restStartedAt, String? workoutTemplateId, String? clientPackageId, bool isTrainerLed, String? clientName, String? clientAvatarUrl, List<ExerciseLogDto>? exerciseLogs
 });
 
 
@@ -65,7 +65,7 @@ class _$WorkoutSessionDtoCopyWithImpl<$Res>
 
 /// Create a copy of WorkoutSessionDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? clientId = null,Object? startTime = null,Object? endTime = freezed,Object? status = freezed,Object? name = freezed,Object? notes = freezed,Object? restStartedAt = freezed,Object? workoutTemplateId = freezed,Object? clientPackageId = freezed,Object? isTrainerLed = null,Object? exerciseLogs = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? clientId = null,Object? startTime = null,Object? endTime = freezed,Object? status = freezed,Object? name = freezed,Object? notes = freezed,Object? restStartedAt = freezed,Object? workoutTemplateId = freezed,Object? clientPackageId = freezed,Object? isTrainerLed = null,Object? clientName = freezed,Object? clientAvatarUrl = freezed,Object? exerciseLogs = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,clientId: null == clientId ? _self.clientId : clientId // ignore: cast_nullable_to_non_nullable
@@ -78,7 +78,9 @@ as String?,restStartedAt: freezed == restStartedAt ? _self.restStartedAt : restS
 as String?,workoutTemplateId: freezed == workoutTemplateId ? _self.workoutTemplateId : workoutTemplateId // ignore: cast_nullable_to_non_nullable
 as String?,clientPackageId: freezed == clientPackageId ? _self.clientPackageId : clientPackageId // ignore: cast_nullable_to_non_nullable
 as String?,isTrainerLed: null == isTrainerLed ? _self.isTrainerLed : isTrainerLed // ignore: cast_nullable_to_non_nullable
-as bool,exerciseLogs: freezed == exerciseLogs ? _self.exerciseLogs : exerciseLogs // ignore: cast_nullable_to_non_nullable
+as bool,clientName: freezed == clientName ? _self.clientName : clientName // ignore: cast_nullable_to_non_nullable
+as String?,clientAvatarUrl: freezed == clientAvatarUrl ? _self.clientAvatarUrl : clientAvatarUrl // ignore: cast_nullable_to_non_nullable
+as String?,exerciseLogs: freezed == exerciseLogs ? _self.exerciseLogs : exerciseLogs // ignore: cast_nullable_to_non_nullable
 as List<ExerciseLogDto>?,
   ));
 }
@@ -164,10 +166,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String clientId,  String startTime,  String? endTime,  String? status,  String? name,  String? notes,  String? restStartedAt,  String? workoutTemplateId,  String? clientPackageId,  bool isTrainerLed,  List<ExerciseLogDto>? exerciseLogs)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String clientId,  String startTime,  String? endTime,  String? status,  String? name,  String? notes,  String? restStartedAt,  String? workoutTemplateId,  String? clientPackageId,  bool isTrainerLed,  String? clientName,  String? clientAvatarUrl,  List<ExerciseLogDto>? exerciseLogs)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _WorkoutSessionDto() when $default != null:
-return $default(_that.id,_that.clientId,_that.startTime,_that.endTime,_that.status,_that.name,_that.notes,_that.restStartedAt,_that.workoutTemplateId,_that.clientPackageId,_that.isTrainerLed,_that.exerciseLogs);case _:
+return $default(_that.id,_that.clientId,_that.startTime,_that.endTime,_that.status,_that.name,_that.notes,_that.restStartedAt,_that.workoutTemplateId,_that.clientPackageId,_that.isTrainerLed,_that.clientName,_that.clientAvatarUrl,_that.exerciseLogs);case _:
   return orElse();
 
 }
@@ -185,10 +187,10 @@ return $default(_that.id,_that.clientId,_that.startTime,_that.endTime,_that.stat
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String clientId,  String startTime,  String? endTime,  String? status,  String? name,  String? notes,  String? restStartedAt,  String? workoutTemplateId,  String? clientPackageId,  bool isTrainerLed,  List<ExerciseLogDto>? exerciseLogs)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String clientId,  String startTime,  String? endTime,  String? status,  String? name,  String? notes,  String? restStartedAt,  String? workoutTemplateId,  String? clientPackageId,  bool isTrainerLed,  String? clientName,  String? clientAvatarUrl,  List<ExerciseLogDto>? exerciseLogs)  $default,) {final _that = this;
 switch (_that) {
 case _WorkoutSessionDto():
-return $default(_that.id,_that.clientId,_that.startTime,_that.endTime,_that.status,_that.name,_that.notes,_that.restStartedAt,_that.workoutTemplateId,_that.clientPackageId,_that.isTrainerLed,_that.exerciseLogs);case _:
+return $default(_that.id,_that.clientId,_that.startTime,_that.endTime,_that.status,_that.name,_that.notes,_that.restStartedAt,_that.workoutTemplateId,_that.clientPackageId,_that.isTrainerLed,_that.clientName,_that.clientAvatarUrl,_that.exerciseLogs);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -205,10 +207,10 @@ return $default(_that.id,_that.clientId,_that.startTime,_that.endTime,_that.stat
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String clientId,  String startTime,  String? endTime,  String? status,  String? name,  String? notes,  String? restStartedAt,  String? workoutTemplateId,  String? clientPackageId,  bool isTrainerLed,  List<ExerciseLogDto>? exerciseLogs)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String clientId,  String startTime,  String? endTime,  String? status,  String? name,  String? notes,  String? restStartedAt,  String? workoutTemplateId,  String? clientPackageId,  bool isTrainerLed,  String? clientName,  String? clientAvatarUrl,  List<ExerciseLogDto>? exerciseLogs)?  $default,) {final _that = this;
 switch (_that) {
 case _WorkoutSessionDto() when $default != null:
-return $default(_that.id,_that.clientId,_that.startTime,_that.endTime,_that.status,_that.name,_that.notes,_that.restStartedAt,_that.workoutTemplateId,_that.clientPackageId,_that.isTrainerLed,_that.exerciseLogs);case _:
+return $default(_that.id,_that.clientId,_that.startTime,_that.endTime,_that.status,_that.name,_that.notes,_that.restStartedAt,_that.workoutTemplateId,_that.clientPackageId,_that.isTrainerLed,_that.clientName,_that.clientAvatarUrl,_that.exerciseLogs);case _:
   return null;
 
 }
@@ -220,7 +222,7 @@ return $default(_that.id,_that.clientId,_that.startTime,_that.endTime,_that.stat
 @JsonSerializable()
 
 class _WorkoutSessionDto implements WorkoutSessionDto {
-  const _WorkoutSessionDto({required this.id, required this.clientId, required this.startTime, this.endTime, this.status, this.name, this.notes, this.restStartedAt, this.workoutTemplateId, this.clientPackageId, this.isTrainerLed = false, final  List<ExerciseLogDto>? exerciseLogs}): _exerciseLogs = exerciseLogs;
+  const _WorkoutSessionDto({required this.id, required this.clientId, required this.startTime, this.endTime, this.status, this.name, this.notes, this.restStartedAt, this.workoutTemplateId, this.clientPackageId, this.isTrainerLed = false, this.clientName, this.clientAvatarUrl, final  List<ExerciseLogDto>? exerciseLogs}): _exerciseLogs = exerciseLogs;
   factory _WorkoutSessionDto.fromJson(Map<String, dynamic> json) => _$WorkoutSessionDtoFromJson(json);
 
 @override final  String id;
@@ -234,6 +236,8 @@ class _WorkoutSessionDto implements WorkoutSessionDto {
 @override final  String? workoutTemplateId;
 @override final  String? clientPackageId;
 @override@JsonKey() final  bool isTrainerLed;
+@override final  String? clientName;
+@override final  String? clientAvatarUrl;
  final  List<ExerciseLogDto>? _exerciseLogs;
 @override List<ExerciseLogDto>? get exerciseLogs {
   final value = _exerciseLogs;
@@ -257,16 +261,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _WorkoutSessionDto&&(identical(other.id, id) || other.id == id)&&(identical(other.clientId, clientId) || other.clientId == clientId)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.status, status) || other.status == status)&&(identical(other.name, name) || other.name == name)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.restStartedAt, restStartedAt) || other.restStartedAt == restStartedAt)&&(identical(other.workoutTemplateId, workoutTemplateId) || other.workoutTemplateId == workoutTemplateId)&&(identical(other.clientPackageId, clientPackageId) || other.clientPackageId == clientPackageId)&&(identical(other.isTrainerLed, isTrainerLed) || other.isTrainerLed == isTrainerLed)&&const DeepCollectionEquality().equals(other._exerciseLogs, _exerciseLogs));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _WorkoutSessionDto&&(identical(other.id, id) || other.id == id)&&(identical(other.clientId, clientId) || other.clientId == clientId)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.status, status) || other.status == status)&&(identical(other.name, name) || other.name == name)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.restStartedAt, restStartedAt) || other.restStartedAt == restStartedAt)&&(identical(other.workoutTemplateId, workoutTemplateId) || other.workoutTemplateId == workoutTemplateId)&&(identical(other.clientPackageId, clientPackageId) || other.clientPackageId == clientPackageId)&&(identical(other.isTrainerLed, isTrainerLed) || other.isTrainerLed == isTrainerLed)&&(identical(other.clientName, clientName) || other.clientName == clientName)&&(identical(other.clientAvatarUrl, clientAvatarUrl) || other.clientAvatarUrl == clientAvatarUrl)&&const DeepCollectionEquality().equals(other._exerciseLogs, _exerciseLogs));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,clientId,startTime,endTime,status,name,notes,restStartedAt,workoutTemplateId,clientPackageId,isTrainerLed,const DeepCollectionEquality().hash(_exerciseLogs));
+int get hashCode => Object.hash(runtimeType,id,clientId,startTime,endTime,status,name,notes,restStartedAt,workoutTemplateId,clientPackageId,isTrainerLed,clientName,clientAvatarUrl,const DeepCollectionEquality().hash(_exerciseLogs));
 
 @override
 String toString() {
-  return 'WorkoutSessionDto(id: $id, clientId: $clientId, startTime: $startTime, endTime: $endTime, status: $status, name: $name, notes: $notes, restStartedAt: $restStartedAt, workoutTemplateId: $workoutTemplateId, clientPackageId: $clientPackageId, isTrainerLed: $isTrainerLed, exerciseLogs: $exerciseLogs)';
+  return 'WorkoutSessionDto(id: $id, clientId: $clientId, startTime: $startTime, endTime: $endTime, status: $status, name: $name, notes: $notes, restStartedAt: $restStartedAt, workoutTemplateId: $workoutTemplateId, clientPackageId: $clientPackageId, isTrainerLed: $isTrainerLed, clientName: $clientName, clientAvatarUrl: $clientAvatarUrl, exerciseLogs: $exerciseLogs)';
 }
 
 
@@ -277,7 +281,7 @@ abstract mixin class _$WorkoutSessionDtoCopyWith<$Res> implements $WorkoutSessio
   factory _$WorkoutSessionDtoCopyWith(_WorkoutSessionDto value, $Res Function(_WorkoutSessionDto) _then) = __$WorkoutSessionDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String clientId, String startTime, String? endTime, String? status, String? name, String? notes, String? restStartedAt, String? workoutTemplateId, String? clientPackageId, bool isTrainerLed, List<ExerciseLogDto>? exerciseLogs
+ String id, String clientId, String startTime, String? endTime, String? status, String? name, String? notes, String? restStartedAt, String? workoutTemplateId, String? clientPackageId, bool isTrainerLed, String? clientName, String? clientAvatarUrl, List<ExerciseLogDto>? exerciseLogs
 });
 
 
@@ -294,7 +298,7 @@ class __$WorkoutSessionDtoCopyWithImpl<$Res>
 
 /// Create a copy of WorkoutSessionDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? clientId = null,Object? startTime = null,Object? endTime = freezed,Object? status = freezed,Object? name = freezed,Object? notes = freezed,Object? restStartedAt = freezed,Object? workoutTemplateId = freezed,Object? clientPackageId = freezed,Object? isTrainerLed = null,Object? exerciseLogs = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? clientId = null,Object? startTime = null,Object? endTime = freezed,Object? status = freezed,Object? name = freezed,Object? notes = freezed,Object? restStartedAt = freezed,Object? workoutTemplateId = freezed,Object? clientPackageId = freezed,Object? isTrainerLed = null,Object? clientName = freezed,Object? clientAvatarUrl = freezed,Object? exerciseLogs = freezed,}) {
   return _then(_WorkoutSessionDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,clientId: null == clientId ? _self.clientId : clientId // ignore: cast_nullable_to_non_nullable
@@ -307,7 +311,9 @@ as String?,restStartedAt: freezed == restStartedAt ? _self.restStartedAt : restS
 as String?,workoutTemplateId: freezed == workoutTemplateId ? _self.workoutTemplateId : workoutTemplateId // ignore: cast_nullable_to_non_nullable
 as String?,clientPackageId: freezed == clientPackageId ? _self.clientPackageId : clientPackageId // ignore: cast_nullable_to_non_nullable
 as String?,isTrainerLed: null == isTrainerLed ? _self.isTrainerLed : isTrainerLed // ignore: cast_nullable_to_non_nullable
-as bool,exerciseLogs: freezed == exerciseLogs ? _self._exerciseLogs : exerciseLogs // ignore: cast_nullable_to_non_nullable
+as bool,clientName: freezed == clientName ? _self.clientName : clientName // ignore: cast_nullable_to_non_nullable
+as String?,clientAvatarUrl: freezed == clientAvatarUrl ? _self.clientAvatarUrl : clientAvatarUrl // ignore: cast_nullable_to_non_nullable
+as String?,exerciseLogs: freezed == exerciseLogs ? _self._exerciseLogs : exerciseLogs // ignore: cast_nullable_to_non_nullable
 as List<ExerciseLogDto>?,
   ));
 }

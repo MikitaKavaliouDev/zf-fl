@@ -37,8 +37,11 @@ class AuthApiService {
     return RefreshResponse.fromJson(data);
   }
 
-  Future<User> getMe() async {
-    final response = await _dio.get('/api/auth/me');
+  Future<User> getMe({String? accessToken}) async {
+    final options = accessToken != null
+        ? Options(headers: {'Authorization': 'Bearer $accessToken'})
+        : null;
+    final response = await _dio.get('/api/auth/me', options: options);
     final data = response.data['data'] as Map<String, dynamic>;
     return User.fromJson(data);
   }

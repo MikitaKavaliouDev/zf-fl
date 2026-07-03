@@ -4,6 +4,8 @@ import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../features/auth/cubit/auth_cubit.dart';
+import '../security/active_mode_holder.dart';
 import '../security/token_storage.dart';
 
 /// Queued Dio interceptor that:
@@ -15,8 +17,9 @@ import '../security/token_storage.dart';
 @singleton
 class AuthInterceptor extends QueuedInterceptor {
   final TokenStorage _tokenStorage;
+  final ActiveModeHolder _modeHolder;
 
-  AuthInterceptor(this._tokenStorage);
+  AuthInterceptor(this._tokenStorage, this._modeHolder);
 
   @override
   void onRequest(
@@ -29,7 +32,15 @@ class AuthInterceptor extends QueuedInterceptor {
       return;
     }
 
-    final token = await _tokenStorage.getAccessToken();
+    // Don't overwrite an Authorization header that's already set
+    // (e.g., getMe in getCurrentUser passes a per-mode token).
+    if (options.headers.containsKey('Authorization')) {
+      handler.next(options);
+      return;
+    }
+
+    final token =
+        await _tokenStorage.getAccessToken(mode: _modeHolder.currentMode);
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';
     }
@@ -45,16 +56,23 @@ class AuthInterceptor extends QueuedInterceptor {
 
     // Attempt token refresh
     try {
-      final dio = GetIt.instance<Dio>();
-      final refreshToken = await _tokenStorage.getRefreshToken();
+      final currentMode = _modeHolder.currentMode;
+      final refreshToken =
+          await _tokenStorage.getRefreshToken(mode: currentMode);
 
       if (refreshToken == null) {
-        await _tokenStorage.clearTokens();
+        await _tokenStorage.clearTokens(mode: currentMode);
+        _forceUnauthenticated();
         handler.next(err);
         return;
       }
 
-      final response = await dio.post(
+      // Use a bare Dio for the refresh call to avoid recursive deadlock
+      // when the refresh token itself is rejected (the interceptor chain
+      // would call onError again → holds QueuedInterceptor._errorLock → hang).
+      final baseUrl = GetIt.instance<Dio>().options.baseUrl;
+      final bareDio = Dio(BaseOptions(baseUrl: baseUrl));
+      final response = await bareDio.post(
         '/api/auth/refresh',
         data: {'refreshToken': refreshToken},
       );
@@ -66,11 +84,12 @@ class AuthInterceptor extends QueuedInterceptor {
       await _tokenStorage.saveTokens(
         accessToken: newAccess,
         refreshToken: newRefresh,
+        mode: currentMode,
       );
 
       // Retry the original request with the new token
       err.requestOptions.headers['Authorization'] = 'Bearer $newAccess';
-      final retryResponse = await dio.fetch(err.requestOptions);
+      final retryResponse = await bareDio.fetch(err.requestOptions);
       handler.resolve(retryResponse);
     } catch (e) {
       final isAuthRejection = e is DioException &&
@@ -79,7 +98,8 @@ class AuthInterceptor extends QueuedInterceptor {
 
       if (isAuthRejection) {
         // Server explicitly rejected the refresh token
-        await _tokenStorage.clearTokens();
+        await _tokenStorage.clearTokens(mode: _modeHolder.currentMode);
+        _forceUnauthenticated();
       } else {
         // Network error, timeout, server error — keep tokens
         developer.log(
@@ -89,6 +109,16 @@ class AuthInterceptor extends QueuedInterceptor {
         );
       }
       handler.next(err);
+    }
+  }
+
+  /// Force the app back to the login screen when the session is irrecoverable.
+  /// Called from a non-constructor context, so GetIt is fully initialized.
+  void _forceUnauthenticated() {
+    try {
+      GetIt.instance<AuthCubit>().clearError();
+    } catch (_) {
+      // GetIt may not be ready during early startup — ignore.
     }
   }
 

@@ -3,17 +3,31 @@ import 'dart:developer' as developer;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../auth/cubit/auth_cubit.dart';
+import '../../auth/cubit/auth_state.dart';
 import '../data/daily_targets_repository.dart';
 import 'daily_targets_state.dart';
 
 @injectable
 class DailyTargetsCubit extends Cubit<DailyTargetsState> {
   final DailyTargetsRepository _repository;
+  final AuthCubit _authCubit;
 
-  DailyTargetsCubit(this._repository) : super(const DailyTargetsState.initial());
+  DailyTargetsCubit(this._repository, this._authCubit)
+      : super(const DailyTargetsState.initial());
 
   /// Load daily targets for a specific date (ISO string, e.g. "2026-06-25").
+  ///
+  /// When the authenticated user is a trainer, returns empty targets
+  /// without making any client API calls.
   Future<void> loadTargets({String? date}) async {
+    // Skip client API calls for trainer users.
+    final authState = _authCubit.state;
+    if (authState is AuthAuthenticated && authState.isTrainer) {
+      emit(DailyTargetsState.loaded(targets: []));
+      return;
+    }
+
     emit(const DailyTargetsState.loading());
     try {
       final targets = await _repository.getTargets(date: date);

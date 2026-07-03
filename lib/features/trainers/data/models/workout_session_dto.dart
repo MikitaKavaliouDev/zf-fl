@@ -19,6 +19,8 @@ abstract class WorkoutSessionDto with _$WorkoutSessionDto {
     String? workoutTemplateId,
     String? clientPackageId,
     @Default(false) bool isTrainerLed,
+    String? clientName,
+    String? clientAvatarUrl,
     List<ExerciseLogDto>? exerciseLogs,
   }) = _WorkoutSessionDto;
 

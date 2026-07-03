@@ -23,6 +23,7 @@ import 'widgets/recent_history_section.dart';
 import 'widgets/streak_motivation_card.dart';
 import 'widgets/upcoming_sessions_carousel.dart';
 import 'widgets/ziro_header.dart';
+import 'upcoming_session_detail_screen.dart';
 
 /// Main client-facing dashboard after login.
 ///
@@ -299,7 +300,18 @@ class _DashboardContent extends StatelessWidget {
           if (upcomingSessions.isNotEmpty)
             UpcomingSessionsCarousel(
               sessions: upcomingSessions,
-              onSessionTap: (_) => context.go('/workout'),
+              onSessionTap: (session) => showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: AppColors.background,
+                shape: const RoundedRectangleBorder(
+                  borderRadius:
+                      BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                builder: (_) => UpcomingSessionDetailScreen(
+                  sessionId: session.id,
+                ),
+              ),
             ),
 
           if (upcomingSessions.isNotEmpty) const SizedBox(height: 24),

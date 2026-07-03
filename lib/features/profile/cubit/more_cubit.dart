@@ -26,10 +26,21 @@ class MoreCubit extends Cubit<MoreState> {
   ///
   /// Cache-first for privacy settings — if cached data exists, emits loaded
   /// immediately without a loading flash, then silently refreshes.
+  ///
+  /// Privacy settings are a client-only feature. When the authenticated
+  /// user is a trainer, the API call is skipped entirely — the state
+  /// loads immediately without privacy data.
   Future<void> loadUserData({bool forceRefresh = false}) async {
     // Get user from AuthCubit's current state
     final authState = _authCubit.state;
     final user = authState is AuthAuthenticated ? authState.user : null;
+    final isTrainer = authState is AuthAuthenticated && authState.isTrainer;
+
+    // Skip privacy API call entirely for trainers — it's a client-only endpoint.
+    if (isTrainer) {
+      emit(MoreState.loaded(user: user));
+      return;
+    }
 
     // 1. Check cache first (unless forced refresh)
     if (!forceRefresh) {

@@ -3,6 +3,8 @@ import 'dart:developer' as developer;
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../../core/models/app_mode.dart';
+import '../../../core/security/active_mode_holder.dart';
 import '../../../core/security/token_storage.dart';
 import 'auth_api_service.dart';
 import 'models/auth_response.dart';
@@ -15,21 +17,29 @@ import 'models/user.dart';
 class AuthRepository {
   final AuthApiService _api;
   final TokenStorage _tokenStorage;
+  final ActiveModeHolder _modeHolder;
 
-  AuthRepository(this._api, this._tokenStorage);
+  AuthRepository(this._api, this._tokenStorage, this._modeHolder);
 
   // ── Auth actions ──
 
+  /// Log in and store the token under the given [mode].
+  /// On first login [mode] defaults to [AppMode.client]; the caller
+  /// passes a specific mode when logging in during a mode switch flow.
   Future<AuthResponse> login({
     required String email,
     required String password,
+    AppMode mode = AppMode.client,
   }) async {
     final request = LoginRequest(email: email, password: password);
     final response = await _api.login(request);
     await _tokenStorage.saveTokens(
       accessToken: response.accessToken,
       refreshToken: response.refreshToken,
+      mode: mode,
     );
+    await _tokenStorage.saveUser(response.user, mode: mode);
+    _modeHolder.currentMode = mode;
     return response;
   }
 
@@ -49,13 +59,24 @@ class AuthRepository {
     // Note: do NOT save tokens — email confirmation required first
   }
 
+  /// Log out of the [ActiveModeHolder.currentMode] only.
+  /// The other mode's session is preserved.
   Future<void> logout() async {
+    final mode = _modeHolder.currentMode;
     try {
       await _api.signOut();
     } on DioException catch (_) {
       // Even if API call fails, clear local tokens
     }
-    await _tokenStorage.clearTokens();
+    await _tokenStorage.clearTokens(mode: mode);
+  }
+
+  /// Log out of BOTH modes (full app sign-out).
+  Future<void> logoutAll() async {
+    try {
+      await _api.signOut();
+    } on DioException catch (_) {}
+    await _tokenStorage.clearAll();
   }
 
   Future<void> completeOnboarding() async {
@@ -64,51 +85,44 @@ class AuthRepository {
 
   // ── Token / session helpers ──
 
-  /// Restore the current user session from stored tokens.
-  ///
-  /// Tries the access token first (via [getMe]). If that fails (missing,
-  /// expired, or server rejection), falls back to the refresh token via
-  /// [AuthApiService.refresh] to obtain fresh credentials.
-  ///
+  /// Restore the user session for the given [mode].
+  /// Passes the stored access token directly so [AuthApiService.getMe]
+  /// works even when the active [ActiveModeHolder.currentMode] differs.
   /// Returns the [User] if a valid session exists, or `null` otherwise.
-  Future<User?> getCurrentUser() async {
-    // 1. Try access token → GET /api/auth/me
-    final accessToken = await _tokenStorage.getAccessToken();
+  Future<User?> getCurrentUser({AppMode mode = AppMode.client}) async {
+    final accessToken = await _tokenStorage.getAccessToken(mode: mode);
     if (accessToken != null) {
       try {
-        final user = await _api.getMe();
-        await _tokenStorage.saveUser(user);  // Cache for offline use
+        final user = await _api.getMe(accessToken: accessToken);
+        await _tokenStorage.saveUser(user, mode: mode);
         return user;
       } on DioException catch (e) {
         developer.log(
-          'getCurrentUser: getMe failed (${e.response?.statusCode}), '
+          'getCurrentUser($mode): getMe failed (${e.response?.statusCode}), '
           'falling back to refresh token',
           name: 'auth',
         );
-        // Fall through to refresh token attempt
       } catch (_) {
-        // Non-Dio error — do not attempt refresh
         return null;
       }
     }
 
-    // 2. Fallback: refresh token → POST /api/auth/refresh
-    final refreshToken = await _tokenStorage.getRefreshToken();
+    final refreshToken = await _tokenStorage.getRefreshToken(mode: mode);
     if (refreshToken == null) {
-      developer.log('getCurrentUser: no stored tokens', name: 'auth');
+      developer.log('getCurrentUser($mode): no stored tokens', name: 'auth');
       return null;
     }
 
     try {
       final response = await _api.refresh(refreshToken);
-      // Persist the new token pair so subsequent calls are authenticated.
       await _tokenStorage.saveTokens(
         accessToken: response.accessToken,
         refreshToken: response.refreshToken,
+        mode: mode,
       );
-      await _tokenStorage.saveUser(response.user);  // Cache for offline use
+      await _tokenStorage.saveUser(response.user, mode: mode);
       developer.log(
-        'getCurrentUser: session restored via refresh token',
+        'getCurrentUser($mode): session restored via refresh token',
         name: 'auth',
       );
       return response.user;
@@ -116,18 +130,15 @@ class AuthRepository {
       final isAuthRejection = e is DioException &&
           e.type == DioExceptionType.badResponse &&
           e.response?.statusCode == 401;
-
       if (isAuthRejection) {
-        // Refresh token was explicitly rejected — invalid session
         developer.log(
-          'getCurrentUser: refresh rejected, clearing tokens',
+          'getCurrentUser($mode): refresh rejected, clearing tokens',
           name: 'auth',
         );
-        await _tokenStorage.clearTokens();
+        await _tokenStorage.clearTokens(mode: mode);
       } else {
-        // Network/transient error — tokens are still valid
         developer.log(
-          'getCurrentUser: refresh failed — preserving tokens '
+          'getCurrentUser($mode): refresh failed — preserving tokens '
           '(${e is DioException ? e.type : e.runtimeType})',
           name: 'auth',
           error: e,
@@ -137,14 +148,27 @@ class AuthRepository {
     }
   }
 
-  Future<String?> getAccessToken() => _tokenStorage.getAccessToken();
+  Future<String?> getAccessToken() =>
+      _tokenStorage.getAccessToken(mode: _modeHolder.currentMode);
 
-  Future<User?> getCachedUser() => _tokenStorage.getCachedUser();
+  Future<User?> getCachedUser({AppMode mode = AppMode.client}) =>
+      _tokenStorage.getCachedUser(mode: mode);
 
-  Future<bool> isLoggedIn() async {
-    final token = await _tokenStorage.getAccessToken();
+  Future<bool> isLoggedIn({AppMode mode = AppMode.client}) async {
+    final token = await _tokenStorage.getAccessToken(mode: mode);
     return token != null;
   }
 
-  Future<void> clearSession() => _tokenStorage.clearTokens();
+  Future<void> clearSession() =>
+      _tokenStorage.clearTokens(mode: _modeHolder.currentMode);
+
+  /// Copy tokens from [source] mode to [target] mode.
+  /// Used when [`checkAuthStatus`] determines the user's role doesn't
+  /// match the storage mode (e.g., trainer tokens stored under client
+  /// prefix during initial login).
+  Future<void> migrateTokens({
+    required AppMode source,
+    required AppMode target,
+  }) =>
+      _tokenStorage.migrateTokens(source: source, target: target);
 }

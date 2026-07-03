@@ -25,6 +25,7 @@ import 'package:ziro_fit/core/network/cache_interceptor.dart' as _i921;
 import 'package:ziro_fit/core/network/dio_client.dart' as _i488;
 import 'package:ziro_fit/core/network/response_cache.dart' as _i340;
 import 'package:ziro_fit/core/network/retry_interceptor.dart' as _i578;
+import 'package:ziro_fit/core/security/active_mode_holder.dart' as _i939;
 import 'package:ziro_fit/core/security/token_storage.dart' as _i601;
 import 'package:ziro_fit/core/settings/appearance_settings_service.dart'
     as _i394;
@@ -112,6 +113,42 @@ import 'package:ziro_fit/features/sync/cubit/sync_cubit.dart' as _i796;
 import 'package:ziro_fit/features/sync/data/sync_api_service.dart' as _i93;
 import 'package:ziro_fit/features/sync/data/sync_repository.dart' as _i813;
 import 'package:ziro_fit/features/sync/workout_realtime_service.dart' as _i197;
+import 'package:ziro_fit/features/trainer/cubit/trainer_calendar_cubit.dart'
+    as _i803;
+import 'package:ziro_fit/features/trainer/cubit/trainer_client_analytics_cubit.dart'
+    as _i1014;
+import 'package:ziro_fit/features/trainer/cubit/trainer_client_detail_cubit.dart'
+    as _i634;
+import 'package:ziro_fit/features/trainer/cubit/trainer_client_habits_cubit.dart'
+    as _i163;
+import 'package:ziro_fit/features/trainer/cubit/trainer_client_nutrition_cubit.dart'
+    as _i1069;
+import 'package:ziro_fit/features/trainer/cubit/trainer_clients_cubit.dart'
+    as _i563;
+import 'package:ziro_fit/features/trainer/cubit/trainer_dashboard_cubit.dart'
+    as _i838;
+import 'package:ziro_fit/features/trainer/cubit/trainer_programs_cubit.dart'
+    as _i753;
+import 'package:ziro_fit/features/trainer/data/trainer_calendar_api_service.dart'
+    as _i1031;
+import 'package:ziro_fit/features/trainer/data/trainer_checkin_api_service.dart'
+    as _i300;
+import 'package:ziro_fit/features/trainer/data/trainer_clients_api_service.dart'
+    as _i861;
+import 'package:ziro_fit/features/trainer/data/trainer_dashboard_api_service.dart'
+    as _i444;
+import 'package:ziro_fit/features/trainer/data/trainer_events_api_service.dart'
+    as _i1022;
+import 'package:ziro_fit/features/trainer/data/trainer_nutrition_api_service.dart'
+    as _i270;
+import 'package:ziro_fit/features/trainer/data/trainer_programs_api_service.dart'
+    as _i742;
+import 'package:ziro_fit/features/trainer/data/trainer_recipes_api_service.dart'
+    as _i979;
+import 'package:ziro_fit/features/trainer/data/trainer_resources_api_service.dart'
+    as _i903;
+import 'package:ziro_fit/features/trainer/data/trainer_settings_api_service.dart'
+    as _i821;
 import 'package:ziro_fit/features/trainers/cubit/exercise_detail_cubit.dart'
     as _i109;
 import 'package:ziro_fit/features/trainers/cubit/workout_history_cubit.dart'
@@ -157,6 +194,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.singleton<_i921.CacheInterceptor>(() => _i921.CacheInterceptor());
     gh.singleton<_i340.ResponseCache>(() => _i340.ResponseCache());
     gh.singleton<_i578.RetryInterceptor>(() => _i578.RetryInterceptor());
+    gh.singleton<_i939.ActiveModeHolder>(() => _i939.ActiveModeHolder());
     gh.singleton<_i601.TokenStorage>(() => _i601.TokenStorage());
     gh.singleton<_i394.AppearanceSettingsService>(
       () => _i394.AppearanceSettingsService(),
@@ -191,7 +229,10 @@ extension GetItInjectableX on _i174.GetIt {
       ),
     );
     gh.singleton<_i680.AuthInterceptor>(
-      () => _i680.AuthInterceptor(gh<_i601.TokenStorage>()),
+      () => _i680.AuthInterceptor(
+        gh<_i601.TokenStorage>(),
+        gh<_i939.ActiveModeHolder>(),
+      ),
     );
     gh.lazySingleton<_i361.Dio>(
       () => networkModule.provideDio(
@@ -244,6 +285,36 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i796.SharingApiService(gh<_i361.Dio>()),
     );
     gh.factory<_i93.SyncApiService>(() => _i93.SyncApiService(gh<_i361.Dio>()));
+    gh.factory<_i1031.TrainerCalendarApiService>(
+      () => _i1031.TrainerCalendarApiService(gh<_i361.Dio>()),
+    );
+    gh.factory<_i300.TrainerCheckInApiService>(
+      () => _i300.TrainerCheckInApiService(gh<_i361.Dio>()),
+    );
+    gh.factory<_i861.TrainerClientsApiService>(
+      () => _i861.TrainerClientsApiService(gh<_i361.Dio>()),
+    );
+    gh.factory<_i444.TrainerDashboardApiService>(
+      () => _i444.TrainerDashboardApiService(gh<_i361.Dio>()),
+    );
+    gh.factory<_i1022.TrainerEventsApiService>(
+      () => _i1022.TrainerEventsApiService(gh<_i361.Dio>()),
+    );
+    gh.factory<_i270.TrainerNutritionApiService>(
+      () => _i270.TrainerNutritionApiService(gh<_i361.Dio>()),
+    );
+    gh.factory<_i742.TrainerProgramsApiService>(
+      () => _i742.TrainerProgramsApiService(gh<_i361.Dio>()),
+    );
+    gh.factory<_i979.TrainerRecipesApiService>(
+      () => _i979.TrainerRecipesApiService(gh<_i361.Dio>()),
+    );
+    gh.factory<_i903.TrainerResourcesApiService>(
+      () => _i903.TrainerResourcesApiService(gh<_i361.Dio>()),
+    );
+    gh.factory<_i821.TrainerSettingsApiService>(
+      () => _i821.TrainerSettingsApiService(gh<_i361.Dio>()),
+    );
     gh.factory<_i637.BookingApiService>(
       () => _i637.BookingApiService(gh<_i361.Dio>()),
     );
@@ -256,11 +327,35 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i315.VoiceSettingsApiService>(
       () => _i315.VoiceSettingsApiService(gh<_i361.Dio>()),
     );
+    gh.factory<_i1014.TrainerClientAnalyticsCubit>(
+      () => _i1014.TrainerClientAnalyticsCubit(
+        gh<_i861.TrainerClientsApiService>(),
+      ),
+    );
+    gh.factory<_i634.TrainerClientDetailCubit>(
+      () =>
+          _i634.TrainerClientDetailCubit(gh<_i861.TrainerClientsApiService>()),
+    );
+    gh.factory<_i163.TrainerClientHabitsCubit>(
+      () =>
+          _i163.TrainerClientHabitsCubit(gh<_i861.TrainerClientsApiService>()),
+    );
+    gh.factory<_i1069.TrainerClientNutritionCubit>(
+      () => _i1069.TrainerClientNutritionCubit(
+        gh<_i861.TrainerClientsApiService>(),
+      ),
+    );
+    gh.factory<_i563.TrainerClientsCubit>(
+      () => _i563.TrainerClientsCubit(gh<_i861.TrainerClientsApiService>()),
+    );
     gh.singleton<_i742.SharingRepository>(
       () => _i742.SharingRepository(
         gh<_i796.SharingApiService>(),
         gh<_i340.ResponseCache>(),
       ),
+    );
+    gh.factory<_i753.TrainerProgramsCubit>(
+      () => _i753.TrainerProgramsCubit(gh<_i742.TrainerProgramsApiService>()),
     );
     gh.factory<_i64.ExploreCubit>(
       () => _i64.ExploreCubit(
@@ -297,10 +392,20 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i365.AppDatabase>(),
       ),
     );
+    gh.factory<_i803.TrainerCalendarCubit>(
+      () => _i803.TrainerCalendarCubit(gh<_i1031.TrainerCalendarApiService>()),
+    );
     gh.singleton<_i982.NutritionHabitsRepository>(
       () => _i982.NutritionHabitsRepository(
         gh<_i416.NutritionHabitsApiService>(),
         gh<_i340.ResponseCache>(),
+      ),
+    );
+    gh.factory<_i838.TrainerDashboardCubit>(
+      () => _i838.TrainerDashboardCubit(
+        gh<_i444.TrainerDashboardApiService>(),
+        gh<_i1031.TrainerCalendarApiService>(),
+        gh<_i300.TrainerCheckInApiService>(),
       ),
     );
     gh.factory<_i803.EventDetailCubit>(
@@ -318,12 +423,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.singleton<_i413.FitnessGoalsCubit>(
       () => _i413.FitnessGoalsCubit(gh<_i1035.FitnessGoalsRepository>()),
     );
-    gh.singleton<_i736.AuthRepository>(
-      () => _i736.AuthRepository(
-        gh<_i568.AuthApiService>(),
-        gh<_i601.TokenStorage>(),
-      ),
-    );
     gh.singleton<_i512.AnalyticsRepository>(
       () => _i512.AnalyticsRepository(
         gh<_i396.AnalyticsApiService>(),
@@ -335,9 +434,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i329.NotificationRepository>(),
         gh<_i115.NotificationRealtimeService>(),
       ),
-    );
-    gh.factory<_i514.AuthCubit>(
-      () => _i514.AuthCubit(gh<_i736.AuthRepository>()),
     );
     gh.singleton<_i459.WorkoutSessionRepository>(
       () => _i459.WorkoutSessionRepository(
@@ -361,6 +457,13 @@ extension GetItInjectableX on _i174.GetIt {
     gh.singleton<_i875.ProgramRepository>(
       () => _i875.ProgramRepository(gh<_i755.ProgramApiService>()),
     );
+    gh.singleton<_i736.AuthRepository>(
+      () => _i736.AuthRepository(
+        gh<_i568.AuthApiService>(),
+        gh<_i601.TokenStorage>(),
+        gh<_i939.ActiveModeHolder>(),
+      ),
+    );
     gh.singleton<_i1063.TrainerRepository>(
       () => _i1063.TrainerRepository(
         gh<_i680.TrainerApiService>(),
@@ -369,12 +472,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i137.TemplateDetailCubit>(
       () => _i137.TemplateDetailCubit(gh<_i459.WorkoutSessionRepository>()),
-    );
-    gh.factory<_i851.ProfileConfigCubit>(
-      () => _i851.ProfileConfigCubit(
-        gh<_i768.ProfileApiService>(),
-        gh<_i514.AuthCubit>(),
-      ),
     );
     gh.singleton<_i607.DailyTargetsRepository>(
       () => _i607.DailyTargetsRepository(
@@ -388,6 +485,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i124.ConnectivityService>(),
       ),
     );
+    gh.singleton<_i514.AuthCubit>(
+      () => _i514.AuthCubit(
+        gh<_i736.AuthRepository>(),
+        gh<_i939.ActiveModeHolder>(),
+      ),
+    );
     gh.factory<_i465.CheckInCubit>(
       () => _i465.CheckInCubit(gh<_i979.CheckInRepository>()),
     );
@@ -396,6 +499,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i871.WorkoutSessionCubit>(
       () => _i871.WorkoutSessionCubit(gh<_i459.WorkoutSessionRepository>()),
+    );
+    gh.factory<_i501.DailyTargetsCubit>(
+      () => _i501.DailyTargetsCubit(
+        gh<_i607.DailyTargetsRepository>(),
+        gh<_i514.AuthCubit>(),
+      ),
     );
     gh.factory<_i560.NutritionHabitsCubit>(
       () => _i560.NutritionHabitsCubit(gh<_i982.NutritionHabitsRepository>()),
@@ -416,7 +525,11 @@ extension GetItInjectableX on _i174.GetIt {
       ),
     );
     gh.factory<_i13.HomeCubit>(
-      () => _i13.HomeCubit(gh<_i516.HomeRepository>(), gh<_i448.QueryClient>()),
+      () => _i13.HomeCubit(
+        gh<_i516.HomeRepository>(),
+        gh<_i448.QueryClient>(),
+        gh<_i514.AuthCubit>(),
+      ),
     );
     gh.factory<_i195.WorkoutHistoryCubit>(
       () => _i195.WorkoutHistoryCubit(
@@ -431,8 +544,11 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i459.WorkoutSessionRepository>(),
       ),
     );
-    gh.factory<_i501.DailyTargetsCubit>(
-      () => _i501.DailyTargetsCubit(gh<_i607.DailyTargetsRepository>()),
+    gh.factory<_i851.ProfileConfigCubit>(
+      () => _i851.ProfileConfigCubit(
+        gh<_i768.ProfileApiService>(),
+        gh<_i514.AuthCubit>(),
+      ),
     );
     return this;
   }

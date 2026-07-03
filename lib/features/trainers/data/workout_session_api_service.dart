@@ -69,11 +69,19 @@ class WorkoutSessionApiService {
       data['session'] as Map<String, dynamic>,
     );
 
-    // Inject flat clientId from nested client object
-    final clientId =
-        (session['client'] as Map<String, dynamic>?)?['id'] as String?;
+    // Inject flat clientId / clientName / clientAvatarUrl from nested client object
+    final clientObj = session['client'] as Map<String, dynamic>?;
+    final clientId = clientObj?['id'] as String?;
     if (clientId != null) {
       session['clientId'] = clientId;
+    }
+    final clientName = clientObj?['name'] as String?;
+    if (clientName != null) {
+      session['clientName'] = clientName;
+    }
+    final clientAvatarUrl = clientObj?['avatarPath'] as String?;
+    if (clientAvatarUrl != null) {
+      session['clientAvatarUrl'] = clientAvatarUrl;
     }
 
     // Extract exerciseLogs, inject missing clientId/workoutSessionId/exerciseId

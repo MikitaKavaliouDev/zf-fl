@@ -65,6 +65,12 @@ class WorkoutCompletedView extends StatelessWidget {
           _buildHeader(formattedDate, timeRangeStr),
           const SizedBox(height: 24),
 
+          // ── Client info (trainer sees who was trained) ──
+          if (session.clientName != null && session.clientName!.isNotEmpty) ...[
+            _buildClientInfo(session.clientName!, session.clientAvatarUrl),
+            const SizedBox(height: 24),
+          ],
+
           // ── Stats row ──
           _buildStatsRow(totalDuration, totalVolume, totalSets),
           const SizedBox(height: 24),
@@ -157,6 +163,48 @@ class WorkoutCompletedView extends StatelessWidget {
         Text(
           timeRange,
           style: const TextStyle(fontSize: 14, color: AppColors.mutedText),
+        ),
+      ],
+    );
+  }
+
+  // ── Client Info ──
+
+  Widget _buildClientInfo(String clientName, String? avatarUrl) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        if (avatarUrl != null)
+          Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: ClipOval(
+              child: Image.network(
+                avatarUrl,
+                width: 28,
+                height: 28,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              ),
+            ),
+          )
+        else
+          Container(
+            width: 28,
+            height: 28,
+            decoration: const BoxDecoration(
+              color: AppColors.primary,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.person_rounded, size: 16, color: Colors.white),
+          ),
+        const SizedBox(width: 8),
+        Text(
+          'Client: $clientName',
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: AppColors.foreground,
+          ),
         ),
       ],
     );

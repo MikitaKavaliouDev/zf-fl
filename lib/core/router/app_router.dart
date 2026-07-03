@@ -43,6 +43,23 @@ import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/profile/presentation/settings_screens/contact_support_screen.dart';
 import '../../features/profile/presentation/settings_screens/profile_config_screen.dart';
 import '../../features/sharing/presentation/sharing_screen.dart';
+import '../../features/trainer/cubit/trainer_calendar_cubit.dart';
+import '../../features/trainer/cubit/trainer_client_detail_cubit.dart';
+import '../../features/trainer/cubit/trainer_clients_cubit.dart';
+import '../../features/trainer/cubit/trainer_dashboard_cubit.dart';
+import '../../features/trainer/cubit/trainer_programs_cubit.dart';
+import '../../features/trainer/presentation/calendar/trainer_calendar_screen.dart';
+import '../../features/trainer/presentation/checkins/trainer_checkin_review_screen.dart';
+import '../../features/trainer/presentation/clients/trainer_client_detail_screen.dart';
+import '../../features/trainer/presentation/clients/trainer_clients_screen.dart';
+import '../../features/trainer/presentation/dashboard/trainer_dashboard_screen.dart';
+import '../../features/trainer/presentation/events/trainer_events_screen.dart';
+import '../../features/trainer/presentation/programs/trainer_program_detail_screen.dart';
+import '../../features/trainer/presentation/programs/trainer_programs_screen.dart';
+import '../../features/trainer/presentation/recipes/trainer_recipes_screen.dart';
+import '../../features/trainer/presentation/resources/trainer_resource_vault_screen.dart';
+import '../../features/trainer/presentation/settings/trainer_more_screen.dart';
+import '../../features/trainer/presentation/trainer_shell.dart';
 import '../../features/trainers/cubit/exercise_detail_cubit.dart';
 import '../../features/trainers/cubit/workout_session_cubit.dart';
 import '../../features/trainers/cubit/workout_session_state.dart';
@@ -88,6 +105,8 @@ GoRouter createAppRouter(AuthCubit authCubit) {
       // Don't redirect during initial auth check — prevents login flash
       if (authState is AuthInitial && !hasCheckedAuth) return null;
 
+      final isTrainer = authState is AuthAuthenticated && authState.isTrainer;
+
       final loggedIn =
           authState is AuthAuthenticated ||
           authState is AuthNeedsOnboarding ||
@@ -97,12 +116,20 @@ GoRouter createAppRouter(AuthCubit authCubit) {
           location == '/register' ||
           location == '/verify-email' ||
           location == '/onboarding';
+      final onTrainerPage = location.startsWith('/trainer/');
+      // Shared routes that both clients and trainers can access
+      // (e.g. mini player → full-screen workout session)
+      final onSharedRoute = location == '/workout/session' ||
+          location == '/workout/history' ||
+          location.startsWith('/workout/exercise/');
 
       // Not logged in → auth pages only.
       if (!loggedIn && !onAuthPage) return '/login';
 
       // Logged in → redirect away from auth pages.
-      if (loggedIn && onAuthPage) return '/';
+      if (loggedIn && onAuthPage) {
+        return isTrainer ? '/trainer/dashboard' : '/';
+      }
 
       // Needs onboarding → force to onboarding.
       if (authState is AuthNeedsOnboarding && location != '/onboarding') {
@@ -117,6 +144,18 @@ GoRouter createAppRouter(AuthCubit authCubit) {
       // Pending role (unverified email) → show verify-email.
       if (authState is AuthPendingRole && location != '/verify-email') {
         return '/verify-email';
+      }
+
+      // Trainer on client page → trainer dashboard.
+      // Exclude shared routes (workout session, history, etc.) so the
+      // mini-player → full-screen navigation works for trainers too.
+      if (isTrainer && !onTrainerPage && !onAuthPage && !onSharedRoute) {
+        return '/trainer/dashboard';
+      }
+
+      // Client on trainer page → client home.
+      if (loggedIn && !isTrainer && onTrainerPage) {
+        return '/';
       }
 
       return null; // no redirect
@@ -201,6 +240,65 @@ GoRouter createAppRouter(AuthCubit authCubit) {
                   create: (_) => getIt<AnalyticsCubit>(),
                   child: const AnalyticsScreen(),
                 ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      // ── Trainer shell (5 tabs) ──
+      StatefulShellRoute.indexedStack(
+        builder: (_, _, navigationShell) =>
+            TrainerShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/trainer/calendar',
+                builder: (_, _) => BlocProvider<TrainerCalendarCubit>(
+                  create: (_) => getIt<TrainerCalendarCubit>(),
+                  child: const TrainerCalendarScreen(),
+                ),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/trainer/programs',
+                builder: (_, _) => BlocProvider<TrainerProgramsCubit>(
+                  create: (_) => getIt<TrainerProgramsCubit>(),
+                  child: const TrainerProgramsScreen(),
+                ),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/trainer/dashboard',
+                builder: (_, _) => BlocProvider<TrainerDashboardCubit>(
+                  create: (_) => getIt<TrainerDashboardCubit>(),
+                  child: const TrainerDashboardScreen(),
+                ),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/trainer/clients',
+                builder: (_, _) => BlocProvider<TrainerClientsCubit>(
+                  create: (_) => getIt<TrainerClientsCubit>(),
+                  child: const TrainerClientsScreen(),
+                ),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/trainer/more',
+                builder: (_, _) => const TrainerMoreScreen(),
               ),
             ],
           ),
@@ -301,6 +399,48 @@ GoRouter createAppRouter(AuthCubit authCubit) {
             );
           },
         ),
+      ),
+      // Trainer client detail (full-screen, no bottom nav)
+      GoRoute(
+        path: '/trainer/clients/:id',
+        builder: (_, state) {
+          final clientId = state.pathParameters['id'] ?? '';
+          return BlocProvider<TrainerClientDetailCubit>(
+            create: (_) => getIt<TrainerClientDetailCubit>(),
+            child: TrainerClientDetailScreen(clientId: clientId),
+          );
+        },
+      ),
+      // Trainer program detail (full-screen, no bottom nav)
+      GoRoute(
+        path: '/trainer/programs/:id',
+        builder: (_, state) {
+          final programId = state.pathParameters['id'] ?? '';
+          return BlocProvider<TrainerProgramsCubit>(
+            create: (_) => getIt<TrainerProgramsCubit>(),
+            child: TrainerProgramDetailScreen(programId: programId),
+          );
+        },
+      ),
+      // Trainer check-in review (full-screen, no bottom nav)
+      GoRoute(
+        path: '/trainer/checkins',
+        builder: (_, _) => const TrainerCheckInReviewScreen(),
+      ),
+      // Trainer events (full-screen, no bottom nav)
+      GoRoute(
+        path: '/trainer/events',
+        builder: (_, _) => const TrainerEventsScreen(),
+      ),
+      // Trainer resource vault (full-screen)
+      GoRoute(
+        path: '/trainer/resources',
+        builder: (_, _) => const TrainerResourceVaultScreen(),
+      ),
+      // Trainer recipes (full-screen)
+      GoRoute(
+        path: '/trainer/recipes',
+        builder: (_, _) => const TrainerRecipesScreen(),
       ),
       // Trainer detail (full-screen, no bottom nav)
       GoRoute(
@@ -707,6 +847,29 @@ class _MainShell extends StatelessWidget {
             label: 'Analytics',
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Placeholder screen for trainer tabs not yet implemented ──
+
+class _PlaceholderTrainerScreen extends StatelessWidget {
+  final String label;
+  const _PlaceholderTrainerScreen({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(label)),
+      body: Center(
+        child: Text(
+          '$label — coming soon',
+          style: const TextStyle(
+            fontSize: 16,
+            color: AppColors.mutedText,
+          ),
+        ),
       ),
     );
   }
