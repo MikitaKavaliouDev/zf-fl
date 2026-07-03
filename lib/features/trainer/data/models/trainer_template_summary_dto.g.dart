@@ -17,6 +17,9 @@ _TrainerTemplateSummaryDto _$TrainerTemplateSummaryDtoFromJson(
   exerciseCount: json['_count'] == null
       ? 0
       : countToExerciseCount(json['_count'] as Map<String, dynamic>?),
+  exercises: json['exercises'] == null
+      ? const []
+      : exerciseListFromJson(json['exercises'] as List?),
 );
 
 Map<String, dynamic> _$TrainerTemplateSummaryDtoToJson(
@@ -28,4 +31,5 @@ Map<String, dynamic> _$TrainerTemplateSummaryDtoToJson(
   'order': instance.order,
   'programId': instance.programId,
   '_count': instance.exerciseCount,
+  'exercises': instance.exercises,
 };

@@ -30,67 +30,71 @@ class _TrainerProgramsScreenState extends State<TrainerProgramsScreen> {
     final nameCtrl = TextEditingController();
     final descCtrl = TextEditingController();
 
+    final cubit = context.read<TrainerProgramsCubit>();
+
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.card,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Create Program',
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameCtrl,
-              decoration: InputDecoration(
-                labelText: 'Program name *',
-                filled: true,
-                fillColor: AppColors.mutedSurface,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.borderMuted),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: AppColors.card,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text('Create Program',
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameCtrl,
+                decoration: InputDecoration(
+                  labelText: 'Program name *',
+                  filled: true,
+                  fillColor: AppColors.mutedSurface,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.borderMuted),
+                  ),
+                ),
+                onChanged: (_) => setDialogState(() {}),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: descCtrl,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  labelText: 'Description (optional)',
+                  filled: true,
+                  fillColor: AppColors.mutedSurface,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.borderMuted),
+                  ),
                 ),
               ),
-              onChanged: (_) => setState(() {}),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Cancel'),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: descCtrl,
-              maxLines: 3,
-              decoration: InputDecoration(
-                labelText: 'Description (optional)',
-                filled: true,
-                fillColor: AppColors.mutedSurface,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.borderMuted),
-                ),
-              ),
+            FilledButton(
+              onPressed: nameCtrl.text.trim().isEmpty
+                  ? null
+                  : () {
+                      cubit.createProgram(
+                        CreateProgramRequestDto(
+                          name: nameCtrl.text.trim(),
+                          description: descCtrl.text.trim().isNotEmpty
+                              ? descCtrl.text.trim()
+                              : null,
+                        ),
+                      );
+                      Navigator.of(ctx).pop();
+                    },
+              child: const Text('Create'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: nameCtrl.text.trim().isEmpty
-                ? null
-                : () {
-                    ctx.read<TrainerProgramsCubit>().createProgram(
-                          CreateProgramRequestDto(
-                            name: nameCtrl.text.trim(),
-                            description: descCtrl.text.trim().isNotEmpty
-                                ? descCtrl.text.trim()
-                                : null,
-                          ),
-                        );
-                    Navigator.of(ctx).pop();
-                  },
-            child: const Text('Create'),
-          ),
-        ],
       ),
     );
   }
@@ -286,7 +290,10 @@ class _ProgramCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () => context.push('/trainer/programs/${program.id}'),
+        onTap: () => context.push(
+          '/trainer/programs/${program.id}',
+          extra: program,
+        ),
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(

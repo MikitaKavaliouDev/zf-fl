@@ -9,6 +9,7 @@ import 'models/create_program_request_dto.dart';
 import 'models/create_template_request_dto.dart';
 import 'models/program_analytics_dto.dart';
 import 'models/template_exercise_dto.dart';
+import 'models/program_library_response.dart';
 import 'models/trainer_program_brief_dto.dart';
 import 'models/trainer_template_summary_dto.dart';
 
@@ -20,16 +21,11 @@ class TrainerProgramsApiService {
 
   // ── Programs ──
 
-  /// GET /api/trainer/programs — list trainer's programs.
-  Future<List<TrainerProgramBriefDto>> getPrograms() async {
+  /// GET /api/trainer/programs — list trainer's programs + templates.
+  Future<ProgramLibraryResponse> getPrograms() async {
     final response = await _dio.get('/api/trainer/programs');
-    final data = response.data['data'] as Map<String, dynamic>;
-    // Response has { userPrograms: [...], systemTemplates: [...] }
-    final programs = data['userPrograms'] as List<dynamic>;
-    return programs
-        .map((e) =>
-            TrainerProgramBriefDto.fromJson(e as Map<String, dynamic>))
-        .toList();
+    return ProgramLibraryResponse.fromJson(
+        response.data['data'] as Map<String, dynamic>);
   }
 
   /// POST /api/trainer/programs — create a new program.
@@ -41,7 +37,8 @@ class TrainerProgramsApiService {
       data: request.toJson(),
     );
     final data = response.data['data'] as Map<String, dynamic>;
-    return TrainerProgramBriefDto.fromJson(data);
+    final program = data['program'] as Map<String, dynamic>;
+    return TrainerProgramBriefDto.fromJson(program);
   }
 
   /// GET /api/trainer/programs/:id — program detail with templates.
@@ -88,17 +85,19 @@ class TrainerProgramsApiService {
 
   // ── Templates ──
 
-  /// POST /api/trainer/programs/:id/templates — add template to a program.
+  /// POST /api/trainer/programs/templates — add template to a program.
+  /// `programId` is embedded in the request body, not the URL.
   Future<TrainerTemplateSummaryDto> createTemplate(
     String programId,
     CreateTemplateRequestDto request,
   ) async {
     final response = await _dio.post(
-      '/api/trainer/programs/$programId/templates',
+      '/api/trainer/programs/templates',
       data: request.toJson(),
     );
-    final data = response.data['data'] as Map<String, dynamic>;
-    return TrainerTemplateSummaryDto.fromJson(data);
+    final body = response.data['data'] as Map<String, dynamic>;
+    final templateJson = body['template'] as Map<String, dynamic>;
+    return TrainerTemplateSummaryDto.fromJson(templateJson);
   }
 
   /// PUT /api/trainer/programs/:programId/templates/:id
@@ -122,13 +121,13 @@ class TrainerProgramsApiService {
     );
   }
 
-  /// GET /api/trainer/programs/:id/templates/:templateId — template with exercises.
+  /// GET /api/trainer/programs/templates/:templateId — template with exercises.
   Future<List<TemplateExerciseDto>> getTemplateExercises(
     String programId,
     String templateId,
   ) async {
     final response = await _dio.get(
-      '/api/trainer/programs/$programId/templates/$templateId',
+      '/api/trainer/programs/templates/$templateId',
     );
     final data = response.data['data'] as Map<String, dynamic>;
     final exercises = data['exercises'] as List<dynamic>;
@@ -177,13 +176,14 @@ class TrainerProgramsApiService {
     );
   }
 
-  /// POST /api/trainer/programs/:programId/templates/:templateId/copy
+  /// POST /api/trainer/programs/templates/:templateId/copy
+  /// `programId` is NOT part of the URL — the backend resolves from the template.
   Future<CopyTemplateResponseDto> copyTemplate(
     String programId,
     String templateId,
   ) async {
     final response = await _dio.post(
-      '/api/trainer/programs/$programId/templates/$templateId/copy',
+      '/api/trainer/programs/templates/$templateId/copy',
     );
     final data = response.data['data'] as Map<String, dynamic>;
     return CopyTemplateResponseDto.fromJson(data);

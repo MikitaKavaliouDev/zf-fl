@@ -13,10 +13,12 @@ import '../../data/models/trainer_template_summary_dto.dart';
 /// Full-screen detail view of a single trainer program with its templates.
 class TrainerProgramDetailScreen extends StatefulWidget {
   final String programId;
+  final TrainerProgramBriefDto? program;
 
   const TrainerProgramDetailScreen({
     super.key,
     required this.programId,
+    this.program,
   });
 
   @override
@@ -31,12 +33,17 @@ class _TrainerProgramDetailScreenState
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<TrainerProgramsCubit>().loadPrograms();
-    });
+    // Only fetch if no preloaded program was passed
+    if (widget.program == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<TrainerProgramsCubit>().loadPrograms();
+      });
+    }
   }
 
   TrainerProgramBriefDto? _findProgram(List<TrainerProgramBriefDto> programs) {
+    // Search the live state for the program — this captures optimistic updates.
+    // The builder handles fallback to widget.program when state isn't loaded.
     try {
       return programs.firstWhere((p) => p.id == widget.programId);
     } catch (_) {
@@ -74,71 +81,203 @@ class _TrainerProgramDetailScreenState
     );
   }
 
-  void _showAddTemplateDialog() {
+  Future<void> _showAddTemplateSheet() async {
     final nameCtrl = TextEditingController();
     final descCtrl = TextEditingController();
+    final cubit = context.read<TrainerProgramsCubit>();
 
-    showDialog(
+    // If templates aren't loaded yet, trigger a background load.
+    // The BlocBuilder inside the sheet will react when data arrives.
+    if (cubit.state is! TrainerProgramsLoaded) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        cubit.loadPrograms();
+      });
+    }
+
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.card,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Add Template',
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameCtrl,
-              decoration: InputDecoration(
-                labelText: 'Template name *',
-                filled: true,
-                fillColor: AppColors.mutedSurface,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.borderMuted),
-                ),
+      backgroundColor: AppColors.card,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => BlocProvider.value(
+        value: cubit,
+        child: BlocBuilder<TrainerProgramsCubit, TrainerProgramsState>(
+          builder: (ctx, state) {
+            final libraryTemplates = state is TrainerProgramsLoaded
+              ? [
+                  ...state.userTemplates,
+                  ...state.systemTemplates,
+                ]
+              : const <TrainerTemplateSummaryDto>[];
+
+          final isLoadingData = state is! TrainerProgramsLoaded;
+
+          return StatefulBuilder(
+            builder: (ctx, setSheetState) => Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(ctx).viewInsets.bottom,
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: descCtrl,
-              maxLines: 3,
-              decoration: InputDecoration(
-                labelText: 'Description (optional)',
-                filled: true,
-                fillColor: AppColors.mutedSurface,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.borderMuted),
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: nameCtrl.text.trim().isEmpty
-                ? null
-                : () {
-                    ctx.read<TrainerProgramsCubit>().createTemplate(
-                          CreateTemplateRequestDto(
-                            programId: widget.programId,
-                            name: nameCtrl.text.trim(),
-                            description: descCtrl.text.trim().isNotEmpty
-                                ? descCtrl.text.trim()
-                                : null,
+              child: SizedBox(
+                width: double.infinity,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Handle bar
+                    Center(
+                      child: Container(
+                        margin: const EdgeInsets.only(top: 12, bottom: 8),
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppColors.borderMuted,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      child: Text('Add Template',
+                          style: TextStyle(
+                              fontSize: 17, fontWeight: FontWeight.w600)),
+                    ),
+                    const Divider(height: 1, color: AppColors.borderMuted),
+
+                    if (isLoadingData)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 32),
+                        child: Center(
+                          child: CircularProgressIndicator(
+                              strokeWidth: 3, color: AppColors.primary),
+                        ),
+                      )
+                    else ...[
+                      // Create new section
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+                        child: Text('Create New',
+                            style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.mutedText)),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: TextField(
+                          controller: nameCtrl,
+                          decoration: InputDecoration(
+                            labelText: 'Template name *',
+                            filled: true,
+                            fillColor: AppColors.mutedSurface,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                  color: AppColors.borderMuted),
+                            ),
                           ),
-                        );
-                    Navigator.of(ctx).pop();
-                  },
-            child: const Text('Add'),
-          ),
-        ],
+                          onChanged: (_) => setSheetState(() {}),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+                        child: TextField(
+                          controller: descCtrl,
+                          maxLines: 2,
+                          decoration: InputDecoration(
+                            labelText: 'Description (optional)',
+                            filled: true,
+                            fillColor: AppColors.mutedSurface,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                  color: AppColors.borderMuted),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: FilledButton(
+                            onPressed: nameCtrl.text.trim().isEmpty
+                                ? null
+                                : () {
+                                    cubit.createTemplate(
+                                      CreateTemplateRequestDto(
+                                        programId: widget.programId,
+                                        name: nameCtrl.text.trim(),
+                                        description: descCtrl
+                                                .text.trim().isNotEmpty
+                                            ? descCtrl.text.trim()
+                                            : null,
+                                      ),
+                                    );
+                                    Navigator.of(ctx).pop();
+                                  },
+                            child: const Text('Create Template'),
+                          ),
+                        ),
+                      ),
+                      // Library section
+                      if (libraryTemplates.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        const Divider(
+                            height: 1, color: AppColors.borderMuted),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                          child: Text('From Library',
+                              style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.mutedText)),
+                        ),
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxHeight:
+                                MediaQuery.of(ctx).size.height * 0.25,
+                          ),
+                          child: ListView.separated(
+                            shrinkWrap: true,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20),
+                            itemCount: libraryTemplates.length,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: 6),
+                            itemBuilder: (_, i) {
+                              final t = libraryTemplates[i];
+                              return _LibraryTemplateTile(
+                                name: t.name,
+                                description: t.description,
+                                exerciseCount: t.exerciseCount,
+                                onTap: () {
+                                  cubit.createTemplate(
+                                    CreateTemplateRequestDto(
+                                      programId: widget.programId,
+                                      name: t.name,
+                                      description: t.description,
+                                      exercises: t.exercises,
+                                    ),
+                                  );
+                                  Navigator.of(ctx).pop();
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ],
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
       ),
     );
   }
@@ -160,37 +299,41 @@ class _TrainerProgramDetailScreenState
       body:
           BlocBuilder<TrainerProgramsCubit, TrainerProgramsState>(
         builder: (context, state) {
-          if (state is TrainerProgramsLoading ||
-              state is TrainerProgramsInitial) {
-            return const Center(
-                child:
-                    CircularProgressIndicator(color: AppColors.primary));
-          }
-          if (state is TrainerProgramsError) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(state.message,
-                      style:
-                          const TextStyle(color: AppColors.mutedText)),
-                  const SizedBox(height: 12),
-                  FilledButton.icon(
-                    onPressed: () => context
-                        .read<TrainerProgramsCubit>()
-                        .loadPrograms(),
-                    icon: const Icon(Icons.refresh_rounded),
-                    label: const Text('Retry'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          final loaded = state as TrainerProgramsLoaded;
-          final program = _findProgram(loaded.programs);
+          // Prefer the cubit state (which gets optimistic updates) over the
+          // preloaded widget.program (immutable route extra). Fall back to
+          // widget.program only when the cubit hasn't loaded yet to avoid
+          // showing a spinner on initial navigation.
+          final program = state is TrainerProgramsLoaded
+              ? _findProgram(state.programs) ?? widget.program
+              : widget.program;
 
           if (program == null) {
+            if (state is TrainerProgramsError) {
+              return Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(state.message,
+                        style:
+                            const TextStyle(color: AppColors.mutedText)),
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                      onPressed: () => context
+                          .read<TrainerProgramsCubit>()
+                          .loadPrograms(),
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              );
+            }
+            if (state is TrainerProgramsLoading ||
+                state is TrainerProgramsInitial) {
+              return const Center(
+                  child: CircularProgressIndicator(
+                      color: AppColors.primary));
+            }
             return const Center(
               child: Text('Program not found.',
                   style: TextStyle(color: AppColors.mutedText)),
@@ -240,7 +383,7 @@ class _TrainerProgramDetailScreenState
                             fontWeight: FontWeight.w600)),
                     const Spacer(),
                     TextButton.icon(
-                      onPressed: _showAddTemplateDialog,
+                      onPressed: _showAddTemplateSheet,
                       icon: const Icon(Icons.add_rounded, size: 18),
                       label: const Text('Add'),
                     ),
@@ -539,6 +682,87 @@ class _TemplateCardState extends State<_TemplateCard> {
                 ),
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Library Template Tile ──
+
+class _LibraryTemplateTile extends StatelessWidget {
+  final String name;
+  final String? description;
+  final int exerciseCount;
+  final VoidCallback onTap;
+
+  const _LibraryTemplateTile({
+    required this.name,
+    this.description,
+    required this.exerciseCount,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.mutedSurface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.borderMuted),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              alignment: Alignment.center,
+              child: const Icon(Icons.library_books_outlined,
+                  size: 18, color: AppColors.primary),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.w600)),
+                  if (description != null && description!.isNotEmpty)
+                    Text(description!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontSize: 12, color: AppColors.mutedText)),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.card,
+                borderRadius: BorderRadius.circular(99),
+              ),
+              child: Text('$exerciseCount ex',
+                  style: const TextStyle(
+                      fontSize: 11, color: AppColors.mutedText)),
+            ),
+            const SizedBox(width: 4),
+            const Icon(Icons.add_rounded,
+                size: 18, color: AppColors.primary),
           ],
         ),
       ),

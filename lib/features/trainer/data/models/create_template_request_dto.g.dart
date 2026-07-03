@@ -12,6 +12,14 @@ _CreateTemplateRequestDto _$CreateTemplateRequestDtoFromJson(
   name: json['name'] as String,
   programId: json['programId'] as String,
   description: json['description'] as String?,
+  exercises:
+      (json['exercises'] as List<dynamic>?)
+          ?.map(
+            (e) =>
+                CreateTemplateExerciseDto.fromJson(e as Map<String, dynamic>),
+          )
+          .toList() ??
+      const [],
 );
 
 Map<String, dynamic> _$CreateTemplateRequestDtoToJson(
@@ -20,4 +28,5 @@ Map<String, dynamic> _$CreateTemplateRequestDtoToJson(
   'name': instance.name,
   'programId': instance.programId,
   'description': instance.description,
+  'exercises': instance.exercises,
 };

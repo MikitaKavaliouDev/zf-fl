@@ -19,10 +19,12 @@ class TrainerProgramsCubit extends Cubit<TrainerProgramsState> {
   Future<void> loadPrograms() async {
     emit(const TrainerProgramsState.loading());
     try {
-      final programs = await _api.getPrograms();
+      final library = await _api.getPrograms();
       final activePrograms = await _api.getActivePrograms();
       emit(TrainerProgramsState.loaded(
-        programs: programs,
+        programs: library.userPrograms,
+        systemTemplates: library.systemTemplates,
+        userTemplates: library.userTemplates,
         activePrograms: activePrograms,
       ));
     } catch (e) {
@@ -33,8 +35,13 @@ class TrainerProgramsCubit extends Cubit<TrainerProgramsState> {
 
   Future<void> createProgram(CreateProgramRequestDto request) async {
     try {
-      await _api.createProgram(request);
-      await loadPrograms();
+      final created = await _api.createProgram(request);
+      final current = state;
+      if (current is TrainerProgramsLoaded) {
+        emit(current.copyWith(
+          programs: [created, ...current.programs],
+        ));
+      }
     } catch (e) {
       developer.log('Create program failed: $e', name: 'trainer');
     }
@@ -63,8 +70,22 @@ class TrainerProgramsCubit extends Cubit<TrainerProgramsState> {
 
   Future<void> createTemplate(CreateTemplateRequestDto request) async {
     try {
-      await _api.createTemplate(request.programId, request);
-      await loadPrograms();
+      final created = await _api.createTemplate(request.programId, request);
+      // Optimistically add the template to the local program state
+      // so the UI updates immediately without waiting for full reload.
+      final current = state;
+      if (current is TrainerProgramsLoaded) {
+        emit(current.copyWith(
+          programs: current.programs.map((p) {
+            if (p.id == request.programId) {
+              return p.copyWith(
+                templates: [...p.templates, created],
+              );
+            }
+            return p;
+          }).toList(),
+        ));
+      }
     } catch (e) {
       developer.log('Create template failed: $e', name: 'trainer');
     }

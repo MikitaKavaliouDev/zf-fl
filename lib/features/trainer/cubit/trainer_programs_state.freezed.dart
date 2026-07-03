@@ -125,12 +125,12 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<TrainerProgramBriefDto> programs,  List<ActiveProgramItemDto> activePrograms,  ProgramAnalyticsDto? analytics)?  loaded,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<TrainerProgramBriefDto> programs,  List<ActiveProgramItemDto> activePrograms,  List<TrainerTemplateSummaryDto> systemTemplates,  List<TrainerTemplateSummaryDto> userTemplates,  ProgramAnalyticsDto? analytics)?  loaded,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case TrainerProgramsInitial() when initial != null:
 return initial();case TrainerProgramsLoading() when loading != null:
 return loading();case TrainerProgramsLoaded() when loaded != null:
-return loaded(_that.programs,_that.activePrograms,_that.analytics);case TrainerProgramsError() when error != null:
+return loaded(_that.programs,_that.activePrograms,_that.systemTemplates,_that.userTemplates,_that.analytics);case TrainerProgramsError() when error != null:
 return error(_that.message);case _:
   return orElse();
 
@@ -149,12 +149,12 @@ return error(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<TrainerProgramBriefDto> programs,  List<ActiveProgramItemDto> activePrograms,  ProgramAnalyticsDto? analytics)  loaded,required TResult Function( String message)  error,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<TrainerProgramBriefDto> programs,  List<ActiveProgramItemDto> activePrograms,  List<TrainerTemplateSummaryDto> systemTemplates,  List<TrainerTemplateSummaryDto> userTemplates,  ProgramAnalyticsDto? analytics)  loaded,required TResult Function( String message)  error,}) {final _that = this;
 switch (_that) {
 case TrainerProgramsInitial():
 return initial();case TrainerProgramsLoading():
 return loading();case TrainerProgramsLoaded():
-return loaded(_that.programs,_that.activePrograms,_that.analytics);case TrainerProgramsError():
+return loaded(_that.programs,_that.activePrograms,_that.systemTemplates,_that.userTemplates,_that.analytics);case TrainerProgramsError():
 return error(_that.message);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -169,12 +169,12 @@ return error(_that.message);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<TrainerProgramBriefDto> programs,  List<ActiveProgramItemDto> activePrograms,  ProgramAnalyticsDto? analytics)?  loaded,TResult? Function( String message)?  error,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<TrainerProgramBriefDto> programs,  List<ActiveProgramItemDto> activePrograms,  List<TrainerTemplateSummaryDto> systemTemplates,  List<TrainerTemplateSummaryDto> userTemplates,  ProgramAnalyticsDto? analytics)?  loaded,TResult? Function( String message)?  error,}) {final _that = this;
 switch (_that) {
 case TrainerProgramsInitial() when initial != null:
 return initial();case TrainerProgramsLoading() when loading != null:
 return loading();case TrainerProgramsLoaded() when loaded != null:
-return loaded(_that.programs,_that.activePrograms,_that.analytics);case TrainerProgramsError() when error != null:
+return loaded(_that.programs,_that.activePrograms,_that.systemTemplates,_that.userTemplates,_that.analytics);case TrainerProgramsError() when error != null:
 return error(_that.message);case _:
   return null;
 
@@ -251,7 +251,7 @@ String toString() {
 
 
 class TrainerProgramsLoaded implements TrainerProgramsState {
-  const TrainerProgramsLoaded({final  List<TrainerProgramBriefDto> programs = const [], final  List<ActiveProgramItemDto> activePrograms = const [], this.analytics}): _programs = programs,_activePrograms = activePrograms;
+  const TrainerProgramsLoaded({final  List<TrainerProgramBriefDto> programs = const [], final  List<ActiveProgramItemDto> activePrograms = const [], final  List<TrainerTemplateSummaryDto> systemTemplates = const [], final  List<TrainerTemplateSummaryDto> userTemplates = const [], this.analytics}): _programs = programs,_activePrograms = activePrograms,_systemTemplates = systemTemplates,_userTemplates = userTemplates;
   
 
  final  List<TrainerProgramBriefDto> _programs;
@@ -268,6 +268,20 @@ class TrainerProgramsLoaded implements TrainerProgramsState {
   return EqualUnmodifiableListView(_activePrograms);
 }
 
+ final  List<TrainerTemplateSummaryDto> _systemTemplates;
+@JsonKey() List<TrainerTemplateSummaryDto> get systemTemplates {
+  if (_systemTemplates is EqualUnmodifiableListView) return _systemTemplates;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_systemTemplates);
+}
+
+ final  List<TrainerTemplateSummaryDto> _userTemplates;
+@JsonKey() List<TrainerTemplateSummaryDto> get userTemplates {
+  if (_userTemplates is EqualUnmodifiableListView) return _userTemplates;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_userTemplates);
+}
+
  final  ProgramAnalyticsDto? analytics;
 
 /// Create a copy of TrainerProgramsState
@@ -280,16 +294,16 @@ $TrainerProgramsLoadedCopyWith<TrainerProgramsLoaded> get copyWith => _$TrainerP
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TrainerProgramsLoaded&&const DeepCollectionEquality().equals(other._programs, _programs)&&const DeepCollectionEquality().equals(other._activePrograms, _activePrograms)&&(identical(other.analytics, analytics) || other.analytics == analytics));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TrainerProgramsLoaded&&const DeepCollectionEquality().equals(other._programs, _programs)&&const DeepCollectionEquality().equals(other._activePrograms, _activePrograms)&&const DeepCollectionEquality().equals(other._systemTemplates, _systemTemplates)&&const DeepCollectionEquality().equals(other._userTemplates, _userTemplates)&&(identical(other.analytics, analytics) || other.analytics == analytics));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_programs),const DeepCollectionEquality().hash(_activePrograms),analytics);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_programs),const DeepCollectionEquality().hash(_activePrograms),const DeepCollectionEquality().hash(_systemTemplates),const DeepCollectionEquality().hash(_userTemplates),analytics);
 
 @override
 String toString() {
-  return 'TrainerProgramsState.loaded(programs: $programs, activePrograms: $activePrograms, analytics: $analytics)';
+  return 'TrainerProgramsState.loaded(programs: $programs, activePrograms: $activePrograms, systemTemplates: $systemTemplates, userTemplates: $userTemplates, analytics: $analytics)';
 }
 
 
@@ -300,7 +314,7 @@ abstract mixin class $TrainerProgramsLoadedCopyWith<$Res> implements $TrainerPro
   factory $TrainerProgramsLoadedCopyWith(TrainerProgramsLoaded value, $Res Function(TrainerProgramsLoaded) _then) = _$TrainerProgramsLoadedCopyWithImpl;
 @useResult
 $Res call({
- List<TrainerProgramBriefDto> programs, List<ActiveProgramItemDto> activePrograms, ProgramAnalyticsDto? analytics
+ List<TrainerProgramBriefDto> programs, List<ActiveProgramItemDto> activePrograms, List<TrainerTemplateSummaryDto> systemTemplates, List<TrainerTemplateSummaryDto> userTemplates, ProgramAnalyticsDto? analytics
 });
 
 
@@ -317,11 +331,13 @@ class _$TrainerProgramsLoadedCopyWithImpl<$Res>
 
 /// Create a copy of TrainerProgramsState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? programs = null,Object? activePrograms = null,Object? analytics = freezed,}) {
+@pragma('vm:prefer-inline') $Res call({Object? programs = null,Object? activePrograms = null,Object? systemTemplates = null,Object? userTemplates = null,Object? analytics = freezed,}) {
   return _then(TrainerProgramsLoaded(
 programs: null == programs ? _self._programs : programs // ignore: cast_nullable_to_non_nullable
 as List<TrainerProgramBriefDto>,activePrograms: null == activePrograms ? _self._activePrograms : activePrograms // ignore: cast_nullable_to_non_nullable
-as List<ActiveProgramItemDto>,analytics: freezed == analytics ? _self.analytics : analytics // ignore: cast_nullable_to_non_nullable
+as List<ActiveProgramItemDto>,systemTemplates: null == systemTemplates ? _self._systemTemplates : systemTemplates // ignore: cast_nullable_to_non_nullable
+as List<TrainerTemplateSummaryDto>,userTemplates: null == userTemplates ? _self._userTemplates : userTemplates // ignore: cast_nullable_to_non_nullable
+as List<TrainerTemplateSummaryDto>,analytics: freezed == analytics ? _self.analytics : analytics // ignore: cast_nullable_to_non_nullable
 as ProgramAnalyticsDto?,
   ));
 }

@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$CreateTemplateRequestDto {
 
- String get name; String get programId; String? get description;
+ String get name; String get programId; String? get description; List<CreateTemplateExerciseDto> get exercises;
 /// Create a copy of CreateTemplateRequestDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $CreateTemplateRequestDtoCopyWith<CreateTemplateRequestDto> get copyWith => _$Cr
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CreateTemplateRequestDto&&(identical(other.name, name) || other.name == name)&&(identical(other.programId, programId) || other.programId == programId)&&(identical(other.description, description) || other.description == description));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CreateTemplateRequestDto&&(identical(other.name, name) || other.name == name)&&(identical(other.programId, programId) || other.programId == programId)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other.exercises, exercises));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,programId,description);
+int get hashCode => Object.hash(runtimeType,name,programId,description,const DeepCollectionEquality().hash(exercises));
 
 @override
 String toString() {
-  return 'CreateTemplateRequestDto(name: $name, programId: $programId, description: $description)';
+  return 'CreateTemplateRequestDto(name: $name, programId: $programId, description: $description, exercises: $exercises)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $CreateTemplateRequestDtoCopyWith<$Res>  {
   factory $CreateTemplateRequestDtoCopyWith(CreateTemplateRequestDto value, $Res Function(CreateTemplateRequestDto) _then) = _$CreateTemplateRequestDtoCopyWithImpl;
 @useResult
 $Res call({
- String name, String programId, String? description
+ String name, String programId, String? description, List<CreateTemplateExerciseDto> exercises
 });
 
 
@@ -65,12 +65,13 @@ class _$CreateTemplateRequestDtoCopyWithImpl<$Res>
 
 /// Create a copy of CreateTemplateRequestDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? programId = null,Object? description = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? programId = null,Object? description = freezed,Object? exercises = null,}) {
   return _then(_self.copyWith(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,programId: null == programId ? _self.programId : programId // ignore: cast_nullable_to_non_nullable
 as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,exercises: null == exercises ? _self.exercises : exercises // ignore: cast_nullable_to_non_nullable
+as List<CreateTemplateExerciseDto>,
   ));
 }
 
@@ -155,10 +156,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  String programId,  String? description)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  String programId,  String? description,  List<CreateTemplateExerciseDto> exercises)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CreateTemplateRequestDto() when $default != null:
-return $default(_that.name,_that.programId,_that.description);case _:
+return $default(_that.name,_that.programId,_that.description,_that.exercises);case _:
   return orElse();
 
 }
@@ -176,10 +177,10 @@ return $default(_that.name,_that.programId,_that.description);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  String programId,  String? description)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  String programId,  String? description,  List<CreateTemplateExerciseDto> exercises)  $default,) {final _that = this;
 switch (_that) {
 case _CreateTemplateRequestDto():
-return $default(_that.name,_that.programId,_that.description);case _:
+return $default(_that.name,_that.programId,_that.description,_that.exercises);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -196,10 +197,10 @@ return $default(_that.name,_that.programId,_that.description);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  String programId,  String? description)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  String programId,  String? description,  List<CreateTemplateExerciseDto> exercises)?  $default,) {final _that = this;
 switch (_that) {
 case _CreateTemplateRequestDto() when $default != null:
-return $default(_that.name,_that.programId,_that.description);case _:
+return $default(_that.name,_that.programId,_that.description,_that.exercises);case _:
   return null;
 
 }
@@ -211,12 +212,19 @@ return $default(_that.name,_that.programId,_that.description);case _:
 @JsonSerializable()
 
 class _CreateTemplateRequestDto implements CreateTemplateRequestDto {
-  const _CreateTemplateRequestDto({required this.name, required this.programId, this.description});
+  const _CreateTemplateRequestDto({required this.name, required this.programId, this.description, final  List<CreateTemplateExerciseDto> exercises = const []}): _exercises = exercises;
   factory _CreateTemplateRequestDto.fromJson(Map<String, dynamic> json) => _$CreateTemplateRequestDtoFromJson(json);
 
 @override final  String name;
 @override final  String programId;
 @override final  String? description;
+ final  List<CreateTemplateExerciseDto> _exercises;
+@override@JsonKey() List<CreateTemplateExerciseDto> get exercises {
+  if (_exercises is EqualUnmodifiableListView) return _exercises;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_exercises);
+}
+
 
 /// Create a copy of CreateTemplateRequestDto
 /// with the given fields replaced by the non-null parameter values.
@@ -231,16 +239,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CreateTemplateRequestDto&&(identical(other.name, name) || other.name == name)&&(identical(other.programId, programId) || other.programId == programId)&&(identical(other.description, description) || other.description == description));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CreateTemplateRequestDto&&(identical(other.name, name) || other.name == name)&&(identical(other.programId, programId) || other.programId == programId)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other._exercises, _exercises));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,programId,description);
+int get hashCode => Object.hash(runtimeType,name,programId,description,const DeepCollectionEquality().hash(_exercises));
 
 @override
 String toString() {
-  return 'CreateTemplateRequestDto(name: $name, programId: $programId, description: $description)';
+  return 'CreateTemplateRequestDto(name: $name, programId: $programId, description: $description, exercises: $exercises)';
 }
 
 
@@ -251,7 +259,7 @@ abstract mixin class _$CreateTemplateRequestDtoCopyWith<$Res> implements $Create
   factory _$CreateTemplateRequestDtoCopyWith(_CreateTemplateRequestDto value, $Res Function(_CreateTemplateRequestDto) _then) = __$CreateTemplateRequestDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String name, String programId, String? description
+ String name, String programId, String? description, List<CreateTemplateExerciseDto> exercises
 });
 
 
@@ -268,12 +276,13 @@ class __$CreateTemplateRequestDtoCopyWithImpl<$Res>
 
 /// Create a copy of CreateTemplateRequestDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? programId = null,Object? description = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? programId = null,Object? description = freezed,Object? exercises = null,}) {
   return _then(_CreateTemplateRequestDto(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,programId: null == programId ? _self.programId : programId // ignore: cast_nullable_to_non_nullable
 as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,exercises: null == exercises ? _self._exercises : exercises // ignore: cast_nullable_to_non_nullable
+as List<CreateTemplateExerciseDto>,
   ));
 }
 

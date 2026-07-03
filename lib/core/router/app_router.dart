@@ -54,6 +54,7 @@ import '../../features/trainer/presentation/clients/trainer_client_detail_screen
 import '../../features/trainer/presentation/clients/trainer_clients_screen.dart';
 import '../../features/trainer/presentation/dashboard/trainer_dashboard_screen.dart';
 import '../../features/trainer/presentation/events/trainer_events_screen.dart';
+import '../../features/trainer/data/models/trainer_program_brief_dto.dart';
 import '../../features/trainer/presentation/programs/trainer_program_detail_screen.dart';
 import '../../features/trainer/presentation/programs/trainer_programs_screen.dart';
 import '../../features/trainer/presentation/recipes/trainer_recipes_screen.dart';
@@ -416,9 +417,13 @@ GoRouter createAppRouter(AuthCubit authCubit) {
         path: '/trainer/programs/:id',
         builder: (_, state) {
           final programId = state.pathParameters['id'] ?? '';
+          final program = state.extra as TrainerProgramBriefDto?;
           return BlocProvider<TrainerProgramsCubit>(
             create: (_) => getIt<TrainerProgramsCubit>(),
-            child: TrainerProgramDetailScreen(programId: programId),
+            child: TrainerProgramDetailScreen(
+              programId: programId,
+              program: program,
+            ),
           );
         },
       ),

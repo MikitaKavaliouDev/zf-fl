@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TrainerTemplateSummaryDto {
 
- String get id; String get name; String? get description; int get order; String? get programId;@JsonKey(name: '_count', fromJson: countToExerciseCount) int get exerciseCount;
+ String get id; String get name; String? get description; int get order; String? get programId;@JsonKey(name: '_count', fromJson: countToExerciseCount) int get exerciseCount;@JsonKey(name: 'exercises', fromJson: exerciseListFromJson) List<CreateTemplateExerciseDto> get exercises;
 /// Create a copy of TrainerTemplateSummaryDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $TrainerTemplateSummaryDtoCopyWith<TrainerTemplateSummaryDto> get copyWith => _$
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TrainerTemplateSummaryDto&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.order, order) || other.order == order)&&(identical(other.programId, programId) || other.programId == programId)&&(identical(other.exerciseCount, exerciseCount) || other.exerciseCount == exerciseCount));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TrainerTemplateSummaryDto&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.order, order) || other.order == order)&&(identical(other.programId, programId) || other.programId == programId)&&(identical(other.exerciseCount, exerciseCount) || other.exerciseCount == exerciseCount)&&const DeepCollectionEquality().equals(other.exercises, exercises));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,description,order,programId,exerciseCount);
+int get hashCode => Object.hash(runtimeType,id,name,description,order,programId,exerciseCount,const DeepCollectionEquality().hash(exercises));
 
 @override
 String toString() {
-  return 'TrainerTemplateSummaryDto(id: $id, name: $name, description: $description, order: $order, programId: $programId, exerciseCount: $exerciseCount)';
+  return 'TrainerTemplateSummaryDto(id: $id, name: $name, description: $description, order: $order, programId: $programId, exerciseCount: $exerciseCount, exercises: $exercises)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $TrainerTemplateSummaryDtoCopyWith<$Res>  {
   factory $TrainerTemplateSummaryDtoCopyWith(TrainerTemplateSummaryDto value, $Res Function(TrainerTemplateSummaryDto) _then) = _$TrainerTemplateSummaryDtoCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String? description, int order, String? programId,@JsonKey(name: '_count', fromJson: countToExerciseCount) int exerciseCount
+ String id, String name, String? description, int order, String? programId,@JsonKey(name: '_count', fromJson: countToExerciseCount) int exerciseCount,@JsonKey(name: 'exercises', fromJson: exerciseListFromJson) List<CreateTemplateExerciseDto> exercises
 });
 
 
@@ -65,7 +65,7 @@ class _$TrainerTemplateSummaryDtoCopyWithImpl<$Res>
 
 /// Create a copy of TrainerTemplateSummaryDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? description = freezed,Object? order = null,Object? programId = freezed,Object? exerciseCount = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? description = freezed,Object? order = null,Object? programId = freezed,Object? exerciseCount = null,Object? exercises = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -73,7 +73,8 @@ as String,description: freezed == description ? _self.description : description 
 as String?,order: null == order ? _self.order : order // ignore: cast_nullable_to_non_nullable
 as int,programId: freezed == programId ? _self.programId : programId // ignore: cast_nullable_to_non_nullable
 as String?,exerciseCount: null == exerciseCount ? _self.exerciseCount : exerciseCount // ignore: cast_nullable_to_non_nullable
-as int,
+as int,exercises: null == exercises ? _self.exercises : exercises // ignore: cast_nullable_to_non_nullable
+as List<CreateTemplateExerciseDto>,
   ));
 }
 
@@ -158,10 +159,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String? description,  int order,  String? programId, @JsonKey(name: '_count', fromJson: countToExerciseCount)  int exerciseCount)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String? description,  int order,  String? programId, @JsonKey(name: '_count', fromJson: countToExerciseCount)  int exerciseCount, @JsonKey(name: 'exercises', fromJson: exerciseListFromJson)  List<CreateTemplateExerciseDto> exercises)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TrainerTemplateSummaryDto() when $default != null:
-return $default(_that.id,_that.name,_that.description,_that.order,_that.programId,_that.exerciseCount);case _:
+return $default(_that.id,_that.name,_that.description,_that.order,_that.programId,_that.exerciseCount,_that.exercises);case _:
   return orElse();
 
 }
@@ -179,10 +180,10 @@ return $default(_that.id,_that.name,_that.description,_that.order,_that.programI
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String? description,  int order,  String? programId, @JsonKey(name: '_count', fromJson: countToExerciseCount)  int exerciseCount)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String? description,  int order,  String? programId, @JsonKey(name: '_count', fromJson: countToExerciseCount)  int exerciseCount, @JsonKey(name: 'exercises', fromJson: exerciseListFromJson)  List<CreateTemplateExerciseDto> exercises)  $default,) {final _that = this;
 switch (_that) {
 case _TrainerTemplateSummaryDto():
-return $default(_that.id,_that.name,_that.description,_that.order,_that.programId,_that.exerciseCount);case _:
+return $default(_that.id,_that.name,_that.description,_that.order,_that.programId,_that.exerciseCount,_that.exercises);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -199,10 +200,10 @@ return $default(_that.id,_that.name,_that.description,_that.order,_that.programI
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String? description,  int order,  String? programId, @JsonKey(name: '_count', fromJson: countToExerciseCount)  int exerciseCount)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String? description,  int order,  String? programId, @JsonKey(name: '_count', fromJson: countToExerciseCount)  int exerciseCount, @JsonKey(name: 'exercises', fromJson: exerciseListFromJson)  List<CreateTemplateExerciseDto> exercises)?  $default,) {final _that = this;
 switch (_that) {
 case _TrainerTemplateSummaryDto() when $default != null:
-return $default(_that.id,_that.name,_that.description,_that.order,_that.programId,_that.exerciseCount);case _:
+return $default(_that.id,_that.name,_that.description,_that.order,_that.programId,_that.exerciseCount,_that.exercises);case _:
   return null;
 
 }
@@ -214,7 +215,7 @@ return $default(_that.id,_that.name,_that.description,_that.order,_that.programI
 @JsonSerializable()
 
 class _TrainerTemplateSummaryDto implements TrainerTemplateSummaryDto {
-  const _TrainerTemplateSummaryDto({required this.id, required this.name, this.description, required this.order, this.programId, @JsonKey(name: '_count', fromJson: countToExerciseCount) this.exerciseCount = 0});
+  const _TrainerTemplateSummaryDto({required this.id, required this.name, this.description, required this.order, this.programId, @JsonKey(name: '_count', fromJson: countToExerciseCount) this.exerciseCount = 0, @JsonKey(name: 'exercises', fromJson: exerciseListFromJson) final  List<CreateTemplateExerciseDto> exercises = const []}): _exercises = exercises;
   factory _TrainerTemplateSummaryDto.fromJson(Map<String, dynamic> json) => _$TrainerTemplateSummaryDtoFromJson(json);
 
 @override final  String id;
@@ -223,6 +224,13 @@ class _TrainerTemplateSummaryDto implements TrainerTemplateSummaryDto {
 @override final  int order;
 @override final  String? programId;
 @override@JsonKey(name: '_count', fromJson: countToExerciseCount) final  int exerciseCount;
+ final  List<CreateTemplateExerciseDto> _exercises;
+@override@JsonKey(name: 'exercises', fromJson: exerciseListFromJson) List<CreateTemplateExerciseDto> get exercises {
+  if (_exercises is EqualUnmodifiableListView) return _exercises;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_exercises);
+}
+
 
 /// Create a copy of TrainerTemplateSummaryDto
 /// with the given fields replaced by the non-null parameter values.
@@ -237,16 +245,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TrainerTemplateSummaryDto&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.order, order) || other.order == order)&&(identical(other.programId, programId) || other.programId == programId)&&(identical(other.exerciseCount, exerciseCount) || other.exerciseCount == exerciseCount));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TrainerTemplateSummaryDto&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.order, order) || other.order == order)&&(identical(other.programId, programId) || other.programId == programId)&&(identical(other.exerciseCount, exerciseCount) || other.exerciseCount == exerciseCount)&&const DeepCollectionEquality().equals(other._exercises, _exercises));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,description,order,programId,exerciseCount);
+int get hashCode => Object.hash(runtimeType,id,name,description,order,programId,exerciseCount,const DeepCollectionEquality().hash(_exercises));
 
 @override
 String toString() {
-  return 'TrainerTemplateSummaryDto(id: $id, name: $name, description: $description, order: $order, programId: $programId, exerciseCount: $exerciseCount)';
+  return 'TrainerTemplateSummaryDto(id: $id, name: $name, description: $description, order: $order, programId: $programId, exerciseCount: $exerciseCount, exercises: $exercises)';
 }
 
 
@@ -257,7 +265,7 @@ abstract mixin class _$TrainerTemplateSummaryDtoCopyWith<$Res> implements $Train
   factory _$TrainerTemplateSummaryDtoCopyWith(_TrainerTemplateSummaryDto value, $Res Function(_TrainerTemplateSummaryDto) _then) = __$TrainerTemplateSummaryDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String? description, int order, String? programId,@JsonKey(name: '_count', fromJson: countToExerciseCount) int exerciseCount
+ String id, String name, String? description, int order, String? programId,@JsonKey(name: '_count', fromJson: countToExerciseCount) int exerciseCount,@JsonKey(name: 'exercises', fromJson: exerciseListFromJson) List<CreateTemplateExerciseDto> exercises
 });
 
 
@@ -274,7 +282,7 @@ class __$TrainerTemplateSummaryDtoCopyWithImpl<$Res>
 
 /// Create a copy of TrainerTemplateSummaryDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? description = freezed,Object? order = null,Object? programId = freezed,Object? exerciseCount = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? description = freezed,Object? order = null,Object? programId = freezed,Object? exerciseCount = null,Object? exercises = null,}) {
   return _then(_TrainerTemplateSummaryDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -282,7 +290,8 @@ as String,description: freezed == description ? _self.description : description 
 as String?,order: null == order ? _self.order : order // ignore: cast_nullable_to_non_nullable
 as int,programId: freezed == programId ? _self.programId : programId // ignore: cast_nullable_to_non_nullable
 as String?,exerciseCount: null == exerciseCount ? _self.exerciseCount : exerciseCount // ignore: cast_nullable_to_non_nullable
-as int,
+as int,exercises: null == exercises ? _self._exercises : exercises // ignore: cast_nullable_to_non_nullable
+as List<CreateTemplateExerciseDto>,
   ));
 }
 
