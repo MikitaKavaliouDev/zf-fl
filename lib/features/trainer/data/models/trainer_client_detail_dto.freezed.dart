@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TrainerClientDetailDto {
 
- String get id; String get name; String? get email; String? get phone; String get status; String get createdAt; int? get checkInDay; int? get checkInHour; String? get dateOfBirth; String? get goals; String? get healthNotes; String? get emergencyContactName; String? get emergencyContactPhone; String? get avatarUrl; String? get trainerId;
+ String get id; String get name; String? get email; String? get phone; String get status; String get createdAt; int? get checkInDay; int? get checkInHour; String? get dateOfBirth; String? get goals; String? get healthNotes; String? get emergencyContactName; String? get emergencyContactPhone; String? get avatarUrl; String? get avatarPath; String? get trainerId;
 /// Create a copy of TrainerClientDetailDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $TrainerClientDetailDtoCopyWith<TrainerClientDetailDto> get copyWith => _$Traine
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TrainerClientDetailDto&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.checkInDay, checkInDay) || other.checkInDay == checkInDay)&&(identical(other.checkInHour, checkInHour) || other.checkInHour == checkInHour)&&(identical(other.dateOfBirth, dateOfBirth) || other.dateOfBirth == dateOfBirth)&&(identical(other.goals, goals) || other.goals == goals)&&(identical(other.healthNotes, healthNotes) || other.healthNotes == healthNotes)&&(identical(other.emergencyContactName, emergencyContactName) || other.emergencyContactName == emergencyContactName)&&(identical(other.emergencyContactPhone, emergencyContactPhone) || other.emergencyContactPhone == emergencyContactPhone)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.trainerId, trainerId) || other.trainerId == trainerId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TrainerClientDetailDto&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.checkInDay, checkInDay) || other.checkInDay == checkInDay)&&(identical(other.checkInHour, checkInHour) || other.checkInHour == checkInHour)&&(identical(other.dateOfBirth, dateOfBirth) || other.dateOfBirth == dateOfBirth)&&(identical(other.goals, goals) || other.goals == goals)&&(identical(other.healthNotes, healthNotes) || other.healthNotes == healthNotes)&&(identical(other.emergencyContactName, emergencyContactName) || other.emergencyContactName == emergencyContactName)&&(identical(other.emergencyContactPhone, emergencyContactPhone) || other.emergencyContactPhone == emergencyContactPhone)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.avatarPath, avatarPath) || other.avatarPath == avatarPath)&&(identical(other.trainerId, trainerId) || other.trainerId == trainerId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,email,phone,status,createdAt,checkInDay,checkInHour,dateOfBirth,goals,healthNotes,emergencyContactName,emergencyContactPhone,avatarUrl,trainerId);
+int get hashCode => Object.hash(runtimeType,id,name,email,phone,status,createdAt,checkInDay,checkInHour,dateOfBirth,goals,healthNotes,emergencyContactName,emergencyContactPhone,avatarUrl,avatarPath,trainerId);
 
 @override
 String toString() {
-  return 'TrainerClientDetailDto(id: $id, name: $name, email: $email, phone: $phone, status: $status, createdAt: $createdAt, checkInDay: $checkInDay, checkInHour: $checkInHour, dateOfBirth: $dateOfBirth, goals: $goals, healthNotes: $healthNotes, emergencyContactName: $emergencyContactName, emergencyContactPhone: $emergencyContactPhone, avatarUrl: $avatarUrl, trainerId: $trainerId)';
+  return 'TrainerClientDetailDto(id: $id, name: $name, email: $email, phone: $phone, status: $status, createdAt: $createdAt, checkInDay: $checkInDay, checkInHour: $checkInHour, dateOfBirth: $dateOfBirth, goals: $goals, healthNotes: $healthNotes, emergencyContactName: $emergencyContactName, emergencyContactPhone: $emergencyContactPhone, avatarUrl: $avatarUrl, avatarPath: $avatarPath, trainerId: $trainerId)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $TrainerClientDetailDtoCopyWith<$Res>  {
   factory $TrainerClientDetailDtoCopyWith(TrainerClientDetailDto value, $Res Function(TrainerClientDetailDto) _then) = _$TrainerClientDetailDtoCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String? email, String? phone, String status, String createdAt, int? checkInDay, int? checkInHour, String? dateOfBirth, String? goals, String? healthNotes, String? emergencyContactName, String? emergencyContactPhone, String? avatarUrl, String? trainerId
+ String id, String name, String? email, String? phone, String status, String createdAt, int? checkInDay, int? checkInHour, String? dateOfBirth, String? goals, String? healthNotes, String? emergencyContactName, String? emergencyContactPhone, String? avatarUrl, String? avatarPath, String? trainerId
 });
 
 
@@ -65,7 +65,7 @@ class _$TrainerClientDetailDtoCopyWithImpl<$Res>
 
 /// Create a copy of TrainerClientDetailDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? email = freezed,Object? phone = freezed,Object? status = null,Object? createdAt = null,Object? checkInDay = freezed,Object? checkInHour = freezed,Object? dateOfBirth = freezed,Object? goals = freezed,Object? healthNotes = freezed,Object? emergencyContactName = freezed,Object? emergencyContactPhone = freezed,Object? avatarUrl = freezed,Object? trainerId = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? email = freezed,Object? phone = freezed,Object? status = null,Object? createdAt = null,Object? checkInDay = freezed,Object? checkInHour = freezed,Object? dateOfBirth = freezed,Object? goals = freezed,Object? healthNotes = freezed,Object? emergencyContactName = freezed,Object? emergencyContactPhone = freezed,Object? avatarUrl = freezed,Object? avatarPath = freezed,Object? trainerId = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -81,6 +81,7 @@ as String?,healthNotes: freezed == healthNotes ? _self.healthNotes : healthNotes
 as String?,emergencyContactName: freezed == emergencyContactName ? _self.emergencyContactName : emergencyContactName // ignore: cast_nullable_to_non_nullable
 as String?,emergencyContactPhone: freezed == emergencyContactPhone ? _self.emergencyContactPhone : emergencyContactPhone // ignore: cast_nullable_to_non_nullable
 as String?,avatarUrl: freezed == avatarUrl ? _self.avatarUrl : avatarUrl // ignore: cast_nullable_to_non_nullable
+as String?,avatarPath: freezed == avatarPath ? _self.avatarPath : avatarPath // ignore: cast_nullable_to_non_nullable
 as String?,trainerId: freezed == trainerId ? _self.trainerId : trainerId // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
@@ -167,10 +168,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String? email,  String? phone,  String status,  String createdAt,  int? checkInDay,  int? checkInHour,  String? dateOfBirth,  String? goals,  String? healthNotes,  String? emergencyContactName,  String? emergencyContactPhone,  String? avatarUrl,  String? trainerId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String? email,  String? phone,  String status,  String createdAt,  int? checkInDay,  int? checkInHour,  String? dateOfBirth,  String? goals,  String? healthNotes,  String? emergencyContactName,  String? emergencyContactPhone,  String? avatarUrl,  String? avatarPath,  String? trainerId)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TrainerClientDetailDto() when $default != null:
-return $default(_that.id,_that.name,_that.email,_that.phone,_that.status,_that.createdAt,_that.checkInDay,_that.checkInHour,_that.dateOfBirth,_that.goals,_that.healthNotes,_that.emergencyContactName,_that.emergencyContactPhone,_that.avatarUrl,_that.trainerId);case _:
+return $default(_that.id,_that.name,_that.email,_that.phone,_that.status,_that.createdAt,_that.checkInDay,_that.checkInHour,_that.dateOfBirth,_that.goals,_that.healthNotes,_that.emergencyContactName,_that.emergencyContactPhone,_that.avatarUrl,_that.avatarPath,_that.trainerId);case _:
   return orElse();
 
 }
@@ -188,10 +189,10 @@ return $default(_that.id,_that.name,_that.email,_that.phone,_that.status,_that.c
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String? email,  String? phone,  String status,  String createdAt,  int? checkInDay,  int? checkInHour,  String? dateOfBirth,  String? goals,  String? healthNotes,  String? emergencyContactName,  String? emergencyContactPhone,  String? avatarUrl,  String? trainerId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String? email,  String? phone,  String status,  String createdAt,  int? checkInDay,  int? checkInHour,  String? dateOfBirth,  String? goals,  String? healthNotes,  String? emergencyContactName,  String? emergencyContactPhone,  String? avatarUrl,  String? avatarPath,  String? trainerId)  $default,) {final _that = this;
 switch (_that) {
 case _TrainerClientDetailDto():
-return $default(_that.id,_that.name,_that.email,_that.phone,_that.status,_that.createdAt,_that.checkInDay,_that.checkInHour,_that.dateOfBirth,_that.goals,_that.healthNotes,_that.emergencyContactName,_that.emergencyContactPhone,_that.avatarUrl,_that.trainerId);case _:
+return $default(_that.id,_that.name,_that.email,_that.phone,_that.status,_that.createdAt,_that.checkInDay,_that.checkInHour,_that.dateOfBirth,_that.goals,_that.healthNotes,_that.emergencyContactName,_that.emergencyContactPhone,_that.avatarUrl,_that.avatarPath,_that.trainerId);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -208,10 +209,10 @@ return $default(_that.id,_that.name,_that.email,_that.phone,_that.status,_that.c
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String? email,  String? phone,  String status,  String createdAt,  int? checkInDay,  int? checkInHour,  String? dateOfBirth,  String? goals,  String? healthNotes,  String? emergencyContactName,  String? emergencyContactPhone,  String? avatarUrl,  String? trainerId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String? email,  String? phone,  String status,  String createdAt,  int? checkInDay,  int? checkInHour,  String? dateOfBirth,  String? goals,  String? healthNotes,  String? emergencyContactName,  String? emergencyContactPhone,  String? avatarUrl,  String? avatarPath,  String? trainerId)?  $default,) {final _that = this;
 switch (_that) {
 case _TrainerClientDetailDto() when $default != null:
-return $default(_that.id,_that.name,_that.email,_that.phone,_that.status,_that.createdAt,_that.checkInDay,_that.checkInHour,_that.dateOfBirth,_that.goals,_that.healthNotes,_that.emergencyContactName,_that.emergencyContactPhone,_that.avatarUrl,_that.trainerId);case _:
+return $default(_that.id,_that.name,_that.email,_that.phone,_that.status,_that.createdAt,_that.checkInDay,_that.checkInHour,_that.dateOfBirth,_that.goals,_that.healthNotes,_that.emergencyContactName,_that.emergencyContactPhone,_that.avatarUrl,_that.avatarPath,_that.trainerId);case _:
   return null;
 
 }
@@ -223,7 +224,7 @@ return $default(_that.id,_that.name,_that.email,_that.phone,_that.status,_that.c
 @JsonSerializable()
 
 class _TrainerClientDetailDto implements TrainerClientDetailDto {
-  const _TrainerClientDetailDto({required this.id, required this.name, this.email, this.phone, required this.status, required this.createdAt, this.checkInDay, this.checkInHour, this.dateOfBirth, this.goals, this.healthNotes, this.emergencyContactName, this.emergencyContactPhone, this.avatarUrl, this.trainerId});
+  const _TrainerClientDetailDto({required this.id, required this.name, this.email, this.phone, required this.status, required this.createdAt, this.checkInDay, this.checkInHour, this.dateOfBirth, this.goals, this.healthNotes, this.emergencyContactName, this.emergencyContactPhone, this.avatarUrl, this.avatarPath, this.trainerId});
   factory _TrainerClientDetailDto.fromJson(Map<String, dynamic> json) => _$TrainerClientDetailDtoFromJson(json);
 
 @override final  String id;
@@ -240,6 +241,7 @@ class _TrainerClientDetailDto implements TrainerClientDetailDto {
 @override final  String? emergencyContactName;
 @override final  String? emergencyContactPhone;
 @override final  String? avatarUrl;
+@override final  String? avatarPath;
 @override final  String? trainerId;
 
 /// Create a copy of TrainerClientDetailDto
@@ -255,16 +257,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TrainerClientDetailDto&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.checkInDay, checkInDay) || other.checkInDay == checkInDay)&&(identical(other.checkInHour, checkInHour) || other.checkInHour == checkInHour)&&(identical(other.dateOfBirth, dateOfBirth) || other.dateOfBirth == dateOfBirth)&&(identical(other.goals, goals) || other.goals == goals)&&(identical(other.healthNotes, healthNotes) || other.healthNotes == healthNotes)&&(identical(other.emergencyContactName, emergencyContactName) || other.emergencyContactName == emergencyContactName)&&(identical(other.emergencyContactPhone, emergencyContactPhone) || other.emergencyContactPhone == emergencyContactPhone)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.trainerId, trainerId) || other.trainerId == trainerId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TrainerClientDetailDto&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.checkInDay, checkInDay) || other.checkInDay == checkInDay)&&(identical(other.checkInHour, checkInHour) || other.checkInHour == checkInHour)&&(identical(other.dateOfBirth, dateOfBirth) || other.dateOfBirth == dateOfBirth)&&(identical(other.goals, goals) || other.goals == goals)&&(identical(other.healthNotes, healthNotes) || other.healthNotes == healthNotes)&&(identical(other.emergencyContactName, emergencyContactName) || other.emergencyContactName == emergencyContactName)&&(identical(other.emergencyContactPhone, emergencyContactPhone) || other.emergencyContactPhone == emergencyContactPhone)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.avatarPath, avatarPath) || other.avatarPath == avatarPath)&&(identical(other.trainerId, trainerId) || other.trainerId == trainerId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,email,phone,status,createdAt,checkInDay,checkInHour,dateOfBirth,goals,healthNotes,emergencyContactName,emergencyContactPhone,avatarUrl,trainerId);
+int get hashCode => Object.hash(runtimeType,id,name,email,phone,status,createdAt,checkInDay,checkInHour,dateOfBirth,goals,healthNotes,emergencyContactName,emergencyContactPhone,avatarUrl,avatarPath,trainerId);
 
 @override
 String toString() {
-  return 'TrainerClientDetailDto(id: $id, name: $name, email: $email, phone: $phone, status: $status, createdAt: $createdAt, checkInDay: $checkInDay, checkInHour: $checkInHour, dateOfBirth: $dateOfBirth, goals: $goals, healthNotes: $healthNotes, emergencyContactName: $emergencyContactName, emergencyContactPhone: $emergencyContactPhone, avatarUrl: $avatarUrl, trainerId: $trainerId)';
+  return 'TrainerClientDetailDto(id: $id, name: $name, email: $email, phone: $phone, status: $status, createdAt: $createdAt, checkInDay: $checkInDay, checkInHour: $checkInHour, dateOfBirth: $dateOfBirth, goals: $goals, healthNotes: $healthNotes, emergencyContactName: $emergencyContactName, emergencyContactPhone: $emergencyContactPhone, avatarUrl: $avatarUrl, avatarPath: $avatarPath, trainerId: $trainerId)';
 }
 
 
@@ -275,7 +277,7 @@ abstract mixin class _$TrainerClientDetailDtoCopyWith<$Res> implements $TrainerC
   factory _$TrainerClientDetailDtoCopyWith(_TrainerClientDetailDto value, $Res Function(_TrainerClientDetailDto) _then) = __$TrainerClientDetailDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String? email, String? phone, String status, String createdAt, int? checkInDay, int? checkInHour, String? dateOfBirth, String? goals, String? healthNotes, String? emergencyContactName, String? emergencyContactPhone, String? avatarUrl, String? trainerId
+ String id, String name, String? email, String? phone, String status, String createdAt, int? checkInDay, int? checkInHour, String? dateOfBirth, String? goals, String? healthNotes, String? emergencyContactName, String? emergencyContactPhone, String? avatarUrl, String? avatarPath, String? trainerId
 });
 
 
@@ -292,7 +294,7 @@ class __$TrainerClientDetailDtoCopyWithImpl<$Res>
 
 /// Create a copy of TrainerClientDetailDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? email = freezed,Object? phone = freezed,Object? status = null,Object? createdAt = null,Object? checkInDay = freezed,Object? checkInHour = freezed,Object? dateOfBirth = freezed,Object? goals = freezed,Object? healthNotes = freezed,Object? emergencyContactName = freezed,Object? emergencyContactPhone = freezed,Object? avatarUrl = freezed,Object? trainerId = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? email = freezed,Object? phone = freezed,Object? status = null,Object? createdAt = null,Object? checkInDay = freezed,Object? checkInHour = freezed,Object? dateOfBirth = freezed,Object? goals = freezed,Object? healthNotes = freezed,Object? emergencyContactName = freezed,Object? emergencyContactPhone = freezed,Object? avatarUrl = freezed,Object? avatarPath = freezed,Object? trainerId = freezed,}) {
   return _then(_TrainerClientDetailDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -308,6 +310,7 @@ as String?,healthNotes: freezed == healthNotes ? _self.healthNotes : healthNotes
 as String?,emergencyContactName: freezed == emergencyContactName ? _self.emergencyContactName : emergencyContactName // ignore: cast_nullable_to_non_nullable
 as String?,emergencyContactPhone: freezed == emergencyContactPhone ? _self.emergencyContactPhone : emergencyContactPhone // ignore: cast_nullable_to_non_nullable
 as String?,avatarUrl: freezed == avatarUrl ? _self.avatarUrl : avatarUrl // ignore: cast_nullable_to_non_nullable
+as String?,avatarPath: freezed == avatarPath ? _self.avatarPath : avatarPath // ignore: cast_nullable_to_non_nullable
 as String?,trainerId: freezed == trainerId ? _self.trainerId : trainerId // ignore: cast_nullable_to_non_nullable
 as String?,
   ));

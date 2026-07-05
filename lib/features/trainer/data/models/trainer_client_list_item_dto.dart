@@ -13,6 +13,7 @@ abstract class TrainerClientListItemDto with _$TrainerClientListItemDto {
     required String status,
     String? userId,
     String? avatarUrl,
+    String? avatarPath,
     String? lastWorkoutDate,
     @Default('medium') String engagementScore,
     String? activeProgramName,

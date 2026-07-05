@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 
 import 'models/review_check_in_request_dto.dart';
+import 'models/trainer_check_in_detail_dto.dart';
 import 'models/trainer_check_in_list_item_dto.dart';
 
 @injectable
@@ -26,7 +27,7 @@ class TrainerCheckInApiService {
       '/api/trainer/check-ins',
       queryParameters: queryParams,
     );
-    // Response is { data: [...] } — direct JSON array
+    // Response is { data: [...] } — a direct JSON array
     final items = response.data['data'] as List<dynamic>;
     return items
         .map((e) =>
@@ -34,19 +35,26 @@ class TrainerCheckInApiService {
         .toList();
   }
 
-  /// GET /api/trainer/check-ins/:id — check-in detail.
-  Future<Map<String, dynamic>> getCheckInDetail(String id) async {
+  /// GET /api/trainer/check-ins/:id — full check-in detail with biofeedback.
+  Future<TrainerCheckInDetailDto> getCheckInDetail(String id) async {
     final response = await _dio.get('/api/trainer/check-ins/$id');
     final data = response.data['data'] as Map<String, dynamic>;
-    return data;
+
+    // If wrapped in { current: CheckIn, ... } from detail endpoint
+    if (data.containsKey('current')) {
+      final current = data['current'] as Map<String, dynamic>;
+      return TrainerCheckInDetailDto.fromJson(current);
+    }
+
+    return TrainerCheckInDetailDto.fromJson(data);
   }
 
-  /// POST /api/trainer/check-ins/:id/review — respond to a check-in.
+  /// PATCH /api/trainer/check-ins/:id/review — respond to a check-in.
   Future<void> reviewCheckIn(
     String id,
     ReviewCheckInRequestDto request,
   ) async {
-    await _dio.post(
+    await _dio.patch(
       '/api/trainer/check-ins/$id/review',
       data: request.toJson(),
     );

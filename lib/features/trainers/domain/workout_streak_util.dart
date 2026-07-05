@@ -1,3 +1,4 @@
+import '../../trainer/data/models/trainer_client_session_dto.dart';
 import '../data/models/workout_session_dto.dart';
 
 class WorkoutStreakUtil {
@@ -58,6 +59,54 @@ class WorkoutStreakUtil {
     }
 
     return longest;
+  }
+
+  /// Trainer-specific: calculate the active streak for a client's completed
+  /// sessions. Mirrors iOS `ClientDetailView.activeStreak` algorithm.
+  ///
+  /// Filters for sessions where `status == 'COMPLETED'` and `endTime` is not
+  /// null. Checks today first; if no session today, checks yesterday. If no
+  /// session yesterday either, returns "0 Days". Counts consecutive days
+  /// backward from the first valid day found.
+  static String calculateClientStreak(List<TrainerClientSessionDto> sessions) {
+    // Filter for completed sessions with an end time.
+    final completed = sessions
+        .where((s) => s.status == 'COMPLETED' && s.endTime != null)
+        .toList();
+    if (completed.isEmpty) return '0 Days';
+
+    // Unique completion dates (normalized to local date).
+    final completionDates = completed.map((s) {
+      final dt = DateTime.parse(s.endTime!).toLocal();
+      return DateTime(dt.year, dt.month, dt.day);
+    }).toSet();
+
+    final today = DateTime.now();
+    final todayDate = DateTime(today.year, today.month, today.day);
+
+    int streak = 0;
+    var checkDate = todayDate;
+
+    // iOS algorithm: check today first.
+    if (completionDates.contains(checkDate)) {
+      streak = 1;
+      checkDate = checkDate.subtract(const Duration(days: 1));
+    } else {
+      // No session today — check yesterday.
+      checkDate = checkDate.subtract(const Duration(days: 1));
+      if (!completionDates.contains(checkDate)) {
+        return '0 Days';
+      }
+      // Session exists yesterday — the while loop below will count it.
+    }
+
+    // Count backwards for consecutive days.
+    while (completionDates.contains(checkDate)) {
+      streak++;
+      checkDate = checkDate.subtract(const Duration(days: 1));
+    }
+
+    return '$streak Day${streak == 1 ? '' : 's'}';
   }
 
   /// Returns `true` if the session has been completed.

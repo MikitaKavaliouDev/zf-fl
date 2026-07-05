@@ -23,6 +23,7 @@ _TrainerClientDetailDto _$TrainerClientDetailDtoFromJson(
   emergencyContactName: json['emergencyContactName'] as String?,
   emergencyContactPhone: json['emergencyContactPhone'] as String?,
   avatarUrl: json['avatarUrl'] as String?,
+  avatarPath: json['avatarPath'] as String?,
   trainerId: json['trainerId'] as String?,
 );
 
@@ -43,5 +44,6 @@ Map<String, dynamic> _$TrainerClientDetailDtoToJson(
   'emergencyContactName': instance.emergencyContactName,
   'emergencyContactPhone': instance.emergencyContactPhone,
   'avatarUrl': instance.avatarUrl,
+  'avatarPath': instance.avatarPath,
   'trainerId': instance.trainerId,
 };

@@ -1,0 +1,103 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'trainer_check_in_detail_dto.dart';
+
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
+
+_TrainerCheckInDetailDto _$TrainerCheckInDetailDtoFromJson(
+  Map<String, dynamic> json,
+) => _TrainerCheckInDetailDto(
+  id: json['id'] as String,
+  clientId: json['clientId'] as String,
+  date: json['date'] as String,
+  status: json['status'] as String,
+  checkInType: json['checkInType'] as String?,
+  requestedBy: json['requestedBy'] as String?,
+  requestedAt: json['requestedAt'] as String?,
+  dueDate: json['dueDate'] as String?,
+  weight: (json['weight'] as num?)?.toDouble(),
+  waistCm: (json['waistCm'] as num?)?.toDouble(),
+  sleepHours: (json['sleepHours'] as num?)?.toDouble(),
+  energyLevel: (json['energyLevel'] as num?)?.toInt(),
+  stressLevel: (json['stressLevel'] as num?)?.toInt(),
+  hungerLevel: (json['hungerLevel'] as num?)?.toInt(),
+  digestionLevel: (json['digestionLevel'] as num?)?.toInt(),
+  nutritionCompliance: json['nutritionCompliance'] as String?,
+  weeklyNotes: json['weeklyNotes'] as String?,
+  clientNotes: json['clientNotes'] as String?,
+  weeklyPhotoUrl: json['weeklyPhotoUrl'] as String?,
+  chestCm: (json['chestCm'] as num?)?.toDouble(),
+  armCm: (json['armCm'] as num?)?.toDouble(),
+  thighCm: (json['thighCm'] as num?)?.toDouble(),
+  hipCm: (json['hipCm'] as num?)?.toDouble(),
+  sleepQuality: (json['sleepQuality'] as num?)?.toDouble(),
+  energyTrend: json['energyTrend'] as String?,
+  programSatisfaction: (json['programSatisfaction'] as num?)?.toInt(),
+  hasInjuries: json['hasInjuries'] as bool?,
+  injuryNotes: json['injuryNotes'] as String?,
+  goalsOnTrack: json['goalsOnTrack'] as bool?,
+  goalNotes: json['goalNotes'] as String?,
+  monthlyNotes: json['monthlyNotes'] as String?,
+  frontPhotoUrl: json['frontPhotoUrl'] as String?,
+  sidePhotoUrl: json['sidePhotoUrl'] as String?,
+  backPhotoUrl: json['backPhotoUrl'] as String?,
+  trainerResponse: json['trainerResponse'] as String?,
+  reviewedAt: json['reviewedAt'] as String?,
+  reviewedByUserId: json['reviewedByUserId'] as String?,
+  photos:
+      (json['photos'] as List<dynamic>?)
+          ?.map((e) => CheckInPhotoDto.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <CheckInPhotoDto>[],
+  client: CheckInClientRefDto.fromJson(json['client'] as Map<String, dynamic>),
+  createdAt: json['createdAt'] as String,
+  updatedAt: json['updatedAt'] as String,
+);
+
+Map<String, dynamic> _$TrainerCheckInDetailDtoToJson(
+  _TrainerCheckInDetailDto instance,
+) => <String, dynamic>{
+  'id': instance.id,
+  'clientId': instance.clientId,
+  'date': instance.date,
+  'status': instance.status,
+  'checkInType': instance.checkInType,
+  'requestedBy': instance.requestedBy,
+  'requestedAt': instance.requestedAt,
+  'dueDate': instance.dueDate,
+  'weight': instance.weight,
+  'waistCm': instance.waistCm,
+  'sleepHours': instance.sleepHours,
+  'energyLevel': instance.energyLevel,
+  'stressLevel': instance.stressLevel,
+  'hungerLevel': instance.hungerLevel,
+  'digestionLevel': instance.digestionLevel,
+  'nutritionCompliance': instance.nutritionCompliance,
+  'weeklyNotes': instance.weeklyNotes,
+  'clientNotes': instance.clientNotes,
+  'weeklyPhotoUrl': instance.weeklyPhotoUrl,
+  'chestCm': instance.chestCm,
+  'armCm': instance.armCm,
+  'thighCm': instance.thighCm,
+  'hipCm': instance.hipCm,
+  'sleepQuality': instance.sleepQuality,
+  'energyTrend': instance.energyTrend,
+  'programSatisfaction': instance.programSatisfaction,
+  'hasInjuries': instance.hasInjuries,
+  'injuryNotes': instance.injuryNotes,
+  'goalsOnTrack': instance.goalsOnTrack,
+  'goalNotes': instance.goalNotes,
+  'monthlyNotes': instance.monthlyNotes,
+  'frontPhotoUrl': instance.frontPhotoUrl,
+  'sidePhotoUrl': instance.sidePhotoUrl,
+  'backPhotoUrl': instance.backPhotoUrl,
+  'trainerResponse': instance.trainerResponse,
+  'reviewedAt': instance.reviewedAt,
+  'reviewedByUserId': instance.reviewedByUserId,
+  'photos': instance.photos,
+  'client': instance.client,
+  'createdAt': instance.createdAt,
+  'updatedAt': instance.updatedAt,
+};

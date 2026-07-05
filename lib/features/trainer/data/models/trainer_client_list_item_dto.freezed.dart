@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TrainerClientListItemDto {
 
- String get id; String get name; String? get email; String? get phone; String get status; String? get userId; String? get avatarUrl; String? get lastWorkoutDate; String get engagementScore; String? get activeProgramName;
+ String get id; String get name; String? get email; String? get phone; String get status; String? get userId; String? get avatarUrl; String? get avatarPath; String? get lastWorkoutDate; String get engagementScore; String? get activeProgramName;
 /// Create a copy of TrainerClientListItemDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $TrainerClientListItemDtoCopyWith<TrainerClientListItemDto> get copyWith => _$Tr
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TrainerClientListItemDto&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.status, status) || other.status == status)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.lastWorkoutDate, lastWorkoutDate) || other.lastWorkoutDate == lastWorkoutDate)&&(identical(other.engagementScore, engagementScore) || other.engagementScore == engagementScore)&&(identical(other.activeProgramName, activeProgramName) || other.activeProgramName == activeProgramName));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TrainerClientListItemDto&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.status, status) || other.status == status)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.avatarPath, avatarPath) || other.avatarPath == avatarPath)&&(identical(other.lastWorkoutDate, lastWorkoutDate) || other.lastWorkoutDate == lastWorkoutDate)&&(identical(other.engagementScore, engagementScore) || other.engagementScore == engagementScore)&&(identical(other.activeProgramName, activeProgramName) || other.activeProgramName == activeProgramName));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,email,phone,status,userId,avatarUrl,lastWorkoutDate,engagementScore,activeProgramName);
+int get hashCode => Object.hash(runtimeType,id,name,email,phone,status,userId,avatarUrl,avatarPath,lastWorkoutDate,engagementScore,activeProgramName);
 
 @override
 String toString() {
-  return 'TrainerClientListItemDto(id: $id, name: $name, email: $email, phone: $phone, status: $status, userId: $userId, avatarUrl: $avatarUrl, lastWorkoutDate: $lastWorkoutDate, engagementScore: $engagementScore, activeProgramName: $activeProgramName)';
+  return 'TrainerClientListItemDto(id: $id, name: $name, email: $email, phone: $phone, status: $status, userId: $userId, avatarUrl: $avatarUrl, avatarPath: $avatarPath, lastWorkoutDate: $lastWorkoutDate, engagementScore: $engagementScore, activeProgramName: $activeProgramName)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $TrainerClientListItemDtoCopyWith<$Res>  {
   factory $TrainerClientListItemDtoCopyWith(TrainerClientListItemDto value, $Res Function(TrainerClientListItemDto) _then) = _$TrainerClientListItemDtoCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String? email, String? phone, String status, String? userId, String? avatarUrl, String? lastWorkoutDate, String engagementScore, String? activeProgramName
+ String id, String name, String? email, String? phone, String status, String? userId, String? avatarUrl, String? avatarPath, String? lastWorkoutDate, String engagementScore, String? activeProgramName
 });
 
 
@@ -65,7 +65,7 @@ class _$TrainerClientListItemDtoCopyWithImpl<$Res>
 
 /// Create a copy of TrainerClientListItemDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? email = freezed,Object? phone = freezed,Object? status = null,Object? userId = freezed,Object? avatarUrl = freezed,Object? lastWorkoutDate = freezed,Object? engagementScore = null,Object? activeProgramName = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? email = freezed,Object? phone = freezed,Object? status = null,Object? userId = freezed,Object? avatarUrl = freezed,Object? avatarPath = freezed,Object? lastWorkoutDate = freezed,Object? engagementScore = null,Object? activeProgramName = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -74,6 +74,7 @@ as String?,phone: freezed == phone ? _self.phone : phone // ignore: cast_nullabl
 as String?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,userId: freezed == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
 as String?,avatarUrl: freezed == avatarUrl ? _self.avatarUrl : avatarUrl // ignore: cast_nullable_to_non_nullable
+as String?,avatarPath: freezed == avatarPath ? _self.avatarPath : avatarPath // ignore: cast_nullable_to_non_nullable
 as String?,lastWorkoutDate: freezed == lastWorkoutDate ? _self.lastWorkoutDate : lastWorkoutDate // ignore: cast_nullable_to_non_nullable
 as String?,engagementScore: null == engagementScore ? _self.engagementScore : engagementScore // ignore: cast_nullable_to_non_nullable
 as String,activeProgramName: freezed == activeProgramName ? _self.activeProgramName : activeProgramName // ignore: cast_nullable_to_non_nullable
@@ -162,10 +163,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String? email,  String? phone,  String status,  String? userId,  String? avatarUrl,  String? lastWorkoutDate,  String engagementScore,  String? activeProgramName)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String? email,  String? phone,  String status,  String? userId,  String? avatarUrl,  String? avatarPath,  String? lastWorkoutDate,  String engagementScore,  String? activeProgramName)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TrainerClientListItemDto() when $default != null:
-return $default(_that.id,_that.name,_that.email,_that.phone,_that.status,_that.userId,_that.avatarUrl,_that.lastWorkoutDate,_that.engagementScore,_that.activeProgramName);case _:
+return $default(_that.id,_that.name,_that.email,_that.phone,_that.status,_that.userId,_that.avatarUrl,_that.avatarPath,_that.lastWorkoutDate,_that.engagementScore,_that.activeProgramName);case _:
   return orElse();
 
 }
@@ -183,10 +184,10 @@ return $default(_that.id,_that.name,_that.email,_that.phone,_that.status,_that.u
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String? email,  String? phone,  String status,  String? userId,  String? avatarUrl,  String? lastWorkoutDate,  String engagementScore,  String? activeProgramName)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String? email,  String? phone,  String status,  String? userId,  String? avatarUrl,  String? avatarPath,  String? lastWorkoutDate,  String engagementScore,  String? activeProgramName)  $default,) {final _that = this;
 switch (_that) {
 case _TrainerClientListItemDto():
-return $default(_that.id,_that.name,_that.email,_that.phone,_that.status,_that.userId,_that.avatarUrl,_that.lastWorkoutDate,_that.engagementScore,_that.activeProgramName);case _:
+return $default(_that.id,_that.name,_that.email,_that.phone,_that.status,_that.userId,_that.avatarUrl,_that.avatarPath,_that.lastWorkoutDate,_that.engagementScore,_that.activeProgramName);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -203,10 +204,10 @@ return $default(_that.id,_that.name,_that.email,_that.phone,_that.status,_that.u
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String? email,  String? phone,  String status,  String? userId,  String? avatarUrl,  String? lastWorkoutDate,  String engagementScore,  String? activeProgramName)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String? email,  String? phone,  String status,  String? userId,  String? avatarUrl,  String? avatarPath,  String? lastWorkoutDate,  String engagementScore,  String? activeProgramName)?  $default,) {final _that = this;
 switch (_that) {
 case _TrainerClientListItemDto() when $default != null:
-return $default(_that.id,_that.name,_that.email,_that.phone,_that.status,_that.userId,_that.avatarUrl,_that.lastWorkoutDate,_that.engagementScore,_that.activeProgramName);case _:
+return $default(_that.id,_that.name,_that.email,_that.phone,_that.status,_that.userId,_that.avatarUrl,_that.avatarPath,_that.lastWorkoutDate,_that.engagementScore,_that.activeProgramName);case _:
   return null;
 
 }
@@ -218,7 +219,7 @@ return $default(_that.id,_that.name,_that.email,_that.phone,_that.status,_that.u
 @JsonSerializable()
 
 class _TrainerClientListItemDto implements TrainerClientListItemDto {
-  const _TrainerClientListItemDto({required this.id, required this.name, this.email, this.phone, required this.status, this.userId, this.avatarUrl, this.lastWorkoutDate, this.engagementScore = 'medium', this.activeProgramName});
+  const _TrainerClientListItemDto({required this.id, required this.name, this.email, this.phone, required this.status, this.userId, this.avatarUrl, this.avatarPath, this.lastWorkoutDate, this.engagementScore = 'medium', this.activeProgramName});
   factory _TrainerClientListItemDto.fromJson(Map<String, dynamic> json) => _$TrainerClientListItemDtoFromJson(json);
 
 @override final  String id;
@@ -228,6 +229,7 @@ class _TrainerClientListItemDto implements TrainerClientListItemDto {
 @override final  String status;
 @override final  String? userId;
 @override final  String? avatarUrl;
+@override final  String? avatarPath;
 @override final  String? lastWorkoutDate;
 @override@JsonKey() final  String engagementScore;
 @override final  String? activeProgramName;
@@ -245,16 +247,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TrainerClientListItemDto&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.status, status) || other.status == status)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.lastWorkoutDate, lastWorkoutDate) || other.lastWorkoutDate == lastWorkoutDate)&&(identical(other.engagementScore, engagementScore) || other.engagementScore == engagementScore)&&(identical(other.activeProgramName, activeProgramName) || other.activeProgramName == activeProgramName));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TrainerClientListItemDto&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.status, status) || other.status == status)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.avatarPath, avatarPath) || other.avatarPath == avatarPath)&&(identical(other.lastWorkoutDate, lastWorkoutDate) || other.lastWorkoutDate == lastWorkoutDate)&&(identical(other.engagementScore, engagementScore) || other.engagementScore == engagementScore)&&(identical(other.activeProgramName, activeProgramName) || other.activeProgramName == activeProgramName));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,email,phone,status,userId,avatarUrl,lastWorkoutDate,engagementScore,activeProgramName);
+int get hashCode => Object.hash(runtimeType,id,name,email,phone,status,userId,avatarUrl,avatarPath,lastWorkoutDate,engagementScore,activeProgramName);
 
 @override
 String toString() {
-  return 'TrainerClientListItemDto(id: $id, name: $name, email: $email, phone: $phone, status: $status, userId: $userId, avatarUrl: $avatarUrl, lastWorkoutDate: $lastWorkoutDate, engagementScore: $engagementScore, activeProgramName: $activeProgramName)';
+  return 'TrainerClientListItemDto(id: $id, name: $name, email: $email, phone: $phone, status: $status, userId: $userId, avatarUrl: $avatarUrl, avatarPath: $avatarPath, lastWorkoutDate: $lastWorkoutDate, engagementScore: $engagementScore, activeProgramName: $activeProgramName)';
 }
 
 
@@ -265,7 +267,7 @@ abstract mixin class _$TrainerClientListItemDtoCopyWith<$Res> implements $Traine
   factory _$TrainerClientListItemDtoCopyWith(_TrainerClientListItemDto value, $Res Function(_TrainerClientListItemDto) _then) = __$TrainerClientListItemDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String? email, String? phone, String status, String? userId, String? avatarUrl, String? lastWorkoutDate, String engagementScore, String? activeProgramName
+ String id, String name, String? email, String? phone, String status, String? userId, String? avatarUrl, String? avatarPath, String? lastWorkoutDate, String engagementScore, String? activeProgramName
 });
 
 
@@ -282,7 +284,7 @@ class __$TrainerClientListItemDtoCopyWithImpl<$Res>
 
 /// Create a copy of TrainerClientListItemDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? email = freezed,Object? phone = freezed,Object? status = null,Object? userId = freezed,Object? avatarUrl = freezed,Object? lastWorkoutDate = freezed,Object? engagementScore = null,Object? activeProgramName = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? email = freezed,Object? phone = freezed,Object? status = null,Object? userId = freezed,Object? avatarUrl = freezed,Object? avatarPath = freezed,Object? lastWorkoutDate = freezed,Object? engagementScore = null,Object? activeProgramName = freezed,}) {
   return _then(_TrainerClientListItemDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -291,6 +293,7 @@ as String?,phone: freezed == phone ? _self.phone : phone // ignore: cast_nullabl
 as String?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,userId: freezed == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
 as String?,avatarUrl: freezed == avatarUrl ? _self.avatarUrl : avatarUrl // ignore: cast_nullable_to_non_nullable
+as String?,avatarPath: freezed == avatarPath ? _self.avatarPath : avatarPath // ignore: cast_nullable_to_non_nullable
 as String?,lastWorkoutDate: freezed == lastWorkoutDate ? _self.lastWorkoutDate : lastWorkoutDate // ignore: cast_nullable_to_non_nullable
 as String?,engagementScore: null == engagementScore ? _self.engagementScore : engagementScore // ignore: cast_nullable_to_non_nullable
 as String,activeProgramName: freezed == activeProgramName ? _self.activeProgramName : activeProgramName // ignore: cast_nullable_to_non_nullable

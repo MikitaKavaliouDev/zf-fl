@@ -20,6 +20,7 @@ abstract class TrainerClientDetailDto with _$TrainerClientDetailDto {
     String? emergencyContactName,
     String? emergencyContactPhone,
     String? avatarUrl,
+    String? avatarPath,
     String? trainerId,
   }) = _TrainerClientDetailDto;
 

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
 import '../data/models/create_habit_request_dto.dart';
+import '../data/models/update_habit_request_dto.dart';
 import '../data/trainer_clients_api_service.dart';
 import 'trainer_client_habits_state.dart';
 
@@ -38,6 +39,23 @@ class TrainerClientHabitsCubit extends Cubit<TrainerClientHabitsState> {
       emit(TrainerClientHabitsState.loaded(habits));
     } catch (e) {
       developer.log('Failed to create habit: $e', name: 'trainer');
+      emit(TrainerClientHabitsState.error(e.toString()));
+    }
+  }
+
+  /// Update a habit for a client, then reload the list.
+  Future<void> updateHabit(
+    String clientId,
+    String habitId,
+    UpdateHabitRequestDto request,
+  ) async {
+    emit(const TrainerClientHabitsState.loading());
+    try {
+      await _api.updateHabit(clientId, habitId, request);
+      final habits = await _api.getClientHabits(clientId);
+      emit(TrainerClientHabitsState.loaded(habits));
+    } catch (e) {
+      developer.log('Failed to update habit: $e', name: 'trainer');
       emit(TrainerClientHabitsState.error(e.toString()));
     }
   }

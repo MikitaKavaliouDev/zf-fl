@@ -44,14 +44,21 @@ import '../../features/profile/presentation/settings_screens/contact_support_scr
 import '../../features/profile/presentation/settings_screens/profile_config_screen.dart';
 import '../../features/sharing/presentation/sharing_screen.dart';
 import '../../features/trainer/cubit/trainer_calendar_cubit.dart';
+import '../../features/trainer/cubit/trainer_check_in_review_cubit.dart';
 import '../../features/trainer/cubit/trainer_client_detail_cubit.dart';
+import '../../features/trainer/cubit/trainer_client_sessions_cubit.dart';
+import '../../features/trainer/cubit/trainer_add_client_cubit.dart';
 import '../../features/trainer/cubit/trainer_clients_cubit.dart';
 import '../../features/trainer/cubit/trainer_dashboard_cubit.dart';
 import '../../features/trainer/cubit/trainer_programs_cubit.dart';
 import '../../features/trainer/presentation/calendar/trainer_calendar_screen.dart';
+import '../../features/trainer/presentation/checkins/trainer_check_in_detail_screen.dart';
 import '../../features/trainer/presentation/checkins/trainer_checkin_review_screen.dart';
+import '../../features/trainer/presentation/clients/trainer_add_client_screen.dart';
 import '../../features/trainer/presentation/clients/trainer_client_detail_screen.dart';
+import '../../features/trainer/presentation/clients/trainer_client_history_screen.dart';
 import '../../features/trainer/presentation/clients/trainer_clients_screen.dart';
+import '../../features/trainer/presentation/nutrition/trainer_nutrition_detail_screen.dart';
 import '../../features/trainer/presentation/dashboard/trainer_dashboard_screen.dart';
 import '../../features/trainer/presentation/events/trainer_events_screen.dart';
 import '../../features/trainer/data/models/trainer_program_brief_dto.dart';
@@ -412,6 +419,29 @@ GoRouter createAppRouter(AuthCubit authCubit) {
           );
         },
       ),
+      // Trainer add client (full-screen, no bottom nav — matches iOS AddClientView)
+      GoRoute(
+        path: '/trainer/clients/add',
+        builder: (_, _) => BlocProvider<TrainerAddClientCubit>(
+          create: (_) => getIt<TrainerAddClientCubit>(),
+          child: const TrainerAddClientScreen(),
+        ),
+      ),
+      // Trainer client history (full-screen, no bottom nav)
+      GoRoute(
+        path: '/trainer/clients/:id/history',
+        builder: (_, state) {
+          final clientId = state.pathParameters['id'] ?? '';
+          final clientName = state.extra as String? ?? 'History';
+          return BlocProvider<TrainerClientSessionsCubit>(
+            create: (_) => getIt<TrainerClientSessionsCubit>(),
+            child: TrainerClientHistoryScreen(
+              clientId: clientId,
+              clientName: clientName,
+            ),
+          );
+        },
+      ),
       // Trainer program detail (full-screen, no bottom nav)
       GoRoute(
         path: '/trainer/programs/:id',
@@ -430,7 +460,26 @@ GoRouter createAppRouter(AuthCubit authCubit) {
       // Trainer check-in review (full-screen, no bottom nav)
       GoRoute(
         path: '/trainer/checkins',
-        builder: (_, _) => const TrainerCheckInReviewScreen(),
+        builder: (_, _) => BlocProvider<TrainerCheckInReviewCubit>(
+          create: (_) => getIt<TrainerCheckInReviewCubit>(),
+          child: const TrainerCheckInReviewScreen(),
+        ),
+      ),
+      // Trainer nutrition detail (full-screen, no bottom nav)
+      GoRoute(
+        path: '/trainer/clients/:id/nutrition',
+        builder: (_, state) {
+          final clientId = state.pathParameters['id'] ?? '';
+          return TrainerNutritionDetailScreen(clientId: clientId);
+        },
+      ),
+      // Trainer check-in detail (full-screen, no bottom nav)
+      GoRoute(
+        path: '/trainer/checkins/:id',
+        builder: (_, state) {
+          final checkInId = state.pathParameters['id'] ?? '';
+          return TrainerCheckInDetailScreen(checkInId: checkInId);
+        },
       ),
       // Trainer events (full-screen, no bottom nav)
       GoRoute(

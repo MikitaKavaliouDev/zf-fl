@@ -559,14 +559,297 @@ class _ErrorView extends StatelessWidget {
   }
 }
 
-class _DashboardSkeleton extends StatelessWidget {
+/// Skeleton shimmer placeholder matching the real dashboard layout.
+///
+/// Replaces content entirely while [TrainerDashboardLoading] is active.
+/// Uses a subtle opacity pulse via [AnimationController] to indicate
+/// progress, matching iOS `DashboardSkeleton()` behavior.
+class _DashboardSkeleton extends StatefulWidget {
   const _DashboardSkeleton();
 
   @override
+  State<_DashboardSkeleton> createState() => _DashboardSkeletonState();
+}
+
+class _DashboardSkeletonState extends State<_DashboardSkeleton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _opacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
+    _opacity = Tween<double>(begin: 0.3, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: CircularProgressIndicator(
-        color: AppColors.primary,
+    return AnimatedBuilder(
+      animation: _opacity,
+      builder: (context, child) => Opacity(
+        opacity: _opacity.value,
+        child: child,
+      ),
+      child: ListView(
+        padding: const EdgeInsets.only(top: 16, bottom: 100),
+        children: [
+          // Greeting header skeleton
+          const _SkeletonBlock(width: 200, height: 28),
+          const SizedBox(height: 24),
+
+          // Overview section header
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: _SkeletonBlock(width: 120, height: 16, radius: 6),
+          ),
+          const SizedBox(height: 12),
+
+          // Stats cards — horizontal scroll row, 3 cards
+          SizedBox(
+            height: 120,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              children: const [
+                _SkeletonStatsCard(),
+                SizedBox(width: 12),
+                _SkeletonStatsCard(),
+                SizedBox(width: 12),
+                _SkeletonStatsCard(),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 28),
+
+          // Quick Actions section header
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: _SkeletonBlock(width: 120, height: 16, radius: 6),
+          ),
+          const SizedBox(height: 12),
+
+          // Quick Actions — 2×2 grid
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(child: _SkeletonQuickActionCard()),
+                    SizedBox(width: 12),
+                    Expanded(child: _SkeletonQuickActionCard()),
+                  ],
+                ),
+                SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(child: _SkeletonQuickActionCard()),
+                    SizedBox(width: 12),
+                    Expanded(child: _SkeletonQuickActionCard()),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 28),
+
+          // What's Next section header
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: _SkeletonBlock(width: 120, height: 16, radius: 6),
+          ),
+          const SizedBox(height: 12),
+
+          // Session rows — 3 skeleton rows
+          ...List.generate(
+            3,
+            (_) => const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+              child: _SkeletonSessionRow(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A simple rounded rectangle skeleton block.
+class _SkeletonBlock extends StatelessWidget {
+  final double width;
+  final double height;
+  final double radius;
+
+  const _SkeletonBlock({
+    required this.width,
+    required this.height,
+    this.radius = 8,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: AppColors.mutedSurface,
+        borderRadius: BorderRadius.circular(radius),
+      ),
+    );
+  }
+}
+
+/// Skeleton for a single stats card (160w × 120h, rounded 20px).
+class _SkeletonStatsCard extends StatelessWidget {
+  const _SkeletonStatsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 160,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.mutedSurface,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Circle icon placeholder (32px)
+          Container(
+            width: 32,
+            height: 32,
+            decoration: const BoxDecoration(
+              color: AppColors.borderMuted,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const Spacer(),
+          // Value placeholder (24px tall bar)
+          Container(
+            width: 80,
+            height: 24,
+            decoration: BoxDecoration(
+              color: AppColors.borderMuted,
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ),
+          const SizedBox(height: 6),
+          // Title placeholder (12px tall bar)
+          Container(
+            width: 60,
+            height: 12,
+            decoration: BoxDecoration(
+              color: AppColors.borderMuted,
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Skeleton for a quick action card (110h, rounded 20px).
+class _SkeletonQuickActionCard extends StatelessWidget {
+  const _SkeletonQuickActionCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 110,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.mutedSurface,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Icon square placeholder (48px, rounded 14px)
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppColors.borderMuted,
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Title placeholder (11px tall bar)
+          Container(
+            width: 50,
+            height: 11,
+            decoration: BoxDecoration(
+              color: AppColors.borderMuted,
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Skeleton for a session row: 40px circle + two text bars + chevron.
+class _SkeletonSessionRow extends StatelessWidget {
+  const _SkeletonSessionRow();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.mutedSurface,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          // Circle placeholder (40px)
+          Container(
+            width: 40,
+            height: 40,
+            decoration: const BoxDecoration(
+              color: AppColors.borderMuted,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Text bars
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _SkeletonBlock(width: 140, height: 14, radius: 4),
+                SizedBox(height: 6),
+                _SkeletonBlock(width: 200, height: 12, radius: 4),
+              ],
+            ),
+          ),
+          // Chevron placeholder
+          Container(
+            width: 16,
+            height: 16,
+            decoration: BoxDecoration(
+              color: AppColors.borderMuted,
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+        ],
       ),
     );
   }
