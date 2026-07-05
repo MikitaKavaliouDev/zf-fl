@@ -12,6 +12,7 @@ import '../../features/auth/presentation/email_verification_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/onboarding_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
+import '../../features/auth/presentation/splash_screen.dart';
 import '../../features/check_in/cubit/check_in_cubit.dart';
 import '../../features/check_in/presentation/check_in_detail_screen.dart';
 import '../../features/check_in/presentation/check_in_history_screen.dart';
@@ -98,20 +99,18 @@ class GoRouterRefreshStream extends ChangeNotifier {
 }
 
 GoRouter createAppRouter(AuthCubit authCubit) {
-  var hasCheckedAuth = false;
-  authCubit.stream.listen((state) {
-    if (state is! AuthInitial) hasCheckedAuth = true;
-  });
-
   return GoRouter(
     refreshListenable: GoRouterRefreshStream(authCubit.stream),
-    initialLocation: '/login',
+    initialLocation: '/splash',
     redirect: (context, state) {
       final authState = authCubit.state;
       final location = state.matchedLocation;
 
-      // Don't redirect during initial auth check — prevents login flash
-      if (authState is AuthInitial && !hasCheckedAuth) return null;
+      // While auth state is still being resolved, show the splash screen
+      // instead of flashing the login screen.
+      if (authState is AuthInitial || authState is AuthLoading) {
+        return location == '/splash' ? null : '/splash';
+      }
 
       final isTrainer = authState is AuthAuthenticated && authState.isTrainer;
 
@@ -130,6 +129,12 @@ GoRouter createAppRouter(AuthCubit authCubit) {
       final onSharedRoute = location == '/workout/session' ||
           location == '/workout/history' ||
           location.startsWith('/workout/exercise/');
+
+      // Auth resolved but still on splash → redirect to the right place.
+      if (location == '/splash') {
+        if (!loggedIn) return '/login';
+        return isTrainer ? '/trainer/dashboard' : '/';
+      }
 
       // Not logged in → auth pages only.
       if (!loggedIn && !onAuthPage) return '/login';
@@ -184,6 +189,10 @@ GoRouter createAppRouter(AuthCubit authCubit) {
       GoRoute(
         path: '/onboarding',
         builder: (_, _) => const OnboardingScreen(),
+      ),
+      GoRoute(
+        path: '/splash',
+        builder: (_, _) => const SplashScreen(),
       ),
       // Deep links for Stripe checkout return
       GoRoute(
