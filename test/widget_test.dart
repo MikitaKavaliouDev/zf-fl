@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tanquery_flutter/tanquery_flutter.dart';
 
+import 'package:ziro_fit/core/database/app_database.dart';
 import 'package:ziro_fit/core/di/injection.dart' as di;
+import 'package:ziro_fit/core/network/response_cache.dart';
 import 'package:ziro_fit/core/security/active_mode_holder.dart';
 import 'package:ziro_fit/features/auth/cubit/auth_cubit.dart';
 import 'package:ziro_fit/features/auth/cubit/auth_state.dart';
@@ -53,6 +56,9 @@ void main() {
       final cubit = AuthCubit(
         di.getIt<AuthRepository>(),
         di.getIt<ActiveModeHolder>(),
+        di.getIt<ResponseCache>(),
+        di.getIt<AppDatabase>(),
+        di.getIt<QueryClient>(),
       );
       cubit.emit(AuthState.registerSuccess(
         email: 'test@example.com',

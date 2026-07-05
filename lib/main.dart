@@ -89,19 +89,22 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
       // Load persisted appearance preferences (theme, text size, reduce motion).
       _appearanceCubit.load();
     });
-    // Fetch notifications only after auth state is resolved.
+    // React to auth state changes for the app lifecycle.
+    // This subscription lives for the entire app session (never cancelled)
+    // so logout → re-auth flows work correctly.
     _authSubscription = _authCubit.stream.listen((state) {
       if (state is AuthAuthenticated) {
         _notificationsCubit.fetchNotifications();
-        // Cold-start: check if there's an active workout session.
-        // If yes, the cubit auto-minimizes so the mini-player overlay
-        // appears on the home screen with a synced timer — matching iOS.
+        // Cold-start / re-auth: check if there's an active workout session.
         _workoutSessionCubit.loadCurrent();
         // Configure Voice Coach with the authenticated user ID.
         _voiceCoachCubit.configure(userId: state.user.id);
-        _authSubscription?.cancel();
       } else if (state is AuthUnauthenticated) {
-        _authSubscription?.cancel();
+        // Logged out — reset the workout session cubit so any active timer
+        // and session state are cleaned up. The AuthCubit already cleared
+        // ResponseCache, Drift, and tanquery — screens will refetch fresh
+        // data on their next mount.
+        _workoutSessionCubit.reset();
       }
     });
   }

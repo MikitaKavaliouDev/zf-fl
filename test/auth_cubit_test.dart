@@ -2,8 +2,11 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tanquery_flutter/tanquery_flutter.dart';
 
+import 'package:ziro_fit/core/database/app_database.dart';
 import 'package:ziro_fit/core/models/app_mode.dart';
+import 'package:ziro_fit/core/network/response_cache.dart';
 import 'package:ziro_fit/core/security/active_mode_holder.dart';
 import 'package:ziro_fit/features/auth/cubit/auth_cubit.dart';
 import 'package:ziro_fit/features/auth/cubit/auth_state.dart';
@@ -12,10 +15,16 @@ import 'package:ziro_fit/features/auth/data/models/auth_response.dart';
 import 'package:ziro_fit/features/auth/data/models/user.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
+class MockResponseCache extends Mock implements ResponseCache {}
+class MockAppDatabase extends Mock implements AppDatabase {}
+class MockQueryClient extends Mock implements QueryClient {}
 
 void main() {
   late AuthRepository repository;
   late ActiveModeHolder modeHolder;
+  late ResponseCache cache;
+  late AppDatabase database;
+  late QueryClient queryClient;
   late AuthCubit cubit;
 
   setUpAll(() {
@@ -26,7 +35,10 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     repository = MockAuthRepository();
     modeHolder = ActiveModeHolder();
-    cubit = AuthCubit(repository, modeHolder);
+    cache = MockResponseCache();
+    database = MockAppDatabase();
+    queryClient = MockQueryClient();
+    cubit = AuthCubit(repository, modeHolder, cache, database, queryClient);
   });
 
   tearDown(() {

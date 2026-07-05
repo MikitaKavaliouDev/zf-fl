@@ -592,6 +592,14 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
     );
   }
 
+  /// Reset the cubit to its initial state.
+  /// Used on logout to ensure stale session data doesn't persist.
+  void reset() {
+    _timer?.cancel();
+    emit(const WorkoutSessionState.initial());
+    developer.log('reset | cubit reset to initial', name: 'workout');
+  }
+
   /// Cancel the active workout session.
   ///
   /// The local state (timer + UI) resets immediately. The API call fires in

@@ -6,6 +6,7 @@ import '../../../../core/widgets/error_widget.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../trainers/data/models/template_dto.dart';
 import '../../trainers/presentation/widgets/exercise_picker_sheet.dart';
+import '../cubit/program_cubit.dart';
 import '../cubit/template_detail_cubit.dart';
 import '../cubit/template_detail_state.dart';
 
@@ -37,6 +38,15 @@ class _TemplateDetailBody extends StatefulWidget {
 }
 
 class _TemplateDetailBodyState extends State<_TemplateDetailBody> {
+  /// Pop back and signal the templates library to refresh,
+  /// picking up any local template changes persisted by the cubit.
+  void _popAndRefresh() {
+    // Notify the programs cubit that templates may have changed so the
+    // templates library screen refreshes when it becomes visible again.
+    context.read<ProgramCubit>().loadTemplates();
+    Navigator.of(context).maybePop();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,11 +64,11 @@ class _TemplateDetailBodyState extends State<_TemplateDetailBody> {
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded, color: AppColors.foreground),
-          onPressed: () => Navigator.of(context).maybePop(),
+          onPressed: _popAndRefresh,
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).maybePop(),
+            onPressed: _popAndRefresh,
             child: const Text(
               'Done',
               style: TextStyle(

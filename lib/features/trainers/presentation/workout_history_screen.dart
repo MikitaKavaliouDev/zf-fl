@@ -258,8 +258,10 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
         },
         child: ListView(
           children: [
+            _buildHeader(context, null, allSessions),
+            _buildSearchBar(context, searchQuery),
             SizedBox(
-              height: MediaQuery.of(context).size.height * 0.6,
+              height: MediaQuery.of(context).size.height * 0.5,
               child: _buildEmpty(context),
             ),
           ],
@@ -875,6 +877,58 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
             const Text(
               'Complete a workout to see it here.',
               style: TextStyle(fontSize: 14, color: AppColors.mutedText),
+            ),
+            const SizedBox(height: 32),
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 48,
+                    child: ElevatedButton.icon(
+                      onPressed: () => context.push('/workout/session'),
+                      icon: const Icon(Icons.play_arrow_rounded, size: 20),
+                      label: const Text('Start a Workout'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(99),
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 48,
+                    child: OutlinedButton.icon(
+                      onPressed: () => context.push('/home/templates-library'),
+                      icon: const Icon(Icons.dashboard_customize_outlined, size: 20),
+                      label: const Text('Browse Templates'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.foreground,
+                        side: const BorderSide(color: AppColors.borderActive),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(99),
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

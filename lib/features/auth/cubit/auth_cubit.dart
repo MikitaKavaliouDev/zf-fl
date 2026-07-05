@@ -6,8 +6,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tanquery_flutter/tanquery_flutter.dart';
 
+import '../../../core/database/app_database.dart';
 import '../../../core/models/app_mode.dart';
+import '../../../core/network/response_cache.dart';
 import '../../../core/security/active_mode_holder.dart';
 import '../data/auth_repository.dart';
 import '../data/models/user.dart';
@@ -48,13 +51,21 @@ sealed class AuthEvent with _$AuthEvent {
 class AuthCubit extends Cubit<AuthState> {
   final AuthRepository _repository;
   final ActiveModeHolder _modeHolder;
+  final ResponseCache _cache;
+  final AppDatabase _database;
+  final QueryClient _queryClient;
 
   /// Cached user for the non-active mode (preserved during switches).
   User? _trainerUser;
   User? _clientUser;
 
-  AuthCubit(this._repository, this._modeHolder)
-      : super(const AuthState.initial());
+  AuthCubit(
+    this._repository,
+    this._modeHolder,
+    this._cache,
+    this._database,
+    this._queryClient,
+  ) : super(const AuthState.initial());
 
   // ── Event handlers ──
 
@@ -305,6 +316,11 @@ class AuthCubit extends Cubit<AuthState> {
     else _clientUser = null;
     await _repository.logout();
 
+    // Clear all local data — cache keys like "workout:history:all:20:0"
+    // lack user isolation, so they must be wiped on any user transition
+    // (mode switch or full logout).
+    await _clearLocalData();
+
     // If the other mode still has a cached session, switch to it
     final otherUser = mode == AppMode.trainer ? _clientUser : _trainerUser;
     if (otherUser != null) {
@@ -318,6 +334,18 @@ class AuthCubit extends Cubit<AuthState> {
       ));
     } else {
       emit(const AuthState.unauthenticated());
+    }
+  }
+
+  /// Wipe all locally cached/persisted data so the next login starts fresh.
+  Future<void> _clearLocalData() async {
+    try {
+      await _cache.clearAll();
+      await _database.clearAll();
+      _queryClient.clear();
+      developer.log('Local data cleared (cache, db, tanquery)', name: 'auth');
+    } catch (e, s) {
+      developer.log('_clearLocalData error', name: 'auth', error: e, stackTrace: s);
     }
   }
 

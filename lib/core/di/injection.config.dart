@@ -506,9 +506,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i340.ResponseCache>(),
       ),
     );
-    gh.factory<_i137.TemplateDetailCubit>(
-      () => _i137.TemplateDetailCubit(gh<_i459.WorkoutSessionRepository>()),
-    );
     gh.singleton<_i607.DailyTargetsRepository>(
       () => _i607.DailyTargetsRepository(
         gh<_i1058.DailyTargetsApiService>(),
@@ -521,12 +518,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i124.ConnectivityService>(),
       ),
     );
-    gh.singleton<_i514.AuthCubit>(
-      () => _i514.AuthCubit(
-        gh<_i736.AuthRepository>(),
-        gh<_i939.ActiveModeHolder>(),
-      ),
-    );
     gh.factory<_i465.CheckInCubit>(
       () => _i465.CheckInCubit(gh<_i979.CheckInRepository>()),
     );
@@ -536,20 +527,13 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i871.WorkoutSessionCubit>(
       () => _i871.WorkoutSessionCubit(gh<_i459.WorkoutSessionRepository>()),
     );
-    gh.factory<_i501.DailyTargetsCubit>(
-      () => _i501.DailyTargetsCubit(
-        gh<_i607.DailyTargetsRepository>(),
-        gh<_i514.AuthCubit>(),
-      ),
-    );
     gh.factory<_i560.NutritionHabitsCubit>(
       () => _i560.NutritionHabitsCubit(gh<_i982.NutritionHabitsRepository>()),
     );
-    gh.factory<_i19.MoreCubit>(
-      () => _i19.MoreCubit(
-        gh<_i768.ProfileApiService>(),
-        gh<_i514.AuthCubit>(),
-        gh<_i340.ResponseCache>(),
+    gh.factory<_i137.TemplateDetailCubit>(
+      () => _i137.TemplateDetailCubit(
+        gh<_i459.WorkoutSessionRepository>(),
+        gh<_i783.LocalTemplateRepository>(),
       ),
     );
     gh.factory<_i899.AnalyticsCubit>(
@@ -558,6 +542,15 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i296.AnalyticsLocalService>(),
         gh<_i124.ConnectivityService>(),
         gh<_i514.MeasurementsRepository>(),
+      ),
+    );
+    gh.singleton<_i514.AuthCubit>(
+      () => _i514.AuthCubit(
+        gh<_i736.AuthRepository>(),
+        gh<_i939.ActiveModeHolder>(),
+        gh<_i340.ResponseCache>(),
+        gh<_i365.AppDatabase>(),
+        gh<_i448.QueryClient>(),
       ),
     );
     gh.factory<_i13.HomeCubit>(
@@ -584,6 +577,19 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i851.ProfileConfigCubit(
         gh<_i768.ProfileApiService>(),
         gh<_i514.AuthCubit>(),
+      ),
+    );
+    gh.factory<_i501.DailyTargetsCubit>(
+      () => _i501.DailyTargetsCubit(
+        gh<_i607.DailyTargetsRepository>(),
+        gh<_i514.AuthCubit>(),
+      ),
+    );
+    gh.factory<_i19.MoreCubit>(
+      () => _i19.MoreCubit(
+        gh<_i768.ProfileApiService>(),
+        gh<_i514.AuthCubit>(),
+        gh<_i340.ResponseCache>(),
       ),
     );
     return this;

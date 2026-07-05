@@ -85,6 +85,16 @@ class AppDatabase extends _$AppDatabase {
       },
     );
   }
+
+  /// Deletes all data from every table in a single transaction.
+  /// Used on logout to clear the local database completely.
+  Future<void> clearAll() async {
+    await transaction(() async {
+      for (final table in allTables) {
+        await delete(table).go();
+      }
+    });
+  }
 }
 
 LazyDatabase _openConnection() {
