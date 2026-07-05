@@ -83,6 +83,32 @@ class AuthRepository {
     await _api.completeOnboarding();
   }
 
+  /// Full onboarding with role selection and profile setup.
+  /// Calls /api/onboarding/complete. Returns updated user with new role.
+  Future<User> completeOnboardingFull({
+    required String role,
+    required String name,
+    String? location,
+    String? bio,
+    String? avatarPath,
+  }) async {
+    return _api.completeOnboardingFull(
+      role: role,
+      name: name,
+      location: location,
+      bio: bio,
+      avatarPath: avatarPath,
+    );
+  }
+
+  Future<void> resendVerification(String email, {String? redirect}) async {
+    await _api.resendVerification(email, redirect: redirect);
+  }
+
+  Future<void> verifyEmailCode(String email, String code) async {
+    await _api.verifyEmailCode(email, code);
+  }
+
   // ── Token / session helpers ──
 
   /// Restore the user session for the given [mode].

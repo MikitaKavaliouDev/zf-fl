@@ -137,7 +137,7 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function()?  unauthenticated,TResult Function( User user,  bool isOffline,  bool isTrainer)?  authenticated,TResult Function( User user)?  pendingRole,TResult Function( User user)?  needsOnboarding,TResult Function( RegisterResponse response)?  registerSuccess,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function()?  unauthenticated,TResult Function( User user,  bool isOffline,  bool isTrainer)?  authenticated,TResult Function( User user)?  pendingRole,TResult Function( User user)?  needsOnboarding,TResult Function( String email,  RegisterResponse response)?  registerSuccess,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case AuthInitial() when initial != null:
 return initial();case AuthLoading() when loading != null:
@@ -146,7 +146,7 @@ return unauthenticated();case AuthAuthenticated() when authenticated != null:
 return authenticated(_that.user,_that.isOffline,_that.isTrainer);case AuthPendingRole() when pendingRole != null:
 return pendingRole(_that.user);case AuthNeedsOnboarding() when needsOnboarding != null:
 return needsOnboarding(_that.user);case AuthRegisterSuccess() when registerSuccess != null:
-return registerSuccess(_that.response);case AuthError() when error != null:
+return registerSuccess(_that.email,_that.response);case AuthError() when error != null:
 return error(_that.message);case _:
   return orElse();
 
@@ -165,7 +165,7 @@ return error(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function()  unauthenticated,required TResult Function( User user,  bool isOffline,  bool isTrainer)  authenticated,required TResult Function( User user)  pendingRole,required TResult Function( User user)  needsOnboarding,required TResult Function( RegisterResponse response)  registerSuccess,required TResult Function( String message)  error,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function()  unauthenticated,required TResult Function( User user,  bool isOffline,  bool isTrainer)  authenticated,required TResult Function( User user)  pendingRole,required TResult Function( User user)  needsOnboarding,required TResult Function( String email,  RegisterResponse response)  registerSuccess,required TResult Function( String message)  error,}) {final _that = this;
 switch (_that) {
 case AuthInitial():
 return initial();case AuthLoading():
@@ -174,7 +174,7 @@ return unauthenticated();case AuthAuthenticated():
 return authenticated(_that.user,_that.isOffline,_that.isTrainer);case AuthPendingRole():
 return pendingRole(_that.user);case AuthNeedsOnboarding():
 return needsOnboarding(_that.user);case AuthRegisterSuccess():
-return registerSuccess(_that.response);case AuthError():
+return registerSuccess(_that.email,_that.response);case AuthError():
 return error(_that.message);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -189,7 +189,7 @@ return error(_that.message);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function()?  unauthenticated,TResult? Function( User user,  bool isOffline,  bool isTrainer)?  authenticated,TResult? Function( User user)?  pendingRole,TResult? Function( User user)?  needsOnboarding,TResult? Function( RegisterResponse response)?  registerSuccess,TResult? Function( String message)?  error,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function()?  unauthenticated,TResult? Function( User user,  bool isOffline,  bool isTrainer)?  authenticated,TResult? Function( User user)?  pendingRole,TResult? Function( User user)?  needsOnboarding,TResult? Function( String email,  RegisterResponse response)?  registerSuccess,TResult? Function( String message)?  error,}) {final _that = this;
 switch (_that) {
 case AuthInitial() when initial != null:
 return initial();case AuthLoading() when loading != null:
@@ -198,7 +198,7 @@ return unauthenticated();case AuthAuthenticated() when authenticated != null:
 return authenticated(_that.user,_that.isOffline,_that.isTrainer);case AuthPendingRole() when pendingRole != null:
 return pendingRole(_that.user);case AuthNeedsOnboarding() when needsOnboarding != null:
 return needsOnboarding(_that.user);case AuthRegisterSuccess() when registerSuccess != null:
-return registerSuccess(_that.response);case AuthError() when error != null:
+return registerSuccess(_that.email,_that.response);case AuthError() when error != null:
 return error(_that.message);case _:
   return null;
 
@@ -536,9 +536,10 @@ $UserCopyWith<$Res> get user {
 
 
 class AuthRegisterSuccess implements AuthState {
-  const AuthRegisterSuccess({required this.response});
+  const AuthRegisterSuccess({required this.email, required this.response});
   
 
+ final  String email;
  final  RegisterResponse response;
 
 /// Create a copy of AuthState
@@ -551,16 +552,16 @@ $AuthRegisterSuccessCopyWith<AuthRegisterSuccess> get copyWith => _$AuthRegister
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthRegisterSuccess&&(identical(other.response, response) || other.response == response));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthRegisterSuccess&&(identical(other.email, email) || other.email == email)&&(identical(other.response, response) || other.response == response));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,response);
+int get hashCode => Object.hash(runtimeType,email,response);
 
 @override
 String toString() {
-  return 'AuthState.registerSuccess(response: $response)';
+  return 'AuthState.registerSuccess(email: $email, response: $response)';
 }
 
 
@@ -571,7 +572,7 @@ abstract mixin class $AuthRegisterSuccessCopyWith<$Res> implements $AuthStateCop
   factory $AuthRegisterSuccessCopyWith(AuthRegisterSuccess value, $Res Function(AuthRegisterSuccess) _then) = _$AuthRegisterSuccessCopyWithImpl;
 @useResult
 $Res call({
- RegisterResponse response
+ String email, RegisterResponse response
 });
 
 
@@ -588,9 +589,10 @@ class _$AuthRegisterSuccessCopyWithImpl<$Res>
 
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? response = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? email = null,Object? response = null,}) {
   return _then(AuthRegisterSuccess(
-response: null == response ? _self.response : response // ignore: cast_nullable_to_non_nullable
+email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
+as String,response: null == response ? _self.response : response // ignore: cast_nullable_to_non_nullable
 as RegisterResponse,
   ));
 }

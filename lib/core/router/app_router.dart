@@ -141,9 +141,8 @@ GoRouter createAppRouter(AuthCubit authCubit) {
 
       // Logged in → redirect away from auth pages.
       if (loggedIn && onAuthPage) {
-        // Keep user on verify-email if they just registered or have a pending role
-        if ((authState is AuthRegisterSuccess || authState is AuthPendingRole) &&
-            location == '/verify-email') {
+        // Keep user on verify-email if they just registered
+        if (authState is AuthRegisterSuccess && location == '/verify-email') {
           return null;
         }
         // Keep user on onboarding if they need to complete it
@@ -163,9 +162,9 @@ GoRouter createAppRouter(AuthCubit authCubit) {
         return '/verify-email';
       }
 
-      // Pending role (unverified email) → show verify-email.
-      if (authState is AuthPendingRole && location != '/verify-email') {
-        return '/verify-email';
+      // Pending role → show onboarding setup wizard (role selection, profile, etc.)
+      if (authState is AuthPendingRole && location != '/onboarding') {
+        return '/onboarding';
       }
 
       // Trainer on client page → trainer dashboard.

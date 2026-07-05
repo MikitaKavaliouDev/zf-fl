@@ -52,23 +52,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Logo / Title
-                  const Icon(
-                    Icons.fitness_center_rounded,
-                    size: 64,
-                    color: AppColors.primary,
+                  // Logo
+                  const Image(
+                    image: AssetImage('assets/images/ziro_logo_light.png'),
+                    height: 48,
+                    fit: BoxFit.contain,
                   ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'ZIRO.FIT',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.foreground,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 24),
                   const Text(
                     'Sign in to your account',
                     textAlign: TextAlign.center,

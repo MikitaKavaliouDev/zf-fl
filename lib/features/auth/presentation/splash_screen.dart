@@ -17,14 +17,10 @@ class SplashScreen extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              'ZIRO.FIT',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.w700,
-                color: AppColors.foreground,
-                letterSpacing: 2,
-              ),
+            Image(
+              image: AssetImage('assets/images/ziro_logo_light.png'),
+              height: 48,
+              fit: BoxFit.contain,
             ),
             SizedBox(height: 32),
             SizedBox(

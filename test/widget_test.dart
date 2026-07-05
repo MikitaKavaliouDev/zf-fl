@@ -3,7 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:ziro_fit/core/di/injection.dart' as di;
+import 'package:ziro_fit/core/security/active_mode_holder.dart';
 import 'package:ziro_fit/features/auth/cubit/auth_cubit.dart';
+import 'package:ziro_fit/features/auth/cubit/auth_state.dart';
+import 'package:ziro_fit/features/auth/data/auth_repository.dart';
+import 'package:ziro_fit/features/auth/data/models/register_response.dart';
 import 'package:ziro_fit/features/auth/presentation/email_verification_screen.dart';
 import 'package:ziro_fit/features/auth/presentation/login_screen.dart';
 import 'package:ziro_fit/features/auth/presentation/onboarding_screen.dart';
@@ -45,13 +49,35 @@ void main() {
       expect(find.byType(TextFormField), findsNWidgets(3));
     });
 
-    testWidgets('EmailVerificationScreen renders confirmation', (WidgetTester tester) async {
+    testWidgets('EmailVerificationScreen renders code input', (WidgetTester tester) async {
+      final cubit = AuthCubit(
+        di.getIt<AuthRepository>(),
+        di.getIt<ActiveModeHolder>(),
+      );
+      cubit.emit(AuthState.registerSuccess(
+        email: 'test@example.com',
+        response: RegisterResponse(
+          userId: '123',
+          message: 'OK',
+          requiresSubscription: true,
+          confirmationRequired: true,
+        ),
+      ));
       await tester.pumpWidget(
-        const MaterialApp(home: EmailVerificationScreen()),
+        MaterialApp(
+          home: BlocProvider<AuthCubit>.value(
+            value: cubit,
+            child: const EmailVerificationScreen(),
+          ),
+        ),
       );
 
       expect(find.text('Check your email'), findsOneWidget);
+      expect(find.text('Verify Email'), findsOneWidget);
+      expect(find.text('Resend code'), findsOneWidget);
       expect(find.text('Back to Sign In'), findsOneWidget);
+
+      cubit.close();
     });
 
     testWidgets('OnboardingScreen starts with role selection', (WidgetTester tester) async {

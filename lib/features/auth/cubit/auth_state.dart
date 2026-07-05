@@ -38,6 +38,7 @@ sealed class AuthState with _$AuthState {
 
   /// Registration just completed — show email verification screen.
   const factory AuthState.registerSuccess({
+    required String email,
     required RegisterResponse response,
   }) = AuthRegisterSuccess;
 

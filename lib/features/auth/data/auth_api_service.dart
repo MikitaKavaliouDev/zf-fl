@@ -54,6 +54,36 @@ class AuthApiService {
     await _dio.post('/api/auth/complete-onboarding');
   }
 
+  /// Full onboarding with role selection, profile data, and optional avatar.
+  /// Calls the /api/onboarding/complete endpoint with multipart/form-data.
+  /// Returns updated user data with the new role (client/trainer).
+  Future<User> completeOnboardingFull({
+    required String role,
+    required String name,
+    String? location,
+    String? bio,
+    String? avatarPath,
+  }) async {
+    final map = <String, dynamic>{
+      'role': role,
+      'name': name,
+    };
+    if (location != null && location.isNotEmpty) map['location'] = location;
+    if (bio != null && bio.isNotEmpty) map['bio'] = bio;
+
+    // Build FormData — include file if provided
+    final formData = FormData.fromMap({
+      ...map,
+      if (avatarPath != null && avatarPath.isNotEmpty)
+        'avatar': await MultipartFile.fromFile(avatarPath),
+    });
+
+    final response = await _dio.post('/api/onboarding/complete', data: formData);
+    final data = response.data['data'] as Map<String, dynamic>;
+    final userData = data['user'] as Map<String, dynamic>;
+    return User.fromJson(userData);
+  }
+
   Future<void> forgotPassword(String email, {String? redirectTo}) async {
     await _dio.post('/api/auth/forgot-password', data: {
       'email': email,
@@ -69,6 +99,13 @@ class AuthApiService {
     await _dio.post('/api/auth/resend-verification-email', data: {
       'email': email,
       if (redirect != null) 'redirect': redirect,
+    });
+  }
+
+  Future<void> verifyEmailCode(String email, String code) async {
+    await _dio.post('/api/auth/verify-email-code', data: {
+      'email': email,
+      'code': code,
     });
   }
 }

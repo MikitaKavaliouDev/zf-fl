@@ -34,8 +34,9 @@ sealed class AuthEvent with _$AuthEvent {
   const factory AuthEvent.completeOnboarding({
     required String role,
     required String name,
-    String? bio,
     String? location,
+    String? bio,
+    String? avatarPath,
   }) = CompleteOnboarding;
 
   const factory AuthEvent.logout() = LogoutRequested;
@@ -216,12 +217,30 @@ class AuthCubit extends Cubit<AuthState> {
         name: name,
         trainerId: trainerId,
       );
-      emit(AuthState.registerSuccess(response: response));
+      emit(AuthState.registerSuccess(email: email, response: response));
     } on DioException catch (e) {
       final message = _extractErrorMessage(e);
       emit(AuthState.error(message: message));
     } catch (e) {
       emit(AuthState.error(message: _fallbackError(e)));
+    }
+  }
+
+  Future<void> resendVerification(String email) async {
+    try {
+      await _repository.resendVerification(email);
+    } catch (e) {
+      // Silently fail — the endpoint will resend if the user exists
+      developer.log('resendVerification failed', name: 'auth', error: e);
+    }
+  }
+
+  Future<void> verifyEmailCode(String email, String code) async {
+    try {
+      await _repository.verifyEmailCode(email, code);
+    } catch (e) {
+      developer.log('verifyEmailCode failed', name: 'auth', error: e);
+      rethrow;
     }
   }
 
