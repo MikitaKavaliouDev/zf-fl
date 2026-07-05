@@ -146,7 +146,8 @@ GoRouter createAppRouter(AuthCubit authCubit) {
           return null;
         }
         // Keep user on onboarding if they need to complete it
-        if (authState is AuthNeedsOnboarding && location == '/onboarding') {
+        if ((authState is AuthNeedsOnboarding || authState is AuthPendingRole) &&
+            location == '/onboarding') {
           return null;
         }
         return isTrainer ? '/trainer/dashboard' : '/';

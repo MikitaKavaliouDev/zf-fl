@@ -80,7 +80,7 @@ void main() {
       cubit.close();
     });
 
-    testWidgets('OnboardingScreen starts with role selection', (WidgetTester tester) async {
+    testWidgets('OnboardingScreen starts with language selection', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: BlocProvider<AuthCubit>(
@@ -90,9 +90,9 @@ void main() {
         ),
       );
 
-      expect(find.text("What's your role?"), findsOneWidget);
-      expect(find.text('Trainer'), findsOneWidget);
-      expect(find.text('Client'), findsOneWidget);
+      expect(find.text('Choose your language'), findsOneWidget);
+      expect(find.text('English'), findsOneWidget);
+      expect(find.text('Français'), findsOneWidget);
     });
   });
 }

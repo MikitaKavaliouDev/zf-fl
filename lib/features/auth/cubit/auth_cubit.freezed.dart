@@ -137,13 +137,13 @@ return clearError(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  checkAuthStatus,TResult Function( String email,  String password)?  login,TResult Function( String email,  String password,  String? name,  String? trainerId)?  register,TResult Function( String role,  String name,  String? bio,  String? location)?  completeOnboarding,TResult Function()?  logout,TResult Function()?  clearError,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  checkAuthStatus,TResult Function( String email,  String password)?  login,TResult Function( String email,  String password,  String? name,  String? trainerId)?  register,TResult Function( String role,  String name,  String? location,  String? bio,  String? avatarPath)?  completeOnboarding,TResult Function()?  logout,TResult Function()?  clearError,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case CheckAuthStatus() when checkAuthStatus != null:
 return checkAuthStatus();case LoginSubmitted() when login != null:
 return login(_that.email,_that.password);case RegisterSubmitted() when register != null:
 return register(_that.email,_that.password,_that.name,_that.trainerId);case CompleteOnboarding() when completeOnboarding != null:
-return completeOnboarding(_that.role,_that.name,_that.bio,_that.location);case LogoutRequested() when logout != null:
+return completeOnboarding(_that.role,_that.name,_that.location,_that.bio,_that.avatarPath);case LogoutRequested() when logout != null:
 return logout();case ClearError() when clearError != null:
 return clearError();case _:
   return orElse();
@@ -163,13 +163,13 @@ return clearError();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  checkAuthStatus,required TResult Function( String email,  String password)  login,required TResult Function( String email,  String password,  String? name,  String? trainerId)  register,required TResult Function( String role,  String name,  String? bio,  String? location)  completeOnboarding,required TResult Function()  logout,required TResult Function()  clearError,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  checkAuthStatus,required TResult Function( String email,  String password)  login,required TResult Function( String email,  String password,  String? name,  String? trainerId)  register,required TResult Function( String role,  String name,  String? location,  String? bio,  String? avatarPath)  completeOnboarding,required TResult Function()  logout,required TResult Function()  clearError,}) {final _that = this;
 switch (_that) {
 case CheckAuthStatus():
 return checkAuthStatus();case LoginSubmitted():
 return login(_that.email,_that.password);case RegisterSubmitted():
 return register(_that.email,_that.password,_that.name,_that.trainerId);case CompleteOnboarding():
-return completeOnboarding(_that.role,_that.name,_that.bio,_that.location);case LogoutRequested():
+return completeOnboarding(_that.role,_that.name,_that.location,_that.bio,_that.avatarPath);case LogoutRequested():
 return logout();case ClearError():
 return clearError();}
 }
@@ -185,13 +185,13 @@ return clearError();}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  checkAuthStatus,TResult? Function( String email,  String password)?  login,TResult? Function( String email,  String password,  String? name,  String? trainerId)?  register,TResult? Function( String role,  String name,  String? bio,  String? location)?  completeOnboarding,TResult? Function()?  logout,TResult? Function()?  clearError,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  checkAuthStatus,TResult? Function( String email,  String password)?  login,TResult? Function( String email,  String password,  String? name,  String? trainerId)?  register,TResult? Function( String role,  String name,  String? location,  String? bio,  String? avatarPath)?  completeOnboarding,TResult? Function()?  logout,TResult? Function()?  clearError,}) {final _that = this;
 switch (_that) {
 case CheckAuthStatus() when checkAuthStatus != null:
 return checkAuthStatus();case LoginSubmitted() when login != null:
 return login(_that.email,_that.password);case RegisterSubmitted() when register != null:
 return register(_that.email,_that.password,_that.name,_that.trainerId);case CompleteOnboarding() when completeOnboarding != null:
-return completeOnboarding(_that.role,_that.name,_that.bio,_that.location);case LogoutRequested() when logout != null:
+return completeOnboarding(_that.role,_that.name,_that.location,_that.bio,_that.avatarPath);case LogoutRequested() when logout != null:
 return logout();case ClearError() when clearError != null:
 return clearError();case _:
   return null;
@@ -395,13 +395,14 @@ as String?,
 
 
 class CompleteOnboarding with DiagnosticableTreeMixin implements AuthEvent {
-  const CompleteOnboarding({required this.role, required this.name, this.bio, this.location});
+  const CompleteOnboarding({required this.role, required this.name, this.location, this.bio, this.avatarPath});
   
 
  final  String role;
  final  String name;
- final  String? bio;
  final  String? location;
+ final  String? bio;
+ final  String? avatarPath;
 
 /// Create a copy of AuthEvent
 /// with the given fields replaced by the non-null parameter values.
@@ -414,21 +415,21 @@ $CompleteOnboardingCopyWith<CompleteOnboarding> get copyWith => _$CompleteOnboar
 void debugFillProperties(DiagnosticPropertiesBuilder properties) {
   properties
     ..add(DiagnosticsProperty('type', 'AuthEvent.completeOnboarding'))
-    ..add(DiagnosticsProperty('role', role))..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('bio', bio))..add(DiagnosticsProperty('location', location));
+    ..add(DiagnosticsProperty('role', role))..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('location', location))..add(DiagnosticsProperty('bio', bio))..add(DiagnosticsProperty('avatarPath', avatarPath));
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CompleteOnboarding&&(identical(other.role, role) || other.role == role)&&(identical(other.name, name) || other.name == name)&&(identical(other.bio, bio) || other.bio == bio)&&(identical(other.location, location) || other.location == location));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CompleteOnboarding&&(identical(other.role, role) || other.role == role)&&(identical(other.name, name) || other.name == name)&&(identical(other.location, location) || other.location == location)&&(identical(other.bio, bio) || other.bio == bio)&&(identical(other.avatarPath, avatarPath) || other.avatarPath == avatarPath));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,role,name,bio,location);
+int get hashCode => Object.hash(runtimeType,role,name,location,bio,avatarPath);
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-  return 'AuthEvent.completeOnboarding(role: $role, name: $name, bio: $bio, location: $location)';
+  return 'AuthEvent.completeOnboarding(role: $role, name: $name, location: $location, bio: $bio, avatarPath: $avatarPath)';
 }
 
 
@@ -439,7 +440,7 @@ abstract mixin class $CompleteOnboardingCopyWith<$Res> implements $AuthEventCopy
   factory $CompleteOnboardingCopyWith(CompleteOnboarding value, $Res Function(CompleteOnboarding) _then) = _$CompleteOnboardingCopyWithImpl;
 @useResult
 $Res call({
- String role, String name, String? bio, String? location
+ String role, String name, String? location, String? bio, String? avatarPath
 });
 
 
@@ -456,12 +457,13 @@ class _$CompleteOnboardingCopyWithImpl<$Res>
 
 /// Create a copy of AuthEvent
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? role = null,Object? name = null,Object? bio = freezed,Object? location = freezed,}) {
+@pragma('vm:prefer-inline') $Res call({Object? role = null,Object? name = null,Object? location = freezed,Object? bio = freezed,Object? avatarPath = freezed,}) {
   return _then(CompleteOnboarding(
 role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,bio: freezed == bio ? _self.bio : bio // ignore: cast_nullable_to_non_nullable
-as String?,location: freezed == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
+as String,location: freezed == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
+as String?,bio: freezed == bio ? _self.bio : bio // ignore: cast_nullable_to_non_nullable
+as String?,avatarPath: freezed == avatarPath ? _self.avatarPath : avatarPath // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

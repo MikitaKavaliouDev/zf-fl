@@ -154,7 +154,7 @@ class AuthCubit extends Cubit<AuthState> {
         password: password,
         mode: mode,
       );
-      await _routeByUserState(response.user);
+      await _routeByUserState(response.user, role: response.role);
     } on DioException catch (e) {
       final message = _extractErrorMessage(e);
       emit(AuthState.error(message: message));
@@ -247,13 +247,48 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> completeOnboarding({
     required String role,
     required String name,
-    String? bio,
     String? location,
+    String? bio,
+    String? avatarPath,
   }) async {
     emit(const AuthState.loading());
     try {
-      await _repository.completeOnboarding();
-      await checkAuthStatus();
+      final updatedUser = await _repository.completeOnboardingFull(
+        role: role,
+        name: name,
+        location: location,
+        bio: bio,
+        avatarPath: avatarPath,
+      );
+
+      // Cache the user and cache tokens if needed
+      final roleIsTrainer = updatedUser.role == 'trainer';
+      final mode = roleIsTrainer ? AppMode.trainer : AppMode.client;
+
+      if (mode.isTrainer) {
+        _trainerUser = updatedUser;
+      } else {
+        _clientUser = updatedUser;
+      }
+
+      _modeHolder.currentMode = mode;
+
+      // If the server changed the role, migrate tokens so the
+      // AuthInterceptor can find them under the correct mode.
+      if (mode == AppMode.trainer) {
+        await _repository.migrateTokens(
+          source: AppMode.client,
+          target: AppMode.trainer,
+        );
+      }
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('lastUsedAppMode', roleIsTrainer);
+
+      emit(AuthState.authenticated(
+        user: updatedUser,
+        isTrainer: roleIsTrainer,
+      ));
     } on DioException catch (e) {
       final message = _extractErrorMessage(e);
       emit(AuthState.error(message: message));
@@ -350,8 +385,13 @@ class AuthCubit extends Cubit<AuthState> {
     return AppMode.client;
   }
 
-  Future<void> _routeByUserState(User user) async {
-    if (user.role == 'pending') {
+  /// Routes the user based on their [role] (which may differ from
+  /// [user.role] during login — the login response has the app-level
+  /// role at the top level, while [user.role] reflects the Supabase
+  /// auth role "authenticated").
+  Future<void> _routeByUserState(User user, {String? role}) async {
+    final effectiveRole = role ?? user.role;
+    if (effectiveRole == 'pending') {
       emit(AuthState.pendingRole(user: user));
     } else if (!user.hasCompletedOnboarding) {
       emit(AuthState.needsOnboarding(user: user));

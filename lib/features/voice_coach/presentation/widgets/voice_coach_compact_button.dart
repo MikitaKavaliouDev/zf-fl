@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../cubit/voice_coach_cubit.dart';
 import '../../cubit/voice_coach_state.dart';
@@ -20,7 +19,6 @@ class VoiceCoachCompactButton extends StatefulWidget {
 
 class _VoiceCoachCompactButtonState extends State<VoiceCoachCompactButton>
     with SingleTickerProviderStateMixin {
-  final _cubit = getIt<VoiceCoachCubit>();
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
@@ -43,21 +41,23 @@ class _VoiceCoachCompactButtonState extends State<VoiceCoachCompactButton>
   }
 
   void _handleTap() {
-    final state = _cubit.state;
+    final cubit = context.read<VoiceCoachCubit>();
+    final state = cubit.state;
     if (state is VoiceCoachConnecting) return;
 
     if (state is VoiceCoachDisconnected || state is VoiceCoachError) {
-      if (!_cubit.wasMicPermissionShown) {
+      if (!cubit.wasMicPermissionShown) {
         _showMicPermissionSheet();
       } else {
-        _cubit.toggle();
+        cubit.toggle();
       }
     } else {
-      _cubit.toggle();
+      cubit.toggle();
     }
   }
 
   void _showMicPermissionSheet() {
+    final cubit = context.read<VoiceCoachCubit>();
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -100,9 +100,9 @@ class _VoiceCoachCompactButtonState extends State<VoiceCoachCompactButton>
               child: ElevatedButton(
                 onPressed: () {
                   Navigator.of(ctx).pop();
-                  _cubit.requestMicrophonePermission().then((granted) {
+                  cubit.requestMicrophonePermission().then((granted) {
                     if (granted) {
-                      _cubit.toggle();
+                      cubit.toggle();
                     } else {
                       _showMicDeniedAlert();
                     }
@@ -127,6 +127,7 @@ class _VoiceCoachCompactButtonState extends State<VoiceCoachCompactButton>
   }
 
   void _showMicDeniedAlert() {
+    final cubit = context.read<VoiceCoachCubit>();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -143,7 +144,7 @@ class _VoiceCoachCompactButtonState extends State<VoiceCoachCompactButton>
           TextButton(
             onPressed: () {
               Navigator.of(ctx).pop();
-              _cubit.openSettings();
+              cubit.openSettings();
             },
             child: const Text('Settings'),
           ),
@@ -230,3 +231,4 @@ class _VoiceCoachCompactButtonState extends State<VoiceCoachCompactButton>
     };
   }
 }
+      
