@@ -8,8 +8,8 @@ abstract class RegisterRequest with _$RegisterRequest {
   const factory RegisterRequest({
     required String email,
     required String password,
-    String? name,
-    String? trainerId,
+    @JsonKey(includeIfNull: false) String? name,
+    @JsonKey(includeIfNull: false) String? trainerId,
   }) = _RegisterRequest;
 
   factory RegisterRequest.fromJson(Map<String, dynamic> json) =>

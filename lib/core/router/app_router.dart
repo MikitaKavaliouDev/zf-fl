@@ -141,6 +141,15 @@ GoRouter createAppRouter(AuthCubit authCubit) {
 
       // Logged in → redirect away from auth pages.
       if (loggedIn && onAuthPage) {
+        // Keep user on verify-email if they just registered or have a pending role
+        if ((authState is AuthRegisterSuccess || authState is AuthPendingRole) &&
+            location == '/verify-email') {
+          return null;
+        }
+        // Keep user on onboarding if they need to complete it
+        if (authState is AuthNeedsOnboarding && location == '/onboarding') {
+          return null;
+        }
         return isTrainer ? '/trainer/dashboard' : '/';
       }
 

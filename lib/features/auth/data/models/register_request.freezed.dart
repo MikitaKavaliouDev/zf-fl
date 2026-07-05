@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$RegisterRequest {
 
- String get email; String get password; String? get name; String? get trainerId;
+ String get email; String get password;@JsonKey(includeIfNull: false) String? get name;@JsonKey(includeIfNull: false) String? get trainerId;
 /// Create a copy of RegisterRequest
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $RegisterRequestCopyWith<$Res>  {
   factory $RegisterRequestCopyWith(RegisterRequest value, $Res Function(RegisterRequest) _then) = _$RegisterRequestCopyWithImpl;
 @useResult
 $Res call({
- String email, String password, String? name, String? trainerId
+ String email, String password,@JsonKey(includeIfNull: false) String? name,@JsonKey(includeIfNull: false) String? trainerId
 });
 
 
@@ -156,7 +156,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String email,  String password,  String? name,  String? trainerId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String email,  String password, @JsonKey(includeIfNull: false)  String? name, @JsonKey(includeIfNull: false)  String? trainerId)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _RegisterRequest() when $default != null:
 return $default(_that.email,_that.password,_that.name,_that.trainerId);case _:
@@ -177,7 +177,7 @@ return $default(_that.email,_that.password,_that.name,_that.trainerId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String email,  String password,  String? name,  String? trainerId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String email,  String password, @JsonKey(includeIfNull: false)  String? name, @JsonKey(includeIfNull: false)  String? trainerId)  $default,) {final _that = this;
 switch (_that) {
 case _RegisterRequest():
 return $default(_that.email,_that.password,_that.name,_that.trainerId);case _:
@@ -197,7 +197,7 @@ return $default(_that.email,_that.password,_that.name,_that.trainerId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String email,  String password,  String? name,  String? trainerId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String email,  String password, @JsonKey(includeIfNull: false)  String? name, @JsonKey(includeIfNull: false)  String? trainerId)?  $default,) {final _that = this;
 switch (_that) {
 case _RegisterRequest() when $default != null:
 return $default(_that.email,_that.password,_that.name,_that.trainerId);case _:
@@ -212,13 +212,13 @@ return $default(_that.email,_that.password,_that.name,_that.trainerId);case _:
 @JsonSerializable()
 
 class _RegisterRequest implements RegisterRequest {
-  const _RegisterRequest({required this.email, required this.password, this.name, this.trainerId});
+  const _RegisterRequest({required this.email, required this.password, @JsonKey(includeIfNull: false) this.name, @JsonKey(includeIfNull: false) this.trainerId});
   factory _RegisterRequest.fromJson(Map<String, dynamic> json) => _$RegisterRequestFromJson(json);
 
 @override final  String email;
 @override final  String password;
-@override final  String? name;
-@override final  String? trainerId;
+@override@JsonKey(includeIfNull: false) final  String? name;
+@override@JsonKey(includeIfNull: false) final  String? trainerId;
 
 /// Create a copy of RegisterRequest
 /// with the given fields replaced by the non-null parameter values.
@@ -253,7 +253,7 @@ abstract mixin class _$RegisterRequestCopyWith<$Res> implements $RegisterRequest
   factory _$RegisterRequestCopyWith(_RegisterRequest value, $Res Function(_RegisterRequest) _then) = __$RegisterRequestCopyWithImpl;
 @override @useResult
 $Res call({
- String email, String password, String? name, String? trainerId
+ String email, String password,@JsonKey(includeIfNull: false) String? name,@JsonKey(includeIfNull: false) String? trainerId
 });
 
 

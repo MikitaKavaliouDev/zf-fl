@@ -18,6 +18,6 @@ Map<String, dynamic> _$RegisterRequestToJson(_RegisterRequest instance) =>
     <String, dynamic>{
       'email': instance.email,
       'password': instance.password,
-      'name': instance.name,
-      'trainerId': instance.trainerId,
+      'name': ?instance.name,
+      'trainerId': ?instance.trainerId,
     };
