@@ -124,6 +124,22 @@ GoRouter createAppRouter(AuthCubit authCubit) {
           location == '/verify-email' ||
           location == '/onboarding';
       final onTrainerPage = location.startsWith('/trainer/');
+      // Trainer admin routes (not the public /trainer/:username profile).
+      // These are knowable static prefixes; any /trainer/* that doesn't
+      // match one of these is the public profile route and should not
+      // trigger a client redirect to home.
+      final trainerAdminPrefixes = [
+        '/trainer/calendar',
+        '/trainer/dashboard',
+        '/trainer/programs',
+        '/trainer/clients',
+        '/trainer/more',
+        '/trainer/checkins',
+        '/trainer/events',
+        '/trainer/resources',
+        '/trainer/recipes',
+      ];
+      final onTrainerAdminPage = trainerAdminPrefixes.any((p) => location.startsWith(p));
       // Shared routes that both clients and trainers can access
       // (e.g. mini player → full-screen workout session)
       final onSharedRoute = location == '/workout/session' ||
@@ -175,8 +191,9 @@ GoRouter createAppRouter(AuthCubit authCubit) {
         return '/trainer/dashboard';
       }
 
-      // Client on trainer page → client home.
-      if (loggedIn && !isTrainer && onTrainerPage) {
+      // Client on trainer admin page → client home.
+      // (Public /trainer/:username profiles are exempt.)
+      if (loggedIn && !isTrainer && onTrainerAdminPage) {
         return '/';
       }
 

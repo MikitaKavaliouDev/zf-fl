@@ -486,7 +486,14 @@ class _DiscoveryHeader extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: GestureDetector(
-                  onTap: () => Navigator.of(context).maybePop(),
+                  onTap: () {
+                    final router = GoRouter.of(context);
+                    if (router.canPop()) {
+                      router.pop();
+                    } else {
+                      context.go('/explore');
+                    }
+                  },
                   child: Container(
                     width: 32,
                     height: 32,

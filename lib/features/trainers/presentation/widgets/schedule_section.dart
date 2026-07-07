@@ -469,7 +469,7 @@ class _ScheduleSectionState extends State<ScheduleSection>
   List<Widget> _buildWeeks(int daysInMonth, int firstWeekday) {
     final cells = <Widget>[];
     for (int i = 1; i < firstWeekday; i++) {
-      cells.add(const Spacer());
+      cells.add(const SizedBox.shrink());
     }
     for (int day = 1; day <= daysInMonth; day++) {
       cells.add(DayCell(

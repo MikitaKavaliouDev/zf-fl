@@ -694,34 +694,45 @@ class _RingPainter extends CustomPainter {
   final Color color;
   final double strokeWidth;
 
-  const _RingPainter({
+  // Pre-cached paint object — never allocate inside paint().
+  // This avoids GC pressure when the rest timer ticks every second.
+  final Paint _paint;
+
+  _RingPainter({
     required this.progress,
     required this.color,
     required this.strokeWidth,
-  });
+  }) : _paint = Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round;
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = (size.width - strokeWidth) / 2;
 
-    final paint = Paint()
+    // Apply mutable properties just-in-time (they're cheap field writes,
+    // unlike Paint() constructor + virtual-dispatch setup).
+    _paint
       ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
+      ..strokeWidth = strokeWidth;
 
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
       -math.pi / 2, // start at top
       2 * math.pi * progress, // sweep clockwise
       false,
-      paint,
+      _paint,
     );
   }
 
   @override
   bool shouldRepaint(_RingPainter oldDelegate) {
-    return oldDelegate.progress != progress || oldDelegate.color != color;
+    // Only repaint when the visual properties actually changed.
+    // This prevents unnecessary canvas redraws when the parent
+    // rebuilds for reasons unrelated to the ring.
+    return oldDelegate.progress != progress ||
+        oldDelegate.color != color ||
+        oldDelegate.strokeWidth != strokeWidth;
   }
 }

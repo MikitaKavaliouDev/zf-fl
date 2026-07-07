@@ -8,8 +8,8 @@ import 'workout_formatting.dart';
 /// A single set row within an exercise card.
 ///
 /// Displays set number, weight, reps, optional tempo, RPE indicator,
-/// and a completion checkbox. Weight/reps fields are tappable to
-/// trigger the custom numeric keyboard overlay.
+/// and a completion checkbox with an elastic scale-pulse animation.
+/// The row background smoothly morphs to a green tint when completed.
 class SetRow extends StatelessWidget {
   const SetRow({
     super.key,
@@ -46,8 +46,10 @@ class SetRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: isCompleted ? Colors.green.withValues(alpha: 0.06) : null,
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+      color: isCompleted ? Colors.green.withValues(alpha: 0.06) : Colors.transparent,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
@@ -117,22 +119,9 @@ class SetRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          GestureDetector(
+          _AnimatedCheckbox(
+            isCompleted: isCompleted,
             onTap: onComplete,
-            child: Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: isCompleted ? Colors.green : AppColors.mutedSurface,
-                borderRadius: BorderRadius.circular(99),
-                border: Border.all(
-                  color: isCompleted ? Colors.green : AppColors.borderMuted,
-                ),
-              ),
-              child: isCompleted
-                  ? const Icon(Icons.check_rounded, size: 18, color: Colors.white)
-                  : null,
-            ),
           ),
         ],
       ),
@@ -154,3 +143,90 @@ class SetRow extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Animated checkbox with scale pulse + color morph
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Circular check button that plays an elastic scale-pulse (1.0 → 0.85 → 1.0)
+/// on every tap and morphs between hollow (incomplete) and filled (completed).
+class _AnimatedCheckbox extends StatefulWidget {
+  final bool isCompleted;
+  final VoidCallback onTap;
+
+  const _AnimatedCheckbox({
+    required this.isCompleted,
+    required this.onTap,
+  });
+
+  @override
+  State<_AnimatedCheckbox> createState() => _AnimatedCheckboxState();
+}
+
+class _AnimatedCheckboxState extends State<_AnimatedCheckbox>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _AnimatedCheckbox oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Play a quick pulse when completion status changes from outside
+    if (widget.isCompleted && !oldWidget.isCompleted) {
+      _controller.forward().then((_) => _controller.reverse());
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleTap() {
+    // Trigger the scale pulse
+    _controller.forward().then((_) => _controller.reverse());
+    widget.onTap();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: _handleTap,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          final scale = 1.0 - 0.15 * _controller.value; // 1.0 → 0.85 → 1.0
+          return Transform.scale(
+            scale: scale,
+            child: child,
+          );
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: widget.isCompleted ? Colors.green : AppColors.mutedSurface,
+            borderRadius: BorderRadius.circular(99),
+            border: Border.all(
+              color: widget.isCompleted ? Colors.green : AppColors.borderMuted,
+              width: widget.isCompleted ? 0 : 1.5,
+            ),
+          ),
+          child: widget.isCompleted
+              ? const Icon(Icons.check_rounded, size: 18, color: Colors.white)
+              : null,
+        ),
+      ),
+    );
+  }
+}

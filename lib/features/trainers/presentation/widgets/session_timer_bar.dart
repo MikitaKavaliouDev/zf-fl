@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'workout_formatting.dart';
 
-/// Combined timer bar showing the session timer, rest countdown,
-/// rest progress bar, and long-session warning.
+/// Combined timer bar showing the session timer and rest countdown.
 ///
-/// Extracted from the monolithic _buildActive method — SRP.
+/// Does NOT include the long-session warning — that is rendered separately
+/// in an isolated BlocSelector to prevent tick-triggered rebuilds.
 class SessionTimerBar extends StatelessWidget {
   const SessionTimerBar({
     super.key,
@@ -16,10 +16,7 @@ class SessionTimerBar extends StatelessWidget {
     required this.restElapsed,
     this.restRemaining,
     this.restDuration,
-    required this.showLongSessionWarning,
-    required this.dismissedLongWarning,
     required this.onRestTimerTap,
-    required this.onDismissLongWarning,
   });
 
   final Duration elapsed;
@@ -28,15 +25,12 @@ class SessionTimerBar extends StatelessWidget {
   final Duration restElapsed;
   final int? restRemaining;
   final int? restDuration;
-  final bool showLongSessionWarning;
-  final bool dismissedLongWarning;
   final VoidCallback onRestTimerTap;
-  final VoidCallback onDismissLongWarning;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
         color: AppColors.card,
@@ -44,6 +38,7 @@ class SessionTimerBar extends StatelessWidget {
         border: Border.all(color: AppColors.borderMuted),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           _SessionTimerRow(
             elapsed: elapsed,
@@ -57,8 +52,6 @@ class SessionTimerBar extends StatelessWidget {
             restDuration: restDuration,
             onTap: onRestTimerTap,
           ),
-          if (showLongSessionWarning && !dismissedLongWarning)
-            _LongSessionWarning(onDismiss: onDismissLongWarning),
         ],
       ),
     );
@@ -237,43 +230,4 @@ class _RestProgressSection extends StatelessWidget {
   }
 }
 
-class _LongSessionWarning extends StatelessWidget {
-  const _LongSessionWarning({required this.onDismiss});
 
-  final VoidCallback onDismiss;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.orange.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.warning_amber_rounded, size: 16, color: Colors.orange),
-            const SizedBox(width: 8),
-            const Expanded(
-              child: Text(
-                'Session exceeds 2 hours',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.orange,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-            GestureDetector(
-              onTap: onDismiss,
-              child: const Icon(Icons.close_rounded, size: 16, color: Colors.orange),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
