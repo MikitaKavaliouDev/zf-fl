@@ -33,6 +33,7 @@ class _NutritionHabitsScreenState extends State<NutritionHabitsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: const ValueKey('nutritionHabitsScreen'),
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,

@@ -104,6 +104,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
     return BlocProvider<ExploreCubit>(
       create: (_) => di.getIt<ExploreCubit>(),
       child: Scaffold(
+        key: const ValueKey('exploreScreen'),
         backgroundColor: AppColors.background,
         body: Stack(
           children: [

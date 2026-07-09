@@ -29,8 +29,8 @@ class SyncCubit extends Cubit<SyncState> {
     } else if (s is SyncError) {
       emit(s.copyWith(isOnline: online));
     }
-    // Auto-sync when coming back online
-    if (online && s is SyncIdle) {
+    // Auto-sync when coming back online (from idle or error state)
+    if (online && s is! SyncInProgress) {
       sync();
     }
   }

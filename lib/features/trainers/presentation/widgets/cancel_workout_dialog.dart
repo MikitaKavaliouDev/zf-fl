@@ -42,6 +42,7 @@ class CancelWorkoutDialog extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Container(
+              key: const ValueKey('cancelWorkoutDialog'),
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -85,6 +86,7 @@ class CancelWorkoutDialog extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton(
+                      key: const ValueKey('keepWorkingButton'),
                       onPressed: onDismiss,
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.primary,
@@ -108,6 +110,7 @@ class CancelWorkoutDialog extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
+                      key: const ValueKey('cancelWorkoutConfirmButton'),
                       onPressed: onConfirm,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,

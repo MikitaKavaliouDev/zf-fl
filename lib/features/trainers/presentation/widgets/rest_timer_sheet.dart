@@ -134,6 +134,7 @@ class _RestTimerSheetState extends State<RestTimerSheet> {
   Widget build(BuildContext context) {
     final bottomPad = MediaQuery.of(context).padding.bottom;
     return Container(
+      key: const ValueKey('restTimerSheet'),
       height: MediaQuery.of(context).size.height * 0.85,
       decoration: const BoxDecoration(
         color: AppColors.card,

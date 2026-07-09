@@ -76,6 +76,7 @@ class _ProgramDetailScreenState extends State<ProgramDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: const ValueKey('programDetailScreen'),
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,

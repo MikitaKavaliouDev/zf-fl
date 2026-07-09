@@ -41,6 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: const ValueKey('loginScreen'),
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Center(
@@ -124,6 +125,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   // Email
                   TextFormField(
+                    key: const ValueKey('emailField'),
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
@@ -142,6 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   // Password
                   TextFormField(
+                    key: const ValueKey('passwordField'),
                     controller: _passwordController,
                     obscureText: _obscurePassword,
                     textInputAction: TextInputAction.done,
@@ -171,6 +174,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
+                      key: const ValueKey('forgotPasswordButton'),
                       onPressed: () {
                         // TODO: navigate to forgot password
                       },
@@ -187,6 +191,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     builder: (context, state) {
                       final loading = state is AuthLoading;
                       return ElevatedButton(
+                        key: const ValueKey('loginButton'),
                         onPressed: loading ? null : _submit,
                         child: loading
                             ? const SizedBox(
@@ -212,6 +217,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: TextStyle(color: AppColors.mutedText, fontSize: 14),
                       ),
                       GestureDetector(
+                        key: const ValueKey('registerLink'),
                         onTap: () => context.go('/register'),
                         child: const Text(
                           'Register',

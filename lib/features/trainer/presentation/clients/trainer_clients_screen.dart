@@ -35,6 +35,7 @@ class _TrainerClientsScreenState extends State<TrainerClientsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: const ValueKey('trainerClientsScreen'),
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('Clients')),
       body: Column(

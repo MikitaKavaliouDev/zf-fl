@@ -95,6 +95,12 @@ dev_dependencies:
   # Testing
   bloc_test: ^10.0.0
   mocktail: ^1.0.4
+  patrol: ^4.6.1
+  patrol_finders: ^3.5.0
+
+patrol:
+  app_name: Ziro Fit
+  test_directory: test/e2e
 
 flutter:
   uses-material-design: true

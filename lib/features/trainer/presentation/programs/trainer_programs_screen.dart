@@ -102,6 +102,7 @@ class _TrainerProgramsScreenState extends State<TrainerProgramsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: const ValueKey('trainerProgramsScreen'),
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Programs'),

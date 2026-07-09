@@ -114,14 +114,24 @@ class SyncRepository {
         }
 
         // ── Deleted → soft-delete via deleted_at ──
+        // Tables without deleted_at (e.g. calendar_events) get hard-deleted.
         if (deletedIds.isNotEmpty) {
-          final now = DateTime.now().millisecondsSinceEpoch;
-          for (final id in deletedIds) {
-            await _db.customStatement(
-              'UPDATE $driftTableName SET deleted_at = ?, '
-              'sync_status = \'synced\' WHERE id = ?',
-              [now, id],
-            );
+          if (_tablesWithoutDeletedAt.contains(driftTableName)) {
+            for (final id in deletedIds) {
+              await _db.customStatement(
+                'DELETE FROM "$driftTableName" WHERE id = ?',
+                [id],
+              );
+            }
+          } else {
+            final now = DateTime.now().millisecondsSinceEpoch;
+            for (final id in deletedIds) {
+              await _db.customStatement(
+                'UPDATE "$driftTableName" SET deleted_at = ?, '
+                'sync_status = \'synced\' WHERE id = ?',
+                [now, id],
+              );
+            }
           }
         }
 
@@ -138,16 +148,30 @@ class SyncRepository {
 
   /// Maps wire sync table names to Drift SQL table names.
   ///
-  /// Most match directly (Drift snake_cases the class name and strips
-  /// the `Table` suffix), but some have different names on the wire.
+  /// Tables whose Dart class ends with `Table` get a `_table` suffix in
+  /// the SQL schema (e.g. `ClientsTable` → `clients_table`). Tables
+  /// without the suffix match the wire name directly.
   String? _wireToDriftTableName(String wireName) {
     return switch (wireName) {
+      'clients' => 'clients_table',
+      'profiles' => 'profiles_table',
+      'workout_sessions' => 'workout_sessions_table',
+      'exercises' => 'exercises_table',
       'trainer_services' => 'services',
-      'trainer_packages' => 'package',
-      'trainer_testimonials' => 'testimonial',
+      'trainer_packages' => 'package_table',
+      'trainer_testimonials' => 'testimonial_table',
       'trainer_programs' => 'programs',
-      'bookings' => 'booking',
-      _ => wireName,
+      'bookings' => 'booking_table',
+      // Tables whose wire name matches the Drift SQL table name directly.
+      'workout_templates' => 'workout_templates',
+      'client_assessments' => 'client_assessments',
+      'client_measurements' => 'client_measurements',
+      'client_photos' => 'client_photos',
+      'client_exercise_logs' => 'client_exercise_logs',
+      'notifications' => 'notifications',
+      'trainer_profiles' => 'trainer_profiles',
+      'calendar_events' => 'calendar_events',
+      _ => null,
     };
   }
 
@@ -158,11 +182,15 @@ class SyncRepository {
   // ignore: unused_element — public API helper for mutation sites
   String _driftToWireTableName(String driftName) {
     return switch (driftName) {
+      'clients_table' => 'clients',
+      'profiles_table' => 'profiles',
+      'workout_sessions_table' => 'workout_sessions',
+      'exercises_table' => 'exercises',
       'services' => 'trainer_services',
-      'package' => 'trainer_packages',
-      'testimonial' => 'trainer_testimonials',
+      'package_table' => 'trainer_packages',
+      'testimonial_table' => 'trainer_testimonials',
       'programs' => 'trainer_programs',
-      'booking' => 'bookings',
+      'booking_table' => 'bookings',
       _ => driftName,
     };
   }

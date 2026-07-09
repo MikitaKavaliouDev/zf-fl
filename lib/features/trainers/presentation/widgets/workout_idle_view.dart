@@ -43,6 +43,7 @@ class WorkoutIdleView extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
+                key: const ValueKey('startWorkoutButton'),
                 onPressed: onStartWorkout,
                 icon: const Icon(Icons.play_arrow_rounded),
                 label: const Text('Start Workout'),
@@ -52,6 +53,7 @@ class WorkoutIdleView extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
+                key: const ValueKey('startFromTemplateButton'),
                 onPressed: onStartFromTemplate,
                 icon: const Icon(Icons.library_books_rounded),
                 label: const Text('Start from Template'),

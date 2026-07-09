@@ -44,6 +44,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       create: (context) =>
           context.read<NotificationsCubit>()..fetchNotifications(),
       child: Scaffold(
+        key: const ValueKey('notificationsScreen'),
         backgroundColor: AppColors.background,
         body: Stack(
           alignment: Alignment.topCenter,

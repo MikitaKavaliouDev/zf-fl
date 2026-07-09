@@ -57,6 +57,7 @@ class _DailyTargetsBodyState extends State<_DailyTargetsBody> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: const ValueKey('dailyTargetsScreen'),
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,

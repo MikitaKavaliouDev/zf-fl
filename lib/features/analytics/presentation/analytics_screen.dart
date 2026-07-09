@@ -38,6 +38,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: const ValueKey('analyticsScreen'),
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: BlocBuilder<AnalyticsCubit, AnalyticsState>(

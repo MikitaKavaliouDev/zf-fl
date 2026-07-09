@@ -13,10 +13,10 @@ class UpcomingSessionsCarousel extends StatelessWidget {
   final void Function(ClientDashboardSession) onSessionTap;
 
   const UpcomingSessionsCarousel({
-    super.key,
+    Key? key,
     required this.sessions,
     required this.onSessionTap,
-  });
+  }) : super(key: key ?? const ValueKey('upcomingSessionsCarousel'));
 
   @override
   Widget build(BuildContext context) {

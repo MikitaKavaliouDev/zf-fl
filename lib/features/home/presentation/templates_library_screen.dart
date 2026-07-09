@@ -74,6 +74,7 @@ class _TemplatesLibraryScreenState extends State<TemplatesLibraryScreen> {
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
     return Scaffold(
+      key: const ValueKey('templatesLibraryScreen'),
       backgroundColor: AppColors.background,
       body: Stack(
         children: [

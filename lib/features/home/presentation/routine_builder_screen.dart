@@ -87,6 +87,7 @@ class _RoutineBuilderScreenState extends State<RoutineBuilderScreen> {
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
     return Scaffold(
+      key: const ValueKey('routineBuilderScreen'),
       backgroundColor: AppColors.background,
       body: Stack(
         children: [

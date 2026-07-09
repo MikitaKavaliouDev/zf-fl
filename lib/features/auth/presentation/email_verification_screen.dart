@@ -116,6 +116,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: const ValueKey('emailVerificationScreen'),
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Center(

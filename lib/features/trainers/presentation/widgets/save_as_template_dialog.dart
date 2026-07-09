@@ -21,6 +21,7 @@ class _SaveAsTemplateDialogState extends State<SaveAsTemplateDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      key: const ValueKey('saveAsTemplateDialog'),
       title: const Text('Save as Template'),
       content: Form(
         key: _formKey,
@@ -43,6 +44,7 @@ class _SaveAsTemplateDialogState extends State<SaveAsTemplateDialog> {
           child: const Text('Cancel'),
         ),
         ElevatedButton(
+          key: const ValueKey('saveTemplateButton'),
           onPressed: () {
             if (_formKey.currentState!.validate()) {
               Navigator.of(context).pop(_controller.text.trim());

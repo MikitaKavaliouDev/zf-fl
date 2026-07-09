@@ -149,6 +149,7 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
         context.read<WorkoutSessionCubit>().minimize();
       },
       child: Scaffold(
+        key: const ValueKey('workoutSessionScreen'),
         appBar: _buildAppBar(),
         body: BlocListener<WorkoutSessionCubit, WorkoutSessionState>(
           listenWhen: _listenWhen,

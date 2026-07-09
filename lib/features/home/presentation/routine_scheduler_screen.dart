@@ -43,6 +43,7 @@ class _RoutineSchedulerScreenState extends State<RoutineSchedulerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: const ValueKey('routineSchedulerScreen'),
       backgroundColor: AppColors.background,
       body: _isSuccess ? _buildSuccessView() : _buildSchedulerView(),
     );

@@ -132,6 +132,7 @@ class _ProfileContent extends StatelessWidget {
         : null;
 
     return Scaffold(
+      key: const ValueKey('trainerDetailScreen'),
       body: Stack(
         children: [
           // Main scrollable content
@@ -272,6 +273,7 @@ class _ProfileContent extends StatelessWidget {
                       return const SizedBox.shrink();
                     }
                     return ConnectButton(
+                      key: const ValueKey('connectButton'),
                       isLinked: trainer.isLinked,
                       isPending: state.linkRequestPending,
                       isLoading: state.isLinking,
@@ -602,6 +604,7 @@ class _PackagesSection extends StatelessWidget {
               itemBuilder: (context, index) {
                 final pkg = packages[index];
                 return PackageCard(
+                  key: ValueKey('packageCard_${pkg.id}'),
                   package: pkg,
                   isRecommended: index == 0,
                   onPurchase: () => _purchasePackage(context, pkg),

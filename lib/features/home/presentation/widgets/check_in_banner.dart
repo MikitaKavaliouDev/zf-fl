@@ -25,6 +25,7 @@ class CheckInBanner extends StatelessWidget {
 
   Widget _buildCompleteBanner() {
     return Container(
+      key: const ValueKey('checkInBannerComplete'),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
@@ -69,6 +70,7 @@ class CheckInBanner extends StatelessWidget {
 
   Widget _buildPendingBanner() {
     return GestureDetector(
+      key: const ValueKey('checkInBanner'),
       onTap: onTapCheckIn,
       child: Container(
         padding: const EdgeInsets.all(20),

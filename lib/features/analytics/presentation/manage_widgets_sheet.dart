@@ -49,6 +49,7 @@ class ManageWidgetsSheet extends StatelessWidget {
       expand: false,
       builder: (context, scrollController) {
         return Container(
+          key: const ValueKey('manageWidgetsSheet'),
           decoration: const BoxDecoration(
             color: AppColors.background,
             borderRadius: BorderRadius.vertical(top: Radius.circular(16)),

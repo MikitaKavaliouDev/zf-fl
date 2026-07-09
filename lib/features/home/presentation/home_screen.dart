@@ -48,6 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: const ValueKey('homeScreen'),
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
@@ -239,6 +240,7 @@ class _DashboardContent extends StatelessWidget {
       onRefresh: onRefresh,
       color: AppColors.primary,
       child: ListView(
+        key: const ValueKey('dashboardList'),
         physics: const AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.only(
           left: 16,
@@ -255,18 +257,18 @@ class _DashboardContent extends StatelessWidget {
           const SizedBox(height: 24),
 
           if (trainer != null && remainingCredits != null)
-            CreditStatusWidget(remainingCredits: remainingCredits),
+            CreditStatusWidget(key: const ValueKey('creditStatusWidget'), remainingCredits: remainingCredits),
 
           if (trainer != null && remainingCredits != null)
             const SizedBox(height: 24),
 
           if (streak > 0)
-            StreakMotivationCard(streak: streak),
+            StreakMotivationCard(key: const ValueKey('streakMotivationCard'), streak: streak),
 
           if (streak > 0) const SizedBox(height: 24),
 
           if (activeProgram != null)
-            _ActiveProgramCard(program: activeProgram!)
+            _ActiveProgramCard(key: const ValueKey('activeProgramWidget'), program: activeProgram!)
           else if (trainer != null)
             const NoRoutinePlaceholder(),
 
@@ -279,6 +281,7 @@ class _DashboardContent extends StatelessWidget {
 
           if (pendingRequest != null)
             InvitationHeroCard(
+              key: const ValueKey('invitationHeroCard'),
               message: pendingRequest.message,
               onAccept: () => notifCubit.acceptRequest(pendingRequest.id),
               onDecline: () => notifCubit.declineRequest(pendingRequest.id),
@@ -317,6 +320,7 @@ class _DashboardContent extends StatelessWidget {
           if (upcomingSessions.isNotEmpty) const SizedBox(height: 24),
 
           DailyTargetsSection(
+            key: const ValueKey('homeDailyTargetsSection'),
             onTapAddTarget: () => context.push('/daily-targets'),
           ),
 
@@ -326,7 +330,7 @@ class _DashboardContent extends StatelessWidget {
 
           const SizedBox(height: 24),
 
-          RecentHistorySection(sessions: sessions),
+          RecentHistorySection(key: const ValueKey('recentHistorySection'), sessions: sessions),
         ],
       ),
     );
@@ -407,7 +411,7 @@ class _NutritionHabitsCard extends StatelessWidget {
 class _ActiveProgramCard extends StatelessWidget {
   final ActiveProgramResponse program;
 
-  const _ActiveProgramCard({required this.program});
+  const _ActiveProgramCard({super.key, required this.program});
 
   @override
   Widget build(BuildContext context) {

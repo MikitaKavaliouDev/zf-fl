@@ -52,6 +52,7 @@ class FinishWorkoutDialog extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Container(
+              key: const ValueKey('finishWorkoutDialog'),
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -103,6 +104,7 @@ class FinishWorkoutDialog extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
+                      key: const ValueKey('completeUnfinishedButton'),
                       onPressed: onCompleteUnfinished,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
@@ -127,6 +129,7 @@ class FinishWorkoutDialog extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
+                      key: const ValueKey('discardUnfinishedButton'),
                       onPressed: onDiscardUnfinished,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red.withValues(alpha: 0.1),

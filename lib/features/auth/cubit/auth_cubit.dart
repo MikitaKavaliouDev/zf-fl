@@ -424,7 +424,7 @@ class AuthCubit extends Cubit<AuthState> {
     } else if (!user.hasCompletedOnboarding) {
       emit(AuthState.needsOnboarding(user: user));
     } else {
-      final roleIsTrainer = user.role == 'trainer';
+      final roleIsTrainer = effectiveRole == 'trainer';
       final mode = roleIsTrainer ? AppMode.trainer : AppMode.client;
 
       // Cache user for this mode

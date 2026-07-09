@@ -45,6 +45,7 @@ class WorkoutBottomControls extends StatelessWidget {
                     // Pause / Resume
                     Expanded(
                       child: OutlinedButton.icon(
+                        key: const ValueKey('pauseResumeButton'),
                         onPressed: onPauseResume,
                         icon: Icon(
                           isPaused
@@ -58,6 +59,7 @@ class WorkoutBottomControls extends StatelessWidget {
                     // Finish
                     Expanded(
                       child: ElevatedButton.icon(
+                        key: const ValueKey('finishWorkoutButton'),
                         onPressed: onFinish,
                         icon: const Icon(Icons.stop_rounded),
                         label: const Text('Finish'),

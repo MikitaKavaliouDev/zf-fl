@@ -55,6 +55,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         }
       },
       child: Scaffold(
+        key: const ValueKey('registerScreen'),
         backgroundColor: AppColors.background,
         body: SafeArea(
           child: Center(
@@ -86,6 +87,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                     // Name
                     TextFormField(
+                      key: const ValueKey('nameField'),
                       controller: _nameController,
                       textInputAction: TextInputAction.next,
                       decoration: const InputDecoration(
@@ -97,6 +99,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                     // Email
                     TextFormField(
+                      key: const ValueKey('registerEmailField'),
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
@@ -114,6 +117,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                     // Password
                     TextFormField(
+                      key: const ValueKey('registerPasswordField'),
                       controller: _passwordController,
                       obscureText: _obscurePassword,
                       textInputAction: TextInputAction.done,
@@ -143,6 +147,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       builder: (context, state) {
                         final loading = state is AuthLoading;
                         return ElevatedButton(
+                          key: const ValueKey('createAccountButton'),
                           onPressed: loading ? null : _submit,
                           child: loading
                               ? const SizedBox(
@@ -168,6 +173,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           style: TextStyle(color: AppColors.mutedText, fontSize: 14),
                         ),
                         GestureDetector(
+                          key: const ValueKey('signInLink'),
                           onTap: () => context.go('/login'),
                           child: const Text(
                             'Sign In',

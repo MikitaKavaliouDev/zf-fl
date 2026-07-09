@@ -32,6 +32,7 @@ class QuickActionsRow extends StatelessWidget {
           children: [
             Expanded(
               child: _QuickActionCard(
+                key: const ValueKey('quickStartButton'),
                 onTap: () {
                   context.read<WorkoutSessionCubit>().start();
                   context.push('/workout/session');
@@ -44,6 +45,7 @@ class QuickActionsRow extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: _QuickActionCard(
+                key: const ValueKey('routinesButton'),
                 onTap: () => context.push('/home/my-routines'),
                 icon: Icons.list_alt_rounded,
                 label: 'Routines',
@@ -53,6 +55,7 @@ class QuickActionsRow extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: _QuickActionCard(
+                key: const ValueKey('templatesButton'),
                 onTap: () => context.push('/home/templates-library'),
                 icon: Icons.grid_view_rounded,
                 label: 'Templates',
@@ -74,6 +77,7 @@ class _QuickActionCard extends StatelessWidget {
   final Color color;
 
   const _QuickActionCard({
+    super.key,
     required this.onTap,
     required this.icon,
     required this.label,

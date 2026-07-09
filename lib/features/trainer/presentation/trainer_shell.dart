@@ -18,6 +18,7 @@ class TrainerShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: const ValueKey('trainerShell'),
       body: Stack(
         children: [
           navigationShell,

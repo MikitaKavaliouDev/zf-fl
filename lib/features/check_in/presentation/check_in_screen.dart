@@ -42,6 +42,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: const ValueKey('checkInScreen'),
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: BlocBuilder<CheckInCubit, CheckInState>(
@@ -103,10 +104,11 @@ class _CheckInScreenState extends State<CheckInScreen> {
         // Progress bar
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(2),
-            child: LinearProgressIndicator(
-              value: (step + 1) / 4,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(2),
+              child: LinearProgressIndicator(
+                key: const ValueKey('checkInProgress'),
+                value: (step + 1) / 4,
               minHeight: 4,
               backgroundColor: AppColors.borderMuted,
               valueColor: const AlwaysStoppedAnimation<Color>(
@@ -227,6 +229,7 @@ class _WizardHeader extends StatelessWidget {
       child: Row(
         children: [
           GestureDetector(
+            key: const ValueKey('checkInClose'),
             onTap: onClose,
             child: const Icon(
               Icons.close_rounded,
@@ -287,6 +290,7 @@ class _BottomNav extends StatelessWidget {
           if (onBack != null)
             Expanded(
               child: OutlinedButton(
+                key: const ValueKey('checkInBackButton'),
                 onPressed: onBack,
                 style: OutlinedButton.styleFrom(
                   shape: RoundedRectangleBorder(
@@ -310,6 +314,7 @@ class _BottomNav extends StatelessWidget {
           if (onNext != null)
             Expanded(
               child: ElevatedButton(
+                key: const ValueKey('checkInNextButton'),
                 onPressed: onNext,
                 child: const Text('Next'),
               ),
@@ -317,6 +322,7 @@ class _BottomNav extends StatelessWidget {
           if (onSubmit != null)
             Expanded(
               child: ElevatedButton(
+                key: const ValueKey('checkInSubmitButton'),
                 onPressed: onSubmit,
                 child: const Text('Submit'),
               ),

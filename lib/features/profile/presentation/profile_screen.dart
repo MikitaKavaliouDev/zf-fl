@@ -52,6 +52,7 @@ class _MoreScreenBodyState extends State<_MoreScreenBody> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: const ValueKey('profileScreen'),
       appBar: AppBar(
         title: const Text('More'),
         centerTitle: true,

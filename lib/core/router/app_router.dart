@@ -41,8 +41,17 @@ import '../../features/nutrition_habits/cubit/nutrition_habits_cubit.dart';
 import '../../features/nutrition_habits/presentation/nutrition_habits_screen.dart';
 import '../../features/profile/cubit/profile_config_cubit.dart';
 import '../../features/profile/presentation/profile_screen.dart';
+import '../../features/profile/presentation/settings_screens/ai_coach_settings_screen.dart';
+import '../../features/profile/presentation/settings_screens/appearance_settings_screen.dart';
 import '../../features/profile/presentation/settings_screens/contact_support_screen.dart';
+import '../../features/profile/presentation/settings_screens/custom_exercises_screen.dart';
+import '../../features/profile/presentation/settings_screens/dashboard_prompts_screen.dart';
+import '../../features/profile/presentation/settings_screens/data_privacy_screen.dart';
+import '../../features/profile/presentation/settings_screens/language_settings_screen.dart';
+import '../../features/profile/presentation/settings_screens/my_packages_screen.dart';
+import '../../features/profile/presentation/settings_screens/notification_settings_screen.dart';
 import '../../features/profile/presentation/settings_screens/profile_config_screen.dart';
+import '../../features/profile/presentation/settings_screens/purchase_history_screen.dart';
 import '../../features/sharing/presentation/sharing_screen.dart';
 import '../../features/trainer/cubit/trainer_calendar_cubit.dart';
 import '../../features/trainer/cubit/trainer_check_in_review_cubit.dart';
@@ -346,6 +355,43 @@ GoRouter createAppRouter(AuthCubit authCubit) {
             ],
           ),
         ],
+      ),
+      // Trainer More sub-routes (full-screen, no bottom nav — push navigation)
+      GoRoute(
+        path: '/trainer/more/appearance',
+        builder: (_, _) => const AppearanceSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/trainer/more/ai-coach',
+        builder: (_, _) => const AiCoachSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/trainer/more/language',
+        builder: (_, _) => const LanguageSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/trainer/more/notifications',
+        builder: (_, _) => const NotificationSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/trainer/more/privacy',
+        builder: (_, _) => const DataPrivacyScreen(),
+      ),
+      GoRoute(
+        path: '/trainer/more/packages',
+        builder: (_, _) => const MyPackagesScreen(),
+      ),
+      GoRoute(
+        path: '/trainer/more/purchase-history',
+        builder: (_, _) => const PurchaseHistoryScreen(),
+      ),
+      GoRoute(
+        path: '/trainer/more/dashboard-prompts',
+        builder: (_, _) => const DashboardPromptsScreen(),
+      ),
+      GoRoute(
+        path: '/trainer/more/custom-exercises',
+        builder: (_, _) => const CustomExercisesScreen(),
       ),
       // Explore sub-routes (full-screen, no bottom nav — matching iOS sheet behavior)
       GoRoute(
@@ -905,6 +951,7 @@ class _MainShell extends StatelessWidget {
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
+        key: const ValueKey('shellBottomNav'),
         currentIndex: navigationShell.currentIndex,
         onTap: (i) => navigationShell.goBranch(i, initialLocation: i == navigationShell.currentIndex),
         selectedItemColor: AppColors.primary,

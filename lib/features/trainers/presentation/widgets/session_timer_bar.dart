@@ -80,6 +80,7 @@ class _SessionTimerRow extends StatelessWidget {
         const Icon(Icons.timer_outlined, color: AppColors.primary),
         const SizedBox(width: 12),
         Text(
+          key: const ValueKey('timerDisplay'),
           formatDuration(elapsed),
           style: const TextStyle(
             fontSize: 28,

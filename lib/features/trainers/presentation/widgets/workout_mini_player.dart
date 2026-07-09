@@ -37,6 +37,7 @@ class _WorkoutMiniPlayerState extends State<WorkoutMiniPlayer> {
         final cubit = context.read<WorkoutSessionCubit>();
 
         return GestureDetector(
+          key: const ValueKey('workoutMiniPlayer'),
           onTap: () => _maximize(context, cubit),
           onVerticalDragUpdate: (details) {
             // Dragging up (negative delta) moves the mini player up
@@ -121,6 +122,7 @@ class _WorkoutMiniPlayerState extends State<WorkoutMiniPlayer> {
                         Row(
                           children: [
                             Text(
+                              key: const ValueKey('miniPlayerTimer'),
                               _formatDuration(elapsed),
                               style: const TextStyle(
                                 fontSize: 14,
@@ -157,6 +159,7 @@ class _WorkoutMiniPlayerState extends State<WorkoutMiniPlayer> {
                     children: [
                       // Pause / Play
                       _RoundIconButton(
+                        key: const ValueKey('miniPlayerPauseButton'),
                         icon: isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded,
                         onTap: () {
                           if (isPaused) {
@@ -226,7 +229,11 @@ class _RoundIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
 
-  const _RoundIconButton({required this.icon, required this.onTap});
+  const _RoundIconButton({
+    super.key,
+    required this.icon,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {

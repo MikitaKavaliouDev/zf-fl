@@ -52,6 +52,7 @@ class _TrainerCalendarScreenState extends State<TrainerCalendarScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: const ValueKey('trainerCalendarScreen'),
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(

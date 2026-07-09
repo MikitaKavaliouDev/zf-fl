@@ -32,6 +32,7 @@ class _TrainerDashboardScreenState extends State<TrainerDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: const ValueKey('trainerDashboardScreen'),
       backgroundColor: AppColors.background,
       body: BlocBuilder<TrainerDashboardCubit, TrainerDashboardState>(
         builder: (context, state) {

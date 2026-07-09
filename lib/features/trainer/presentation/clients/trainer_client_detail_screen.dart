@@ -62,6 +62,7 @@ class _TrainerClientDetailScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: const ValueKey('trainerClientDetailScreen'),
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('Client')),
       body: BlocBuilder<TrainerClientDetailCubit, TrainerClientDetailState>(

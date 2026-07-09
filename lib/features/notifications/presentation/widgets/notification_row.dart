@@ -35,6 +35,7 @@ class NotificationRow extends StatelessWidget {
     final color = _iconColor(notification);
 
     return GestureDetector(
+      key: const ValueKey('notificationRow'),
       onTap: () {
         if (!read) cubit.markAsRead(notification.id);
         onTap?.call();
@@ -122,6 +123,7 @@ class NotificationRow extends StatelessWidget {
                   children: [
                     Expanded(
                       child: ElevatedButton(
+                        key: const ValueKey('acceptButton'),
                         onPressed: () => cubit.acceptRequest(notification.id),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
@@ -144,6 +146,7 @@ class NotificationRow extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: TextButton(
+                        key: const ValueKey('declineButton'),
                         onPressed: () => cubit.declineRequest(notification.id),
                         style: TextButton.styleFrom(
                           foregroundColor: const Color(0xFFEF4444),

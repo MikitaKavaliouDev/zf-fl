@@ -46,6 +46,7 @@ class _TrainerClientHistoryScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: const ValueKey('trainerClientHistoryScreen'),
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(widget.clientName),

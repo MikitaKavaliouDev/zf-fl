@@ -50,6 +50,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
         return DefaultTabController(
           length: 4,
           child: Scaffold(
+            key: const ValueKey('exerciseDetailScreen'),
             appBar: AppBar(
               title: Text(
                 widget.exerciseName,

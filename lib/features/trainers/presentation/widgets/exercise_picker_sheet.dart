@@ -259,6 +259,7 @@ class _ExercisePickerSheetState extends State<ExercisePickerSheet> {
     return Padding(
       padding: const EdgeInsets.all(12),
       child: TextField(
+        key: const ValueKey('exercisePickerSearchField'),
         controller: _searchController,
         onChanged: _applyFilter,
         decoration: InputDecoration(

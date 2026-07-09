@@ -8,12 +8,13 @@ Backend is a Next.js REST API at `V:\zirofit-next` (separate repo).
 ## State
 
 **Repo is actively under development.** Code exists across all layers (core, features, tests).
-`pubspec.yaml`, `analysis_options.yaml`, `.gitignore`, CI config are all present.
+`pubspec.yaml`, `analysis_options.yaml`, `.gitignore` are present.
+No CI/CD pipeline is configured (no GitHub Actions, no Docker, no Fastlane).
 See the **Current Codebase State** section below for detailed per-feature inventory.
 
 This instruction file (`AGENTS.md`) is auto-loaded via `opencode.json` — agents do **not** need to be told to read it.
 
-## Current Codebase State (2026-06-26)
+## Current Codebase State (2026-07-09)
 
 ### Feature Inventory
 
@@ -161,6 +162,25 @@ This instruction file (`AGENTS.md`) is auto-loaded via `opencode.json` — agent
 |---|---|
 | Screens | `EducationalOnboardingScreen` (383 lines), `OnboardingSlideWidget` — swipeable educational intro slides |
 
+#### Voice Coach (`lib/features/voice_coach/`) — ✅ Fully Implemented
+| Layer | Files |
+|---|---|
+| Cubit | `VoiceCoachCubit` with sealed `VoiceCoachState` (disconnected, connecting, connected with messages/audioLevel/agentState/conversationId, error) — manages ElevenLabs Conversational AI Agent lifecycle, subscribes to `WorkoutRealtimeService` for AI Server Tool updates |
+| API Service | `VoiceCoachService` (ElevenLabs agent connection), `VoiceSettingsApiService` — voice settings CRUD |
+| Models (2) | `VoiceMessage`, `VoiceSettingsDto` |
+| Widgets (2) | `VoiceCoachButton`, `VoiceCoachCompactButton` — floating mic button and compact variant |
+| Integration | Configured in `_ZiroFitAppState` via `_voiceCoachCubit.configure(userId: ...)` on `AuthAuthenticated` |
+| Realtime | Subscribes to `WorkoutRealtimeService` for AI-driven workout tool updates (Supabase Realtime) |
+
+#### Trainer App (`lib/features/trainer/`) — ✅ Fully Implemented (Trainer-side experience)
+| Layer | Files |
+|---|---|
+| Cubits (12) | `TrainerDashboardCubit`, `TrainerCalendarCubit`, `TrainerClientsCubit`, `TrainerClientDetailCubit`, `TrainerClientSessionsCubit`, `TrainerClientAnalyticsCubit`, `TrainerClientPackagesCubit`, `TrainerClientNutritionCubit`, `TrainerClientHabitsCubit`, `TrainerCheckInReviewCubit`, `TrainerCheckInDetailCubit`, `TrainerProgramsCubit`, `TrainerAddClientCubit`, `TrainerActiveProgramCubit` |
+| API Services (5) | `TrainerCalendarApiService`, `TrainerResourcesApiService`, `TrainerCheckinApiService`, trainer nutrition/recipes APIs |
+| Screens (12+) | `TrainerShell` (5-tab shell: Calendar/Programs/Dashboard/Clients/More), `TrainerDashboardScreen`, `TrainerClientsScreen`, `TrainerClientDetailScreen`, `TrainerClientHistoryScreen`, `TrainerCalendarScreen`, `TrainerCheckInReviewScreen`, `TrainerCheckInDetailScreen`, `TrainerProgramsScreen`, `TrainerProgramDetailScreen`, `TrainerEventsScreen`, `TrainerNutritionDetailScreen`, `TrainerRecipesScreen`, `TrainerResourceVaultScreen`, `TrainerAddClientScreen`, `TrainerMoreScreen` |
+| Models (80+) | DTOs for: programs, sessions, exercises, clients, check-ins, nutrition plans, habits, packages, analytics, calendar events, resources, recipes — ~175 model files |
+| Access | Uses `TrainerShell` (separate GoRouter `StatefulShellRoute`), `BlocBuilder<WorkoutSessionCubit>` mini-player overlay, same pattern as `_MainShell` |
+
 ### Core Infrastructure
 
 | Module | Files | Status |
@@ -210,23 +230,81 @@ This instruction file (`AGENTS.md`) is auto-loaded via `opencode.json` — agent
 
 ### Test Coverage
 
-| Test File | Tests |
-|---|---|
-| `test/auth_cubit_test.dart` | Auth cubit: register, login, token refresh, auto-redirect |
-| `test/trainer_list_cubit_test.dart` | Trainer list cubit: load, pagination, error |
-| `test/trainer_detail_cubit_test.dart` | Trainer detail cubit: load, link/unlink |
-| `test/sync_cubit_test.dart` | Sync cubit: idle/in-progress/error transitions, auto-sync on reconnect |
-| `test/program_cubit_test.dart` | Program cubit: load programs, templates, create, error states (252 lines) |
-| `test/local_template_repository_test.dart` | Local template CRUD with Drift in-memory DB (239 lines) |
-| `test/widget_test.dart` | Smoke test |
+| Test File | Tests | Lines | Coverage |
+|---|---|---|---|
+| `test/sync_converter_test.dart` | 29 cases | 194 | SyncConverter: date ms↔DateTime, snake_case↔camelCase, null handling, sync JSON fidelity |
+| `test/sync_repository_test.dart` | 31 cases | 822 | SyncRepository: pull/push round-trip, pending changes, push assembly, error handling, all 17 Drift tables |
+| `test/sync_cubit_test.dart` | 12 cases | 307 | SyncCubit: error states, connectivity changes, auto-sync guard, lastSyncAt preservation |
+| `test/program_cubit_test.dart` | 4 cases | 252 | Program cubit: load programs, templates, create, error states |
+| `test/local_template_repository_test.dart` | 11 cases | 239 | Local template CRUD with Drift in-memory DB |
+| `test/auth_cubit_test.dart` | 2 groups | — | Auth cubit: register, login, token refresh, auto-redirect |
+| `test/trainer_list_cubit_test.dart` | 2 groups | — | Trainer list cubit: load, pagination, error |
+| `test/trainer_detail_cubit_test.dart` | 2 groups | — | Trainer detail cubit: load, link/unlink |
+| `test/analytics_cubit_test.dart` | 2 groups | — | Analytics cubit: load, error |
+| `test/widget_test.dart` | 1 group | — | Smoke test (auth screens render) |
+
+**Total**: 92 unit/widget tests passing, 59 e2e tests (skipped in `flutter test`, run via Patrol).
+**Pre-existing failures**: `widget_test.dart` (looks for "ZIRO.FIT" text no longer rendered) and `analytics_cubit_test.dart` (mock API returns error) — unrelated to sync changes.
+
+### How to Run Tests
+
+#### Unit Tests (fast, no device required)
+```sh
+# Run all unit tests (skips e2e tests tagged @Tags(['e2e']))
+flutter test --exclude-tags e2e
+
+# Run specific test files
+flutter test test/sync_cubit_test.dart
+flutter test test/sync_repository_test.dart
+
+# Run all sync tests at once
+flutter test test/sync_cubit_test.dart test/sync_repository_test.dart test/sync_converter_test.dart
+
+# Run tests with a specific name pattern
+flutter test --name "auto-sync"
+```
+
+#### E2E Tests (require backend + device/emulator)
+```sh
+# Start backend first
+cd V:\zirofit-next && npm run dev
+
+# Run a single e2e flow with Patrol
+patrol test --target test/e2e/flows/offline_sync_e2e_test.dart
+
+# Run all e2e flows
+patrol test --target test/e2e/flows/
+
+# Run specific e2e tests by tag/name
+patrol test --target test/e2e/flows/ -- --name "Sync"
+```
+
+**Backend must be running** on port 3321. Use test credentials from `test/e2e/helpers/test_credentials.dart`:
+- `client.ada@ziro.fit` / `password123` (linked client)
+- `client.unlinked@ziro.fit` / `password123` (unlinked client)
+- `ada@ziro.fit` / `password123` (trainer)
+
+#### Code Generation
+```sh
+flutter pub run build_runner build --delete-conflicting-outputs
+```
+Required after modifying `@injectable`, `@freezed`, or Drift table annotations.
+
+#### Lint / Analyze
+```sh
+dart analyze lib/
+```
 
 ### Known Gaps / TODO
 - **Push notifications** — local notification support added (`flutter_local_notifications`), but remote push (FCM/APNs) not wired
-- **Offline sync** — architecture is in place (Drift tables, sync cubit, pull/push endpoints) but hasn't been end-to-end tested
 - **Stripe checkout** — deep link routes exist, the actual Stripe payment sheet integration in Flutter is not wired
 - **Plate calculator** — widget exists (`plate_calculator.dart`) but isn't integrated into workout flow
+- **Animation/test coverage for more features** — most features (trainers, explore, home, check-in, nutrition, notifications, workout) lack unit tests for their cubits
+- **CI/CD pipeline** — no GitHub Actions, Fastlane, or Docker setup
 
 ### Recently Resolved
+
+- **Offline sync — comprehensive unit & e2e test coverage** — The sync layer (SyncCubit, SyncRepository, SyncConverter) now has 72 unit tests (29 SyncConverter + 31 SyncRepository + 12 SyncCubit) covering: date conversion, snake_case↔camelCase mapping, pull/push round-trips with all 17 Drift tables, error handling, connectivity change auto-sync, auto-sync from SyncError state on restore, and lastSyncAt preservation across errors. 7 table name mismatches in SyncRepository were fixed (wire snake_case keys vs Drift PascalCase table names). The e2e test suite in `test/e2e/flows/offline_sync_e2e_test.dart` was expanded with 5 scenarios (tab switch after sync, pull-to-refresh, daily targets load, analytics survival, notification badge update). See `docs/e2e-testing.md` for Patrol architecture.
 
 - **Exercise picker — unified bottom sheet** — The template creation `CreateTemplateView` and the live workout `WorkoutSessionScreen` previously had separate, non-shared exercise picker implementations (dialog vs bottom sheet). Both now use the shared `ExercisePickerSheet` widget, a reusable bottom sheet with fuzzy search, supporting both single-select (workout) and multi-select (template creation) via named constructors. See `docs/exercise-picker.md`.
 
@@ -453,7 +531,9 @@ notifications, bookings, trainer_profiles, calendar_events
 
 ## Conventions (from spec + backend verification)
 
-- **Directory layout**: `lib/core/{di,network,database,security,theme}/` + `lib/features/{auth,trainers,workout,sync,home,explore,notifications,profile,analytics,check_in,daily_targets,fitness_goals,sharing,onboarding}/`
+- **Directory layout**: `lib/core/{di,network,database,security,theme}/` + `lib/features/{auth,trainers,trainer,workout,sync,home,explore,notifications,profile,analytics,check_in,daily_targets,fitness_goals,sharing,onboarding,nutrition_habits,voice_coach}/`
+  - `trainers/` = client-facing trainer discovery/profiles/workout
+  - `trainer/` = trainer-side app (dashboard, clients, programs, check-ins)
 - **Offline-first**: writes go to local SQLite immediately; `sync_status` column tracks pending changes; LWW reconciliation on reconnection
 - **Auth**: JWT tokens stored in `flutter_secure_storage`; Dio `QueuedInterceptor` handles silent refresh on 401 via `POST /api/auth/refresh`
 - **Workout state**: `WorkoutCubit` with sealed `WorkoutState` hierarchy — use **freezed** for data classes and sealed unions (already implied by backend `Prisma` enum patterns)
@@ -642,6 +722,7 @@ Before marking any task done, verify ALL:
 - **Cubits must be unit-tested** with `bloc_test`: test initial state, each event handler, loading/error/success transitions.
 - **No widget tests for trivial widgets** (simple text/layout). Do widget test for interactive widgets (forms, lists with tap handlers).
 - **Drift database queries** — test with an in-memory `NativeDatabase.memory()`.
+- **E2E tests** use **Patrol** (not `integration_test`) — handles native permission dialogs, system UI, and deep link return flows. See `docs/e2e-testing.md` for full architecture, setup, and flow catalog.
 
 ### 7. Code Organization Rules
 - **Feature-first**: `lib/features/<name>/` contains `cubit/`, `data/`, `domain/`, `presentation/`. Never put feature code in `lib/core/`.

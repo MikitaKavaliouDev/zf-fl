@@ -40,6 +40,7 @@ class _CheckInDetailScreenState extends State<CheckInDetailScreen> {
         );
 
         return Scaffold(
+          key: const ValueKey('checkInDetailScreen'),
           backgroundColor: AppColors.background,
           appBar: AppBar(
             title: Text(title),

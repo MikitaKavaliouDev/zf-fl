@@ -173,6 +173,7 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
     return BlocProvider.value(
       value: cubit,
       child: Scaffold(
+        key: const ValueKey('workoutHistoryScreen'),
         backgroundColor: AppColors.background,
         appBar: widget.showAppBar
             ? AppBar(

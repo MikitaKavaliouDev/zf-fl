@@ -32,6 +32,7 @@ class ZiroHeader extends StatelessWidget {
     final topPadding = MediaQuery.of(context).padding.top;
 
     return Container(
+      key: const ValueKey('ziroHeader'),
       padding: EdgeInsets.only(left: 16, right: 12, top: topPadding + 8, bottom: 8),
       decoration: BoxDecoration(
         color: AppColors.background.withValues(alpha: 0.75),
@@ -79,6 +80,7 @@ class ZiroHeader extends StatelessWidget {
               ),
               // Bell icon
               GestureDetector(
+                key: const ValueKey('bellIcon'),
                 onTap: () => context.push('/home/notifications'),
                 child: Padding(
                   padding: const EdgeInsets.all(4),

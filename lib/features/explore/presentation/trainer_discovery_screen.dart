@@ -152,6 +152,7 @@ class _TrainerDiscoveryScreenState extends State<TrainerDiscoveryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: const ValueKey('trainerDiscoveryScreen'),
       backgroundColor: AppColors.background,
       body: CustomScrollView(
         controller: _scrollController,
