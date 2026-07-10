@@ -30,7 +30,7 @@ class TrainerMonthView extends StatelessWidget {
       eventMap.putIfAbsent(key, () => []).add(e);
     }
 
-    final firstDay = DateTime(focusedDate.year, focusedDate.month, 1);
+    final firstDay = DateTime(focusedDate.year, focusedDate.month);
     final lastDay = DateTime(focusedDate.year, focusedDate.month + 1, 0);
     final startWeekday = firstDay.weekday % 7; // Monday=0
     final daysInMonth = lastDay.day;

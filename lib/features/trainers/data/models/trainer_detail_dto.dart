@@ -143,6 +143,7 @@ abstract class TrainerDetailDto with _$TrainerDetailDto {
   factory TrainerDetailDto.fromJson(Map<String, dynamic> json) =>
       _$TrainerDetailDtoFromJson(_flattenAggregatedProfile(json));
 
+  @override
   Map<String, dynamic> toJson() =>
       _$TrainerDetailDtoToJson(this as _TrainerDetailDto);
 }

@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/widgets/error_widget.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/error_widget.dart';
 import '../cubit/check_in_cubit.dart';
 import '../cubit/check_in_state.dart';
 import '../data/models/check_in_detail_dto.dart';

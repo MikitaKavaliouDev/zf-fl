@@ -57,7 +57,7 @@ class HomeCubit extends Cubit<HomeState> {
     // or when the user is a trainer (router redirect may not have fired yet).
     final authState = _authCubit.state;
     if (authState is! AuthAuthenticated || authState.isTrainer) {
-      return HomeData(
+      return const HomeData(
         dashboard: ClientDashboardResponse(
           clientData: ClientProfileData(
             id: '',
@@ -66,7 +66,7 @@ class HomeCubit extends Cubit<HomeState> {
             email: '',
           ),
           weightUnit: 'KG',
-          upcomingClientSessions: const [],
+          upcomingClientSessions: [],
         ),
       );
     }

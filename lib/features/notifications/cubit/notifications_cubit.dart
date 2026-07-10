@@ -29,14 +29,13 @@ class NotificationsCubit extends Cubit<NotificationsState> {
   /// a [RefreshIndicator] so we skip the loading state entirely.
   Future<void> fetchNotifications() async {
     try {
-      final result = await _repository.fetchNotifications(page: 1);
+      final result = await _repository.fetchNotifications();
       _seenIds.addAll(result.notifications.map((n) => n.id));
       final unreadCount = result.notifications.where((n) => !n.readStatus).length;
       emit(NotificationsState.loaded(
         notifications: result.notifications,
         unreadCount: unreadCount,
         hasMore: result.hasMore,
-        currentPage: 1,
       ));
 
       _subscribeToRealtime(result.notifications);
@@ -56,7 +55,7 @@ class NotificationsCubit extends Cubit<NotificationsState> {
   /// Silent background refresh of notification data.
   Future<void> _silentRefresh() async {
     try {
-      final result = await _repository.fetchNotifications(page: 1, forceRefresh: true);
+      final result = await _repository.fetchNotifications(forceRefresh: true);
       if (!isClosed) {
         _seenIds.addAll(result.notifications.map((n) => n.id));
         final unreadCount = result.notifications.where((n) => !n.readStatus).length;
@@ -64,7 +63,6 @@ class NotificationsCubit extends Cubit<NotificationsState> {
           notifications: result.notifications,
           unreadCount: unreadCount,
           hasMore: result.hasMore,
-          currentPage: 1,
         ));
         _subscribeToRealtime(result.notifications);
       }

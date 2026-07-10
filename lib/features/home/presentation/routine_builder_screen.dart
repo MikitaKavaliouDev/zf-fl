@@ -1,7 +1,8 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'dart:developer' as developer;
 
 import '../../../core/di/injection.dart';
 import '../../../core/theme/app_theme.dart';

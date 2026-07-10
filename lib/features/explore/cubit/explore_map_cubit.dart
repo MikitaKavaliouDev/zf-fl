@@ -256,7 +256,7 @@ class ExploreMapCubit extends Cubit<ExploreMapState> {
     // will use the correct filter when emitting the new state.
     // Force-refresh because cached data is never yoga-filtered.
     if (mode == MapFilterMode.yoga || current.filterMode == MapFilterMode.yoga) {
-      load(reset: true, forceRefresh: true);
+      load(forceRefresh: true);
       return;
     }
 
@@ -303,7 +303,7 @@ class ExploreMapCubit extends Cubit<ExploreMapState> {
   /// Always force-refreshes because cached data has no search query applied.
   void search(String query) {
     _searchQuery = query.isEmpty ? null : query;
-    load(reset: true, forceRefresh: true);
+    load(forceRefresh: true);
   }
 
   /// Select a cluster by its ID (shows cluster detail popup).

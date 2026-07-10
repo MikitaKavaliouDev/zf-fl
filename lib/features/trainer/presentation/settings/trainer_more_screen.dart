@@ -70,7 +70,7 @@ class _TrainerMoreScreenState extends State<TrainerMoreScreen> {
               const SizedBox(height: 16),
 
               // ── Preferences ──
-              _SectionHeader(title: 'Preferences'),
+              const _SectionHeader(title: 'Preferences'),
               const SizedBox(height: 8),
               _SettingsGroup(children: [
                 _MenuRow(
@@ -152,7 +152,7 @@ class _TrainerMoreScreenState extends State<TrainerMoreScreen> {
               const SizedBox(height: 24),
 
               // ── Experimental Features ──
-              _SectionHeader(title: 'Experimental Features'),
+              const _SectionHeader(title: 'Experimental Features'),
               const SizedBox(height: 8),
               _SettingsGroup(children: [
                 _ToggleRow(
@@ -196,7 +196,7 @@ class _TrainerMoreScreenState extends State<TrainerMoreScreen> {
               const SizedBox(height: 24),
 
               // ── Business ──
-              _SectionHeader(title: 'Business'),
+              const _SectionHeader(title: 'Business'),
               const SizedBox(height: 8),
               _SettingsGroup(children: [
                 _MenuRow(
@@ -266,21 +266,21 @@ class _TrainerMoreScreenState extends State<TrainerMoreScreen> {
               const SizedBox(height: 24),
 
               // ── Legal ──
-              _SectionHeader(title: 'Legal'),
+              const _SectionHeader(title: 'Legal'),
               const SizedBox(height: 8),
               _SettingsGroup(children: [
                 _MenuRow(
                   icon: Icons.description_outlined,
                   color: AppColors.mutedText,
                   label: 'Terms of Service',
-                  trailing: _ExternalLinkIndicator(),
+                  trailing: const _ExternalLinkIndicator(),
                   onTap: () => _launchUrl('https://ziro.fit/terms'),
                 ),
                 _MenuRow(
                   icon: Icons.shield_outlined,
                   color: AppColors.mutedText,
                   label: 'Privacy Policy',
-                  trailing: _ExternalLinkIndicator(),
+                  trailing: const _ExternalLinkIndicator(),
                   onTap: () =>
                       _launchUrl('https://ziro.fit/privacy-policy'),
                   isLast: true,

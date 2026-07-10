@@ -54,7 +54,7 @@ class TrainerCalendarCubit extends Cubit<TrainerCalendarState> {
       if (state is TrainerCalendarLoaded) {
         final loaded = state as TrainerCalendarLoaded;
         final start = DateTime(loaded.focusedDate.year,
-            loaded.focusedDate.month, 1);
+            loaded.focusedDate.month);
         final end = DateTime(loaded.focusedDate.year,
             loaded.focusedDate.month + 1, 0);
         await loadEvents(startDate: start, endDate: end);
@@ -73,7 +73,7 @@ class TrainerCalendarCubit extends Cubit<TrainerCalendarState> {
       if (state is TrainerCalendarLoaded) {
         final loaded = state as TrainerCalendarLoaded;
         final start = DateTime(loaded.focusedDate.year,
-            loaded.focusedDate.month, 1);
+            loaded.focusedDate.month);
         final end = DateTime(loaded.focusedDate.year,
             loaded.focusedDate.month + 1, 0);
         await loadEvents(startDate: start, endDate: end);
@@ -93,7 +93,7 @@ class TrainerCalendarCubit extends Cubit<TrainerCalendarState> {
       if (state is TrainerCalendarLoaded) {
         final loaded = state as TrainerCalendarLoaded;
         final start = DateTime(loaded.focusedDate.year,
-            loaded.focusedDate.month, 1);
+            loaded.focusedDate.month);
         final end = DateTime(loaded.focusedDate.year,
             loaded.focusedDate.month + 1, 0);
         await loadEvents(startDate: start, endDate: end);

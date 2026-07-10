@@ -3,8 +3,8 @@ import 'dart:developer' as developer;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
-import '../data/trainer_clients_api_service.dart';
 import '../data/models/update_client_request_dto.dart';
+import '../data/trainer_clients_api_service.dart';
 import 'trainer_client_detail_state.dart';
 
 @injectable

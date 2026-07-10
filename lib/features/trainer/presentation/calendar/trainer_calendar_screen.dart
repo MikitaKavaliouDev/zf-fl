@@ -36,7 +36,7 @@ class _TrainerCalendarScreenState extends State<TrainerCalendarScreen> {
 
   void _loadMonth() {
     final start =
-        DateTime(_focusedDate.year, _focusedDate.month, 1);
+        DateTime(_focusedDate.year, _focusedDate.month);
     final end =
         DateTime(_focusedDate.year, _focusedDate.month + 1, 0);
     context.read<TrainerCalendarCubit>().loadEvents(startDate: start, endDate: end);
@@ -64,7 +64,7 @@ class _TrainerCalendarScreenState extends State<TrainerCalendarScreen> {
           icon: const Icon(Icons.chevron_left_rounded),
           onPressed: () {
             setState(() {
-              _focusedDate = DateTime(_focusedDate.year, _focusedDate.month - 1, 1);
+              _focusedDate = DateTime(_focusedDate.year, _focusedDate.month - 1);
             });
             _loadMonth();
           },
@@ -74,7 +74,7 @@ class _TrainerCalendarScreenState extends State<TrainerCalendarScreen> {
             icon: const Icon(Icons.chevron_right_rounded),
             onPressed: () {
               setState(() {
-                _focusedDate = DateTime(_focusedDate.year, _focusedDate.month + 1, 1);
+                _focusedDate = DateTime(_focusedDate.year, _focusedDate.month + 1);
               });
               _loadMonth();
             },

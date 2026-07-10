@@ -76,7 +76,7 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       // Try client session first
       final clientUser =
-          await _repository.getCurrentUser(mode: AppMode.client);
+          await _repository.getCurrentUser();
       if (clientUser != null) _clientUser = clientUser;
 
       // Then try trainer session (independent of client)
@@ -126,7 +126,7 @@ class AuthCubit extends Cubit<AuthState> {
     } catch (e, s) {
       developer.log('checkAuthStatus failed', name: 'auth', error: e, stackTrace: s);
       // Fallback: try cached users
-      final cachedClient = await _repository.getCachedUser(mode: AppMode.client);
+      final cachedClient = await _repository.getCachedUser();
       final cachedTrainer =
           await _repository.getCachedUser(mode: AppMode.trainer);
       final preferredMode = await _resolvePreferredMode();

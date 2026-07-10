@@ -19,6 +19,7 @@ abstract class ClientDashboardResponse with _$ClientDashboardResponse {
   factory ClientDashboardResponse.fromJson(Map<String, dynamic> json) =>
       _$ClientDashboardResponseFromJson(json);
 
+  @override
   Map<String, dynamic> toJson() =>
       _$ClientDashboardResponseToJson(this as _ClientDashboardResponse);
 }

@@ -358,7 +358,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Text(
-            "How will you use Ziro Fit?",
+            'How will you use Ziro Fit?',
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,

@@ -3,8 +3,8 @@ import 'dart:developer' as developer;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
-import '../data/trainer_checkin_api_service.dart';
 import '../data/models/review_check_in_request_dto.dart';
+import '../data/trainer_checkin_api_service.dart';
 import 'trainer_check_in_detail_state.dart';
 
 @injectable

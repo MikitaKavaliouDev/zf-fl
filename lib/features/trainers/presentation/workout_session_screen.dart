@@ -1083,7 +1083,7 @@ class _TimerSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocSelector<WorkoutSessionCubit, WorkoutSessionState, _TimerData>(
       selector: (state) {
-        if (state is! WorkoutSessionActive) return _TimerData();
+        if (state is! WorkoutSessionActive) return const _TimerData();
         return _TimerData(
           elapsed: state.elapsed,
           isPaused: state.isPaused,

@@ -11,6 +11,7 @@ import '../data/home_data.dart';
 import '../data/models/active_program_response.dart';
 import '../data/models/client_dashboard_response.dart';
 import '../data/models/client_recent_session.dart';
+import 'upcoming_session_detail_screen.dart';
 import 'widgets/check_in_banner.dart';
 import 'widgets/coach_card.dart';
 import 'widgets/credit_status_widget.dart';
@@ -23,7 +24,6 @@ import 'widgets/recent_history_section.dart';
 import 'widgets/streak_motivation_card.dart';
 import 'widgets/upcoming_sessions_carousel.dart';
 import 'widgets/ziro_header.dart';
-import 'upcoming_session_detail_screen.dart';
 
 /// Main client-facing dashboard after login.
 ///

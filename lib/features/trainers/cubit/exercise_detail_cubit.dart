@@ -4,8 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
 import '../data/models/exercise_dto.dart';
-import '../data/workout_session_repository.dart';
 import '../data/models/workout_session_response.dart';
+import '../data/workout_session_repository.dart';
 import 'exercise_detail_state.dart';
 
 @injectable

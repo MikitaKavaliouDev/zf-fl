@@ -1,7 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import 'check_in_photo_dto.dart';
 import 'check_in_client_ref_dto.dart';
+import 'check_in_photo_dto.dart';
 
 part 'trainer_check_in_detail_dto.freezed.dart';
 part 'trainer_check_in_detail_dto.g.dart';

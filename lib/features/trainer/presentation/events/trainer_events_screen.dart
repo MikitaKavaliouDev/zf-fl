@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
-
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_theme.dart';

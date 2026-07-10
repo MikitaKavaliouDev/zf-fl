@@ -98,7 +98,7 @@ class TokenStorage {
   /// Clear tokens and cached user for BOTH modes.
   Future<void> clearAll() async {
     await Future.wait([
-      clearTokens(mode: AppMode.client),
+      clearTokens(),
       clearTokens(mode: AppMode.trainer),
     ]);
   }

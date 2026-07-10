@@ -8,8 +8,8 @@ import 'models/create_exercise_request_dto.dart';
 import 'models/create_program_request_dto.dart';
 import 'models/create_template_request_dto.dart';
 import 'models/program_analytics_dto.dart';
-import 'models/template_exercise_dto.dart';
 import 'models/program_library_response.dart';
+import 'models/template_exercise_dto.dart';
 import 'models/trainer_program_brief_dto.dart';
 import 'models/trainer_template_summary_dto.dart';
 

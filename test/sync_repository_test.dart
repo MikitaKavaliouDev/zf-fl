@@ -23,7 +23,7 @@ Future<void> insertNotification(
   return db.customStatement(
     'INSERT INTO notifications '
     '(id, user_id, message, type, read_status, created_at, updated_at, sync_status) '
-    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    'VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
     [id, userId, message, type, readStatus, createdAt, updatedAt, syncStatus],
   );
 }
@@ -511,7 +511,7 @@ void main() {
       test('markAllSynced sets all pending rows to synced', () async {
         await insertNotification(db, id: 'n-a', syncStatus: 'pending');
         await insertNotification(db, id: 'n-b', syncStatus: 'pending');
-        await insertNotification(db, id: 'n-c', syncStatus: 'synced');
+        await insertNotification(db, id: 'n-c');
 
         await repository.markAllSynced('notifications');
 
@@ -566,10 +566,10 @@ void main() {
 
       test('falls back to timestamp heuristic when no action record', () async {
         await insertClient(db, id: 'pc-heuristic-c', name: 'Create',
-            email: 'c@test.com', createdAt: 1000, updatedAt: 1000,
+            email: 'c@test.com',
             syncStatus: 'pending');
         await insertClient(db, id: 'pc-heuristic-u', name: 'Update',
-            email: 'u@test.com', createdAt: 1000, updatedAt: 2000,
+            email: 'u@test.com', updatedAt: 2000,
             syncStatus: 'pending');
 
         when(() => api.pull(0)).thenAnswer((_) async => {
@@ -618,7 +618,7 @@ void main() {
 
       test('excludes synced rows, only collects pending', () async {
         await insertClient(db, id: 'only-synced', name: 'Synced',
-            email: 's@test.com', syncStatus: 'synced');
+            email: 's@test.com');
         await insertClient(db, id: 'only-pending', name: 'Pending',
             email: 'p@test.com', syncStatus: 'pending');
 

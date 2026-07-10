@@ -24,7 +24,7 @@ class DailyTargetsCubit extends Cubit<DailyTargetsState> {
     // Skip client API calls for trainer users.
     final authState = _authCubit.state;
     if (authState is AuthAuthenticated && authState.isTrainer) {
-      emit(DailyTargetsState.loaded(targets: []));
+      emit(const DailyTargetsState.loaded(targets: []));
       return;
     }
 
