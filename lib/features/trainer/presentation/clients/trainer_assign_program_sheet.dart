@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../cubit/trainer_clients_cubit.dart';
 import '../../data/models/assign_program_request_dto.dart';
 import '../../data/models/trainer_program_brief_dto.dart';
+import '../../data/trainer_clients_api_service.dart';
 import '../../data/trainer_programs_api_service.dart';
 
 /// Modal bottom sheet to assign a program to a client.
@@ -77,10 +76,9 @@ class _TrainerAssignProgramSheetState
         startDate: '${_startDate.year.toString().padLeft(4, '0')}-${_startDate.month.toString().padLeft(2, '0')}-${_startDate.day.toString().padLeft(2, '0')}',
         frequency: _frequency,
       );
-      await context
-          .read<TrainerClientsCubit>()
-          .assignProgram(widget.clientId, request);
-      if (mounted) Navigator.of(context).pop();
+      final api = getIt<TrainerClientsApiService>();
+      await api.assignProgram(widget.clientId, request);
+      if (mounted) Navigator.of(context).pop(true);
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -313,7 +311,10 @@ class _TrainerAssignProgramSheetState
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: AppColors.borderMuted),
           ),
-          child: ListTile(
+          clipBehavior: Clip.antiAlias,
+          child: Material(
+            type: MaterialType.transparency,
+            child: ListTile(
             onTap: _pickDate,
             leading: const Icon(
               Icons.calendar_today_rounded,
@@ -341,6 +342,7 @@ class _TrainerAssignProgramSheetState
               ),
             ),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+          ),
           ),
         ),
 

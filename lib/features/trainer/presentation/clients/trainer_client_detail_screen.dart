@@ -521,8 +521,8 @@ class _OverviewSectionState extends State<_OverviewSection> {
               const SizedBox(width: 12),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {
-                    showModalBottomSheet(
+                  onPressed: () async {
+                    final assigned = await showModalBottomSheet<bool>(
                       context: context,
                       isScrollControlled: true,
                       shape: const RoundedRectangleBorder(
@@ -530,6 +530,7 @@ class _OverviewSectionState extends State<_OverviewSection> {
                       ),
                       builder: (_) => TrainerAssignProgramSheet(clientId: widget.clientId),
                     );
+                    if (assigned == true && mounted) _loadAll();
                   },
                   icon: const Icon(Icons.assignment_outlined, size: 18),
                   label: const Text('Assign Program', style: TextStyle(fontSize: 13)),
@@ -773,16 +774,17 @@ class _ProgramsTab extends StatelessWidget {
                 style: TextStyle(color: AppColors.mutedText)),
             const SizedBox(height: 16),
             FilledButton.icon(
-              onPressed: () => showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                shape: const RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.vertical(top: Radius.circular(20)),
-                ),
-                builder: (_) =>
-                    TrainerAssignProgramSheet(clientId: clientId),
-              ),
+              onPressed: () async {
+                await showModalBottomSheet<bool>(
+                  context: context,
+                  isScrollControlled: true,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(20)),
+                  ),
+                  builder: (_) => TrainerAssignProgramSheet(clientId: clientId),
+                );
+              },
               icon: const Icon(Icons.add_rounded),
               label: const Text('Assign Program'),
             ),
