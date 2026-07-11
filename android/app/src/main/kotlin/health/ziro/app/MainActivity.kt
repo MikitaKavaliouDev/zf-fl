@@ -1,4 +1,4 @@
-package fit.ziro.ziro_fit
+package health.ziro.app
 
 import io.flutter.embedding.android.FlutterActivity
 

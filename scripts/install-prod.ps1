@@ -33,7 +33,7 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host ""
     Write-Host "✅ Installed successfully!" -ForegroundColor Green
     Write-Host "🚀 Launching app..." -ForegroundColor Cyan
-    adb -s $DEVICE_ID shell am start -n fit.ziro.ziro_fit/.MainActivity
+    adb -s $DEVICE_ID shell am start -n health.ziro.app/.MainActivity
 } else {
     Write-Host "❌ Installation failed!" -ForegroundColor Red
 }

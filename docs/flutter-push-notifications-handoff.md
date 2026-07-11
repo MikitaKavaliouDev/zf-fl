@@ -55,7 +55,7 @@ The backend now supports push notifications over Firebase Cloud Messaging (FCM).
 | `flutter_local_notifications` | ✅ Already installed (`^18.0.1`) |
 | Dio with auto auth interceptor | ✅ Ready |
 | In-app notification list (Supabase realtime) | ✅ Already works via `NotificationsCubit` |
-| Android `applicationId` | `fit.ziro.ziro_fit` |
+| Android `applicationId` | `health.ziro.app` |
 | iOS deployment target | 13.0 |
 
 ---
@@ -69,7 +69,7 @@ The Firebase project **zirofit** already exists. You need to register the Flutte
 In [Firebase Console → Project Settings → General → Your apps](https://console.firebase.google.com/project/zirofit/settings/general):
 
 1. Click **Add app** → **Android**
-2. **Android package name**: `fit.ziro.ziro_fit` (matches `applicationId` in `android/app/build.gradle.kts`)
+2. **Android package name**: `health.ziro.app` (matches `applicationId` in `android/app/build.gradle.kts`)
 3. **App nickname**: `Ziro Fit Android`
 4. Click **Register app**
 5. **Download `google-services.json`** — place at `android/app/google-services.json`
@@ -78,7 +78,7 @@ In [Firebase Console → Project Settings → General → Your apps](https://con
 ### 1.2 Register iOS app
 
 1. Click **Add app** → **iOS**
-2. **Apple bundle ID**: `fit.ziro.ziro_fit` (matches `PRODUCT_BUNDLE_IDENTIFIER` in Xcode)
+2. **Apple bundle ID**: `health.ziro.app` (matches `PRODUCT_BUNDLE_IDENTIFIER` in Xcode)
 3. **App nickname**: `Ziro Fit iOS`
 4. Click **Register app**
 5. **Download `GoogleService-Info.plist`** — place at `ios/Runner/GoogleService-Info.plist`
@@ -155,7 +155,7 @@ Firebase Messaging requires `minSdk >= 21`. If `flutter.minSdkVersion` resolves 
 
 ```kotlin
 defaultConfig {
-    applicationId = "fit.ziro.ziro_fit"
+    applicationId = "health.ziro.app"
     minSdk = 23  // Explicit override if flutter.minSdkVersion < 21
     // ...
 }
