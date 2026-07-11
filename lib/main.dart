@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -8,6 +11,7 @@ import 'package:tanquery_flutter/tanquery_flutter.dart';
 
 import 'core/di/injection.dart' as di;
 import 'core/logging/state_logger.dart';
+import 'core/push/push_service.dart';
 import 'core/refresh/refresh_tracker.dart';
 import 'core/router/app_router.dart';
 import 'core/settings/appearance_settings_service.dart';
@@ -24,9 +28,31 @@ import 'features/sync/cubit/sync_cubit.dart';
 import 'features/sync/cubit/sync_state.dart';
 import 'features/trainers/cubit/workout_session_cubit.dart';
 import 'features/voice_coach/cubit/voice_coach_cubit.dart';
+import 'firebase_options.dart';
+
+/// Top-level background message handler for FCM.
+///
+/// Runs in its own isolate when a push arrives while the app is terminated.
+/// Must be registered before [Firebase.initializeApp] and must be a
+/// top-level function annotated with `@pragma('vm:entry-point')`.
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  developer.log('[Push Background] ${message.messageId}', name: 'push');
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Register background message handler BEFORE Firebase init.
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  // Initialize Firebase with platform-specific config.
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   // Initialize local notifications plugin.
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
@@ -44,6 +70,11 @@ void main() async {
 
   // Register notification plugin as a singleton.
   di.getIt.registerSingleton(flutterLocalNotificationsPlugin);
+
+  // Initialize push service and register FCM token.
+  final pushService = PushService(flutterLocalNotificationsPlugin);
+  di.getIt.registerSingleton(pushService);
+  unawaited(pushService.initialize());
 
   runApp(const ZiroFitApp());
 }
@@ -88,12 +119,30 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
       _authCubit.checkAuthStatus();
       // Load persisted appearance preferences (theme, text size, reduce motion).
       _appearanceCubit.load();
+      // Wire push notification tap navigation to GoRouter.
+      di.getIt<PushService>().onNavigate = (payload) {
+        try {
+          if (payload.startsWith('zirofitapp://')) {
+            final path = Uri.parse(payload).path;
+            _router.go(path);
+          } else {
+            // referenceId-based pushes: navigate to a generic handler
+            // TODO: Map referenceId to specific screen via PuhNotificationData.type
+            developer.log('Push tap — referenceId, no route mapping yet: $payload', name: 'push');
+          }
+        } catch (e) {
+          developer.log('Push tap navigation error: $e', name: 'push');
+        }
+      };
     });
     // React to auth state changes for the app lifecycle.
     // This subscription lives for the entire app session (never cancelled)
     // so logout → re-auth flows work correctly.
     _authSubscription = _authCubit.stream.listen((state) {
       if (state is AuthAuthenticated) {
+        // Re-register push token after successful auth (covers login / re-auth).
+        // Uses lightweight reRegisterToken(), not full initialize().
+        unawaited(di.getIt<PushService>().reRegisterToken());
         _notificationsCubit.fetchNotifications();
         // Cold-start / re-auth: check if there's an active workout session.
         _workoutSessionCubit.loadCurrent();

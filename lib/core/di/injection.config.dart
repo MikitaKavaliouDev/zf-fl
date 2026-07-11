@@ -88,6 +88,8 @@ import 'package:ziro_fit/features/notifications/cubit/notifications_cubit.dart'
     as _i861;
 import 'package:ziro_fit/features/notifications/data/api/notification_api_service.dart'
     as _i781;
+import 'package:ziro_fit/features/notifications/data/api/push_api_service.dart'
+    as _i1050;
 import 'package:ziro_fit/features/notifications/data/repositories/notification_repository.dart'
     as _i329;
 import 'package:ziro_fit/features/notifications/data/services/notification_realtime_service.dart'
@@ -286,6 +288,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i781.NotificationApiService>(
       () => _i781.NotificationApiService(gh<_i361.Dio>()),
+    );
+    gh.factory<_i1050.PushApiService>(
+      () => _i1050.PushApiService(gh<_i361.Dio>()),
     );
     gh.factory<_i416.NutritionHabitsApiService>(
       () => _i416.NutritionHabitsApiService(gh<_i361.Dio>()),
