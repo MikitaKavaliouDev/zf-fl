@@ -1,5 +1,5 @@
 name: ziro_fit
-description: "ZIRO.FIT — Flutter fitness training platform."
+description: "ZIRO.FIT —  Fitness training platform."
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -69,6 +69,8 @@ dependencies:
   add_2_calendar: ^3.0.1
   fl_chart: ^1.2.0
   flutter_local_notifications: ^18.0.1
+  firebase_core: ^3.12.0
+  firebase_messaging: ^15.2.0
   image_picker: ^1.1.2
   shared_preferences: ^2.3.4
   cached_network_image: ^3.4.1
