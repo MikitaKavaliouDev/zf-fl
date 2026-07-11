@@ -254,8 +254,9 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
       _repository.getSessionDetails(sessionId);
 
   /// Fetch all available templates.
-  Future<List<TemplateDto>> fetchTemplates() =>
-      _repository.getTemplates();
+  /// When called by a trainer, pass [clientId] to access the client's templates.
+  Future<List<TemplateDto>> fetchTemplates({String? clientId}) =>
+      _repository.getTemplates(clientId: clientId);
 
   /// Get a specific template by ID.
   Future<TemplateDto> getTemplate(String templateId) =>

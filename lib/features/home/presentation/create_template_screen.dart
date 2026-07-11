@@ -278,7 +278,10 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
         color: AppColors.mutedSurface,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: ListTile(
+      clipBehavior: Clip.antiAlias,
+      child: Material(
+        type: MaterialType.transparency,
+        child: ListTile(
         leading: const Icon(
           Icons.drag_handle_rounded,
           size: 20,
@@ -332,6 +335,7 @@ class _CreateTemplateViewState extends State<CreateTemplateView> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

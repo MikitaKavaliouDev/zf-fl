@@ -26,6 +26,9 @@ import '../../data/models/trainer_client_package_dto.dart';
 import '../../data/models/trainer_client_session_dto.dart';
 import '../../data/models/update_habit_request_dto.dart';
 import '../../data/trainer_clients_api_service.dart';
+import '../../../trainers/cubit/workout_session_cubit.dart';
+import '../../../trainers/data/models/template_dto.dart';
+import '../../../trainers/presentation/widgets/template_picker_dialog.dart';
 import 'trainer_assign_program_sheet.dart';
 import 'trainer_nutrition_plan_editor_sheet.dart';
 
@@ -244,6 +247,118 @@ class _OverviewSectionState extends State<_OverviewSection> {
     }
   }
 
+  void _showStartSessionSheet({String? clientPackageId}) {
+    developer.log('Show start session sheet for client: ${widget.clientId}${clientPackageId != null ? ' | package: $clientPackageId' : ''}', name: 'trainer');
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Drag handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Icon(Icons.fitness_center_rounded, size: 48, color: AppColors.primary),
+              const SizedBox(height: 16),
+              const Text(
+                'Start Workout Session',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Start a blank session or choose a template.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: AppColors.mutedText),
+              ),
+              const SizedBox(height: 32),
+              FilledButton.icon(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  context.read<WorkoutSessionCubit>().start(
+                    clientId: widget.clientId,
+                    clientPackageId: clientPackageId,
+                  );
+                  context.push('/workout/session');
+                },
+                icon: const Icon(Icons.play_arrow_rounded),
+                label: const Text('Start Workout'),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () async {
+                  Navigator.of(ctx).pop();
+                  final cubit = context.read<WorkoutSessionCubit>();
+                  List<TemplateDto> templates;
+                  try {
+                    templates = await cubit.fetchTemplates(clientId: widget.clientId);
+                  } catch (_) {
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Could not load templates.'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                    return;
+                  }
+                  if (!context.mounted) return;
+                  if (templates.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('No templates available.'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                    return;
+                  }
+                  final selected = await showDialog<TemplateDto>(
+                    context: context,
+                    builder: (_) => TemplatePickerDialog(templates: templates),
+                  );
+                  if (selected != null && context.mounted) {
+                    cubit.start(
+                      clientId: widget.clientId,
+                      templateId: selected.id,
+                      clientPackageId: clientPackageId,
+                    );
+                    context.push('/workout/session');
+                  }
+                },
+                icon: const Icon(Icons.library_books_rounded),
+                label: const Text('Start from Template'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildInfoRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -450,35 +565,38 @@ class _OverviewSectionState extends State<_OverviewSection> {
 
           // Active Package Card
           if (!_isLoadingPackages && activePackage != null) ...[
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF34C759),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(activePackage.package.name,
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-                        Text('${activePackage.sessionsRemaining} sessions remaining',
-                            style: const TextStyle(fontSize: 12, color: Colors.white70)),
-                      ],
+            GestureDetector(
+              onTap: () => _showStartSessionSheet(clientPackageId: activePackage.id),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF34C759),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(activePackage.package.name,
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                          Text('${activePackage.sessionsRemaining} sessions remaining',
+                              style: const TextStyle(fontSize: 12, color: Colors.white70)),
+                        ],
+                      ),
                     ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text('Start Session',
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
                     ),
-                    child: const Text('Start Session',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -488,9 +606,7 @@ class _OverviewSectionState extends State<_OverviewSection> {
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
-              onPressed: () {
-                developer.log('Start session for client: ${widget.clientId}', name: 'trainer');
-              },
+              onPressed: _showStartSessionSheet,
               icon: const Icon(Icons.play_arrow_rounded),
               label: const Text('Start Workout Session'),
               style: FilledButton.styleFrom(
@@ -595,7 +711,9 @@ class _OverviewSectionState extends State<_OverviewSection> {
       label = session.startTime;
     }
 
-    return Container(
+    return GestureDetector(
+      onTap: () => context.push('/workout/history/${session.id}'),
+      child: Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -653,6 +771,7 @@ class _OverviewSectionState extends State<_OverviewSection> {
           const Icon(Icons.chevron_right, size: 16, color: AppColors.mutedText),
         ],
       ),
+    ),
     );
   }
 

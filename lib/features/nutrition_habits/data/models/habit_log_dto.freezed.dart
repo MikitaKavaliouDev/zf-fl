@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$HabitLogDto {
 
- String get id; String get habitId; String get clientId; DateTime get date; bool get isCompleted; String? get note; DateTime get createdAt; DateTime get updatedAt;
+ String get id; String get habitId; String get clientId; String get date; bool get isCompleted; String? get note; DateTime get createdAt; DateTime get updatedAt;
 /// Create a copy of HabitLogDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $HabitLogDtoCopyWith<$Res>  {
   factory $HabitLogDtoCopyWith(HabitLogDto value, $Res Function(HabitLogDto) _then) = _$HabitLogDtoCopyWithImpl;
 @useResult
 $Res call({
- String id, String habitId, String clientId, DateTime date, bool isCompleted, String? note, DateTime createdAt, DateTime updatedAt
+ String id, String habitId, String clientId, String date, bool isCompleted, String? note, DateTime createdAt, DateTime updatedAt
 });
 
 
@@ -71,7 +71,7 @@ id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,habitId: null == habitId ? _self.habitId : habitId // ignore: cast_nullable_to_non_nullable
 as String,clientId: null == clientId ? _self.clientId : clientId // ignore: cast_nullable_to_non_nullable
 as String,date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
-as DateTime,isCompleted: null == isCompleted ? _self.isCompleted : isCompleted // ignore: cast_nullable_to_non_nullable
+as String,isCompleted: null == isCompleted ? _self.isCompleted : isCompleted // ignore: cast_nullable_to_non_nullable
 as bool,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
 as String?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
@@ -160,7 +160,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String habitId,  String clientId,  DateTime date,  bool isCompleted,  String? note,  DateTime createdAt,  DateTime updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String habitId,  String clientId,  String date,  bool isCompleted,  String? note,  DateTime createdAt,  DateTime updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _HabitLogDto() when $default != null:
 return $default(_that.id,_that.habitId,_that.clientId,_that.date,_that.isCompleted,_that.note,_that.createdAt,_that.updatedAt);case _:
@@ -181,7 +181,7 @@ return $default(_that.id,_that.habitId,_that.clientId,_that.date,_that.isComplet
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String habitId,  String clientId,  DateTime date,  bool isCompleted,  String? note,  DateTime createdAt,  DateTime updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String habitId,  String clientId,  String date,  bool isCompleted,  String? note,  DateTime createdAt,  DateTime updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _HabitLogDto():
 return $default(_that.id,_that.habitId,_that.clientId,_that.date,_that.isCompleted,_that.note,_that.createdAt,_that.updatedAt);case _:
@@ -201,7 +201,7 @@ return $default(_that.id,_that.habitId,_that.clientId,_that.date,_that.isComplet
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String habitId,  String clientId,  DateTime date,  bool isCompleted,  String? note,  DateTime createdAt,  DateTime updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String habitId,  String clientId,  String date,  bool isCompleted,  String? note,  DateTime createdAt,  DateTime updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _HabitLogDto() when $default != null:
 return $default(_that.id,_that.habitId,_that.clientId,_that.date,_that.isCompleted,_that.note,_that.createdAt,_that.updatedAt);case _:
@@ -222,7 +222,7 @@ class _HabitLogDto extends HabitLogDto {
 @override final  String id;
 @override final  String habitId;
 @override final  String clientId;
-@override final  DateTime date;
+@override final  String date;
 @override final  bool isCompleted;
 @override final  String? note;
 @override final  DateTime createdAt;
@@ -261,7 +261,7 @@ abstract mixin class _$HabitLogDtoCopyWith<$Res> implements $HabitLogDtoCopyWith
   factory _$HabitLogDtoCopyWith(_HabitLogDto value, $Res Function(_HabitLogDto) _then) = __$HabitLogDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String habitId, String clientId, DateTime date, bool isCompleted, String? note, DateTime createdAt, DateTime updatedAt
+ String id, String habitId, String clientId, String date, bool isCompleted, String? note, DateTime createdAt, DateTime updatedAt
 });
 
 
@@ -284,7 +284,7 @@ id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,habitId: null == habitId ? _self.habitId : habitId // ignore: cast_nullable_to_non_nullable
 as String,clientId: null == clientId ? _self.clientId : clientId // ignore: cast_nullable_to_non_nullable
 as String,date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
-as DateTime,isCompleted: null == isCompleted ? _self.isCompleted : isCompleted // ignore: cast_nullable_to_non_nullable
+as String,isCompleted: null == isCompleted ? _self.isCompleted : isCompleted // ignore: cast_nullable_to_non_nullable
 as bool,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
 as String?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable

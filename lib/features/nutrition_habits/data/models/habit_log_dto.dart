@@ -9,7 +9,7 @@ abstract class HabitLogDto with _$HabitLogDto {
     required String id,
     required String habitId,
     required String clientId,
-    required DateTime date,
+    required String date,
     required bool isCompleted,
     String? note,
     required DateTime createdAt,

@@ -27,7 +27,11 @@ class NutritionHabitsCubit extends Cubit<NutritionHabitsState> {
       ]);
       final plan = results[0] as NutritionPlanDto?;
       final habits = results[1] as List<DailyHabitDto>;
-      emit(NutritionHabitsState.loaded(plan: plan, habits: habits));
+      emit(NutritionHabitsState.loaded(
+        plan: plan,
+        habits: habits,
+        selectedDate: DateTime.now(),
+      ));
     } catch (e) {
       developer.log('NutritionHabitsCubit.loadData failed: $e',
           name: 'nutrition_habits');
@@ -35,19 +39,32 @@ class NutritionHabitsCubit extends Cubit<NutritionHabitsState> {
     }
   }
 
-  /// Toggle a habit's completion for today with optimistic UI + rollback.
+  /// Select a date to view habits for.
+  void selectDate(DateTime date) {
+    final s = state;
+    if (s is NutritionHabitsLoaded) {
+      emit(s.copyWith(selectedDate: date));
+    }
+  }
+
+  /// Go back to today (reset selectedDate).
+  void backToToday() {
+    selectDate(DateTime.now());
+  }
+
+  /// Toggle a habit's completion for [selectedDate] with optimistic UI + rollback.
   Future<void> toggleHabit(String habitId, bool isCompleted) async {
     final s = state;
     if (s is! NutritionHabitsLoaded) return;
     final snapshot = s;
 
+    final dateStr = DateFormat('yyyy-MM-dd').format(s.selectedDate);
+
     // Optimistic local update
-    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
     final updatedHabits = s.habits.map((habit) {
       if (habit.id != habitId) return habit;
-      // Create an optimistic log entry (server may add fields like id)
       final existingLogs = habit.logs.toList();
-      final idx = existingLogs.indexWhere((l) => l.date == today);
+      final idx = existingLogs.indexWhere((l) => l.date == dateStr);
       if (idx >= 0) {
         existingLogs[idx] = existingLogs[idx].copyWith(
           isCompleted: isCompleted,
@@ -57,7 +74,7 @@ class NutritionHabitsCubit extends Cubit<NutritionHabitsState> {
           id: '',
           habitId: habitId,
           clientId: '',
-          date: DateTime.now(),
+          date: dateStr,
           isCompleted: isCompleted,
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
@@ -65,12 +82,16 @@ class NutritionHabitsCubit extends Cubit<NutritionHabitsState> {
       }
       return habit.copyWith(logs: existingLogs);
     }).toList();
-    emit(NutritionHabitsState.loaded(plan: s.plan, habits: updatedHabits));
+    emit(NutritionHabitsState.loaded(
+      plan: s.plan,
+      habits: updatedHabits,
+      selectedDate: s.selectedDate,
+    ));
 
     try {
       final log = await _repository.logHabit(
         habitId,
-        date: today,
+        date: dateStr,
         isCompleted: isCompleted,
       );
       _repository.invalidateCache();
@@ -86,7 +107,11 @@ class NutritionHabitsCubit extends Cubit<NutritionHabitsState> {
         }
         return habit.copyWith(logs: existingLogs);
       }).toList();
-      emit(NutritionHabitsState.loaded(plan: s.plan, habits: confirmed));
+      emit(NutritionHabitsState.loaded(
+        plan: s.plan,
+        habits: confirmed,
+        selectedDate: s.selectedDate,
+      ));
     } catch (e) {
       developer.log('NutritionHabitsCubit.toggleHabit failed: $e',
           name: 'nutrition_habits');

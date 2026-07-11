@@ -12,7 +12,7 @@ import '../data/models/nutrition_plan_dto.dart';
 
 /// Nutrition plan + habit tracking screen.
 ///
-/// Maps to iOS NutritionDetailView + Today's Habits section
+/// Maps to iOS NutritionDetailView (322 lines) + Today's Habits section
 /// (see ios-nutrition-habits-handoff.md).
 class NutritionHabitsScreen extends StatefulWidget {
   const NutritionHabitsScreen({super.key});
@@ -71,7 +71,7 @@ class _NutritionHabitsScreenState extends State<NutritionHabitsScreen> {
               ),
             NutritionHabitsError(:final message) =>
               _ErrorView(message: message, onRetry: () => context.read<NutritionHabitsCubit>().loadData()),
-            NutritionHabitsLoaded(:final plan, :final habits) =>
+            NutritionHabitsLoaded(:final plan, :final habits, :final selectedDate) =>
               RefreshIndicator(
                 onRefresh: () => context.read<NutritionHabitsCubit>().refresh(),
                 color: AppColors.primary,
@@ -87,11 +87,16 @@ class _NutritionHabitsScreenState extends State<NutritionHabitsScreen> {
                       const SizedBox(height: 24),
                     ],
 
-                    // ── Today's Habits Section ──
+                    // ── Habits Section (with date support) ──
                     _HabitsSection(
                       habits: habits,
+                      selectedDate: selectedDate,
                       onToggle: (habitId, isCompleted) =>
                           context.read<NutritionHabitsCubit>().toggleHabit(habitId, isCompleted),
+                      onDateChanged: (date) =>
+                          context.read<NutritionHabitsCubit>().selectDate(date),
+                      onBackToToday: () =>
+                          context.read<NutritionHabitsCubit>().backToToday(),
                     ),
                   ],
                 ),
@@ -151,7 +156,7 @@ class _NutritionPlanCard extends StatelessWidget {
         ),
         const SizedBox(height: 20),
 
-        // ── Daily Targets / Macros ──
+        // ── Daily Targets / Macros (iOS colors: orange/blue/green/purple) ──
         const Text(
           'Daily Targets',
           style: TextStyle(
@@ -166,7 +171,7 @@ class _NutritionPlanCard extends StatelessWidget {
           value: plan.calories,
           unit: 'kcal',
           maxRef: 3000,
-          color: AppColors.primary,
+          color: const Color(0xFFFF9500), // iOS system orange
         ),
         const SizedBox(height: 10),
         _MacroBar(
@@ -174,7 +179,7 @@ class _NutritionPlanCard extends StatelessWidget {
           value: plan.protein,
           unit: 'g',
           maxRef: 300,
-          color: const Color(0xFF22C55E),
+          color: const Color(0xFF007AFF), // iOS system blue
         ),
         const SizedBox(height: 10),
         _MacroBar(
@@ -182,7 +187,7 @@ class _NutritionPlanCard extends StatelessWidget {
           value: plan.carbs,
           unit: 'g',
           maxRef: 400,
-          color: const Color(0xFFF59E0B),
+          color: const Color(0xFF34C759), // iOS system green
         ),
         const SizedBox(height: 10),
         _MacroBar(
@@ -190,7 +195,7 @@ class _NutritionPlanCard extends StatelessWidget {
           value: plan.fats,
           unit: 'g',
           maxRef: 100,
-          color: const Color(0xFFEF4444),
+          color: const Color(0xFFAF52DE), // iOS system purple
         ),
 
         // ── Section dividers ──
@@ -395,35 +400,85 @@ class _SectionBlock extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Habits Section
+// Habits Section (with per-date viewing — matches iOS behavior)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _HabitsSection extends StatelessWidget {
   final List<DailyHabitDto> habits;
+  final DateTime selectedDate;
   final void Function(String habitId, bool isCompleted) onToggle;
+  final ValueChanged<DateTime> onDateChanged;
+  final VoidCallback onBackToToday;
 
   const _HabitsSection({
     required this.habits,
+    required this.selectedDate,
     required this.onToggle,
+    required this.onDateChanged,
+    required this.onBackToToday,
   });
+
+  bool get _isToday {
+    final now = DateTime.now();
+    return selectedDate.year == now.year &&
+        selectedDate.month == now.month &&
+        selectedDate.day == now.day;
+  }
+
+  bool get _isPastDate => selectedDate.isBefore(DateTime.now().subtract(const Duration(days: 1)));
+
+  void _goBackDay() {
+    onDateChanged(selectedDate.subtract(const Duration(days: 1)));
+  }
+
+  void _goForwardDay() {
+    if (!_isToday) {
+      onDateChanged(selectedDate.add(const Duration(days: 1)));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final today = DateTime.now();
+    final isToday = _isToday;
+    final dateStr = isToday
+        ? 'Today'
+        : DateFormat('MMM d, yyyy').format(selectedDate);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // ── Date Navigation Row ──
         Row(
           children: [
-            const Text(
-              "Today's Habits",
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.mutedText,
+            IconButton(
+              icon: const Icon(Icons.chevron_left_rounded),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              color: AppColors.primary,
+              onPressed: _goBackDay,
+            ),
+            GestureDetector(
+              onTap: () => _showDatePicker(context),
+              child: Text(
+                dateStr,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.foreground,
+                ),
               ),
             ),
-            if (habits.isNotEmpty) ...[
-              const SizedBox(width: 8),
+            IconButton(
+              icon: const Icon(Icons.chevron_right_rounded),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              color: isToday ? AppColors.mutedText.withValues(alpha: 0.3) : AppColors.primary,
+              onPressed: isToday ? null : _goForwardDay,
+            ),
+            const Spacer(),
+            // Count badge
+            if (habits.isNotEmpty)
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -440,10 +495,26 @@ class _HabitsSection extends StatelessWidget {
                   ),
                 ),
               ),
-            ],
           ],
         ),
-        const SizedBox(height: 12),
+        if (!isToday) ...[
+          const SizedBox(height: 4),
+          // Back to Today button (matches iOS behavior)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: onBackToToday,
+              icon: const Icon(Icons.today_rounded, size: 16),
+              label: const Text('Back to Today'),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                visualDensity: VisualDensity.compact,
+              ),
+            ),
+          ),
+        ],
+        const SizedBox(height: 8),
         if (habits.isEmpty)
           Container(
             width: double.infinity,
@@ -461,39 +532,71 @@ class _HabitsSection extends StatelessWidget {
         else
           ...habits.map((habit) => _HabitRow(
                 habit: habit,
+                selectedDate: selectedDate,
+                isReadOnly: !isToday,
                 onToggle: (v) => onToggle(habit.id, v),
               )),
       ],
     );
   }
+
+  Future<void> _showDatePicker(BuildContext context) async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: now.subtract(const Duration(days: 365)),
+      lastDate: now,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+                  primary: AppColors.primary,
+                ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      onDateChanged(picked);
+    }
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Individual Habit Row
+// Individual Habit Row (supports per-date viewing + read-only for past dates)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _HabitRow extends StatelessWidget {
   final DailyHabitDto habit;
+  final DateTime selectedDate;
+  final bool isReadOnly;
   final ValueChanged<bool> onToggle;
 
-  const _HabitRow({required this.habit, required this.onToggle});
+  const _HabitRow({
+    required this.habit,
+    required this.selectedDate,
+    required this.isReadOnly,
+    required this.onToggle,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    final todayLog = habit.logs.firstWhere(
-      (log) => DateFormat('yyyy-MM-dd').format(log.date) == todayStr,
+    final dateStr = DateFormat('yyyy-MM-dd').format(selectedDate);
+    final logForDate = habit.logs.firstWhere(
+      (log) => log.date == dateStr,
       orElse: () => HabitLogDto(
         id: '',
         habitId: habit.id,
         clientId: '',
-        date: DateTime.now(),
+        date: dateStr,
         isCompleted: false,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       ),
     );
-    final isCompleted = todayLog.isCompleted;
+    final isCompleted = logForDate.isCompleted;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -505,7 +608,7 @@ class _HabitRow extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
-          onTap: () => onToggle(!isCompleted),
+          onTap: isReadOnly ? null : () => onToggle(!isCompleted),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             child: Row(
@@ -517,8 +620,10 @@ class _HabitRow extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: isCompleted
-                        ? Colors.green
-                        : AppColors.borderMuted,
+                        ? (isReadOnly ? AppColors.mutedText : Colors.green)
+                        : (isReadOnly
+                            ? AppColors.borderMuted.withValues(alpha: 0.5)
+                            : AppColors.borderMuted),
                   ),
                   child: isCompleted
                       ? const Icon(Icons.check, size: 16, color: Colors.white)
@@ -535,7 +640,9 @@ class _HabitRow extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w500,
-                          color: AppColors.foreground,
+                          color: isReadOnly
+                              ? AppColors.mutedText
+                              : AppColors.foreground,
                           decoration: isCompleted
                               ? TextDecoration.lineThrough
                               : null,

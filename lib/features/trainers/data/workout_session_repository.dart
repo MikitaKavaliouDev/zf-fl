@@ -223,7 +223,8 @@ class WorkoutSessionRepository {
     return (session: response.session, logs: response.exerciseLogs);
   }
 
-  Future<List<TemplateDto>> getTemplates() => _api.getTemplates();
+  Future<List<TemplateDto>> getTemplates({String? clientId}) =>
+      _api.getTemplates(clientId: clientId);
 
   Future<TemplateDto> getTemplate(String templateId) =>
       _api.getTemplate(templateId);

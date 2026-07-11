@@ -125,12 +125,12 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( NutritionPlanDto? plan,  List<DailyHabitDto> habits)?  loaded,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( NutritionPlanDto? plan,  List<DailyHabitDto> habits,  DateTime selectedDate)?  loaded,TResult Function( String message)?  error,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case NutritionHabitsInitial() when initial != null:
 return initial();case NutritionHabitsLoading() when loading != null:
 return loading();case NutritionHabitsLoaded() when loaded != null:
-return loaded(_that.plan,_that.habits);case NutritionHabitsError() when error != null:
+return loaded(_that.plan,_that.habits,_that.selectedDate);case NutritionHabitsError() when error != null:
 return error(_that.message);case _:
   return orElse();
 
@@ -149,12 +149,12 @@ return error(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( NutritionPlanDto? plan,  List<DailyHabitDto> habits)  loaded,required TResult Function( String message)  error,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( NutritionPlanDto? plan,  List<DailyHabitDto> habits,  DateTime selectedDate)  loaded,required TResult Function( String message)  error,}) {final _that = this;
 switch (_that) {
 case NutritionHabitsInitial():
 return initial();case NutritionHabitsLoading():
 return loading();case NutritionHabitsLoaded():
-return loaded(_that.plan,_that.habits);case NutritionHabitsError():
+return loaded(_that.plan,_that.habits,_that.selectedDate);case NutritionHabitsError():
 return error(_that.message);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -169,12 +169,12 @@ return error(_that.message);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( NutritionPlanDto? plan,  List<DailyHabitDto> habits)?  loaded,TResult? Function( String message)?  error,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( NutritionPlanDto? plan,  List<DailyHabitDto> habits,  DateTime selectedDate)?  loaded,TResult? Function( String message)?  error,}) {final _that = this;
 switch (_that) {
 case NutritionHabitsInitial() when initial != null:
 return initial();case NutritionHabitsLoading() when loading != null:
 return loading();case NutritionHabitsLoaded() when loaded != null:
-return loaded(_that.plan,_that.habits);case NutritionHabitsError() when error != null:
+return loaded(_that.plan,_that.habits,_that.selectedDate);case NutritionHabitsError() when error != null:
 return error(_that.message);case _:
   return null;
 
@@ -251,7 +251,7 @@ String toString() {
 
 
 class NutritionHabitsLoaded implements NutritionHabitsState {
-  const NutritionHabitsLoaded({this.plan, required final  List<DailyHabitDto> habits}): _habits = habits;
+  const NutritionHabitsLoaded({this.plan, required final  List<DailyHabitDto> habits, required this.selectedDate}): _habits = habits;
   
 
  final  NutritionPlanDto? plan;
@@ -262,6 +262,7 @@ class NutritionHabitsLoaded implements NutritionHabitsState {
   return EqualUnmodifiableListView(_habits);
 }
 
+ final  DateTime selectedDate;
 
 /// Create a copy of NutritionHabitsState
 /// with the given fields replaced by the non-null parameter values.
@@ -273,16 +274,16 @@ $NutritionHabitsLoadedCopyWith<NutritionHabitsLoaded> get copyWith => _$Nutritio
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is NutritionHabitsLoaded&&(identical(other.plan, plan) || other.plan == plan)&&const DeepCollectionEquality().equals(other._habits, _habits));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is NutritionHabitsLoaded&&(identical(other.plan, plan) || other.plan == plan)&&const DeepCollectionEquality().equals(other._habits, _habits)&&(identical(other.selectedDate, selectedDate) || other.selectedDate == selectedDate));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,plan,const DeepCollectionEquality().hash(_habits));
+int get hashCode => Object.hash(runtimeType,plan,const DeepCollectionEquality().hash(_habits),selectedDate);
 
 @override
 String toString() {
-  return 'NutritionHabitsState.loaded(plan: $plan, habits: $habits)';
+  return 'NutritionHabitsState.loaded(plan: $plan, habits: $habits, selectedDate: $selectedDate)';
 }
 
 
@@ -293,7 +294,7 @@ abstract mixin class $NutritionHabitsLoadedCopyWith<$Res> implements $NutritionH
   factory $NutritionHabitsLoadedCopyWith(NutritionHabitsLoaded value, $Res Function(NutritionHabitsLoaded) _then) = _$NutritionHabitsLoadedCopyWithImpl;
 @useResult
 $Res call({
- NutritionPlanDto? plan, List<DailyHabitDto> habits
+ NutritionPlanDto? plan, List<DailyHabitDto> habits, DateTime selectedDate
 });
 
 
@@ -310,11 +311,12 @@ class _$NutritionHabitsLoadedCopyWithImpl<$Res>
 
 /// Create a copy of NutritionHabitsState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? plan = freezed,Object? habits = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? plan = freezed,Object? habits = null,Object? selectedDate = null,}) {
   return _then(NutritionHabitsLoaded(
 plan: freezed == plan ? _self.plan : plan // ignore: cast_nullable_to_non_nullable
 as NutritionPlanDto?,habits: null == habits ? _self._habits : habits // ignore: cast_nullable_to_non_nullable
-as List<DailyHabitDto>,
+as List<DailyHabitDto>,selectedDate: null == selectedDate ? _self.selectedDate : selectedDate // ignore: cast_nullable_to_non_nullable
+as DateTime,
   ));
 }
 

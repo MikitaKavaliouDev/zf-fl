@@ -1,15 +1,19 @@
 import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../cubit/trainer_client_nutrition_cubit.dart';
+import '../../cubit/trainer_client_nutrition_state.dart';
 import '../../data/models/create_habit_request_dto.dart';
 import '../../data/models/log_habit_request_dto.dart';
 import '../../data/models/trainer_habit_dto.dart';
 import '../../data/models/trainer_nutrition_plan_dto.dart';
 import '../../data/models/update_habit_request_dto.dart';
 import '../../data/trainer_clients_api_service.dart';
+import '../clients/trainer_nutrition_plan_editor_sheet.dart';
 
 /// Full-screen nutrition detail view for a trainer to manage a client's
 /// nutrition plan with macro progress bars, section blocks, and habits CRUD.
@@ -30,11 +34,10 @@ class _TrainerNutritionDetailScreenState
     extends State<TrainerNutritionDetailScreen> {
   final TrainerClientsApiService _api = getIt<TrainerClientsApiService>();
 
-  // ── Data state ──
-  TrainerNutritionPlanDto? _plan;
+  // ── Habits state (loaded independently via direct API) ──
   List<TrainerHabitDto> _habits = [];
-  bool _isLoading = true;
-  String? _errorMessage;
+  bool _habitsLoading = true;
+  String? _habitsError;
 
   // ── Date state ──
   DateTime _selectedDate = DateTime.now();
@@ -61,7 +64,10 @@ class _TrainerNutritionDetailScreenState
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<TrainerClientNutritionCubit>().loadPlan(widget.clientId);
+      _loadHabits();
+    });
   }
 
   @override
@@ -73,41 +79,36 @@ class _TrainerNutritionDetailScreenState
 
   // ── Data Loading ──
 
-  Future<void> _loadData() async {
+  Future<void> _loadHabits() async {
     setState(() {
-      _isLoading = true;
-      _errorMessage = null;
+      _habitsLoading = true;
+      _habitsError = null;
     });
     try {
-      final results = await Future.wait([
-        _api.getClientNutrition(widget.clientId),
-        _api.getClientHabits(widget.clientId),
-      ]);
+      final habits = await _api.getClientHabits(widget.clientId);
       if (!mounted) return;
       setState(() {
-        _plan = results[0] as TrainerNutritionPlanDto?;
-        _habits = results[1] as List<TrainerHabitDto>;
-        _isLoading = false;
+        _habits = habits;
+        _habitsLoading = false;
       });
     } catch (e) {
-      developer.log('Failed to load nutrition data: $e', name: 'trainer');
+      developer.log('Failed to load habits: $e', name: 'trainer');
       if (!mounted) return;
       setState(() {
-        _errorMessage = e.toString();
-        _isLoading = false;
+        _habitsError = e.toString();
+        _habitsLoading = false;
       });
     }
   }
 
-  // ── Habit CRUD ──
+  // ── Habits CRUD ──
 
   Future<void> _toggleHabit(TrainerHabitDto habit) async {
-    // Check if there's already a log for the selected date
     final existingLog = habit.logs.where((l) => l.date == _dateString).firstOrNull;
     final newIsCompleted = existingLog?.isCompleted != true;
 
     try {
-      await _api.logHabit(
+      final log = await _api.logHabit(
         widget.clientId,
         habit.id,
         LogHabitRequestDto(
@@ -119,7 +120,25 @@ class _TrainerNutritionDetailScreenState
         'Toggled habit ${habit.id} to ${newIsCompleted ? "completed" : "incomplete"}',
         name: 'trainer',
       );
-      await _loadData();
+      // Update the local habit's logs without reloading
+      setState(() {
+        final index = _habits.indexWhere((h) => h.id == habit.id);
+        if (index != -1) {
+          final updatedHabit = _habits[index];
+          if (existingLog != null) {
+            // Replace existing log entry
+            final updatedLogs = updatedHabit.logs.map((l) {
+              return l.id == existingLog.id ? log : l;
+            }).toList();
+            _habits[index] = updatedHabit.copyWith(logs: updatedLogs);
+          } else {
+            // Append new log entry
+            _habits[index] = updatedHabit.copyWith(
+              logs: [...updatedHabit.logs, log],
+            );
+          }
+        }
+      });
     } catch (e) {
       developer.log('Failed to toggle habit: $e', name: 'trainer');
       if (!mounted) return;
@@ -161,7 +180,7 @@ class _TrainerNutritionDetailScreenState
 
     try {
       if (_editingHabit != null) {
-        await _api.updateHabit(
+        final updated = await _api.updateHabit(
           widget.clientId,
           _editingHabit!.id,
           UpdateHabitRequestDto(
@@ -172,8 +191,13 @@ class _TrainerNutritionDetailScreenState
             frequency: _habitFrequency,
           ),
         );
+        setState(() {
+          final index = _habits.indexWhere((h) => h.id == _editingHabit!.id);
+          if (index != -1) _habits[index] = updated;
+          _isSavingHabit = false;
+        });
       } else {
-        await _api.createHabit(
+        final created = await _api.createHabit(
           widget.clientId,
           CreateHabitRequestDto(
             title: title,
@@ -183,12 +207,11 @@ class _TrainerNutritionDetailScreenState
             frequency: _habitFrequency,
           ),
         );
+        setState(() {
+          _habits.add(created);
+          _isSavingHabit = false;
+        });
       }
-
-      setState(() {
-        _isSavingHabit = false;
-      });
-      await _loadData();
     } catch (e) {
       developer.log('Failed to save habit: $e', name: 'trainer');
       setState(() {
@@ -202,7 +225,9 @@ class _TrainerNutritionDetailScreenState
     try {
       await _api.deleteHabit(widget.clientId, habit.id);
       developer.log('Deleted habit ${habit.id}', name: 'trainer');
-      await _loadData();
+      setState(() {
+        _habits.removeWhere((h) => h.id == habit.id);
+      });
     } catch (e) {
       developer.log('Failed to delete habit: $e', name: 'trainer');
       if (!mounted) return;
@@ -240,12 +265,19 @@ class _TrainerNutritionDetailScreenState
     if (!mounted) return;
 
     try {
-      await _api.deleteNutritionPlan(_plan!.id);
-      developer.log('Deleted nutrition plan ${_plan!.id}', name: 'trainer');
+      // Get current plan id from cubit state
+      final state = context.read<TrainerClientNutritionCubit>().state;
+      String? planId;
+      if (state is TrainerClientNutritionLoaded && state.plan != null) {
+        planId = state.plan!.id;
+      }
+      if (planId == null) return;
+
+      await _api.deleteNutritionPlan(planId);
+      developer.log('Deleted nutrition plan $planId', name: 'trainer');
       if (!mounted) return;
-      setState(() {
-        _plan = null;
-      });
+      // Reload plan via cubit — emits loaded(null), UI reacts
+      context.read<TrainerClientNutritionCubit>().loadPlan(widget.clientId);
     } catch (e) {
       developer.log('Failed to delete nutrition plan: $e', name: 'trainer');
       if (!mounted) return;
@@ -255,50 +287,78 @@ class _TrainerNutritionDetailScreenState
     }
   }
 
+  // ── Open Nutrition Plan Editor ──
+
+  void _openEditor() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.background,
+      builder: (sheetContext) {
+        // Uses the parent BlocProvider — same cubit instance.
+        // When the editor calls cubit.upsertPlan(), the cubit emits
+        // loaded state and the BlocBuilder below rebuilds automatically.
+        return TrainerNutritionPlanEditorSheet(clientId: widget.clientId);
+      },
+    );
+  }
+
   // ── Build ──
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Nutrition'),
-        actions: [
-          if (_plan != null) ...[
-            IconButton(
-              onPressed: _deletePlan,
-              icon: const Icon(Icons.delete_outline_rounded),
-              color: Colors.red,
-              tooltip: 'Delete plan',
+    return BlocProvider(
+      create: (_) => getIt<TrainerClientNutritionCubit>(),
+      child: BlocBuilder<TrainerClientNutritionCubit,
+          TrainerClientNutritionState>(
+        builder: (context, nutritionState) {
+          return Scaffold(
+            backgroundColor: AppColors.background,
+            appBar: AppBar(
+              backgroundColor: AppColors.background,
+              elevation: 0,
+              title: const Text('Nutrition'),
+              actions: [
+                if (nutritionState is TrainerClientNutritionLoaded &&
+                    nutritionState.plan != null) ...[
+                  IconButton(
+                    onPressed: _deletePlan,
+                    icon: const Icon(Icons.delete_outline_rounded),
+                    color: Colors.red,
+                    tooltip: 'Delete plan',
+                  ),
+                  TextButton(
+                    onPressed: _openEditor,
+                    child: const Text(
+                      'Edit',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
-            TextButton(
-              onPressed: () {
-                // Edit plan — navigate to editor
-                // (placeholder for NutritionFormView equivalent)
-              },
-              child: const Text(
-                'Edit',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                ),
-              ),
-            ),
-          ],
-        ],
+            body: _buildBody(nutritionState),
+          );
+        },
       ),
-      body: _buildBody(),
     );
   }
 
-  Widget _buildBody() {
-    if (_isLoading) {
+  Widget _buildBody(TrainerClientNutritionState nutritionState) {
+    // ── Loading: show when plan or habits still loading ──
+    if (nutritionState is TrainerClientNutritionLoading ||
+        nutritionState is TrainerClientNutritionInitial ||
+        _habitsLoading) {
       return const Center(
         child: CircularProgressIndicator(color: AppColors.primary),
       );
     }
 
-    if (_errorMessage != null) {
+    // ── Error ──
+    if (nutritionState is TrainerClientNutritionError) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -309,13 +369,15 @@ class _TrainerNutritionDetailScreenState
                   size: 48, color: AppColors.mutedText),
               const SizedBox(height: 16),
               Text(
-                _errorMessage!,
+                nutritionState.message,
                 style: const TextStyle(color: AppColors.mutedText),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
               FilledButton.icon(
-                onPressed: _loadData,
+                onPressed: () => context
+                    .read<TrainerClientNutritionCubit>()
+                    .loadPlan(widget.clientId),
                 icon: const Icon(Icons.refresh_rounded, size: 18),
                 label: const Text('Retry'),
               ),
@@ -325,44 +387,57 @@ class _TrainerNutritionDetailScreenState
       );
     }
 
-    if (_plan == null) {
-      return _buildEmptyState();
+    // ── Loaded ──
+    if (nutritionState is TrainerClientNutritionLoaded) {
+      final plan = nutritionState.plan;
+
+      // Empty state: no plan
+      if (plan == null) {
+        return _buildEmptyState();
+      }
+
+      // Plan found — show full content
+      return RefreshIndicator(
+        onRefresh: () async {
+          context
+              .read<TrainerClientNutritionCubit>()
+              .loadPlan(widget.clientId);
+          await _loadHabits();
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(plan),
+              const SizedBox(height: 24),
+              _buildMacroSection(plan),
+              const SizedBox(height: 24),
+              if (plan.mealNotes != null && plan.mealNotes!.isNotEmpty)
+                _buildSectionBlock(title: 'Meal Notes', content: plan.mealNotes!),
+              if (plan.foodsToEat != null && plan.foodsToEat!.isNotEmpty)
+                _buildSectionBlock(title: 'Foods to Eat', content: plan.foodsToEat!),
+              if (plan.foodsToAvoid != null && plan.foodsToAvoid!.isNotEmpty)
+                _buildSectionBlock(title: 'Foods to Avoid', content: plan.foodsToAvoid!),
+              if (plan.mealTiming != null && plan.mealTiming!.isNotEmpty)
+                _buildSectionBlock(title: 'Meal Timing', content: plan.mealTiming!),
+              if (plan.hydration != null && plan.hydration!.isNotEmpty)
+                _buildSectionBlock(title: 'Hydration', content: plan.hydration!),
+              if (plan.supplements != null && plan.supplements!.isNotEmpty)
+                _buildSectionBlock(title: 'Supplements', content: plan.supplements!),
+              if (plan.habitNotes != null && plan.habitNotes!.isNotEmpty)
+                _buildSectionBlock(title: 'Habit Notes', content: plan.habitNotes!),
+              const SizedBox(height: 8),
+              _buildHabitsSection(),
+              const SizedBox(height: 40),
+            ],
+          ),
+        ),
+      );
     }
 
-    return RefreshIndicator(
-      onRefresh: _loadData,
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 24),
-            _buildMacroSection(),
-            const SizedBox(height: 24),
-            // Section blocks
-            if (_plan!.mealNotes != null && _plan!.mealNotes!.isNotEmpty)
-              _buildSectionBlock(title: 'Meal Notes', content: _plan!.mealNotes!),
-            if (_plan!.foodsToEat != null && _plan!.foodsToEat!.isNotEmpty)
-              _buildSectionBlock(title: 'Foods to Eat', content: _plan!.foodsToEat!),
-            if (_plan!.foodsToAvoid != null && _plan!.foodsToAvoid!.isNotEmpty)
-              _buildSectionBlock(title: 'Foods to Avoid', content: _plan!.foodsToAvoid!),
-            if (_plan!.mealTiming != null && _plan!.mealTiming!.isNotEmpty)
-              _buildSectionBlock(title: 'Meal Timing', content: _plan!.mealTiming!),
-            if (_plan!.hydration != null && _plan!.hydration!.isNotEmpty)
-              _buildSectionBlock(title: 'Hydration', content: _plan!.hydration!),
-            if (_plan!.supplements != null && _plan!.supplements!.isNotEmpty)
-              _buildSectionBlock(title: 'Supplements', content: _plan!.supplements!),
-            if (_plan!.habitNotes != null && _plan!.habitNotes!.isNotEmpty)
-              _buildSectionBlock(title: 'Habit Notes', content: _plan!.habitNotes!),
-            const SizedBox(height: 8),
-            _buildHabitsSection(),
-            const SizedBox(height: 40),
-          ],
-        ),
-      ),
-    );
+    return const SizedBox.shrink();
   }
 
   // ── Empty State ──
@@ -399,9 +474,7 @@ class _TrainerNutritionDetailScreenState
             ),
             const SizedBox(height: 16),
             FilledButton.icon(
-              onPressed: () {
-                // Open nutrition plan editor
-              },
+              onPressed: _openEditor,
               icon: const Icon(Icons.add_rounded, size: 18),
               label: const Text('Create Nutrition Plan'),
             ),
@@ -413,12 +486,12 @@ class _TrainerNutritionDetailScreenState
 
   // ── Header ──
 
-  Widget _buildHeader() {
+  Widget _buildHeader(TrainerNutritionPlanDto plan) {
     return Row(
       children: [
         Expanded(
           child: Text(
-            _plan!.title,
+            plan.title,
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -426,7 +499,7 @@ class _TrainerNutritionDetailScreenState
             ),
           ),
         ),
-        if (_plan!.isActive)
+        if (plan.isActive)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
@@ -448,7 +521,7 @@ class _TrainerNutritionDetailScreenState
 
   // ── Macro Progress Bars ──
 
-  Widget _buildMacroSection() {
+  Widget _buildMacroSection(TrainerNutritionPlanDto plan) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -466,7 +539,7 @@ class _TrainerNutritionDetailScreenState
             Expanded(
               child: _macroBar(
                 label: 'Calories',
-                value: _plan!.calories,
+                value: plan.calories,
                 maxValue: 3000,
                 unit: '',
                 color: Colors.orange,
@@ -476,7 +549,7 @@ class _TrainerNutritionDetailScreenState
             Expanded(
               child: _macroBar(
                 label: 'Protein',
-                value: _plan!.protein,
+                value: plan.protein,
                 maxValue: 300,
                 unit: 'g',
                 color: Colors.blue,
@@ -490,7 +563,7 @@ class _TrainerNutritionDetailScreenState
             Expanded(
               child: _macroBar(
                 label: 'Carbs',
-                value: _plan!.carbs,
+                value: plan.carbs,
                 maxValue: 400,
                 unit: 'g',
                 color: Colors.green,
@@ -500,7 +573,7 @@ class _TrainerNutritionDetailScreenState
             Expanded(
               child: _macroBar(
                 label: 'Fats',
-                value: _plan!.fats,
+                value: plan.fats,
                 maxValue: 100,
                 unit: 'g',
                 color: Colors.purple,
@@ -617,7 +690,6 @@ class _TrainerNutritionDetailScreenState
       children: [
         const Divider(color: AppColors.borderMuted),
         const SizedBox(height: 12),
-        // ── Habits header ──
         Row(
           children: [
             const Text(
@@ -629,7 +701,6 @@ class _TrainerNutritionDetailScreenState
               ),
             ),
             const Spacer(),
-            // Date picker button — shown when viewing past dates
             if (!_isToday)
               InkWell(
                 onTap: () async {
@@ -642,7 +713,7 @@ class _TrainerNutritionDetailScreenState
                   );
                   if (picked != null && mounted) {
                     setState(() => _selectedDate = picked);
-                    await _loadData();
+                    await _loadHabits();
                   }
                 },
                 borderRadius: BorderRadius.circular(8),
@@ -656,7 +727,6 @@ class _TrainerNutritionDetailScreenState
                 ),
               ),
             if (!_isToday) const SizedBox(width: 8),
-            // Add button
             Material(
               color: Colors.transparent,
               child: InkWell(
@@ -686,8 +756,15 @@ class _TrainerNutritionDetailScreenState
         ),
         const SizedBox(height: 8),
 
-        // ── Habits list ──
-        if (activeHabits.isEmpty)
+        if (_habitsError != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Text(
+              'Failed to load habits: $_habitsError',
+              style: const TextStyle(fontSize: 14, color: Colors.red),
+            ),
+          )
+        else if (activeHabits.isEmpty)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 8),
             child: Text(
@@ -707,14 +784,13 @@ class _TrainerNutritionDetailScreenState
                 onDelete: () => _deleteHabit(habit),
               )),
 
-        // ── Back to Today button ──
         if (!_isToday)
           Padding(
             padding: const EdgeInsets.only(top: 12),
             child: GestureDetector(
               onTap: () {
                 setState(() => _selectedDate = DateTime.now());
-                _loadData();
+                _loadHabits();
               },
               child: const Text(
                 'Back to Today',
@@ -752,7 +828,6 @@ class _TrainerNutritionDetailScreenState
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Drag handle
                   Center(
                     child: Container(
                       width: 36,
@@ -764,8 +839,6 @@ class _TrainerNutritionDetailScreenState
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // Title
                   Text(
                     _editingHabit == null ? 'Add Habit' : 'Edit Habit',
                     style: const TextStyle(
@@ -775,8 +848,6 @@ class _TrainerNutritionDetailScreenState
                     ),
                   ),
                   const SizedBox(height: 20),
-
-                  // Title field
                   const Text(
                     'Title',
                     style: TextStyle(
@@ -800,8 +871,6 @@ class _TrainerNutritionDetailScreenState
                     },
                   ),
                   const SizedBox(height: 16),
-
-                  // Description field
                   const Text(
                     'Description (optional)',
                     style: TextStyle(
@@ -821,8 +890,6 @@ class _TrainerNutritionDetailScreenState
                     maxLines: 2,
                   ),
                   const SizedBox(height: 16),
-
-                  // Frequency picker
                   const Text(
                     'Frequency',
                     style: TextStyle(
@@ -834,14 +901,8 @@ class _TrainerNutritionDetailScreenState
                   const SizedBox(height: 8),
                   SegmentedButton<String>(
                     segments: const [
-                      ButtonSegment(
-                        value: 'DAILY',
-                        label: Text('Daily'),
-                      ),
-                      ButtonSegment(
-                        value: 'WEEKLY',
-                        label: Text('Weekly'),
-                      ),
+                      ButtonSegment(value: 'DAILY', label: Text('Daily')),
+                      ButtonSegment(value: 'WEEKLY', label: Text('Weekly')),
                     ],
                     selected: {_habitFrequency},
                     onSelectionChanged: (sel) {
@@ -852,22 +913,14 @@ class _TrainerNutritionDetailScreenState
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                   ),
-
-                  // Error
                   if (_habitFormError != null) ...[
                     const SizedBox(height: 12),
                     Text(
                       _habitFormError!,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.red,
-                      ),
+                      style: const TextStyle(fontSize: 12, color: Colors.red),
                     ),
                   ],
-
                   const SizedBox(height: 24),
-
-                  // Buttons
                   Row(
                     children: [
                       Expanded(
@@ -883,10 +936,8 @@ class _TrainerNutritionDetailScreenState
                             ),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
-                          child: const Text(
-                            'Cancel',
-                            style: TextStyle(fontSize: 14),
-                          ),
+                          child: const Text('Cancel',
+                              style: TextStyle(fontSize: 14)),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -916,10 +967,8 @@ class _TrainerNutritionDetailScreenState
                                     color: Colors.white,
                                   ),
                                 )
-                              : const Text(
-                                  'Save',
-                                  style: TextStyle(fontSize: 14),
-                                ),
+                              : const Text('Save',
+                                  style: TextStyle(fontSize: 14)),
                         ),
                       ),
                     ],
@@ -953,7 +1002,8 @@ class _HabitCheckRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isCompleted = habit.logs.where((l) => l.date == date).any((l) => l.isCompleted);
+    final isCompleted =
+        habit.logs.where((l) => l.date == date).any((l) => l.isCompleted);
 
     return Dismissible(
       key: ValueKey('habit_${habit.id}'),
@@ -977,11 +1027,9 @@ class _HabitCheckRow extends StatelessWidget {
       ),
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.endToStart) {
-          // Swipe left → Edit
           onEdit();
           return false;
         } else {
-          // Swipe right → Delete — confirm first
           return await showDialog<bool>(
             context: context,
             builder: (ctx) => AlertDialog(
@@ -1019,9 +1067,7 @@ class _HabitCheckRow extends StatelessWidget {
                 height: 24,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: isCompleted
-                      ? AppColors.primary
-                      : Colors.transparent,
+                  color: isCompleted ? AppColors.primary : Colors.transparent,
                   border: Border.all(
                     color: isCompleted
                         ? AppColors.primary
@@ -1030,11 +1076,8 @@ class _HabitCheckRow extends StatelessWidget {
                   ),
                 ),
                 child: isCompleted
-                    ? const Icon(
-                        Icons.check_rounded,
-                        size: 14,
-                        color: Colors.white,
-                      )
+                    ? const Icon(Icons.check_rounded,
+                        size: 14, color: Colors.white)
                     : null,
               ),
             ),

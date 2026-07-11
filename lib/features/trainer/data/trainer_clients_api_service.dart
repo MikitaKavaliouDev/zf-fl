@@ -13,6 +13,7 @@ import 'models/trainer_client_list_item_dto.dart';
 import 'models/trainer_client_package_dto.dart';
 import 'models/trainer_client_session_dto.dart';
 import 'models/trainer_habit_dto.dart';
+import 'models/trainer_habit_log_dto.dart';
 import 'models/trainer_nutrition_plan_dto.dart';
 import 'models/update_client_request_dto.dart';
 import 'models/update_habit_request_dto.dart';
@@ -196,15 +197,18 @@ class TrainerClientsApiService {
   }
 
   /// POST /api/trainer/clients/:clientId/habits/:habitId/log
-  Future<void> logHabit(
+  Future<TrainerHabitLogDto> logHabit(
     String clientId,
     String habitId,
     LogHabitRequestDto request,
   ) async {
-    await _dio.post(
+    final response = await _dio.post(
       '/api/trainer/clients/$clientId/habits/$habitId/log',
       data: request.toJson(),
     );
+    final data = response.data['data'] as Map<String, dynamic>;
+    final log = data['log'] as Map<String, dynamic>;
+    return TrainerHabitLogDto.fromJson(log);
   }
 
   // ── Nutrition ──
@@ -231,7 +235,8 @@ class TrainerClientsApiService {
       data: request.toJson(),
     );
     final data = response.data['data'] as Map<String, dynamic>;
-    return TrainerNutritionPlanDto.fromJson(data);
+    final plan = data['plan'] as Map<String, dynamic>;
+    return TrainerNutritionPlanDto.fromJson(plan);
   }
 
   /// DELETE /api/trainer/nutrition/:planId

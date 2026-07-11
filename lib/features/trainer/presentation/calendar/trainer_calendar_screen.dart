@@ -147,12 +147,24 @@ class _TrainerCalendarScreenState extends State<TrainerCalendarScreen> {
         Expanded(
           child: switch (viewMode) {
             CalendarViewMode.agenda => TrainerAgendaView(
-                events: events,
+                events: events.where((e) {
+                  final dt = DateTime.tryParse(e.start);
+                  if (dt == null) return false;
+                  return dt.year == _focusedDate.year &&
+                      dt.month == _focusedDate.month &&
+                      dt.day == _focusedDate.day;
+                }).toList(),
                 focusedDate: _focusedDate,
                 onEventTap: (e) => _showEventDetail(e),
               ),
             CalendarViewMode.day => TrainerDayView(
-                events: events,
+                events: events.where((e) {
+                  final dt = DateTime.tryParse(e.start);
+                  if (dt == null) return false;
+                  return dt.year == _focusedDate.year &&
+                      dt.month == _focusedDate.month &&
+                      dt.day == _focusedDate.day;
+                }).toList(),
                 focusedDate: _focusedDate,
                 onEventTap: (e) => _showEventDetail(e),
               ),

@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
@@ -318,53 +319,55 @@ class _SessionCard extends StatelessWidget {
     final isCompleted = session.status == 'COMPLETED';
     final duration = _computeDuration(session);
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderMuted),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header: Date & Status
-          Row(
-            children: [
-              const Icon(Icons.calendar_today_rounded,
-                  size: 14, color: AppColors.primary),
-              const SizedBox(width: 6),
-              Text(
-                dateStr,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.foreground,
-                ),
-              ),
-              const Spacer(),
-              if (isCompleted)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
+    return GestureDetector(
+      onTap: () => context.push('/workout/history/${session.id}'),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.borderMuted),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header: Date & Status
+            Row(
+              children: [
+                const Icon(Icons.calendar_today_rounded,
+                    size: 14, color: AppColors.primary),
+                const SizedBox(width: 6),
+                Text(
+                  dateStr,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.foreground,
                   ),
-                  child: const Text(
-                    'Completed',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green,
+                ),
+                const Spacer(),
+                if (isCompleted)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      'Completed',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
                     ),
                   ),
-                ),
-              const SizedBox(width: 4),
-              const Icon(Icons.chevron_right_rounded,
-                  size: 20, color: AppColors.mutedText),
-            ],
-          ),
+                const SizedBox(width: 4),
+                const Icon(Icons.chevron_right_rounded,
+                    size: 20, color: AppColors.mutedText),
+              ],
+            ),
           const SizedBox(height: 8),
           const Divider(
             height: 1,
@@ -411,6 +414,7 @@ class _SessionCard extends StatelessWidget {
             ),
           ],
         ],
+      ),
       ),
     );
   }

@@ -292,8 +292,14 @@ class WorkoutSessionApiService {
   }
 
   /// Get all templates for the current user's active program.
-  Future<List<TemplateDto>> getTemplates() async {
-    final response = await _dio.get('/api/client/program/active');
+  /// When called by a trainer, pass [clientId] to access the client's templates.
+  Future<List<TemplateDto>> getTemplates({String? clientId}) async {
+    final response = await _dio.get(
+      '/api/client/program/active',
+      queryParameters: {
+        if (clientId != null) 'clientId': clientId,
+      },
+    );
     final data = response.data['data'];
     if (data == null) return [];
     final templates = data['templates'] as List<dynamic>;

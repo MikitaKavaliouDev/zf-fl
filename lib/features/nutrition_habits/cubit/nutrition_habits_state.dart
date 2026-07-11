@@ -14,6 +14,7 @@ sealed class NutritionHabitsState with _$NutritionHabitsState {
   const factory NutritionHabitsState.loaded({
     NutritionPlanDto? plan,
     required List<DailyHabitDto> habits,
+    required DateTime selectedDate,
   }) = NutritionHabitsLoaded;
 
   const factory NutritionHabitsState.error(String message) =

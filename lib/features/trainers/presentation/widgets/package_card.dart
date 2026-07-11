@@ -19,92 +19,92 @@ class PackageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 260,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isRecommended ? AppColors.primary : AppColors.borderMuted,
-          width: isRecommended ? 2 : 1,
+    return GestureDetector(
+      onTap: onPurchase,
+      child: Container(
+        width: 260,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isRecommended ? AppColors.primary : AppColors.borderMuted,
+            width: isRecommended ? 2 : 1,
+          ),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Recommended badge
-          if (isRecommended)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withAlpha(25),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: const Text(
-                'Recommended',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Recommended badge
+            if (isRecommended)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withAlpha(25),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Text(
+                  'Recommended',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
                 ),
               ),
-            ),
-          const SizedBox(height: 10),
+            const SizedBox(height: 10),
 
-          // Package name
-          Text(
-            package.name,
-            style: const TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-              color: AppColors.foreground,
-            ),
-          ),
-          const SizedBox(height: 4),
-
-          // Session count
-          Text(
-            '${package.numberOfSessions} sessions',
-            style: const TextStyle(
-              fontSize: 13,
-              color: AppColors.mutedText,
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          // Description
-          if (package.description != null) ...[
+            // Package name
             Text(
-              package.description!,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+              package.name,
               style: const TextStyle(
-                fontSize: 12,
-                color: AppColors.mutedText,
-                height: 1.3,
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+                color: AppColors.foreground,
               ),
             ),
-            const SizedBox(height: 12),
-          ],
+            const SizedBox(height: 4),
 
-          const Spacer(),
+            // Session count
+            Text(
+              '${package.numberOfSessions} sessions',
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.mutedText,
+              ),
+            ),
+            const SizedBox(height: 8),
 
-          // Price + Buy button
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
+            // Description
+            if (package.description != null) ...[
               Text(
-                '${package.currency ?? '\$'}${package.price}',
+                package.description!,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
+                  fontSize: 12,
+                  color: AppColors.mutedText,
+                  height: 1.3,
                 ),
               ),
-              GestureDetector(
-                onTap: onPurchase,
-                child: Container(
+              const SizedBox(height: 12),
+            ],
+
+            const Spacer(),
+
+            // Price + Buy button
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${package.currency ?? '\$'}${package.price}',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+                Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 8,
@@ -122,10 +122,10 @@ class PackageCard extends StatelessWidget {
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
