@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "346703991164",
+    "project_id": "zirofit-6e174",
+    "storage_bucket": "zirofit-6e174.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:346703991164:android:fddaf8dbe0b89c5e2614f9",
+        "android_client_info": {
+          "package_name": "health.ziro.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAaLjWnRJEE93i5R6L570AsAYvFdg0aD1U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
