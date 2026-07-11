@@ -62,14 +62,6 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
   bool _lastNewPrRecord = false;
   bool _dismissedLongWarning = false;
 
-  /// Composite key that changes whenever the focus target moves.
-  /// Used to force BlocSelector-based widgets to rebuild when focus changes
-  /// without rebuilding on every 1-second timer tick.
-  String get _focusKey {
-    if (_focusTarget == null) return 'none';
-    return '${_focusTarget!.exerciseId}:${_focusTarget!.setIndex}:${_focusTarget!.fieldType.name}';
-  }
-
   // ElevenLabs AI Coach Realtime subscription
   StreamSubscription<AIWorkoutEvent>? _aiEventSub;
 
@@ -342,8 +334,6 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
               ),
 
               // ── 3. Exercise list (BlocSelector — only rebuilds on logs) ──
-              // The key changes on focus-change so the list reflects the
-              // current focusTarget even when logs haven't changed.
               Expanded(
                 child: AnimatedPadding(
                   duration: const Duration(milliseconds: 250),
@@ -351,7 +341,6 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
                   padding: EdgeInsets.only(bottom: showKeyboard ? keyboardHeight : 0),
                   child: _buildExerciseList(
                     showKeyboard: showKeyboard,
-                    focusKey: _focusKey,
                   ),
                 ),
               ),
@@ -405,7 +394,7 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
               ? WorkoutNumericKeyboard(
                   key: const ValueKey('num'),
                   isWeight: _focusTarget!.isWeight,
-                  isLastField: _computeIsLastField(),
+                  primaryLabel: _focusTarget!.isWeight ? 'Next' : 'Log',
                   text: _activeInputText,
                   onTextChanged: (v) => setState(() => _activeInputText = v),
                   onNext: _handleInputNext,
@@ -427,32 +416,16 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
     );
   }
 
-  /// Compute whether the current focus target is on the last field
-  /// of the last set (used by keyboard to show "Done" vs "Next").
-  bool _computeIsLastField() {
-    if (_focusTarget == null) return false;
-    final state = context.read<WorkoutSessionCubit>().state;
-    if (state is! WorkoutSessionActive) return false;
-    final exLogs = state.logs
-        .where((l) => l.exerciseId == _focusTarget!.exerciseId)
-        .toList();
-    return !_focusTarget!.isWeight &&
-        _focusTarget!.setIndex == exLogs.length - 1;
-  }
-
   /// Build the exercise list wrapped in a [BlocSelector] so it ONLY
   /// rebuilds when [logs] change (not on every 1-second timer tick).
-  ///
-  /// The [focusKey] forces a widget-key change when [_focusTarget] moves,
-  /// ensuring the list reflects the updated highlight even when logs
-  /// are stable.
+  /// Focus/target state is read from the mutable fields at build time,
+  /// so the list always renders the correct highlights when it rebuilds.
   Widget _buildExerciseList({
     required bool showKeyboard,
-    required String focusKey,
   }) {
     return BlocSelector<WorkoutSessionCubit, WorkoutSessionState,
         List<ExerciseLogDto>>(
-      key: ValueKey('ex-list-$focusKey'),
+      key: const ValueKey('exercise-list'),
       selector: (state) =>
           state is WorkoutSessionActive ? state.logs : const [],
       builder: (context, logs) {
@@ -779,32 +752,12 @@ class _WorkoutSessionScreenState extends State<WorkoutSessionScreen> {
         currentValue: log.reps?.toDouble(),
       );
     } else {
-      // 2. We are on reps.
-      final nextIndex = setIndex + 1;
-      if (nextIndex < exLogs.length) {
-        // There is a next set. Save draft reps value locally and move to next set's weight.
-        _syncActiveInputLocally();
-        
-        developer.log(
-          'nav_next | exercise=${exLogs[nextIndex].exercise?.name ?? exerciseId} '
-          '| set=$setIndex→$nextIndex | field=reps→weight',
-          name: 'workout',
-        );
-        _setFocusDelayed(
-          exerciseId: exerciseId,
-          setIndex: nextIndex,
-          fieldType: FieldType.weight,
-          currentValue: exLogs[nextIndex].weight,
-        );
-      } else {
-        // This is the last field of the last set!
-        // Tapping 'Done' should submit the set/exercise as completed!
-        _completeSet(
-          exerciseId: exerciseId,
-          setIndex: setIndex,
-          log: log,
-        );
-      }
+      // 2. We are on reps — always submit this set as completed.
+      _completeSet(
+        exerciseId: exerciseId,
+        setIndex: setIndex,
+        log: log,
+      );
     }
   }
 

@@ -193,9 +193,9 @@ class WorkoutSessionApiService {
     final response = await _dio.get(
       '/api/workout-sessions/history',
       queryParameters: {
-        'clientId': clientId,
+        if (clientId != null) 'clientId': clientId,
         'limit': limit,
-        'cursor': cursor,
+        if (cursor != null) 'cursor': cursor,
       },
     );
     final data = response.data['data'] as Map<String, dynamic>;

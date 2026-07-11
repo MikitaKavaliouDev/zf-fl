@@ -35,11 +35,13 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
     final current = state;
     if (current is! WorkoutSessionActive || current.isPaused) return;
 
-    // Accumulate elapsed time locally. The initial elapsed is set once
-    // from the server's startTime (in start/loadCurrent), then incremented
-    // here each tick. This avoids cross-timezone issues from comparing
-    // DateTime.now() (local) against a UTC-parsed server timestamp.
-    final elapsed = current.elapsed + const Duration(seconds: 1);
+    // Recompute elapsed from the server's UTC startTime every tick,
+    // matching iOS behavior (WorkoutTimer.update uses
+    // Date().timeIntervalSince(startTime)). This self-corrects after
+    // background gaps — unlike accumulation, which would freeze while
+    // Timer.periodic is suspended.
+    final serverStartTime = DateTime.parse(current.session.startTime);
+    final elapsed = DateTime.now().toUtc().difference(serverStartTime);
 
     // Countdown rest timer (if restDuration is set)
     int? restRemaining = current.restRemaining;
@@ -78,7 +80,7 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
       newRestElapsed = DateTime.now().difference(current.restStartedAt!);
     }
 
-    final showWarning = elapsed.inSeconds >= 7200 && !current.showLongSessionWarning;
+    final showWarning = current.showLongSessionWarning || elapsed.inSeconds >= 7200;
 
     emit(current.copyWith(
       elapsed: elapsed,
@@ -190,22 +192,37 @@ class WorkoutSessionCubit extends Cubit<WorkoutSessionState> {
   }
 
   /// Silent background refresh of the live session state.
+  ///
+  /// Always re-syncs [elapsed] from the server's startTime so the timer
+  /// self-corrects after background gaps. If the same session is active,
+  /// only elapsed and logs are updated (timer keeps running). If a
+  /// different session is found, a full active state is emitted and the
+  /// timer is (re)started.
   Future<void> _silentRefreshLiveSession({bool isMinimized = true}) async {
     try {
       final result =
           await _repository.getLiveSession(forceRefresh: true);
       if (!isClosed && result.session != null) {
-        if (result.session!.id !=
-            (state is WorkoutSessionActive
-                ? (state as WorkoutSessionActive).session.id
-                : null)) {
-          final serverStartTime =
-              DateTime.parse(result.session!.startTime);
-          final timerAnchor = DateTime.now().toUtc();
+        final serverStartTime =
+            DateTime.parse(result.session!.startTime);
+        final timerAnchor = DateTime.now().toUtc();
+        final computedElapsed = timerAnchor.difference(serverStartTime);
+
+        final currentState = state;
+        if (currentState is WorkoutSessionActive &&
+            result.session!.id == currentState.session.id) {
+          // Same session — re-sync elapsed and logs only.
+          // Timer is already running; do not restart it.
+          emit(currentState.copyWith(
+            elapsed: computedElapsed,
+            logs: result.logs,
+          ));
+        } else {
+          // Different session (or no active session) — full refresh.
           emit(WorkoutSessionState.active(
             session: result.session!,
             logs: result.logs,
-            elapsed: timerAnchor.difference(serverStartTime),
+            elapsed: computedElapsed,
             startTime: timerAnchor,
             isMinimized: isMinimized,
           ));

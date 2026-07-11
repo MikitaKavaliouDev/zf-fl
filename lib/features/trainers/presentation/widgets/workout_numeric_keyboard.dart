@@ -7,10 +7,10 @@ import 'package:flutter/services.dart';
 /// - Dismiss button
 /// - Custom RPE picker or Plate Calculator launcher
 /// - -10 / +10 increment modifiers
-/// - Next/Done focus advance button
+/// - Primary action button — caller-specified label ('Next', 'Log', 'Done')
 class WorkoutNumericKeyboard extends StatelessWidget {
   final bool isWeight;
-  final bool isLastField;
+  final String primaryLabel;
   final String text;
   final ValueChanged<String> onTextChanged;
   final VoidCallback onNext;
@@ -20,7 +20,7 @@ class WorkoutNumericKeyboard extends StatelessWidget {
   const WorkoutNumericKeyboard({
     super.key,
     required this.isWeight,
-    this.isLastField = false,
+    this.primaryLabel = 'Next',
     required this.text,
     required this.onTextChanged,
     required this.onNext,
@@ -57,7 +57,7 @@ class WorkoutNumericKeyboard extends StatelessWidget {
                 width: MediaQuery.of(context).size.width * 0.22,
                 child: _ActionColumn(
                   isWeight: isWeight,
-                  isLastField: isLastField,
+                  primaryLabel: primaryLabel,
                   onDismiss: onDismiss,
                   onAction: onAction,
                   onTextChanged: onTextChanged,
@@ -153,12 +153,12 @@ class _NumberGrid extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Action column: dismiss, contextual action, +/-, Next
+// Action column: dismiss, contextual action, +/-, Primary
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _ActionColumn extends StatelessWidget {
   final bool isWeight;
-  final bool isLastField;
+  final String primaryLabel;
   final VoidCallback onDismiss;
   final VoidCallback? onAction;
   final ValueChanged<String> onTextChanged;
@@ -167,7 +167,7 @@ class _ActionColumn extends StatelessWidget {
 
   const _ActionColumn({
     required this.isWeight,
-    required this.isLastField,
+    required this.primaryLabel,
     required this.onDismiss,
     this.onAction,
     required this.onTextChanged,
@@ -212,9 +212,9 @@ class _ActionColumn extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        // Next / Done button
+        // Primary action button (caller-specified label: Next / Log / Done)
         _ActionButton(
-          label: isLastField ? 'Done' : 'Next',
+          label: primaryLabel,
           primary: true,
           onTap: onNext,
           height: 60,
