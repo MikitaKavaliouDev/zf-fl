@@ -33,6 +33,8 @@ class TrainerNutritionDetailScreen extends StatefulWidget {
 class _TrainerNutritionDetailScreenState
     extends State<TrainerNutritionDetailScreen> {
   final TrainerClientsApiService _api = getIt<TrainerClientsApiService>();
+  late final TrainerClientNutritionCubit _nutritionCubit =
+      getIt<TrainerClientNutritionCubit>();
 
   // ── Habits state (loaded independently via direct API) ──
   List<TrainerHabitDto> _habits = [];
@@ -65,7 +67,7 @@ class _TrainerNutritionDetailScreenState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<TrainerClientNutritionCubit>().loadPlan(widget.clientId);
+      _nutritionCubit.loadPlan(widget.clientId);
       _loadHabits();
     });
   }
@@ -266,7 +268,7 @@ class _TrainerNutritionDetailScreenState
 
     try {
       // Get current plan id from cubit state
-      final state = context.read<TrainerClientNutritionCubit>().state;
+      final state = _nutritionCubit.state;
       String? planId;
       if (state is TrainerClientNutritionLoaded && state.plan != null) {
         planId = state.plan!.id;
@@ -277,7 +279,7 @@ class _TrainerNutritionDetailScreenState
       developer.log('Deleted nutrition plan $planId', name: 'trainer');
       if (!mounted) return;
       // Reload plan via cubit — emits loaded(null), UI reacts
-      context.read<TrainerClientNutritionCubit>().loadPlan(widget.clientId);
+      _nutritionCubit.loadPlan(widget.clientId);
     } catch (e) {
       developer.log('Failed to delete nutrition plan: $e', name: 'trainer');
       if (!mounted) return;
@@ -307,8 +309,8 @@ class _TrainerNutritionDetailScreenState
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => getIt<TrainerClientNutritionCubit>(),
+    return BlocProvider.value(
+      value: _nutritionCubit,
       child: BlocBuilder<TrainerClientNutritionCubit,
           TrainerClientNutritionState>(
         builder: (context, nutritionState) {
@@ -375,9 +377,7 @@ class _TrainerNutritionDetailScreenState
               ),
               const SizedBox(height: 16),
               FilledButton.icon(
-                onPressed: () => context
-                    .read<TrainerClientNutritionCubit>()
-                    .loadPlan(widget.clientId),
+                onPressed: () => _nutritionCubit.loadPlan(widget.clientId),
                 icon: const Icon(Icons.refresh_rounded, size: 18),
                 label: const Text('Retry'),
               ),
@@ -399,9 +399,7 @@ class _TrainerNutritionDetailScreenState
       // Plan found — show full content
       return RefreshIndicator(
         onRefresh: () async {
-          context
-              .read<TrainerClientNutritionCubit>()
-              .loadPlan(widget.clientId);
+          _nutritionCubit.loadPlan(widget.clientId);
           await _loadHabits();
         },
         child: SingleChildScrollView(
