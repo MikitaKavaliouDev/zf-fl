@@ -98,6 +98,8 @@ import 'package:ziro_fit/features/notifications/data/api/push_api_service.dart'
     as _i1050;
 import 'package:ziro_fit/features/notifications/data/repositories/notification_repository.dart'
     as _i329;
+import 'package:ziro_fit/features/notifications/data/services/notification_preferences_service.dart'
+    as _i413;
 import 'package:ziro_fit/features/notifications/data/services/notification_realtime_service.dart'
     as _i115;
 import 'package:ziro_fit/features/nutrition_habits/cubit/nutrition_habits_cubit.dart'
@@ -154,6 +156,8 @@ import 'package:ziro_fit/features/trainer/cubit/trainer_dashboard_cubit.dart'
     as _i838;
 import 'package:ziro_fit/features/trainer/cubit/trainer_programs_cubit.dart'
     as _i753;
+import 'package:ziro_fit/features/trainer/data/storefront_local_service.dart'
+    as _i364;
 import 'package:ziro_fit/features/trainer/data/trainer_billing_api_service.dart'
     as _i472;
 import 'package:ziro_fit/features/trainer/data/trainer_calendar_api_service.dart'
@@ -233,6 +237,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.singleton<_i778.ExperimentalFeaturesService>(
       () => _i778.ExperimentalFeaturesService(),
     );
+    gh.singleton<_i413.NotificationPreferencesService>(
+      () => _i413.NotificationPreferencesService(),
+    );
     gh.singleton<_i115.NotificationRealtimeService>(
       () => _i115.NotificationRealtimeService(),
     );
@@ -260,6 +267,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.singleton<_i783.LocalTemplateRepository>(
       () => _i783.LocalTemplateRepository(gh<_i365.AppDatabase>()),
+    );
+    gh.singleton<_i364.StorefrontLocalService>(
+      () => _i364.StorefrontLocalService(gh<_i365.AppDatabase>()),
     );
     gh.factory<_i305.VoiceCoachCubit>(
       () => _i305.VoiceCoachCubit(
@@ -456,6 +466,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i340.ResponseCache>(),
       ),
     );
+    gh.factory<_i627.StorefrontCubit>(
+      () => _i627.StorefrontCubit(
+        gh<_i885.TrainerStorefrontApiService>(),
+        gh<_i364.StorefrontLocalService>(),
+      ),
+    );
     gh.singleton<_i549.BookingRepository>(
       () => _i549.BookingRepository(gh<_i637.BookingApiService>()),
     );
@@ -487,12 +503,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i975.TrainerDiscoveryCubit>(
       () => _i975.TrainerDiscoveryCubit(gh<_i549.ExploreApiService>()),
     );
-    gh.singleton<_i329.NotificationRepository>(
-      () => _i329.NotificationRepository(
-        gh<_i781.NotificationApiService>(),
-        gh<_i340.ResponseCache>(),
-      ),
-    );
     gh.singleton<_i413.FitnessGoalsCubit>(
       () => _i413.FitnessGoalsCubit(gh<_i1035.FitnessGoalsRepository>()),
     );
@@ -513,10 +523,11 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i1003.ExerciseProgressApiService>(),
       ),
     );
-    gh.factory<_i861.NotificationsCubit>(
-      () => _i861.NotificationsCubit(
-        gh<_i329.NotificationRepository>(),
-        gh<_i115.NotificationRealtimeService>(),
+    gh.singleton<_i329.NotificationRepository>(
+      () => _i329.NotificationRepository(
+        gh<_i781.NotificationApiService>(),
+        gh<_i365.AppDatabase>(),
+        gh<_i340.ResponseCache>(),
       ),
     );
     gh.singleton<_i459.WorkoutSessionRepository>(
@@ -556,9 +567,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i0.SubscriptionCubit>(
       () => _i0.SubscriptionCubit(gh<_i472.TrainerBillingApiService>()),
-    );
-    gh.factory<_i627.StorefrontCubit>(
-      () => _i627.StorefrontCubit(gh<_i885.TrainerStorefrontApiService>()),
     );
     gh.singleton<_i607.DailyTargetsRepository>(
       () => _i607.DailyTargetsRepository(
@@ -612,6 +620,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i516.HomeRepository>(),
         gh<_i448.QueryClient>(),
         gh<_i514.AuthCubit>(),
+      ),
+    );
+    gh.factory<_i861.NotificationsCubit>(
+      () => _i861.NotificationsCubit(
+        gh<_i329.NotificationRepository>(),
+        gh<_i115.NotificationRealtimeService>(),
       ),
     );
     gh.factory<_i195.WorkoutHistoryCubit>(

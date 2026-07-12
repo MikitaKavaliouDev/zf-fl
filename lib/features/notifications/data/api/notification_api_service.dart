@@ -72,4 +72,14 @@ class NotificationApiService {
   Future<void> declineRequest(String id) async {
     await _dio.post('/api/notifications/$id/decline');
   }
+
+  /// DELETE /api/notifications/:id — delete a single notification.
+  Future<void> delete(String id) async {
+    await _dio.delete('/api/notifications/$id');
+  }
+
+  /// DELETE /api/notifications — delete all notifications.
+  Future<void> deleteAll() async {
+    await _dio.delete('/api/notifications');
+  }
 }
