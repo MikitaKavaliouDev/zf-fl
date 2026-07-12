@@ -67,7 +67,7 @@ class PackagePreviewCard extends StatelessWidget {
             ),
             if (package.duration != null)
               Text(
-                package.duration!,
+                '${package.duration} sessions',
                 style: const TextStyle(
                   fontSize: 11,
                   color: AppColors.mutedText,

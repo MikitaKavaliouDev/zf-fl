@@ -12,35 +12,51 @@ void main() {
   late Dio dio;
   late TrainerStorefrontApiService service;
 
-  final profileJson = {
-    'data': {
-      'name': 'Test Trainer',
-      'username': 'testtrainer',
-      'bio': 'Experienced fitness coach',
-      'specialties': 'Strength Training, HIIT',
-      'tags': ['Strength', 'Cardio'],
-      'packages': [
-        {
-          'id': 'pkg1',
-          'name': 'Basic Plan',
-          'price': '99.99',
-          'duration': 'Monthly',
+  /// Build a nested response matching GET /api/trainer/profile shape.
+  Map<String, dynamic> _buildResponse({
+    required String name,
+    String? username,
+    String? bio,
+    String? philosophy,
+    String? methodology,
+    dynamic specialties,
+    String? certifications,
+    String? avatarUrl,
+    String? bannerUrl,
+    List<Map<String, dynamic>> packages = const [],
+    List<Map<String, dynamic>> services = const [],
+    List<Map<String, dynamic>> socialLinks = const [],
+    List<Map<String, dynamic>> externalLinks = const [],
+    List<Map<String, dynamic>> testimonials = const [],
+    List<Map<String, dynamic>> transformationPhotos = const [],
+  }) {
+    return {
+      'data': {
+        'profile': {
+          'id': 'trainer-uuid',
+          'name': name,
+          'email': 'trainer@ziro.fit',
+          'username': username,
+          'role': 'trainer',
+          'profile': {
+            'aboutMe': bio,
+            'philosophy': philosophy,
+            'methodology': methodology,
+            'specialties': specialties,
+            'certifications': certifications,
+            'profilePhotoPath': avatarUrl,
+            'bannerImagePath': bannerUrl,
+            'services': services,
+            'socialLinks': socialLinks,
+            'externalLinks': externalLinks,
+            'testimonials': testimonials,
+            'transformationPhotos': transformationPhotos,
+          },
+          'packages': packages,
         },
-      ],
-      'services': [
-        {
-          'id': 'svc1',
-          'name': 'Personal Training',
-          'description': 'One-on-one coaching',
-          'price': '50',
-        },
-      ],
-      'socialLinks': [],
-      'externalLinks': [],
-      'testimonials': [],
-      'transformationPhotos': [],
-    },
-  };
+      },
+    };
+  }
 
   setUp(() {
     dio = MockDio();
@@ -48,48 +64,64 @@ void main() {
   });
 
   group('TrainerStorefrontApiService', () {
-    test('getProfile returns parsed DTO', () async {
-      when(() => dio.get('/api/trainer/profile/text')).thenAnswer(
+    test('getProfile returns parsed DTO from nested shape', () async {
+      final responseJson = _buildResponse(
+        name: 'Test Trainer',
+        username: 'testtrainer',
+        bio: 'Experienced fitness coach',
+        specialties: ['Strength Training', 'HIIT'],
+        certifications: 'CPT, CSCS',
+        packages: [
+          {
+            'id': 'pkg1',
+            'name': 'Basic Plan',
+            'price': '99.99',
+            'numberOfSessions': 12,
+          },
+        ],
+        services: [
+          {
+            'id': 'svc1',
+            'title': 'Personal Training',
+            'description': 'One-on-one coaching',
+            'price': '50',
+          },
+        ],
+      );
+
+      when(() => dio.get('/api/trainer/profile')).thenAnswer(
         (_) async => Response(
-          requestOptions: RequestOptions(path: '/api/trainer/profile/text'),
-          data: profileJson,
+          requestOptions: RequestOptions(path: '/api/trainer/profile'),
+          data: responseJson,
           statusCode: 200,
         ),
       );
 
       final result = await service.getProfile();
       expect(result.name, 'Test Trainer');
+      expect(result.username, 'testtrainer');
       expect(result.bio, 'Experienced fitness coach');
-      expect(result.specialties, 'Strength Training, HIIT');
-      expect(result.tags, ['Strength', 'Cardio']);
+      expect(result.specialties, ['Strength Training', 'HIIT']);
+      expect(result.certifications, 'CPT, CSCS');
       expect(result.packages, hasLength(1));
       expect(result.packages.first.name, 'Basic Plan');
       expect(result.packages.first.price, '99.99');
-      expect(result.packages.first.duration, 'Monthly');
+      expect(result.packages.first.duration, 12);
       expect(result.services, hasLength(1));
       expect(result.services.first.name, 'Personal Training');
     });
 
     test('getProfile handles empty packages and services', () async {
-      final emptyJson = {
-        'data': {
-          'name': 'Empty Trainer',
-          'username': 'empty',
-          'bio': 'No packages yet',
-          'packages': <Map<String, dynamic>>[],
-          'services': <Map<String, dynamic>>[],
-          'tags': <String>[],
-          'socialLinks': [],
-          'externalLinks': [],
-          'testimonials': [],
-          'transformationPhotos': [],
-        },
-      };
+      final responseJson = _buildResponse(
+        name: 'Empty Trainer',
+        username: 'empty',
+        bio: 'No packages yet',
+      );
 
-      when(() => dio.get('/api/trainer/profile/text')).thenAnswer(
+      when(() => dio.get('/api/trainer/profile')).thenAnswer(
         (_) async => Response(
-          requestOptions: RequestOptions(path: '/api/trainer/profile/text'),
-          data: emptyJson,
+          requestOptions: RequestOptions(path: '/api/trainer/profile'),
+          data: responseJson,
           statusCode: 200,
         ),
       );
@@ -100,24 +132,41 @@ void main() {
       expect(result.services, isEmpty);
     });
 
-    test('getProfile handles missing optional fields', () async {
-      final minimalJson = {
+    test('getProfile handles null nested profile', () async {
+      final responseJson = {
         'data': {
-          'name': 'Trainer',
-          'packages': <Map<String, dynamic>>[],
-          'services': <Map<String, dynamic>>[],
-          'tags': <String>[],
-          'socialLinks': [],
-          'externalLinks': [],
-          'testimonials': [],
-          'transformationPhotos': [],
+          'profile': {
+            'id': 'trainer-uuid',
+            'name': 'Minimal Trainer',
+            'email': 'trainer@ziro.fit',
+            'profile': null,
+            'packages': <Map<String, dynamic>>[],
+          },
         },
       };
 
-      when(() => dio.get('/api/trainer/profile/text')).thenAnswer(
+      when(() => dio.get('/api/trainer/profile')).thenAnswer(
         (_) async => Response(
-          requestOptions: RequestOptions(path: '/api/trainer/profile/text'),
-          data: minimalJson,
+          requestOptions: RequestOptions(path: '/api/trainer/profile'),
+          data: responseJson,
+          statusCode: 200,
+        ),
+      );
+
+      final result = await service.getProfile();
+      expect(result.name, 'Minimal Trainer');
+      expect(result.bio, isNull);
+      expect(result.specialties, isEmpty);
+      expect(result.packages, isEmpty);
+    });
+
+    test('getProfile handles missing optional fields', () async {
+      final responseJson = _buildResponse(name: 'Trainer');
+
+      when(() => dio.get('/api/trainer/profile')).thenAnswer(
+        (_) async => Response(
+          requestOptions: RequestOptions(path: '/api/trainer/profile'),
+          data: responseJson,
           statusCode: 200,
         ),
       );
@@ -126,13 +175,13 @@ void main() {
       expect(result.name, 'Trainer');
       expect(result.bio, isNull);
       expect(result.username, isNull);
-      expect(result.specialties, isNull);
+      expect(result.specialties, isEmpty);
     });
 
     test('getProfile throws on network error', () async {
-      when(() => dio.get('/api/trainer/profile/text')).thenThrow(
+      when(() => dio.get('/api/trainer/profile')).thenThrow(
         DioException(
-          requestOptions: RequestOptions(path: '/api/trainer/profile/text'),
+          requestOptions: RequestOptions(path: '/api/trainer/profile'),
           error: 'Connection refused',
           type: DioExceptionType.connectionError,
         ),

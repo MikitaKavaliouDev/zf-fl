@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$StorefrontProfileDto {
 
- String get name; String? get username; String? get bio; String? get philosophy; String? get methodology; String? get specialties; String? get certifications; String? get qualifications; String? get avatarUrl; String? get bannerUrl; List<String> get tags; List<StorefrontPackageDto> get packages; List<StorefrontServiceDto> get services; List<StorefrontSocialLinkDto> get socialLinks; List<StorefrontExternalLinkDto> get externalLinks; List<StorefrontTestimonialDto> get testimonials; List<StorefrontPhotoDto> get transformationPhotos;
+ String get name; String? get username; String? get bio; String? get philosophy; String? get methodology; List<String> get specialties; String? get certifications; String? get avatarUrl; String? get bannerUrl; List<String> get tags; List<StorefrontPackageDto> get packages; List<StorefrontServiceDto> get services; List<StorefrontSocialLinkDto> get socialLinks; List<StorefrontExternalLinkDto> get externalLinks; List<StorefrontTestimonialDto> get testimonials; List<StorefrontPhotoDto> get transformationPhotos; double? get averageRating; int get reviewCount;
 /// Create a copy of StorefrontProfileDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $StorefrontProfileDtoCopyWith<StorefrontProfileDto> get copyWith => _$Storefront
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StorefrontProfileDto&&(identical(other.name, name) || other.name == name)&&(identical(other.username, username) || other.username == username)&&(identical(other.bio, bio) || other.bio == bio)&&(identical(other.philosophy, philosophy) || other.philosophy == philosophy)&&(identical(other.methodology, methodology) || other.methodology == methodology)&&(identical(other.specialties, specialties) || other.specialties == specialties)&&(identical(other.certifications, certifications) || other.certifications == certifications)&&(identical(other.qualifications, qualifications) || other.qualifications == qualifications)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.bannerUrl, bannerUrl) || other.bannerUrl == bannerUrl)&&const DeepCollectionEquality().equals(other.tags, tags)&&const DeepCollectionEquality().equals(other.packages, packages)&&const DeepCollectionEquality().equals(other.services, services)&&const DeepCollectionEquality().equals(other.socialLinks, socialLinks)&&const DeepCollectionEquality().equals(other.externalLinks, externalLinks)&&const DeepCollectionEquality().equals(other.testimonials, testimonials)&&const DeepCollectionEquality().equals(other.transformationPhotos, transformationPhotos));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StorefrontProfileDto&&(identical(other.name, name) || other.name == name)&&(identical(other.username, username) || other.username == username)&&(identical(other.bio, bio) || other.bio == bio)&&(identical(other.philosophy, philosophy) || other.philosophy == philosophy)&&(identical(other.methodology, methodology) || other.methodology == methodology)&&const DeepCollectionEquality().equals(other.specialties, specialties)&&(identical(other.certifications, certifications) || other.certifications == certifications)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.bannerUrl, bannerUrl) || other.bannerUrl == bannerUrl)&&const DeepCollectionEquality().equals(other.tags, tags)&&const DeepCollectionEquality().equals(other.packages, packages)&&const DeepCollectionEquality().equals(other.services, services)&&const DeepCollectionEquality().equals(other.socialLinks, socialLinks)&&const DeepCollectionEquality().equals(other.externalLinks, externalLinks)&&const DeepCollectionEquality().equals(other.testimonials, testimonials)&&const DeepCollectionEquality().equals(other.transformationPhotos, transformationPhotos)&&(identical(other.averageRating, averageRating) || other.averageRating == averageRating)&&(identical(other.reviewCount, reviewCount) || other.reviewCount == reviewCount));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,username,bio,philosophy,methodology,specialties,certifications,qualifications,avatarUrl,bannerUrl,const DeepCollectionEquality().hash(tags),const DeepCollectionEquality().hash(packages),const DeepCollectionEquality().hash(services),const DeepCollectionEquality().hash(socialLinks),const DeepCollectionEquality().hash(externalLinks),const DeepCollectionEquality().hash(testimonials),const DeepCollectionEquality().hash(transformationPhotos));
+int get hashCode => Object.hash(runtimeType,name,username,bio,philosophy,methodology,const DeepCollectionEquality().hash(specialties),certifications,avatarUrl,bannerUrl,const DeepCollectionEquality().hash(tags),const DeepCollectionEquality().hash(packages),const DeepCollectionEquality().hash(services),const DeepCollectionEquality().hash(socialLinks),const DeepCollectionEquality().hash(externalLinks),const DeepCollectionEquality().hash(testimonials),const DeepCollectionEquality().hash(transformationPhotos),averageRating,reviewCount);
 
 @override
 String toString() {
-  return 'StorefrontProfileDto(name: $name, username: $username, bio: $bio, philosophy: $philosophy, methodology: $methodology, specialties: $specialties, certifications: $certifications, qualifications: $qualifications, avatarUrl: $avatarUrl, bannerUrl: $bannerUrl, tags: $tags, packages: $packages, services: $services, socialLinks: $socialLinks, externalLinks: $externalLinks, testimonials: $testimonials, transformationPhotos: $transformationPhotos)';
+  return 'StorefrontProfileDto(name: $name, username: $username, bio: $bio, philosophy: $philosophy, methodology: $methodology, specialties: $specialties, certifications: $certifications, avatarUrl: $avatarUrl, bannerUrl: $bannerUrl, tags: $tags, packages: $packages, services: $services, socialLinks: $socialLinks, externalLinks: $externalLinks, testimonials: $testimonials, transformationPhotos: $transformationPhotos, averageRating: $averageRating, reviewCount: $reviewCount)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $StorefrontProfileDtoCopyWith<$Res>  {
   factory $StorefrontProfileDtoCopyWith(StorefrontProfileDto value, $Res Function(StorefrontProfileDto) _then) = _$StorefrontProfileDtoCopyWithImpl;
 @useResult
 $Res call({
- String name, String? username, String? bio, String? philosophy, String? methodology, String? specialties, String? certifications, String? qualifications, String? avatarUrl, String? bannerUrl, List<String> tags, List<StorefrontPackageDto> packages, List<StorefrontServiceDto> services, List<StorefrontSocialLinkDto> socialLinks, List<StorefrontExternalLinkDto> externalLinks, List<StorefrontTestimonialDto> testimonials, List<StorefrontPhotoDto> transformationPhotos
+ String name, String? username, String? bio, String? philosophy, String? methodology, List<String> specialties, String? certifications, String? avatarUrl, String? bannerUrl, List<String> tags, List<StorefrontPackageDto> packages, List<StorefrontServiceDto> services, List<StorefrontSocialLinkDto> socialLinks, List<StorefrontExternalLinkDto> externalLinks, List<StorefrontTestimonialDto> testimonials, List<StorefrontPhotoDto> transformationPhotos, double? averageRating, int reviewCount
 });
 
 
@@ -65,16 +65,15 @@ class _$StorefrontProfileDtoCopyWithImpl<$Res>
 
 /// Create a copy of StorefrontProfileDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? username = freezed,Object? bio = freezed,Object? philosophy = freezed,Object? methodology = freezed,Object? specialties = freezed,Object? certifications = freezed,Object? qualifications = freezed,Object? avatarUrl = freezed,Object? bannerUrl = freezed,Object? tags = null,Object? packages = null,Object? services = null,Object? socialLinks = null,Object? externalLinks = null,Object? testimonials = null,Object? transformationPhotos = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? username = freezed,Object? bio = freezed,Object? philosophy = freezed,Object? methodology = freezed,Object? specialties = null,Object? certifications = freezed,Object? avatarUrl = freezed,Object? bannerUrl = freezed,Object? tags = null,Object? packages = null,Object? services = null,Object? socialLinks = null,Object? externalLinks = null,Object? testimonials = null,Object? transformationPhotos = null,Object? averageRating = freezed,Object? reviewCount = null,}) {
   return _then(_self.copyWith(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,username: freezed == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
 as String?,bio: freezed == bio ? _self.bio : bio // ignore: cast_nullable_to_non_nullable
 as String?,philosophy: freezed == philosophy ? _self.philosophy : philosophy // ignore: cast_nullable_to_non_nullable
 as String?,methodology: freezed == methodology ? _self.methodology : methodology // ignore: cast_nullable_to_non_nullable
-as String?,specialties: freezed == specialties ? _self.specialties : specialties // ignore: cast_nullable_to_non_nullable
-as String?,certifications: freezed == certifications ? _self.certifications : certifications // ignore: cast_nullable_to_non_nullable
-as String?,qualifications: freezed == qualifications ? _self.qualifications : qualifications // ignore: cast_nullable_to_non_nullable
+as String?,specialties: null == specialties ? _self.specialties : specialties // ignore: cast_nullable_to_non_nullable
+as List<String>,certifications: freezed == certifications ? _self.certifications : certifications // ignore: cast_nullable_to_non_nullable
 as String?,avatarUrl: freezed == avatarUrl ? _self.avatarUrl : avatarUrl // ignore: cast_nullable_to_non_nullable
 as String?,bannerUrl: freezed == bannerUrl ? _self.bannerUrl : bannerUrl // ignore: cast_nullable_to_non_nullable
 as String?,tags: null == tags ? _self.tags : tags // ignore: cast_nullable_to_non_nullable
@@ -84,7 +83,9 @@ as List<StorefrontServiceDto>,socialLinks: null == socialLinks ? _self.socialLin
 as List<StorefrontSocialLinkDto>,externalLinks: null == externalLinks ? _self.externalLinks : externalLinks // ignore: cast_nullable_to_non_nullable
 as List<StorefrontExternalLinkDto>,testimonials: null == testimonials ? _self.testimonials : testimonials // ignore: cast_nullable_to_non_nullable
 as List<StorefrontTestimonialDto>,transformationPhotos: null == transformationPhotos ? _self.transformationPhotos : transformationPhotos // ignore: cast_nullable_to_non_nullable
-as List<StorefrontPhotoDto>,
+as List<StorefrontPhotoDto>,averageRating: freezed == averageRating ? _self.averageRating : averageRating // ignore: cast_nullable_to_non_nullable
+as double?,reviewCount: null == reviewCount ? _self.reviewCount : reviewCount // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 
@@ -169,10 +170,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  String? username,  String? bio,  String? philosophy,  String? methodology,  String? specialties,  String? certifications,  String? qualifications,  String? avatarUrl,  String? bannerUrl,  List<String> tags,  List<StorefrontPackageDto> packages,  List<StorefrontServiceDto> services,  List<StorefrontSocialLinkDto> socialLinks,  List<StorefrontExternalLinkDto> externalLinks,  List<StorefrontTestimonialDto> testimonials,  List<StorefrontPhotoDto> transformationPhotos)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  String? username,  String? bio,  String? philosophy,  String? methodology,  List<String> specialties,  String? certifications,  String? avatarUrl,  String? bannerUrl,  List<String> tags,  List<StorefrontPackageDto> packages,  List<StorefrontServiceDto> services,  List<StorefrontSocialLinkDto> socialLinks,  List<StorefrontExternalLinkDto> externalLinks,  List<StorefrontTestimonialDto> testimonials,  List<StorefrontPhotoDto> transformationPhotos,  double? averageRating,  int reviewCount)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StorefrontProfileDto() when $default != null:
-return $default(_that.name,_that.username,_that.bio,_that.philosophy,_that.methodology,_that.specialties,_that.certifications,_that.qualifications,_that.avatarUrl,_that.bannerUrl,_that.tags,_that.packages,_that.services,_that.socialLinks,_that.externalLinks,_that.testimonials,_that.transformationPhotos);case _:
+return $default(_that.name,_that.username,_that.bio,_that.philosophy,_that.methodology,_that.specialties,_that.certifications,_that.avatarUrl,_that.bannerUrl,_that.tags,_that.packages,_that.services,_that.socialLinks,_that.externalLinks,_that.testimonials,_that.transformationPhotos,_that.averageRating,_that.reviewCount);case _:
   return orElse();
 
 }
@@ -190,10 +191,10 @@ return $default(_that.name,_that.username,_that.bio,_that.philosophy,_that.metho
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  String? username,  String? bio,  String? philosophy,  String? methodology,  String? specialties,  String? certifications,  String? qualifications,  String? avatarUrl,  String? bannerUrl,  List<String> tags,  List<StorefrontPackageDto> packages,  List<StorefrontServiceDto> services,  List<StorefrontSocialLinkDto> socialLinks,  List<StorefrontExternalLinkDto> externalLinks,  List<StorefrontTestimonialDto> testimonials,  List<StorefrontPhotoDto> transformationPhotos)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  String? username,  String? bio,  String? philosophy,  String? methodology,  List<String> specialties,  String? certifications,  String? avatarUrl,  String? bannerUrl,  List<String> tags,  List<StorefrontPackageDto> packages,  List<StorefrontServiceDto> services,  List<StorefrontSocialLinkDto> socialLinks,  List<StorefrontExternalLinkDto> externalLinks,  List<StorefrontTestimonialDto> testimonials,  List<StorefrontPhotoDto> transformationPhotos,  double? averageRating,  int reviewCount)  $default,) {final _that = this;
 switch (_that) {
 case _StorefrontProfileDto():
-return $default(_that.name,_that.username,_that.bio,_that.philosophy,_that.methodology,_that.specialties,_that.certifications,_that.qualifications,_that.avatarUrl,_that.bannerUrl,_that.tags,_that.packages,_that.services,_that.socialLinks,_that.externalLinks,_that.testimonials,_that.transformationPhotos);case _:
+return $default(_that.name,_that.username,_that.bio,_that.philosophy,_that.methodology,_that.specialties,_that.certifications,_that.avatarUrl,_that.bannerUrl,_that.tags,_that.packages,_that.services,_that.socialLinks,_that.externalLinks,_that.testimonials,_that.transformationPhotos,_that.averageRating,_that.reviewCount);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -210,10 +211,10 @@ return $default(_that.name,_that.username,_that.bio,_that.philosophy,_that.metho
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  String? username,  String? bio,  String? philosophy,  String? methodology,  String? specialties,  String? certifications,  String? qualifications,  String? avatarUrl,  String? bannerUrl,  List<String> tags,  List<StorefrontPackageDto> packages,  List<StorefrontServiceDto> services,  List<StorefrontSocialLinkDto> socialLinks,  List<StorefrontExternalLinkDto> externalLinks,  List<StorefrontTestimonialDto> testimonials,  List<StorefrontPhotoDto> transformationPhotos)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  String? username,  String? bio,  String? philosophy,  String? methodology,  List<String> specialties,  String? certifications,  String? avatarUrl,  String? bannerUrl,  List<String> tags,  List<StorefrontPackageDto> packages,  List<StorefrontServiceDto> services,  List<StorefrontSocialLinkDto> socialLinks,  List<StorefrontExternalLinkDto> externalLinks,  List<StorefrontTestimonialDto> testimonials,  List<StorefrontPhotoDto> transformationPhotos,  double? averageRating,  int reviewCount)?  $default,) {final _that = this;
 switch (_that) {
 case _StorefrontProfileDto() when $default != null:
-return $default(_that.name,_that.username,_that.bio,_that.philosophy,_that.methodology,_that.specialties,_that.certifications,_that.qualifications,_that.avatarUrl,_that.bannerUrl,_that.tags,_that.packages,_that.services,_that.socialLinks,_that.externalLinks,_that.testimonials,_that.transformationPhotos);case _:
+return $default(_that.name,_that.username,_that.bio,_that.philosophy,_that.methodology,_that.specialties,_that.certifications,_that.avatarUrl,_that.bannerUrl,_that.tags,_that.packages,_that.services,_that.socialLinks,_that.externalLinks,_that.testimonials,_that.transformationPhotos,_that.averageRating,_that.reviewCount);case _:
   return null;
 
 }
@@ -225,7 +226,7 @@ return $default(_that.name,_that.username,_that.bio,_that.philosophy,_that.metho
 @JsonSerializable()
 
 class _StorefrontProfileDto implements StorefrontProfileDto {
-  const _StorefrontProfileDto({required this.name, this.username, this.bio, this.philosophy, this.methodology, this.specialties, this.certifications, this.qualifications, this.avatarUrl, this.bannerUrl, final  List<String> tags = const [], final  List<StorefrontPackageDto> packages = const [], final  List<StorefrontServiceDto> services = const [], final  List<StorefrontSocialLinkDto> socialLinks = const [], final  List<StorefrontExternalLinkDto> externalLinks = const [], final  List<StorefrontTestimonialDto> testimonials = const [], final  List<StorefrontPhotoDto> transformationPhotos = const []}): _tags = tags,_packages = packages,_services = services,_socialLinks = socialLinks,_externalLinks = externalLinks,_testimonials = testimonials,_transformationPhotos = transformationPhotos;
+  const _StorefrontProfileDto({required this.name, this.username, this.bio, this.philosophy, this.methodology, final  List<String> specialties = const [], this.certifications, this.avatarUrl, this.bannerUrl, final  List<String> tags = const [], final  List<StorefrontPackageDto> packages = const [], final  List<StorefrontServiceDto> services = const [], final  List<StorefrontSocialLinkDto> socialLinks = const [], final  List<StorefrontExternalLinkDto> externalLinks = const [], final  List<StorefrontTestimonialDto> testimonials = const [], final  List<StorefrontPhotoDto> transformationPhotos = const [], this.averageRating, this.reviewCount = 0}): _specialties = specialties,_tags = tags,_packages = packages,_services = services,_socialLinks = socialLinks,_externalLinks = externalLinks,_testimonials = testimonials,_transformationPhotos = transformationPhotos;
   factory _StorefrontProfileDto.fromJson(Map<String, dynamic> json) => _$StorefrontProfileDtoFromJson(json);
 
 @override final  String name;
@@ -233,9 +234,14 @@ class _StorefrontProfileDto implements StorefrontProfileDto {
 @override final  String? bio;
 @override final  String? philosophy;
 @override final  String? methodology;
-@override final  String? specialties;
+ final  List<String> _specialties;
+@override@JsonKey() List<String> get specialties {
+  if (_specialties is EqualUnmodifiableListView) return _specialties;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_specialties);
+}
+
 @override final  String? certifications;
-@override final  String? qualifications;
 @override final  String? avatarUrl;
 @override final  String? bannerUrl;
  final  List<String> _tags;
@@ -287,6 +293,8 @@ class _StorefrontProfileDto implements StorefrontProfileDto {
   return EqualUnmodifiableListView(_transformationPhotos);
 }
 
+@override final  double? averageRating;
+@override@JsonKey() final  int reviewCount;
 
 /// Create a copy of StorefrontProfileDto
 /// with the given fields replaced by the non-null parameter values.
@@ -301,16 +309,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StorefrontProfileDto&&(identical(other.name, name) || other.name == name)&&(identical(other.username, username) || other.username == username)&&(identical(other.bio, bio) || other.bio == bio)&&(identical(other.philosophy, philosophy) || other.philosophy == philosophy)&&(identical(other.methodology, methodology) || other.methodology == methodology)&&(identical(other.specialties, specialties) || other.specialties == specialties)&&(identical(other.certifications, certifications) || other.certifications == certifications)&&(identical(other.qualifications, qualifications) || other.qualifications == qualifications)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.bannerUrl, bannerUrl) || other.bannerUrl == bannerUrl)&&const DeepCollectionEquality().equals(other._tags, _tags)&&const DeepCollectionEquality().equals(other._packages, _packages)&&const DeepCollectionEquality().equals(other._services, _services)&&const DeepCollectionEquality().equals(other._socialLinks, _socialLinks)&&const DeepCollectionEquality().equals(other._externalLinks, _externalLinks)&&const DeepCollectionEquality().equals(other._testimonials, _testimonials)&&const DeepCollectionEquality().equals(other._transformationPhotos, _transformationPhotos));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StorefrontProfileDto&&(identical(other.name, name) || other.name == name)&&(identical(other.username, username) || other.username == username)&&(identical(other.bio, bio) || other.bio == bio)&&(identical(other.philosophy, philosophy) || other.philosophy == philosophy)&&(identical(other.methodology, methodology) || other.methodology == methodology)&&const DeepCollectionEquality().equals(other._specialties, _specialties)&&(identical(other.certifications, certifications) || other.certifications == certifications)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.bannerUrl, bannerUrl) || other.bannerUrl == bannerUrl)&&const DeepCollectionEquality().equals(other._tags, _tags)&&const DeepCollectionEquality().equals(other._packages, _packages)&&const DeepCollectionEquality().equals(other._services, _services)&&const DeepCollectionEquality().equals(other._socialLinks, _socialLinks)&&const DeepCollectionEquality().equals(other._externalLinks, _externalLinks)&&const DeepCollectionEquality().equals(other._testimonials, _testimonials)&&const DeepCollectionEquality().equals(other._transformationPhotos, _transformationPhotos)&&(identical(other.averageRating, averageRating) || other.averageRating == averageRating)&&(identical(other.reviewCount, reviewCount) || other.reviewCount == reviewCount));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,username,bio,philosophy,methodology,specialties,certifications,qualifications,avatarUrl,bannerUrl,const DeepCollectionEquality().hash(_tags),const DeepCollectionEquality().hash(_packages),const DeepCollectionEquality().hash(_services),const DeepCollectionEquality().hash(_socialLinks),const DeepCollectionEquality().hash(_externalLinks),const DeepCollectionEquality().hash(_testimonials),const DeepCollectionEquality().hash(_transformationPhotos));
+int get hashCode => Object.hash(runtimeType,name,username,bio,philosophy,methodology,const DeepCollectionEquality().hash(_specialties),certifications,avatarUrl,bannerUrl,const DeepCollectionEquality().hash(_tags),const DeepCollectionEquality().hash(_packages),const DeepCollectionEquality().hash(_services),const DeepCollectionEquality().hash(_socialLinks),const DeepCollectionEquality().hash(_externalLinks),const DeepCollectionEquality().hash(_testimonials),const DeepCollectionEquality().hash(_transformationPhotos),averageRating,reviewCount);
 
 @override
 String toString() {
-  return 'StorefrontProfileDto(name: $name, username: $username, bio: $bio, philosophy: $philosophy, methodology: $methodology, specialties: $specialties, certifications: $certifications, qualifications: $qualifications, avatarUrl: $avatarUrl, bannerUrl: $bannerUrl, tags: $tags, packages: $packages, services: $services, socialLinks: $socialLinks, externalLinks: $externalLinks, testimonials: $testimonials, transformationPhotos: $transformationPhotos)';
+  return 'StorefrontProfileDto(name: $name, username: $username, bio: $bio, philosophy: $philosophy, methodology: $methodology, specialties: $specialties, certifications: $certifications, avatarUrl: $avatarUrl, bannerUrl: $bannerUrl, tags: $tags, packages: $packages, services: $services, socialLinks: $socialLinks, externalLinks: $externalLinks, testimonials: $testimonials, transformationPhotos: $transformationPhotos, averageRating: $averageRating, reviewCount: $reviewCount)';
 }
 
 
@@ -321,7 +329,7 @@ abstract mixin class _$StorefrontProfileDtoCopyWith<$Res> implements $Storefront
   factory _$StorefrontProfileDtoCopyWith(_StorefrontProfileDto value, $Res Function(_StorefrontProfileDto) _then) = __$StorefrontProfileDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String name, String? username, String? bio, String? philosophy, String? methodology, String? specialties, String? certifications, String? qualifications, String? avatarUrl, String? bannerUrl, List<String> tags, List<StorefrontPackageDto> packages, List<StorefrontServiceDto> services, List<StorefrontSocialLinkDto> socialLinks, List<StorefrontExternalLinkDto> externalLinks, List<StorefrontTestimonialDto> testimonials, List<StorefrontPhotoDto> transformationPhotos
+ String name, String? username, String? bio, String? philosophy, String? methodology, List<String> specialties, String? certifications, String? avatarUrl, String? bannerUrl, List<String> tags, List<StorefrontPackageDto> packages, List<StorefrontServiceDto> services, List<StorefrontSocialLinkDto> socialLinks, List<StorefrontExternalLinkDto> externalLinks, List<StorefrontTestimonialDto> testimonials, List<StorefrontPhotoDto> transformationPhotos, double? averageRating, int reviewCount
 });
 
 
@@ -338,16 +346,15 @@ class __$StorefrontProfileDtoCopyWithImpl<$Res>
 
 /// Create a copy of StorefrontProfileDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? username = freezed,Object? bio = freezed,Object? philosophy = freezed,Object? methodology = freezed,Object? specialties = freezed,Object? certifications = freezed,Object? qualifications = freezed,Object? avatarUrl = freezed,Object? bannerUrl = freezed,Object? tags = null,Object? packages = null,Object? services = null,Object? socialLinks = null,Object? externalLinks = null,Object? testimonials = null,Object? transformationPhotos = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? username = freezed,Object? bio = freezed,Object? philosophy = freezed,Object? methodology = freezed,Object? specialties = null,Object? certifications = freezed,Object? avatarUrl = freezed,Object? bannerUrl = freezed,Object? tags = null,Object? packages = null,Object? services = null,Object? socialLinks = null,Object? externalLinks = null,Object? testimonials = null,Object? transformationPhotos = null,Object? averageRating = freezed,Object? reviewCount = null,}) {
   return _then(_StorefrontProfileDto(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,username: freezed == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
 as String?,bio: freezed == bio ? _self.bio : bio // ignore: cast_nullable_to_non_nullable
 as String?,philosophy: freezed == philosophy ? _self.philosophy : philosophy // ignore: cast_nullable_to_non_nullable
 as String?,methodology: freezed == methodology ? _self.methodology : methodology // ignore: cast_nullable_to_non_nullable
-as String?,specialties: freezed == specialties ? _self.specialties : specialties // ignore: cast_nullable_to_non_nullable
-as String?,certifications: freezed == certifications ? _self.certifications : certifications // ignore: cast_nullable_to_non_nullable
-as String?,qualifications: freezed == qualifications ? _self.qualifications : qualifications // ignore: cast_nullable_to_non_nullable
+as String?,specialties: null == specialties ? _self._specialties : specialties // ignore: cast_nullable_to_non_nullable
+as List<String>,certifications: freezed == certifications ? _self.certifications : certifications // ignore: cast_nullable_to_non_nullable
 as String?,avatarUrl: freezed == avatarUrl ? _self.avatarUrl : avatarUrl // ignore: cast_nullable_to_non_nullable
 as String?,bannerUrl: freezed == bannerUrl ? _self.bannerUrl : bannerUrl // ignore: cast_nullable_to_non_nullable
 as String?,tags: null == tags ? _self._tags : tags // ignore: cast_nullable_to_non_nullable
@@ -357,7 +364,9 @@ as List<StorefrontServiceDto>,socialLinks: null == socialLinks ? _self._socialLi
 as List<StorefrontSocialLinkDto>,externalLinks: null == externalLinks ? _self._externalLinks : externalLinks // ignore: cast_nullable_to_non_nullable
 as List<StorefrontExternalLinkDto>,testimonials: null == testimonials ? _self._testimonials : testimonials // ignore: cast_nullable_to_non_nullable
 as List<StorefrontTestimonialDto>,transformationPhotos: null == transformationPhotos ? _self._transformationPhotos : transformationPhotos // ignore: cast_nullable_to_non_nullable
-as List<StorefrontPhotoDto>,
+as List<StorefrontPhotoDto>,averageRating: freezed == averageRating ? _self.averageRating : averageRating // ignore: cast_nullable_to_non_nullable
+as double?,reviewCount: null == reviewCount ? _self.reviewCount : reviewCount // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 
@@ -368,7 +377,7 @@ as List<StorefrontPhotoDto>,
 /// @nodoc
 mixin _$StorefrontPackageDto {
 
- String get id; String get name; String? get description; String get price; String? get duration; List<String> get features;
+ String get id; String get name; String? get description; String get price;@JsonKey(name: 'numberOfSessions') int? get duration;
 /// Create a copy of StorefrontPackageDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -381,16 +390,16 @@ $StorefrontPackageDtoCopyWith<StorefrontPackageDto> get copyWith => _$Storefront
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StorefrontPackageDto&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.price, price) || other.price == price)&&(identical(other.duration, duration) || other.duration == duration)&&const DeepCollectionEquality().equals(other.features, features));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StorefrontPackageDto&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.price, price) || other.price == price)&&(identical(other.duration, duration) || other.duration == duration));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,description,price,duration,const DeepCollectionEquality().hash(features));
+int get hashCode => Object.hash(runtimeType,id,name,description,price,duration);
 
 @override
 String toString() {
-  return 'StorefrontPackageDto(id: $id, name: $name, description: $description, price: $price, duration: $duration, features: $features)';
+  return 'StorefrontPackageDto(id: $id, name: $name, description: $description, price: $price, duration: $duration)';
 }
 
 
@@ -401,7 +410,7 @@ abstract mixin class $StorefrontPackageDtoCopyWith<$Res>  {
   factory $StorefrontPackageDtoCopyWith(StorefrontPackageDto value, $Res Function(StorefrontPackageDto) _then) = _$StorefrontPackageDtoCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String? description, String price, String? duration, List<String> features
+ String id, String name, String? description, String price,@JsonKey(name: 'numberOfSessions') int? duration
 });
 
 
@@ -418,15 +427,14 @@ class _$StorefrontPackageDtoCopyWithImpl<$Res>
 
 /// Create a copy of StorefrontPackageDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? description = freezed,Object? price = null,Object? duration = freezed,Object? features = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? description = freezed,Object? price = null,Object? duration = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,price: null == price ? _self.price : price // ignore: cast_nullable_to_non_nullable
 as String,duration: freezed == duration ? _self.duration : duration // ignore: cast_nullable_to_non_nullable
-as String?,features: null == features ? _self.features : features // ignore: cast_nullable_to_non_nullable
-as List<String>,
+as int?,
   ));
 }
 
@@ -511,10 +519,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String? description,  String price,  String? duration,  List<String> features)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String? description,  String price, @JsonKey(name: 'numberOfSessions')  int? duration)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StorefrontPackageDto() when $default != null:
-return $default(_that.id,_that.name,_that.description,_that.price,_that.duration,_that.features);case _:
+return $default(_that.id,_that.name,_that.description,_that.price,_that.duration);case _:
   return orElse();
 
 }
@@ -532,10 +540,10 @@ return $default(_that.id,_that.name,_that.description,_that.price,_that.duration
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String? description,  String price,  String? duration,  List<String> features)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String? description,  String price, @JsonKey(name: 'numberOfSessions')  int? duration)  $default,) {final _that = this;
 switch (_that) {
 case _StorefrontPackageDto():
-return $default(_that.id,_that.name,_that.description,_that.price,_that.duration,_that.features);case _:
+return $default(_that.id,_that.name,_that.description,_that.price,_that.duration);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -552,10 +560,10 @@ return $default(_that.id,_that.name,_that.description,_that.price,_that.duration
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String? description,  String price,  String? duration,  List<String> features)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String? description,  String price, @JsonKey(name: 'numberOfSessions')  int? duration)?  $default,) {final _that = this;
 switch (_that) {
 case _StorefrontPackageDto() when $default != null:
-return $default(_that.id,_that.name,_that.description,_that.price,_that.duration,_that.features);case _:
+return $default(_that.id,_that.name,_that.description,_that.price,_that.duration);case _:
   return null;
 
 }
@@ -567,21 +575,14 @@ return $default(_that.id,_that.name,_that.description,_that.price,_that.duration
 @JsonSerializable()
 
 class _StorefrontPackageDto implements StorefrontPackageDto {
-  const _StorefrontPackageDto({required this.id, required this.name, this.description, required this.price, this.duration, final  List<String> features = const []}): _features = features;
+  const _StorefrontPackageDto({required this.id, required this.name, this.description, required this.price, @JsonKey(name: 'numberOfSessions') this.duration});
   factory _StorefrontPackageDto.fromJson(Map<String, dynamic> json) => _$StorefrontPackageDtoFromJson(json);
 
 @override final  String id;
 @override final  String name;
 @override final  String? description;
 @override final  String price;
-@override final  String? duration;
- final  List<String> _features;
-@override@JsonKey() List<String> get features {
-  if (_features is EqualUnmodifiableListView) return _features;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_features);
-}
-
+@override@JsonKey(name: 'numberOfSessions') final  int? duration;
 
 /// Create a copy of StorefrontPackageDto
 /// with the given fields replaced by the non-null parameter values.
@@ -596,16 +597,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StorefrontPackageDto&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.price, price) || other.price == price)&&(identical(other.duration, duration) || other.duration == duration)&&const DeepCollectionEquality().equals(other._features, _features));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StorefrontPackageDto&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.price, price) || other.price == price)&&(identical(other.duration, duration) || other.duration == duration));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,description,price,duration,const DeepCollectionEquality().hash(_features));
+int get hashCode => Object.hash(runtimeType,id,name,description,price,duration);
 
 @override
 String toString() {
-  return 'StorefrontPackageDto(id: $id, name: $name, description: $description, price: $price, duration: $duration, features: $features)';
+  return 'StorefrontPackageDto(id: $id, name: $name, description: $description, price: $price, duration: $duration)';
 }
 
 
@@ -616,7 +617,7 @@ abstract mixin class _$StorefrontPackageDtoCopyWith<$Res> implements $Storefront
   factory _$StorefrontPackageDtoCopyWith(_StorefrontPackageDto value, $Res Function(_StorefrontPackageDto) _then) = __$StorefrontPackageDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String? description, String price, String? duration, List<String> features
+ String id, String name, String? description, String price,@JsonKey(name: 'numberOfSessions') int? duration
 });
 
 
@@ -633,15 +634,14 @@ class __$StorefrontPackageDtoCopyWithImpl<$Res>
 
 /// Create a copy of StorefrontPackageDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? description = freezed,Object? price = null,Object? duration = freezed,Object? features = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? description = freezed,Object? price = null,Object? duration = freezed,}) {
   return _then(_StorefrontPackageDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,price: null == price ? _self.price : price // ignore: cast_nullable_to_non_nullable
 as String,duration: freezed == duration ? _self.duration : duration // ignore: cast_nullable_to_non_nullable
-as String?,features: null == features ? _self._features : features // ignore: cast_nullable_to_non_nullable
-as List<String>,
+as int?,
   ));
 }
 
@@ -652,7 +652,7 @@ as List<String>,
 /// @nodoc
 mixin _$StorefrontServiceDto {
 
- String get id; String get name; String? get description; String? get price;
+ String get id;@JsonKey(name: 'title') String get name; String? get description; String? get price;
 /// Create a copy of StorefrontServiceDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -685,7 +685,7 @@ abstract mixin class $StorefrontServiceDtoCopyWith<$Res>  {
   factory $StorefrontServiceDtoCopyWith(StorefrontServiceDto value, $Res Function(StorefrontServiceDto) _then) = _$StorefrontServiceDtoCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String? description, String? price
+ String id,@JsonKey(name: 'title') String name, String? description, String? price
 });
 
 
@@ -793,7 +793,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String? description,  String? price)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'title')  String name,  String? description,  String? price)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StorefrontServiceDto() when $default != null:
 return $default(_that.id,_that.name,_that.description,_that.price);case _:
@@ -814,7 +814,7 @@ return $default(_that.id,_that.name,_that.description,_that.price);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String? description,  String? price)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'title')  String name,  String? description,  String? price)  $default,) {final _that = this;
 switch (_that) {
 case _StorefrontServiceDto():
 return $default(_that.id,_that.name,_that.description,_that.price);case _:
@@ -834,7 +834,7 @@ return $default(_that.id,_that.name,_that.description,_that.price);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String? description,  String? price)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'title')  String name,  String? description,  String? price)?  $default,) {final _that = this;
 switch (_that) {
 case _StorefrontServiceDto() when $default != null:
 return $default(_that.id,_that.name,_that.description,_that.price);case _:
@@ -849,11 +849,11 @@ return $default(_that.id,_that.name,_that.description,_that.price);case _:
 @JsonSerializable()
 
 class _StorefrontServiceDto implements StorefrontServiceDto {
-  const _StorefrontServiceDto({required this.id, required this.name, this.description, this.price});
+  const _StorefrontServiceDto({required this.id, @JsonKey(name: 'title') required this.name, this.description, this.price});
   factory _StorefrontServiceDto.fromJson(Map<String, dynamic> json) => _$StorefrontServiceDtoFromJson(json);
 
 @override final  String id;
-@override final  String name;
+@override@JsonKey(name: 'title') final  String name;
 @override final  String? description;
 @override final  String? price;
 
@@ -890,7 +890,7 @@ abstract mixin class _$StorefrontServiceDtoCopyWith<$Res> implements $Storefront
   factory _$StorefrontServiceDtoCopyWith(_StorefrontServiceDto value, $Res Function(_StorefrontServiceDto) _then) = __$StorefrontServiceDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String? description, String? price
+ String id,@JsonKey(name: 'title') String name, String? description, String? price
 });
 
 
@@ -924,7 +924,7 @@ as String?,
 /// @nodoc
 mixin _$StorefrontSocialLinkDto {
 
- String get platform; String get url;
+ String get id; String get platform; String get url;
 /// Create a copy of StorefrontSocialLinkDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -937,16 +937,16 @@ $StorefrontSocialLinkDtoCopyWith<StorefrontSocialLinkDto> get copyWith => _$Stor
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StorefrontSocialLinkDto&&(identical(other.platform, platform) || other.platform == platform)&&(identical(other.url, url) || other.url == url));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StorefrontSocialLinkDto&&(identical(other.id, id) || other.id == id)&&(identical(other.platform, platform) || other.platform == platform)&&(identical(other.url, url) || other.url == url));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,platform,url);
+int get hashCode => Object.hash(runtimeType,id,platform,url);
 
 @override
 String toString() {
-  return 'StorefrontSocialLinkDto(platform: $platform, url: $url)';
+  return 'StorefrontSocialLinkDto(id: $id, platform: $platform, url: $url)';
 }
 
 
@@ -957,7 +957,7 @@ abstract mixin class $StorefrontSocialLinkDtoCopyWith<$Res>  {
   factory $StorefrontSocialLinkDtoCopyWith(StorefrontSocialLinkDto value, $Res Function(StorefrontSocialLinkDto) _then) = _$StorefrontSocialLinkDtoCopyWithImpl;
 @useResult
 $Res call({
- String platform, String url
+ String id, String platform, String url
 });
 
 
@@ -974,9 +974,10 @@ class _$StorefrontSocialLinkDtoCopyWithImpl<$Res>
 
 /// Create a copy of StorefrontSocialLinkDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? platform = null,Object? url = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? platform = null,Object? url = null,}) {
   return _then(_self.copyWith(
-platform: null == platform ? _self.platform : platform // ignore: cast_nullable_to_non_nullable
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,platform: null == platform ? _self.platform : platform // ignore: cast_nullable_to_non_nullable
 as String,url: null == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
 as String,
   ));
@@ -1063,10 +1064,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String platform,  String url)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String platform,  String url)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StorefrontSocialLinkDto() when $default != null:
-return $default(_that.platform,_that.url);case _:
+return $default(_that.id,_that.platform,_that.url);case _:
   return orElse();
 
 }
@@ -1084,10 +1085,10 @@ return $default(_that.platform,_that.url);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String platform,  String url)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String platform,  String url)  $default,) {final _that = this;
 switch (_that) {
 case _StorefrontSocialLinkDto():
-return $default(_that.platform,_that.url);case _:
+return $default(_that.id,_that.platform,_that.url);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1104,10 +1105,10 @@ return $default(_that.platform,_that.url);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String platform,  String url)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String platform,  String url)?  $default,) {final _that = this;
 switch (_that) {
 case _StorefrontSocialLinkDto() when $default != null:
-return $default(_that.platform,_that.url);case _:
+return $default(_that.id,_that.platform,_that.url);case _:
   return null;
 
 }
@@ -1119,9 +1120,10 @@ return $default(_that.platform,_that.url);case _:
 @JsonSerializable()
 
 class _StorefrontSocialLinkDto implements StorefrontSocialLinkDto {
-  const _StorefrontSocialLinkDto({required this.platform, required this.url});
+  const _StorefrontSocialLinkDto({required this.id, required this.platform, required this.url});
   factory _StorefrontSocialLinkDto.fromJson(Map<String, dynamic> json) => _$StorefrontSocialLinkDtoFromJson(json);
 
+@override final  String id;
 @override final  String platform;
 @override final  String url;
 
@@ -1138,16 +1140,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StorefrontSocialLinkDto&&(identical(other.platform, platform) || other.platform == platform)&&(identical(other.url, url) || other.url == url));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StorefrontSocialLinkDto&&(identical(other.id, id) || other.id == id)&&(identical(other.platform, platform) || other.platform == platform)&&(identical(other.url, url) || other.url == url));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,platform,url);
+int get hashCode => Object.hash(runtimeType,id,platform,url);
 
 @override
 String toString() {
-  return 'StorefrontSocialLinkDto(platform: $platform, url: $url)';
+  return 'StorefrontSocialLinkDto(id: $id, platform: $platform, url: $url)';
 }
 
 
@@ -1158,7 +1160,7 @@ abstract mixin class _$StorefrontSocialLinkDtoCopyWith<$Res> implements $Storefr
   factory _$StorefrontSocialLinkDtoCopyWith(_StorefrontSocialLinkDto value, $Res Function(_StorefrontSocialLinkDto) _then) = __$StorefrontSocialLinkDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String platform, String url
+ String id, String platform, String url
 });
 
 
@@ -1175,9 +1177,10 @@ class __$StorefrontSocialLinkDtoCopyWithImpl<$Res>
 
 /// Create a copy of StorefrontSocialLinkDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? platform = null,Object? url = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? platform = null,Object? url = null,}) {
   return _then(_StorefrontSocialLinkDto(
-platform: null == platform ? _self.platform : platform // ignore: cast_nullable_to_non_nullable
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,platform: null == platform ? _self.platform : platform // ignore: cast_nullable_to_non_nullable
 as String,url: null == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
 as String,
   ));
@@ -1190,7 +1193,7 @@ as String,
 /// @nodoc
 mixin _$StorefrontExternalLinkDto {
 
- String get label; String get url;
+ String get id; String get label; String get url;
 /// Create a copy of StorefrontExternalLinkDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1203,16 +1206,16 @@ $StorefrontExternalLinkDtoCopyWith<StorefrontExternalLinkDto> get copyWith => _$
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StorefrontExternalLinkDto&&(identical(other.label, label) || other.label == label)&&(identical(other.url, url) || other.url == url));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StorefrontExternalLinkDto&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.url, url) || other.url == url));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,label,url);
+int get hashCode => Object.hash(runtimeType,id,label,url);
 
 @override
 String toString() {
-  return 'StorefrontExternalLinkDto(label: $label, url: $url)';
+  return 'StorefrontExternalLinkDto(id: $id, label: $label, url: $url)';
 }
 
 
@@ -1223,7 +1226,7 @@ abstract mixin class $StorefrontExternalLinkDtoCopyWith<$Res>  {
   factory $StorefrontExternalLinkDtoCopyWith(StorefrontExternalLinkDto value, $Res Function(StorefrontExternalLinkDto) _then) = _$StorefrontExternalLinkDtoCopyWithImpl;
 @useResult
 $Res call({
- String label, String url
+ String id, String label, String url
 });
 
 
@@ -1240,9 +1243,10 @@ class _$StorefrontExternalLinkDtoCopyWithImpl<$Res>
 
 /// Create a copy of StorefrontExternalLinkDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? label = null,Object? url = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? label = null,Object? url = null,}) {
   return _then(_self.copyWith(
-label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,url: null == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
 as String,
   ));
@@ -1329,10 +1333,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String label,  String url)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String label,  String url)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StorefrontExternalLinkDto() when $default != null:
-return $default(_that.label,_that.url);case _:
+return $default(_that.id,_that.label,_that.url);case _:
   return orElse();
 
 }
@@ -1350,10 +1354,10 @@ return $default(_that.label,_that.url);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String label,  String url)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String label,  String url)  $default,) {final _that = this;
 switch (_that) {
 case _StorefrontExternalLinkDto():
-return $default(_that.label,_that.url);case _:
+return $default(_that.id,_that.label,_that.url);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1370,10 +1374,10 @@ return $default(_that.label,_that.url);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String label,  String url)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String label,  String url)?  $default,) {final _that = this;
 switch (_that) {
 case _StorefrontExternalLinkDto() when $default != null:
-return $default(_that.label,_that.url);case _:
+return $default(_that.id,_that.label,_that.url);case _:
   return null;
 
 }
@@ -1385,9 +1389,10 @@ return $default(_that.label,_that.url);case _:
 @JsonSerializable()
 
 class _StorefrontExternalLinkDto implements StorefrontExternalLinkDto {
-  const _StorefrontExternalLinkDto({required this.label, required this.url});
+  const _StorefrontExternalLinkDto({required this.id, required this.label, required this.url});
   factory _StorefrontExternalLinkDto.fromJson(Map<String, dynamic> json) => _$StorefrontExternalLinkDtoFromJson(json);
 
+@override final  String id;
 @override final  String label;
 @override final  String url;
 
@@ -1404,16 +1409,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StorefrontExternalLinkDto&&(identical(other.label, label) || other.label == label)&&(identical(other.url, url) || other.url == url));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StorefrontExternalLinkDto&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.url, url) || other.url == url));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,label,url);
+int get hashCode => Object.hash(runtimeType,id,label,url);
 
 @override
 String toString() {
-  return 'StorefrontExternalLinkDto(label: $label, url: $url)';
+  return 'StorefrontExternalLinkDto(id: $id, label: $label, url: $url)';
 }
 
 
@@ -1424,7 +1429,7 @@ abstract mixin class _$StorefrontExternalLinkDtoCopyWith<$Res> implements $Store
   factory _$StorefrontExternalLinkDtoCopyWith(_StorefrontExternalLinkDto value, $Res Function(_StorefrontExternalLinkDto) _then) = __$StorefrontExternalLinkDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String label, String url
+ String id, String label, String url
 });
 
 
@@ -1441,9 +1446,10 @@ class __$StorefrontExternalLinkDtoCopyWithImpl<$Res>
 
 /// Create a copy of StorefrontExternalLinkDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? label = null,Object? url = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? label = null,Object? url = null,}) {
   return _then(_StorefrontExternalLinkDto(
-label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,url: null == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
 as String,
   ));
@@ -1456,7 +1462,7 @@ as String,
 /// @nodoc
 mixin _$StorefrontTestimonialDto {
 
- String get id; String get clientName; String? get clientAvatarUrl; String get text; double? get rating; String? get date;
+ String get id; String get clientName;@JsonKey(name: 'testimonialText') String get text; double? get rating;@JsonKey(name: 'createdAt') String? get date;
 /// Create a copy of StorefrontTestimonialDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1469,16 +1475,16 @@ $StorefrontTestimonialDtoCopyWith<StorefrontTestimonialDto> get copyWith => _$St
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StorefrontTestimonialDto&&(identical(other.id, id) || other.id == id)&&(identical(other.clientName, clientName) || other.clientName == clientName)&&(identical(other.clientAvatarUrl, clientAvatarUrl) || other.clientAvatarUrl == clientAvatarUrl)&&(identical(other.text, text) || other.text == text)&&(identical(other.rating, rating) || other.rating == rating)&&(identical(other.date, date) || other.date == date));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StorefrontTestimonialDto&&(identical(other.id, id) || other.id == id)&&(identical(other.clientName, clientName) || other.clientName == clientName)&&(identical(other.text, text) || other.text == text)&&(identical(other.rating, rating) || other.rating == rating)&&(identical(other.date, date) || other.date == date));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,clientName,clientAvatarUrl,text,rating,date);
+int get hashCode => Object.hash(runtimeType,id,clientName,text,rating,date);
 
 @override
 String toString() {
-  return 'StorefrontTestimonialDto(id: $id, clientName: $clientName, clientAvatarUrl: $clientAvatarUrl, text: $text, rating: $rating, date: $date)';
+  return 'StorefrontTestimonialDto(id: $id, clientName: $clientName, text: $text, rating: $rating, date: $date)';
 }
 
 
@@ -1489,7 +1495,7 @@ abstract mixin class $StorefrontTestimonialDtoCopyWith<$Res>  {
   factory $StorefrontTestimonialDtoCopyWith(StorefrontTestimonialDto value, $Res Function(StorefrontTestimonialDto) _then) = _$StorefrontTestimonialDtoCopyWithImpl;
 @useResult
 $Res call({
- String id, String clientName, String? clientAvatarUrl, String text, double? rating, String? date
+ String id, String clientName,@JsonKey(name: 'testimonialText') String text, double? rating,@JsonKey(name: 'createdAt') String? date
 });
 
 
@@ -1506,12 +1512,11 @@ class _$StorefrontTestimonialDtoCopyWithImpl<$Res>
 
 /// Create a copy of StorefrontTestimonialDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? clientName = null,Object? clientAvatarUrl = freezed,Object? text = null,Object? rating = freezed,Object? date = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? clientName = null,Object? text = null,Object? rating = freezed,Object? date = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,clientName: null == clientName ? _self.clientName : clientName // ignore: cast_nullable_to_non_nullable
-as String,clientAvatarUrl: freezed == clientAvatarUrl ? _self.clientAvatarUrl : clientAvatarUrl // ignore: cast_nullable_to_non_nullable
-as String?,text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
+as String,text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
 as String,rating: freezed == rating ? _self.rating : rating // ignore: cast_nullable_to_non_nullable
 as double?,date: freezed == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
 as String?,
@@ -1599,10 +1604,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String clientName,  String? clientAvatarUrl,  String text,  double? rating,  String? date)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String clientName, @JsonKey(name: 'testimonialText')  String text,  double? rating, @JsonKey(name: 'createdAt')  String? date)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StorefrontTestimonialDto() when $default != null:
-return $default(_that.id,_that.clientName,_that.clientAvatarUrl,_that.text,_that.rating,_that.date);case _:
+return $default(_that.id,_that.clientName,_that.text,_that.rating,_that.date);case _:
   return orElse();
 
 }
@@ -1620,10 +1625,10 @@ return $default(_that.id,_that.clientName,_that.clientAvatarUrl,_that.text,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String clientName,  String? clientAvatarUrl,  String text,  double? rating,  String? date)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String clientName, @JsonKey(name: 'testimonialText')  String text,  double? rating, @JsonKey(name: 'createdAt')  String? date)  $default,) {final _that = this;
 switch (_that) {
 case _StorefrontTestimonialDto():
-return $default(_that.id,_that.clientName,_that.clientAvatarUrl,_that.text,_that.rating,_that.date);case _:
+return $default(_that.id,_that.clientName,_that.text,_that.rating,_that.date);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1640,10 +1645,10 @@ return $default(_that.id,_that.clientName,_that.clientAvatarUrl,_that.text,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String clientName,  String? clientAvatarUrl,  String text,  double? rating,  String? date)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String clientName, @JsonKey(name: 'testimonialText')  String text,  double? rating, @JsonKey(name: 'createdAt')  String? date)?  $default,) {final _that = this;
 switch (_that) {
 case _StorefrontTestimonialDto() when $default != null:
-return $default(_that.id,_that.clientName,_that.clientAvatarUrl,_that.text,_that.rating,_that.date);case _:
+return $default(_that.id,_that.clientName,_that.text,_that.rating,_that.date);case _:
   return null;
 
 }
@@ -1655,15 +1660,14 @@ return $default(_that.id,_that.clientName,_that.clientAvatarUrl,_that.text,_that
 @JsonSerializable()
 
 class _StorefrontTestimonialDto implements StorefrontTestimonialDto {
-  const _StorefrontTestimonialDto({required this.id, required this.clientName, this.clientAvatarUrl, required this.text, this.rating, this.date});
+  const _StorefrontTestimonialDto({required this.id, required this.clientName, @JsonKey(name: 'testimonialText') required this.text, this.rating, @JsonKey(name: 'createdAt') this.date});
   factory _StorefrontTestimonialDto.fromJson(Map<String, dynamic> json) => _$StorefrontTestimonialDtoFromJson(json);
 
 @override final  String id;
 @override final  String clientName;
-@override final  String? clientAvatarUrl;
-@override final  String text;
+@override@JsonKey(name: 'testimonialText') final  String text;
 @override final  double? rating;
-@override final  String? date;
+@override@JsonKey(name: 'createdAt') final  String? date;
 
 /// Create a copy of StorefrontTestimonialDto
 /// with the given fields replaced by the non-null parameter values.
@@ -1678,16 +1682,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StorefrontTestimonialDto&&(identical(other.id, id) || other.id == id)&&(identical(other.clientName, clientName) || other.clientName == clientName)&&(identical(other.clientAvatarUrl, clientAvatarUrl) || other.clientAvatarUrl == clientAvatarUrl)&&(identical(other.text, text) || other.text == text)&&(identical(other.rating, rating) || other.rating == rating)&&(identical(other.date, date) || other.date == date));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StorefrontTestimonialDto&&(identical(other.id, id) || other.id == id)&&(identical(other.clientName, clientName) || other.clientName == clientName)&&(identical(other.text, text) || other.text == text)&&(identical(other.rating, rating) || other.rating == rating)&&(identical(other.date, date) || other.date == date));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,clientName,clientAvatarUrl,text,rating,date);
+int get hashCode => Object.hash(runtimeType,id,clientName,text,rating,date);
 
 @override
 String toString() {
-  return 'StorefrontTestimonialDto(id: $id, clientName: $clientName, clientAvatarUrl: $clientAvatarUrl, text: $text, rating: $rating, date: $date)';
+  return 'StorefrontTestimonialDto(id: $id, clientName: $clientName, text: $text, rating: $rating, date: $date)';
 }
 
 
@@ -1698,7 +1702,7 @@ abstract mixin class _$StorefrontTestimonialDtoCopyWith<$Res> implements $Storef
   factory _$StorefrontTestimonialDtoCopyWith(_StorefrontTestimonialDto value, $Res Function(_StorefrontTestimonialDto) _then) = __$StorefrontTestimonialDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String clientName, String? clientAvatarUrl, String text, double? rating, String? date
+ String id, String clientName,@JsonKey(name: 'testimonialText') String text, double? rating,@JsonKey(name: 'createdAt') String? date
 });
 
 
@@ -1715,12 +1719,11 @@ class __$StorefrontTestimonialDtoCopyWithImpl<$Res>
 
 /// Create a copy of StorefrontTestimonialDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? clientName = null,Object? clientAvatarUrl = freezed,Object? text = null,Object? rating = freezed,Object? date = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? clientName = null,Object? text = null,Object? rating = freezed,Object? date = freezed,}) {
   return _then(_StorefrontTestimonialDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,clientName: null == clientName ? _self.clientName : clientName // ignore: cast_nullable_to_non_nullable
-as String,clientAvatarUrl: freezed == clientAvatarUrl ? _self.clientAvatarUrl : clientAvatarUrl // ignore: cast_nullable_to_non_nullable
-as String?,text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
+as String,text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
 as String,rating: freezed == rating ? _self.rating : rating // ignore: cast_nullable_to_non_nullable
 as double?,date: freezed == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
 as String?,
@@ -1734,7 +1737,7 @@ as String?,
 /// @nodoc
 mixin _$StorefrontPhotoDto {
 
- String get id; String get url; String? get caption;
+ String get id;@JsonKey(name: 'publicUrl') String get url; String? get caption;
 /// Create a copy of StorefrontPhotoDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1767,7 +1770,7 @@ abstract mixin class $StorefrontPhotoDtoCopyWith<$Res>  {
   factory $StorefrontPhotoDtoCopyWith(StorefrontPhotoDto value, $Res Function(StorefrontPhotoDto) _then) = _$StorefrontPhotoDtoCopyWithImpl;
 @useResult
 $Res call({
- String id, String url, String? caption
+ String id,@JsonKey(name: 'publicUrl') String url, String? caption
 });
 
 
@@ -1874,7 +1877,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String url,  String? caption)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'publicUrl')  String url,  String? caption)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StorefrontPhotoDto() when $default != null:
 return $default(_that.id,_that.url,_that.caption);case _:
@@ -1895,7 +1898,7 @@ return $default(_that.id,_that.url,_that.caption);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String url,  String? caption)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'publicUrl')  String url,  String? caption)  $default,) {final _that = this;
 switch (_that) {
 case _StorefrontPhotoDto():
 return $default(_that.id,_that.url,_that.caption);case _:
@@ -1915,7 +1918,7 @@ return $default(_that.id,_that.url,_that.caption);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String url,  String? caption)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'publicUrl')  String url,  String? caption)?  $default,) {final _that = this;
 switch (_that) {
 case _StorefrontPhotoDto() when $default != null:
 return $default(_that.id,_that.url,_that.caption);case _:
@@ -1930,11 +1933,11 @@ return $default(_that.id,_that.url,_that.caption);case _:
 @JsonSerializable()
 
 class _StorefrontPhotoDto implements StorefrontPhotoDto {
-  const _StorefrontPhotoDto({required this.id, required this.url, this.caption});
+  const _StorefrontPhotoDto({required this.id, @JsonKey(name: 'publicUrl') required this.url, this.caption});
   factory _StorefrontPhotoDto.fromJson(Map<String, dynamic> json) => _$StorefrontPhotoDtoFromJson(json);
 
 @override final  String id;
-@override final  String url;
+@override@JsonKey(name: 'publicUrl') final  String url;
 @override final  String? caption;
 
 /// Create a copy of StorefrontPhotoDto
@@ -1970,7 +1973,7 @@ abstract mixin class _$StorefrontPhotoDtoCopyWith<$Res> implements $StorefrontPh
   factory _$StorefrontPhotoDtoCopyWith(_StorefrontPhotoDto value, $Res Function(_StorefrontPhotoDto) _then) = __$StorefrontPhotoDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String url, String? caption
+ String id,@JsonKey(name: 'publicUrl') String url, String? caption
 });
 
 

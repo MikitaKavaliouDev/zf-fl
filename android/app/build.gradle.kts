@@ -52,6 +52,10 @@ kotlin {
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     androidTestUtil("androidx.test:orchestrator:1.5.1")
+    // Reference patrol classes.jar as a file dep so it gets DEX'd by the project DEX builder
+    androidTestImplementation(files("${rootProject.projectDir}/../build/patrol/intermediates/runtime_library_classes_jar/debug/bundleLibRuntimeToJarDebug/classes.jar") {
+        builtBy(":patrol:bundleLibRuntimeToJarDebug")
+    })
 }
 
 flutter {

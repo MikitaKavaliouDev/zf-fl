@@ -14,9 +14,12 @@ _StorefrontProfileDto _$StorefrontProfileDtoFromJson(
   bio: json['bio'] as String?,
   philosophy: json['philosophy'] as String?,
   methodology: json['methodology'] as String?,
-  specialties: json['specialties'] as String?,
+  specialties:
+      (json['specialties'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const [],
   certifications: json['certifications'] as String?,
-  qualifications: json['qualifications'] as String?,
   avatarUrl: json['avatarUrl'] as String?,
   bannerUrl: json['bannerUrl'] as String?,
   tags:
@@ -59,6 +62,8 @@ _StorefrontProfileDto _$StorefrontProfileDtoFromJson(
           ?.map((e) => StorefrontPhotoDto.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const [],
+  averageRating: (json['averageRating'] as num?)?.toDouble(),
+  reviewCount: (json['reviewCount'] as num?)?.toInt() ?? 0,
 );
 
 Map<String, dynamic> _$StorefrontProfileDtoToJson(
@@ -71,7 +76,6 @@ Map<String, dynamic> _$StorefrontProfileDtoToJson(
   'methodology': instance.methodology,
   'specialties': instance.specialties,
   'certifications': instance.certifications,
-  'qualifications': instance.qualifications,
   'avatarUrl': instance.avatarUrl,
   'bannerUrl': instance.bannerUrl,
   'tags': instance.tags,
@@ -81,6 +85,8 @@ Map<String, dynamic> _$StorefrontProfileDtoToJson(
   'externalLinks': instance.externalLinks,
   'testimonials': instance.testimonials,
   'transformationPhotos': instance.transformationPhotos,
+  'averageRating': instance.averageRating,
+  'reviewCount': instance.reviewCount,
 };
 
 _StorefrontPackageDto _$StorefrontPackageDtoFromJson(
@@ -90,10 +96,7 @@ _StorefrontPackageDto _$StorefrontPackageDtoFromJson(
   name: json['name'] as String,
   description: json['description'] as String?,
   price: json['price'] as String,
-  duration: json['duration'] as String?,
-  features:
-      (json['features'] as List<dynamic>?)?.map((e) => e as String).toList() ??
-      const [],
+  duration: (json['numberOfSessions'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$StorefrontPackageDtoToJson(
@@ -103,15 +106,14 @@ Map<String, dynamic> _$StorefrontPackageDtoToJson(
   'name': instance.name,
   'description': instance.description,
   'price': instance.price,
-  'duration': instance.duration,
-  'features': instance.features,
+  'numberOfSessions': instance.duration,
 };
 
 _StorefrontServiceDto _$StorefrontServiceDtoFromJson(
   Map<String, dynamic> json,
 ) => _StorefrontServiceDto(
   id: json['id'] as String,
-  name: json['name'] as String,
+  name: json['title'] as String,
   description: json['description'] as String?,
   price: json['price'] as String?,
 );
@@ -120,7 +122,7 @@ Map<String, dynamic> _$StorefrontServiceDtoToJson(
   _StorefrontServiceDto instance,
 ) => <String, dynamic>{
   'id': instance.id,
-  'name': instance.name,
+  'title': instance.name,
   'description': instance.description,
   'price': instance.price,
 };
@@ -128,34 +130,43 @@ Map<String, dynamic> _$StorefrontServiceDtoToJson(
 _StorefrontSocialLinkDto _$StorefrontSocialLinkDtoFromJson(
   Map<String, dynamic> json,
 ) => _StorefrontSocialLinkDto(
+  id: json['id'] as String,
   platform: json['platform'] as String,
   url: json['url'] as String,
 );
 
 Map<String, dynamic> _$StorefrontSocialLinkDtoToJson(
   _StorefrontSocialLinkDto instance,
-) => <String, dynamic>{'platform': instance.platform, 'url': instance.url};
+) => <String, dynamic>{
+  'id': instance.id,
+  'platform': instance.platform,
+  'url': instance.url,
+};
 
 _StorefrontExternalLinkDto _$StorefrontExternalLinkDtoFromJson(
   Map<String, dynamic> json,
 ) => _StorefrontExternalLinkDto(
+  id: json['id'] as String,
   label: json['label'] as String,
   url: json['url'] as String,
 );
 
 Map<String, dynamic> _$StorefrontExternalLinkDtoToJson(
   _StorefrontExternalLinkDto instance,
-) => <String, dynamic>{'label': instance.label, 'url': instance.url};
+) => <String, dynamic>{
+  'id': instance.id,
+  'label': instance.label,
+  'url': instance.url,
+};
 
 _StorefrontTestimonialDto _$StorefrontTestimonialDtoFromJson(
   Map<String, dynamic> json,
 ) => _StorefrontTestimonialDto(
   id: json['id'] as String,
   clientName: json['clientName'] as String,
-  clientAvatarUrl: json['clientAvatarUrl'] as String?,
-  text: json['text'] as String,
+  text: json['testimonialText'] as String,
   rating: (json['rating'] as num?)?.toDouble(),
-  date: json['date'] as String?,
+  date: json['createdAt'] as String?,
 );
 
 Map<String, dynamic> _$StorefrontTestimonialDtoToJson(
@@ -163,22 +174,21 @@ Map<String, dynamic> _$StorefrontTestimonialDtoToJson(
 ) => <String, dynamic>{
   'id': instance.id,
   'clientName': instance.clientName,
-  'clientAvatarUrl': instance.clientAvatarUrl,
-  'text': instance.text,
+  'testimonialText': instance.text,
   'rating': instance.rating,
-  'date': instance.date,
+  'createdAt': instance.date,
 };
 
 _StorefrontPhotoDto _$StorefrontPhotoDtoFromJson(Map<String, dynamic> json) =>
     _StorefrontPhotoDto(
       id: json['id'] as String,
-      url: json['url'] as String,
+      url: json['publicUrl'] as String,
       caption: json['caption'] as String?,
     );
 
 Map<String, dynamic> _$StorefrontPhotoDtoToJson(_StorefrontPhotoDto instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'url': instance.url,
+      'publicUrl': instance.url,
       'caption': instance.caption,
     };

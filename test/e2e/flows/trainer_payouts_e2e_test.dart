@@ -5,6 +5,7 @@ library;
 // Requires: running backend (../zirofit-next) and connected device/emulator
 // Run: patrol test --target test/e2e/flows/trainer_payouts_e2e_test.dart
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:patrol/patrol.dart';
 
@@ -35,9 +36,14 @@ void main() {
       expect(find.text('Stripe Connect'), findsOneWidget);
 
       // One of the status texts should appear
-      final connected = find.text('Connected & Ready');
-      final notConnected = find.text('Not Connected');
-      expect(connected.or(notConnected), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (w) =>
+              w is Text &&
+              (w.data == 'Connected & Ready' || w.data == 'Not Connected'),
+        ),
+        findsOneWidget,
+      );
     },
   );
 }

@@ -273,7 +273,7 @@ flutter test --name "auto-sync"
 #### E2E Tests (require backend + device/emulator)
 ```sh
 # Start backend first
-cd ~/pr/zirofit-next && npm run dev
+cd ~/pr/zirofit-next && pnpm run dev
 
 # Run a single e2e flow with Patrol
 patrol test --target test/e2e/flows/offline_sync_e2e_test.dart

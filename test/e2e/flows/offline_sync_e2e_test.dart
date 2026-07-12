@@ -10,7 +10,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:patrol/patrol.dart';
 
 import '../helpers/auth_helper.dart';
-import '../helpers/navigation_helper.dart';
 
 void main() {
   patrolTest(
@@ -73,11 +72,12 @@ void main() {
 
       // Drag down on the dashboard to trigger pull-to-refresh
       // The home screen uses a RefreshIndicator wrapping the dashboard content
-      final dashboardWidget = $(#homeScreen);
-      await dashboardWidget.scroll(
-        Offset(0, 300),
-        duration: const Duration(milliseconds: 500),
+      await $.tester.timedDrag(
+        find.byKey(const Key('homeScreen')),
+        const Offset(0, 300),
+        const Duration(milliseconds: 500),
       );
+      await $.pumpAndSettle();
 
       // After refresh, dashboard should still show
       await $(#homeScreen).waitUntilVisible(

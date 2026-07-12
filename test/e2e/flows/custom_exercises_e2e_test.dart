@@ -51,7 +51,7 @@ void main() {
 
       // Edit the name
       // Clear and type new name
-      await $(#exerciseNameField).clearText();
+      await $(#exerciseNameField).enterText('');
       await $(#exerciseNameField).enterText('E2E Test Exercise (edited)');
       await $('Save Changes').tap();
 

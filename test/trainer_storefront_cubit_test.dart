@@ -5,6 +5,7 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:ziro_fit/features/trainer/cubit/storefront_cubit.dart';
 import 'package:ziro_fit/features/trainer/cubit/storefront_state.dart';
+import 'package:ziro_fit/features/trainer/data/storefront_local_service.dart';
 import 'package:ziro_fit/features/trainer/data/trainer_storefront_api_service.dart';
 import 'package:ziro_fit/features/trainer/data/models/storefront_profile_dto.dart';
 import 'package:ziro_fit/features/trainer/data/models/stripe_status_dto.dart';
@@ -12,15 +13,30 @@ import 'package:ziro_fit/features/trainer/data/models/stripe_status_dto.dart';
 class MockTrainerStorefrontApiService extends Mock
     implements TrainerStorefrontApiService {}
 
+class MockStorefrontLocalService extends Mock
+    implements StorefrontLocalService {}
+
 void main() {
   late TrainerStorefrontApiService apiService;
+  late StorefrontLocalService localService;
   late StorefrontCubit cubit;
+
+  setUpAll(() {
+    registerFallbackValue(StorefrontProfileDto(
+      name: 'dummy',
+      username: 'dummy',
+    ));
+    registerFallbackValue(StripeStatusDto(
+      chargesEnabled: false,
+      detailsSubmitted: false,
+    ));
+  });
 
   final testProfile = StorefrontProfileDto(
     name: 'Test Trainer',
     username: 'testtrainer',
     bio: 'Coach bio',
-    specialties: 'Strength',
+    specialties: ['Strength'],
   );
 
   final testStripeStatus = StripeStatusDto(
@@ -31,7 +47,18 @@ void main() {
 
   setUp(() {
     apiService = MockTrainerStorefrontApiService();
-    cubit = StorefrontCubit(apiService);
+    localService = MockStorefrontLocalService();
+    // Default: cache is empty (cold start)
+    when(() => localService.cachedProfile())
+        .thenAnswer((_) async => null);
+    when(() => localService.cachedStripeStatus())
+        .thenAnswer((_) async => null);
+    // Cache writes are fire-and-forget (unawaited)
+    when(() => localService.cacheProfile(any()))
+        .thenAnswer((_) async {});
+    when(() => localService.cacheStripeStatus(any()))
+        .thenAnswer((_) async {});
+    cubit = StorefrontCubit(apiService, localService);
   });
 
   tearDown(() {
@@ -70,7 +97,7 @@ void main() {
       build: () {
         when(() => apiService.getProfile())
             .thenThrow(DioException(
-              requestOptions: RequestOptions(path: '/api/trainer/profile/text'),
+              requestOptions: RequestOptions(path: '/api/trainer/profile'),
               error: 'Network error',
               type: DioExceptionType.connectionError,
             ));
@@ -112,13 +139,13 @@ void main() {
       },
       act: (cubit) async {
         await cubit.load();
-        await cubit.load();
+        await cubit.load(forceRefresh: true);
       },
       expect: () => [
-        // First load
+        // First load (cold start — cache empty)
         const StorefrontLoading(),
         isA<StorefrontLoaded>(),
-        // Second load (pull-to-refresh)
+        // Second load (force-refresh — skip cache)
         const StorefrontLoading(),
         isA<StorefrontLoaded>(),
       ],

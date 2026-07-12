@@ -11,9 +11,8 @@ abstract class StorefrontProfileDto with _$StorefrontProfileDto {
     String? bio,
     String? philosophy,
     String? methodology,
-    String? specialties,
+    @Default([]) List<String> specialties,
     String? certifications,
-    String? qualifications,
     String? avatarUrl,
     String? bannerUrl,
     @Default([]) List<String> tags,
@@ -23,6 +22,8 @@ abstract class StorefrontProfileDto with _$StorefrontProfileDto {
     @Default([]) List<StorefrontExternalLinkDto> externalLinks,
     @Default([]) List<StorefrontTestimonialDto> testimonials,
     @Default([]) List<StorefrontPhotoDto> transformationPhotos,
+    double? averageRating,
+    @Default(0) int reviewCount,
   }) = _StorefrontProfileDto;
 
   factory StorefrontProfileDto.fromJson(Map<String, dynamic> json) =>
@@ -36,8 +37,7 @@ abstract class StorefrontPackageDto with _$StorefrontPackageDto {
     required String name,
     String? description,
     required String price,
-    String? duration,
-    @Default([]) List<String> features,
+    @JsonKey(name: 'numberOfSessions') int? duration,
   }) = _StorefrontPackageDto;
 
   factory StorefrontPackageDto.fromJson(Map<String, dynamic> json) =>
@@ -48,7 +48,7 @@ abstract class StorefrontPackageDto with _$StorefrontPackageDto {
 abstract class StorefrontServiceDto with _$StorefrontServiceDto {
   const factory StorefrontServiceDto({
     required String id,
-    required String name,
+    @JsonKey(name: 'title') required String name,
     String? description,
     String? price,
   }) = _StorefrontServiceDto;
@@ -60,6 +60,7 @@ abstract class StorefrontServiceDto with _$StorefrontServiceDto {
 @freezed
 abstract class StorefrontSocialLinkDto with _$StorefrontSocialLinkDto {
   const factory StorefrontSocialLinkDto({
+    required String id,
     required String platform,
     required String url,
   }) = _StorefrontSocialLinkDto;
@@ -71,6 +72,7 @@ abstract class StorefrontSocialLinkDto with _$StorefrontSocialLinkDto {
 @freezed
 abstract class StorefrontExternalLinkDto with _$StorefrontExternalLinkDto {
   const factory StorefrontExternalLinkDto({
+    required String id,
     required String label,
     required String url,
   }) = _StorefrontExternalLinkDto;
@@ -84,10 +86,9 @@ abstract class StorefrontTestimonialDto with _$StorefrontTestimonialDto {
   const factory StorefrontTestimonialDto({
     required String id,
     required String clientName,
-    String? clientAvatarUrl,
-    required String text,
+    @JsonKey(name: 'testimonialText') required String text,
     double? rating,
-    String? date,
+    @JsonKey(name: 'createdAt') String? date,
   }) = _StorefrontTestimonialDto;
 
   factory StorefrontTestimonialDto.fromJson(Map<String, dynamic> json) =>
@@ -98,7 +99,7 @@ abstract class StorefrontTestimonialDto with _$StorefrontTestimonialDto {
 abstract class StorefrontPhotoDto with _$StorefrontPhotoDto {
   const factory StorefrontPhotoDto({
     required String id,
-    required String url,
+    @JsonKey(name: 'publicUrl') required String url,
     String? caption,
   }) = _StorefrontPhotoDto;
 

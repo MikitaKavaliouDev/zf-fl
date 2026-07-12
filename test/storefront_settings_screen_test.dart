@@ -10,7 +10,6 @@ import 'package:ziro_fit/features/trainer/cubit/storefront_state.dart';
 import 'package:ziro_fit/features/trainer/data/models/storefront_profile_dto.dart';
 import 'package:ziro_fit/features/trainer/data/models/stripe_status_dto.dart';
 import 'package:ziro_fit/features/trainer/presentation/settings/storefront_settings_screen.dart';
-import 'package:ziro_fit/features/trainer/presentation/settings/widgets/package_preview_card.dart';
 
 class MockStorefrontCubit extends Mock implements StorefrontCubit {}
 
@@ -28,13 +27,13 @@ void main() {
     name: 'Test Trainer',
     username: 'testtrainer',
     bio: 'Coach bio',
-    specialties: 'Strength',
+    specialties: ['Strength'],
     packages: [
       StorefrontPackageDto(
         id: 'pkg1',
         name: 'Basic Plan',
         price: '99.99',
-        duration: 'Monthly',
+        duration: 12,
       ),
     ],
     services: [
@@ -68,13 +67,16 @@ void main() {
   }
 
   group('StorefrontSettingsScreen', () {
-    testWidgets('shows loading indicator', (tester) async {
+    testWidgets('shows shimmer skeleton while loading', (tester) async {
       await tester.pumpWidget(buildScreen(
         createMockCubit(const StorefrontLoading()),
       ));
       await tester.pump();
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      // Shimmer skeleton uses AnimatedBuilder for animated rectangles
+      expect(find.byType(AnimatedBuilder), findsAtLeast(1));
+      // No error widget shown
+      expect(find.text('Failed to load storefront'), findsNothing);
     });
 
     testWidgets('shows profile data when loaded', (tester) async {
@@ -86,20 +88,26 @@ void main() {
       ));
       await tester.pump();
 
+      // Hero section: name, specialty chip, stats
       expect(find.text('Test Trainer'), findsOneWidget);
-      expect(find.text('Coach bio'), findsOneWidget);
       expect(find.text('Strength'), findsOneWidget);
-      expect(find.text('1 Packages'), findsOneWidget);
+      expect(find.text('Coach bio'), findsAtLeast(1));
+
+      // Stats row (value + label pairs)
+      expect(find.text('1'), findsAtLeast(1)); // packages count, services count
+      expect(find.text('Packages'), findsAtLeast(1));
+      expect(find.text('Services'), findsAtLeast(1));
+
+      // Package card
       expect(find.text('Basic Plan'), findsOneWidget);
 
       // Scroll down to reveal services + payments sections
-      // Drag on a widget in the main ListView (not inside the horizontal PackageCarousel)
       await tester.drag(find.text('Test Trainer'), const Offset(0, -500));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
       expect(find.text('Personal Training'), findsOneWidget);
 
-      await tester.drag(find.text('Personal Training'), const Offset(0, -200));
+      await tester.drag(find.text('Personal Training'), const Offset(0, -300));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
       expect(find.text('Connected — payouts enabled'), findsOneWidget);
@@ -138,9 +146,14 @@ void main() {
       await tester.pump();
 
       expect(find.text('Empty Trainer'), findsOneWidget);
-      expect(find.text('No packages yet'), findsOneWidget);
-      expect(find.text('0 Packages'), findsOneWidget);
-      expect(find.byType(PackagePreviewCard), findsNothing);
+      // Empty hint for packages section
+      expect(
+        find.text('No packages yet. Add them in your Marketplace Profile.'),
+        findsOneWidget,
+      );
+      // Stats show 0 for packages
+      expect(find.text('0'), findsAtLeast(2));
+      expect(find.text('Packages'), findsOneWidget);
     });
   });
 }
