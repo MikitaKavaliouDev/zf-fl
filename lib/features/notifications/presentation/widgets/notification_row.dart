@@ -34,17 +34,27 @@ class NotificationRow extends StatelessWidget {
     final icon = _iconData(notification);
     final color = _iconColor(notification);
 
-    return GestureDetector(
-      key: const ValueKey('notificationRow'),
-      onTap: () {
-        if (!read) cubit.markAsRead(notification.id);
-        onTap?.call();
-      },
-      child: Container(
-        color: read ? Colors.transparent : const Color(0xFF007AFF).withValues(alpha: 0.05),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+    return Dismissible(
+      key: ValueKey(notification.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        color: const Color(0xFFEF4444), // red-500
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 24),
+        child: const Icon(Icons.delete_rounded, color: Colors.white, size: 24),
+      ),
+      onDismissed: (_) => cubit.deleteNotification(notification.id),
+      child: GestureDetector(
+        key: const ValueKey('notificationRow'),
+        onTap: () {
+          if (!read) cubit.markAsRead(notification.id);
+          onTap?.call();
+        },
+        child: Container(
+          color: read ? Colors.transparent : const Color(0xFF007AFF).withValues(alpha: 0.05),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
             // Main row: icon, message + date, unread dot
             Padding(
               padding: const EdgeInsets.all(16),
@@ -171,6 +181,7 @@ class NotificationRow extends StatelessWidget {
           ],
         ),
       ),
+    ),
     );
   }
 

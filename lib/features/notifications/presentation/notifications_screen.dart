@@ -38,6 +38,30 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
   }
 
+  Future<void> _showClearAllConfirmation(BuildContext context) {
+    return showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Clear All Notifications?'),
+        content: const Text('This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              context.read<NotificationsCubit>().deleteAllNotifications();
+            },
+            style: TextButton.styleFrom(foregroundColor: const Color(0xFFEF4444)),
+            child: const Text('Clear All'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider<NotificationsCubit>(
@@ -87,6 +111,25 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 showDone: true,
                 onDone: () => Navigator.of(context).pop(),
               ),
+            ),
+            BlocBuilder<NotificationsCubit, NotificationsState>(
+              builder: (context, state) {
+                if (state is! NotificationsLoaded || state.notifications.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+                final topPadding = MediaQuery.of(context).padding.top;
+                return Positioned(
+                  top: topPadding + 44,
+                  right: 16,
+                  child: TextButton.icon(
+                    key: const ValueKey('clearAllButton'),
+                    onPressed: () => _showClearAllConfirmation(context),
+                    icon: const Icon(Icons.delete_sweep_rounded, size: 18),
+                    label: const Text('Clear All', style: TextStyle(fontSize: 14)),
+                    style: TextButton.styleFrom(foregroundColor: const Color(0xFFEF4444)),
+                  ),
+                );
+              },
             ),
           ],
         ),

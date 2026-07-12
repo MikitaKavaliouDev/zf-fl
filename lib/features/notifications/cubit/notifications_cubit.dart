@@ -174,12 +174,11 @@ class NotificationsCubit extends Cubit<NotificationsState> {
     ));
   }
 
-  /// Mark a single notification as read (optimistic update + rollback).
+  /// Mark a single notification as read (optimistic update, Drift is local).
   Future<void> markAsRead(String id) async {
     final currentState = state;
     if (currentState is! NotificationsLoaded) return;
 
-    final snapshot = currentState;
     final updatedList = currentState.notifications.map((n) {
       if (n.id == id && !n.readStatus) return n.copyWith(readStatus: true);
       return n;
@@ -189,30 +188,53 @@ class NotificationsCubit extends Cubit<NotificationsState> {
 
     try {
       await _repository.markAsRead(id);
-      _repository.invalidateCache();
     } catch (e) {
       developer.log('markAsRead failed: $e', name: 'notifications');
-      emit(snapshot);
     }
   }
 
-  /// Mark all notifications as read (optimistic update + rollback).
+  /// Mark all notifications as read (optimistic update, Drift is local).
   Future<void> markAllAsRead() async {
     final currentState = state;
     if (currentState is! NotificationsLoaded) return;
 
-    final snapshot = currentState;
     final updatedList = currentState.notifications
         .map((n) => n.copyWith(readStatus: true))
         .toList();
-    emit(currentState.copyWith(notifications: updatedList));
+    emit(currentState.copyWith(notifications: updatedList, unreadCount: 0));
 
     try {
       await _repository.markAllAsRead();
-      _repository.invalidateCache();
     } catch (e) {
       developer.log('markAllAsRead failed: $e', name: 'notifications');
-      emit(snapshot);
+    }
+  }
+
+  /// Remove a single notification (optimistic removal, Drift soft-delete).
+  Future<void> deleteNotification(String id) async {
+    final currentState = state;
+    if (currentState is! NotificationsLoaded) return;
+    _seenIds.remove(id);
+    final updatedList = currentState.notifications.where((n) => n.id != id).toList();
+    final unreadCount = updatedList.where((n) => !n.readStatus).length;
+    emit(currentState.copyWith(notifications: updatedList, unreadCount: unreadCount));
+    try {
+      await _repository.deleteNotification(id);
+    } catch (e) {
+      developer.log('deleteNotification failed: $e', name: 'notifications');
+    }
+  }
+
+  /// Remove all notifications (optimistic clear, Drift soft-delete).
+  Future<void> deleteAllNotifications() async {
+    final currentState = state;
+    if (currentState is! NotificationsLoaded) return;
+    _seenIds.clear();
+    emit(currentState.copyWith(notifications: [], unreadCount: 0));
+    try {
+      await _repository.deleteAllNotifications();
+    } catch (e) {
+      developer.log('deleteAllNotifications failed: $e', name: 'notifications');
     }
   }
 
@@ -260,9 +282,8 @@ class NotificationsCubit extends Cubit<NotificationsState> {
     }
   }
 
-  /// Pull-to-refresh: bust ResponseCache, then force-fetch from API.
+  /// Pull-to-refresh: force-fetch from API (Drift handles caching internally).
   Future<void> refreshFromPull() async {
-    await _repository.invalidateCache();
     await fetchNotifications();
   }
 
