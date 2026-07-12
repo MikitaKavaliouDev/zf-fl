@@ -120,15 +120,33 @@ class _ZiroFitAppState extends State<ZiroFitApp> {
       // Load persisted appearance preferences (theme, text size, reduce motion).
       _appearanceCubit.load();
       // Wire push notification tap navigation to GoRouter.
-      di.getIt<PushService>().onNavigate = (payload) {
+      di.getIt<PushService>().onNavigate = (payload, {data}) {
         try {
           if (payload.startsWith('zirofitapp://')) {
             final path = Uri.parse(payload).path;
             _router.go(path);
+          } else if (data != null && data['type'] is String) {
+            final type = data['type'] as String;
+            developer.log('Push tap — type: $type, referenceId: $payload', name: 'push');
+            switch (type) {
+              case 'session_reminder':
+              case 'workout_reminder':
+                _router.go('/workout');
+              case 'program_assigned':
+                _router.go('/home/program-detail');
+              case 'checkin_reminder':
+                _router.go('/home/check-in');
+              case 'booking_request':
+              case 'booking_confirmed':
+              case 'booking_cancelled':
+              case 'booking_updated':
+              case 'promotion':
+              default:
+                _router.go('/home/notifications');
+            }
           } else {
-            // referenceId-based pushes: navigate to a generic handler
-            // TODO: Map referenceId to specific screen via PuhNotificationData.type
-            developer.log('Push tap — referenceId, no route mapping yet: $payload', name: 'push');
+            developer.log('Push tap — referenceId, no type data: $payload', name: 'push');
+            _router.go('/home/notifications');
           }
         } catch (e) {
           developer.log('Push tap navigation error: $e', name: 'push');

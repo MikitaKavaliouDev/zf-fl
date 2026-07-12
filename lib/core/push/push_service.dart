@@ -24,7 +24,7 @@ class PushService {
   /// Set this from the widget layer (e.g. _ZiroFitAppState) to integrate
   /// with GoRouter navigation. The callback receives the full payload
   ///  (e.g. "zirofitapp://bookings/uuid" or a referenceId).
-  void Function(String payload)? onNavigate;
+  void Function(String payload, {Map<String, dynamic>? data})? onNavigate;
 
   PushService(this._localNotifications);
 
@@ -125,7 +125,7 @@ class PushService {
       onDidReceiveNotificationResponse: (response) {
         final payload = response.payload;
         if (payload != null) {
-          _handleTapPayload(payload);
+          _handleTapPayload(payload, data: null);
         }
       },
     );
@@ -155,19 +155,19 @@ class PushService {
 
   void _handleNotificationTap(RemoteMessage message) {
     final data = message.data;
-    _handleTapPayload(data['url'] as String? ?? data['referenceId'] as String? ?? '');
+    _handleTapPayload(data['url'] as String? ?? data['referenceId'] as String? ?? '', data: data);
   }
 
-  void _handleTapPayload(String payload) {
+  void _handleTapPayload(String payload, {Map<String, dynamic>? data}) {
     if (payload.startsWith('zirofitapp://')) {
       final uri = Uri.parse(payload);
       developer.log('Push tap — navigate to: $uri', name: 'push');
       // Invoke the navigation callback so the widget layer can navigate.
-      onNavigate?.call(payload);
+      onNavigate?.call(payload, data: data);
     } else if (payload.isNotEmpty) {
       developer.log('Push tap — referenceId: $payload', name: 'push');
-      // Invoke the navigation callback with the raw referenceId.
-      onNavigate?.call(payload);
+      // Invoke the navigation callback with the raw referenceId and data.
+      onNavigate?.call(payload, data: data);
     }
   }
 }
