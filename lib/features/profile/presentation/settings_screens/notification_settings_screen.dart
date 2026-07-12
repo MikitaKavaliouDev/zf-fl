@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../features/notifications/data/services/notification_preferences_service.dart';
 
 class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({super.key});
@@ -21,6 +23,25 @@ class _NotificationSettingsScreenState
   bool _eventPromotions = false;
   bool _productUpdates = false;
 
+  NotificationPreferencesService? _prefsService;
+
+  @override
+  void initState() {
+    super.initState();
+    _prefsService = GetIt.instance<NotificationPreferencesService>();
+    _prefsService!.loadAll().then((prefs) {
+      if (!mounted) return;
+      setState(() {
+        _workoutReminders = prefs['workoutReminders'] as bool;
+        _sessionReminders = prefs['sessionReminders'] as bool;
+        _achievementAlerts = prefs['achievementAlerts'] as bool;
+        _trainerMessages = prefs['trainerMessages'] as bool;
+        _eventPromotions = prefs['eventPromotions'] as bool;
+        _productUpdates = prefs['productUpdates'] as bool;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,7 +59,10 @@ class _NotificationSettingsScreenState
                 title: 'Workout Reminders',
                 subtitle: 'Daily reminders for scheduled workouts',
                 value: _workoutReminders,
-                onChanged: (v) => setState(() => _workoutReminders = v),
+                onChanged: (v) {
+                  _prefsService!.setWorkoutReminders(v);
+                  setState(() => _workoutReminders = v);
+                },
               ),
               _buildToggleRow(
                 icon: Icons.timer_rounded,
@@ -46,7 +70,10 @@ class _NotificationSettingsScreenState
                 title: 'Session Reminders',
                 subtitle: 'Reminders before training sessions',
                 value: _sessionReminders,
-                onChanged: (v) => setState(() => _sessionReminders = v),
+                onChanged: (v) {
+                  _prefsService!.setSessionReminders(v);
+                  setState(() => _sessionReminders = v);
+                },
               ),
               _buildToggleRow(
                 icon: Icons.emoji_events_rounded,
@@ -54,7 +81,10 @@ class _NotificationSettingsScreenState
                 title: 'Achievement Alerts',
                 subtitle: 'When you hit a new personal record',
                 value: _achievementAlerts,
-                onChanged: (v) => setState(() => _achievementAlerts = v),
+                onChanged: (v) {
+                  _prefsService!.setAchievementAlerts(v);
+                  setState(() => _achievementAlerts = v);
+                },
                 isLast: true,
               ),
             ],
@@ -69,7 +99,10 @@ class _NotificationSettingsScreenState
                 title: 'Trainer Messages',
                 subtitle: 'Messages from your trainer',
                 value: _trainerMessages,
-                onChanged: (v) => setState(() => _trainerMessages = v),
+                onChanged: (v) {
+                  _prefsService!.setTrainerMessages(v);
+                  setState(() => _trainerMessages = v);
+                },
               ),
               _buildToggleRow(
                 icon: Icons.campaign_rounded,
@@ -77,7 +110,10 @@ class _NotificationSettingsScreenState
                 title: 'Events & Promotions',
                 subtitle: 'Workshops, challenges, and special offers',
                 value: _eventPromotions,
-                onChanged: (v) => setState(() => _eventPromotions = v),
+                onChanged: (v) {
+                  _prefsService!.setEventPromotions(v);
+                  setState(() => _eventPromotions = v);
+                },
               ),
               _buildToggleRow(
                 icon: Icons.new_releases_rounded,
@@ -85,7 +121,10 @@ class _NotificationSettingsScreenState
                 title: 'Product Updates',
                 subtitle: 'New features and improvements',
                 value: _productUpdates,
-                onChanged: (v) => setState(() => _productUpdates = v),
+                onChanged: (v) {
+                  _prefsService!.setProductUpdates(v);
+                  setState(() => _productUpdates = v);
+                },
                 isLast: true,
               ),
             ],
