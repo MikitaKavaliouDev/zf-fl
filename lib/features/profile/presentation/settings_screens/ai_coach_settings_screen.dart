@@ -3,6 +3,7 @@ import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 
 import '../../../../core/di/injection.dart';
+import '../../../../core/network/response_cache.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../voice_coach/data/models/voice_settings_dto.dart';
 import '../../../voice_coach/data/services/voice_settings_api_service.dart';
@@ -21,6 +22,8 @@ class AiCoachSettingsScreen extends StatefulWidget {
 
 class _AiCoachSettingsScreenState extends State<AiCoachSettingsScreen> {
   final _apiService = getIt<VoiceSettingsApiService>();
+  final _cache = getIt<ResponseCache>();
+  static const _settingsCacheKey = 'voice:settings';
 
   bool _isLoading = true;
   String? _errorMessage;
@@ -43,6 +46,20 @@ class _AiCoachSettingsScreenState extends State<AiCoachSettingsScreen> {
       _errorMessage = null;
     });
 
+    // 1. Check cache first
+    final cachedSettings = await _cache.get<VoiceSettingsResponseDto>(
+      _settingsCacheKey,
+      VoiceSettingsResponseDto.fromJson,
+    );
+    if (cachedSettings != null) {
+      setState(() {
+        _selectedVoiceId = cachedSettings.voiceId;
+        _settings = cachedSettings.settings ?? const VoiceSettingsValues();
+        _isLoading = false;
+      });
+    }
+
+    // 2. Try network — always attempt to refresh
     try {
       final results = await Future.wait([
         _apiService.getVoiceSettings(),
@@ -52,18 +69,27 @@ class _AiCoachSettingsScreenState extends State<AiCoachSettingsScreen> {
       final voiceSettings = results[0] as VoiceSettingsResponseDto;
       final voices = results[1] as List<VoiceDto>;
 
+      // Update cache with fresh data
+      await _cache.set(_settingsCacheKey, voiceSettings.toJson());
+
       setState(() {
         _selectedVoiceId = voiceSettings.voiceId;
         _settings = voiceSettings.settings ?? const VoiceSettingsValues();
         _voices = voices;
         _isLoading = false;
+        _errorMessage = null;
       });
     } catch (e) {
       developer.log('[AICoachSettings] Failed to load: $e', name: 'settings');
-      setState(() {
-        _isLoading = false;
-        _errorMessage = 'Failed to load voice settings. Check your connection.';
-      });
+      if (cachedSettings == null) {
+        // No cache and network failed — show error
+        setState(() {
+          _isLoading = false;
+          _errorMessage =
+              'Failed to load voice settings. Check your connection.';
+        });
+      }
+      // If cache was available, we already showed it — no error needed
     }
   }
 
@@ -73,10 +99,12 @@ class _AiCoachSettingsScreenState extends State<AiCoachSettingsScreen> {
     setState(() => _hasChanges = false);
 
     try {
-      await _apiService.updateVoiceSettings(
+      final updated = await _apiService.updateVoiceSettings(
         voiceId: _selectedVoiceId!,
         settings: _settings,
       );
+      // Update cache after save
+      await _cache.set(_settingsCacheKey, updated.toJson());
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

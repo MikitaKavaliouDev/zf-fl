@@ -245,7 +245,7 @@ try {
 | | Detail |
 |---|---|
 | **Backend** | Add optional `page`/`pageSize` params to `GET /api/notifications` route + Zod schema |
-| **Backend files** | `V:\zirofit-next\src\app\api\notifications\route.ts`, `route.schema.ts` |
+| **Backend files** | `~/pr/zirofit-next\src\app\api\notifications\route.ts`, `route.schema.ts` |
 | **Flutter** | Add `page`/`limit` to `NotificationApiService.fetchNotifications()`, update cubit with `hasMore` |
 | **Realtime** | New notifications from Supabase insert at top (no pagination conflict with cursor-based pagination) |
 | **Risk** | LOW-MED |

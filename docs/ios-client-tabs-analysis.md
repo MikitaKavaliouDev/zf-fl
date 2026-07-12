@@ -1,8 +1,8 @@
 # iOS App Client Mode — Tab Structure Analysis
 
-> **Source**: `V:\Ziro-Fit\Ziro Fit\` (iOS Swift/SwiftUI reference app)
+> **Source**: `../Ziro-Fit/Ziro Fit\` (iOS Swift/SwiftUI reference app)
 > **Analyzed**: 2026-06-24
-> **Purpose**: Inform Flutter (`V:\zf-fl`) parity implementation
+> **Purpose**: Inform Flutter (`~/pr/zf-fl`) parity implementation
 
 ---
 
@@ -23,7 +23,7 @@ Mode switching is persisted via `@AppStorage("lastUsedAppMode")` and defaults to
 
 ## 2. Tab Bar Configuration (Client Mode)
 
-**File**: `V:\Ziro-Fit\Ziro Fit\Views\Common\CustomTabBar.swift`
+**File**: `../Ziro-Fit/Ziro Fit\Views\Common\CustomTabBar.swift`
 
 ### 2.1 Tab Definitions
 
@@ -61,7 +61,7 @@ enum AppTab: String, CaseIterable {
 
 ## 3. Tab 1: Explore (`PersonalExploreView`)
 
-**File**: `V:\Ziro-Fit\Ziro Fit\Views\ZiroMe\PersonalExploreView.swift`
+**File**: `../Ziro-Fit/Ziro Fit\Views\ZiroMe\PersonalExploreView.swift`
 **Flutter counterpart**: `/explore` → `ExploreScreen`
 
 ### 3.1 Header / Navigation
@@ -116,7 +116,7 @@ Telegram-style capsule segmented control (`ExploreSlidingSegment`).
 
 ## 4. Tab 2: Workouts (`WorkoutHistoryView`)
 
-**File**: `V:\Ziro-Fit\Ziro Fit\Views\ZiroMe\WorkoutHistoryView.swift`
+**File**: `../Ziro-Fit/Ziro Fit\Views\ZiroMe\WorkoutHistoryView.swift`
 **Flutter counterpart**: Currently mapped to `/workout` → `WorkoutSessionScreen` (wrong — should be history)
 
 ### 4.1 Header
@@ -162,7 +162,7 @@ Telegram-style capsule segmented control (`ExploreSlidingSegment`).
 
 ## 5. Tab 3: Home (`PersonalHomeView`) — Center Tab
 
-**File**: `V:\Ziro-Fit\Ziro Fit\Views\ZiroMe\PersonalHomeView.swift`
+**File**: `../Ziro-Fit/Ziro Fit\Views\ZiroMe\PersonalHomeView.swift`
 **Flutter counterpart**: `/` → `HomeScreen`
 
 ### 5.1 Header
@@ -214,7 +214,7 @@ Telegram-style capsule segmented control (`ExploreSlidingSegment`).
 
 ## 6. Tab 4: Analytics (`PersonalAnalyticsView`)
 
-**File**: `V:\Ziro-Fit\Ziro Fit\Views\ZiroMe\PersonalAnalyticsView.swift`
+**File**: `../Ziro-Fit/Ziro Fit\Views\ZiroMe\PersonalAnalyticsView.swift`
 **Flutter counterpart**: **MISSING** — no Analytics tab exists
 
 ### 6.1 Header
@@ -264,7 +264,7 @@ Telegram-style capsule segmented control (`ExploreSlidingSegment`).
 
 ## 7. Tab 5: More (`MoreView`)
 
-**File**: `V:\Ziro-Fit\Ziro Fit\Views\Common\MoreView.swift`
+**File**: `../Ziro-Fit/Ziro Fit\Views\Common\MoreView.swift`
 **Flutter counterpart**: `/profile` → `ProfileScreen` (currently minimal scaffold)
 
 ### 7.1 Header
@@ -528,4 +528,4 @@ isRoutinesEnabled       // Personal routines builder
 
 ---
 
-> **Note**: All references to iOS files are relative to `V:\Ziro-Fit\Ziro Fit\`.
+> **Note**: All references to iOS files are relative to `../Ziro-Fit/Ziro Fit\`.

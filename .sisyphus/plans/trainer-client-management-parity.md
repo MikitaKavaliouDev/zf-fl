@@ -2,9 +2,9 @@
 
 ## Overview
 
-Achieve 1:1 feature and layout parity between iOS and Flutter for ALL trainer-facing client management screens. The iOS implementation at `V:\Ziro-Fit` has 13 screens; Flutter currently has ~8 with significant gaps.
+Achieve 1:1 feature and layout parity between iOS and Flutter for ALL trainer-facing client management screens. The iOS implementation at `../Ziro-Fit` has 13 screens; Flutter currently has ~8 with significant gaps.
 
-**Backend**: `V:\zirofit-next` — all needed endpoints exist under `/api/trainer/clients/` and `/api/clients/`.
+**Backend**: `~/pr/zirofit-next` — all needed endpoints exist under `/api/trainer/clients/` and `/api/clients/`.
 **Flutter target**: `lib/features/trainer/` — expand existing feature module.
 
 ---
@@ -39,7 +39,7 @@ Achieve 1:1 feature and layout parity between iOS and Flutter for ALL trainer-fa
 
 #### P0-1: Backend Contract Verification Script
 - [ ] Create `scripts/verify-trainer-client-api-contracts.sh`
-- [ ] Start backend: `cd V:\zirofit-next && npm run dev`
+- [ ] Start backend: `cd ~/pr/zirofit-next && npm run dev`
 - [ ] Authenticate as trainer: `POST /api/auth/login` with `ada@ziro.fit` / `password123`
 - [ ] Verify every endpoint listed in §10 of analysis doc:
   - `GET /api/trainer/clients` — capture client list shape

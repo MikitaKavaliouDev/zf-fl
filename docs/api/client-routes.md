@@ -1,6 +1,6 @@
 # Client API Routes — Complete Reference
 
-> **Source**: `V:\zirofit-next\src\app\api\client\` — Next.js App Router  
+> **Source**: `~/pr/zirofit-next\src\app\api\client\` — Next.js App Router  
 > **Auth**: All endpoints require authentication via `requireUserShort` or `withAuth`  
 > **Response Envelope**: All successful responses wrapped in `{ data: ... }`, errors in `{ error: { message, code?, details? } }`  
 > **Last Updated**: 2026-06-24

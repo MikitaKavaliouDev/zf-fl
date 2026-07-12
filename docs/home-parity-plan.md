@@ -66,7 +66,7 @@ Widget exists (`plate_calculator.dart`) but isn't integrated into workout flow.
 
 ---
 
-## API Contracts (from backend `V:\zirofit-next`)
+## API Contracts (from backend `~/pr/zirofit-next`)
 
 ### `GET /api/client/programs` → `ProgramLibraryResponse`
 ```typescript

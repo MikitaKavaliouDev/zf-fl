@@ -3,7 +3,7 @@
 ## Project
 
 **ZIRO.FIT** client mobile app — Flutter fitness training platform.
-Backend is a Next.js REST API at `V:\zirofit-next` (separate repo).
+Backend is a Next.js REST API at `~/pr/zirofit-next` (separate repo).
 
 ## State
 
@@ -254,11 +254,11 @@ This instruction file (`AGENTS.md`) is auto-loaded via `opencode.json` — agent
 
 - **Nutrition & Habits — dedicated screen** — The `_NutritionHabitsCard` on the home dashboard was incorrectly pointing to `/daily-targets`. Implemented a full `NutritionHabitsScreen` matching the iOS spec from `ios-nutrition-habits-handoff.md`: nutrition plan detail with macro progress bars (calories/protein/carbs/fats), section blocks for meal notes/foods to eat/foods to avoid/meal timing/hydration/supplements/habit notes, and today's habit checklist with circle checkboxes and frequency badges. Backed by `NutritionHabitsCubit` which loads plan + habits in parallel and supports optimistic habit toggle via `POST /api/client/habits/{habitId}/log`. See `docs/ios-nutrition-habits-handoff.md` for the iOS reference spec.
 
-- **Nutrition & Habits** (`V:\Ziro-Fit\ios-nutrition-habits-handoff.md`) — iOS spec for nutrition plan detail view (macro bars, meal notes, foods, hydration, supplements) and habit checklist with toggle. Flutter implementation matches the spec exactly. See `docs/ios-nutrition-habits-handoff.md`.
+- **Nutrition & Habits** (`../Ziro-Fit/ios-nutrition-habits-handoff.md`) — iOS spec for nutrition plan detail view (macro bars, meal notes, foods, hydration, supplements) and habit checklist with toggle. Flutter implementation matches the spec exactly. See `docs/ios-nutrition-habits-handoff.md`.
 
 ## iOS Reference App
 
-The iOS version of ZIRO.FIT is at **`V:\Ziro-Fit`** (Swift/SwiftUI).
+The iOS version of ZIRO.FIT is at **`../Ziro-Fit`** (Swift/SwiftUI).
 Before building any UI feature, check the iOS implementation first for layout patterns, component hierarchy, spacing, typography, and color usage.
 Key reference files:
 - Explore tab (trainer cards): `Ziro Fit/Views/ZiroMe/TrainerDiscoveryView.swift` — `TrainerDiscoveryCard`, `ExploreTrainerCard`
@@ -290,7 +290,7 @@ Rules:
 
 ## How to Verify Backend Contracts
 
-**Do not trust `docs/implementation.md` blindly.** The backend repo at `V:\zirofit-next` is the source of truth for API shapes. Before creating any Flutter model or service:
+**Do not trust `docs/implementation.md` blindly.** The backend repo at `~/pr/zirofit-next` is the source of truth for API shapes. Before creating any Flutter model or service:
 
 1. Read the Zod schema file alongside each backend route: `src/app/api/<path>/route.schema.ts` — this defines the exact request/response contract.
 2. Read the route handler `route.ts` to confirm the runtime response shape.
@@ -302,7 +302,7 @@ Rules:
 
 **Backend commands:**
 ```sh
-cd V:\zirofit-next
+cd ~/pr/zirofit-next
 npm run dev          # starts on port 3321
 npm run test         # Jest unit tests
 npm run lint         # ESLint
@@ -509,7 +509,7 @@ Every feature delivered to this codebase must be **end-to-end production-ready**
 #### Rule 3: Deep Analysis Before Feature Delivery
 Before implementing any feature:
 1. **Read the existing implementation** — check if similar functionality exists elsewhere in the codebase that can be reused or extended.
-2. **Read the iOS reference** (if applicable) — the iOS app at `V:\Ziro-Fit` is the design specification. Understand the full layout, component hierarchy, spacing, and interaction model before writing a single line of Flutter code.
+2. **Read the iOS reference** (if applicable) — the iOS app at `../Ziro-Fit` is the design specification. Understand the full layout, component hierarchy, spacing, and interaction model before writing a single line of Flutter code.
 3. **Verify backend contracts** — read the Zod schema (`route.schema.ts`), route handler (`route.ts`), and Prisma schema (`schema.prisma`) for every endpoint the feature touches.
 4. **Identify reuse opportunities** — does this feature share models, widgets, or cubits with existing features? Extract shared code rather than duplicating.
 5. **Document analysis** — if the feature is complex, write an analysis doc in `docs/` (see `docs/trainer-profile-analysis.md`, `docs/home-page-analysis.md` for examples).
@@ -548,7 +548,7 @@ Before marking any feature complete, verify:
 **Verification protocol:**
 ```
 Step 1: Ensure backend is running
-  → cd V:\zirofit-next && npm run dev
+  → cd ~/pr/zirofit-next && npm run dev
   → Confirm port 3321 is listening
 
 Step 2: Authenticate

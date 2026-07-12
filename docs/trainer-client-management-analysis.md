@@ -452,7 +452,7 @@ lib/features/trainer_clients/              ← New feature (or expand lib/featur
 
 ## 10. Appendix: Complete Backend API Contract for Trainer Client Endpoints
 
-Source: `V:\zirofit-next\src\app\api\trainer\` + `V:\zirofit-next\src\app\api\clients\`
+Source: `~/pr/zirofit-next\src\app\api\trainer\` + `~/pr/zirofit-next\src\app\api\clients\`
 
 ### Client CRUD
 

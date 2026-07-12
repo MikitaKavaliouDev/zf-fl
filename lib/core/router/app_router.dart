@@ -59,6 +59,9 @@ import '../../features/trainer/cubit/trainer_check_in_review_cubit.dart';
 import '../../features/trainer/cubit/trainer_client_detail_cubit.dart';
 import '../../features/trainer/cubit/trainer_client_sessions_cubit.dart';
 import '../../features/trainer/cubit/trainer_clients_cubit.dart';
+import '../../features/trainer/cubit/payouts_cubit.dart';
+import '../../features/trainer/cubit/storefront_cubit.dart';
+import '../../features/trainer/cubit/subscription_cubit.dart';
 import '../../features/trainer/cubit/trainer_dashboard_cubit.dart';
 import '../../features/trainer/cubit/trainer_programs_cubit.dart';
 import '../../features/trainer/data/models/trainer_program_brief_dto.dart';
@@ -76,6 +79,10 @@ import '../../features/trainer/presentation/programs/trainer_program_detail_scre
 import '../../features/trainer/presentation/programs/trainer_programs_screen.dart';
 import '../../features/trainer/presentation/recipes/trainer_recipes_screen.dart';
 import '../../features/trainer/presentation/resources/trainer_resource_vault_screen.dart';
+import '../../features/trainer/presentation/settings/digital_business_card_screen.dart';
+import '../../features/trainer/presentation/settings/payouts_screen.dart';
+import '../../features/trainer/presentation/settings/storefront_settings_screen.dart';
+import '../../features/trainer/presentation/settings/subscription_screen.dart';
 import '../../features/trainer/presentation/settings/trainer_more_screen.dart';
 import '../../features/trainer/presentation/trainer_shell.dart';
 import '../../features/trainers/cubit/exercise_detail_cubit.dart';
@@ -392,6 +399,32 @@ GoRouter createAppRouter(AuthCubit authCubit) {
       GoRoute(
         path: '/trainer/more/custom-exercises',
         builder: (_, _) => const CustomExercisesScreen(),
+      ),
+      // Trainer Business Feature routes
+      GoRoute(
+        path: '/trainer/more/digital-business-card',
+        builder: (_, _) => const DigitalBusinessCardScreen(),
+      ),
+      GoRoute(
+        path: '/trainer/more/payouts',
+        builder: (_, _) => BlocProvider(
+          create: (_) => getIt<PayoutsCubit>(),
+          child: const PayoutsScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/trainer/more/subscription',
+        builder: (_, _) => BlocProvider(
+          create: (_) => getIt<SubscriptionCubit>(),
+          child: const SubscriptionScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/trainer/more/storefront-settings',
+        builder: (_, _) => BlocProvider(
+          create: (_) => getIt<StorefrontCubit>(),
+          child: const StorefrontSettingsScreen(),
+        ),
       ),
       // Explore sub-routes (full-screen, no bottom nav — matching iOS sheet behavior)
       GoRoute(

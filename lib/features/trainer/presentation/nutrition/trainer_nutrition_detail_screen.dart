@@ -19,7 +19,7 @@ import '../clients/trainer_nutrition_plan_editor_sheet.dart';
 /// nutrition plan with macro progress bars, section blocks, and habits CRUD.
 ///
 /// Mirrors iOS NutritionDetailView at
-/// V:\Ziro-Fit\Ziro Fit\Views\Trainer\NutritionDetailView.swift
+/// ../Ziro-Fit/Ziro Fit\Views\Trainer\NutritionDetailView.swift
 class TrainerNutritionDetailScreen extends StatefulWidget {
   final String clientId;
 

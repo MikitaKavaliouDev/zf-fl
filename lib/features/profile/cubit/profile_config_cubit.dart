@@ -4,8 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../../core/network/response_cache.dart';
 import '../../auth/cubit/auth_cubit.dart';
 import '../../auth/cubit/auth_state.dart';
+import '../data/models/profile_core_info_dto.dart';
 import '../data/models/profile_text_content_dto.dart';
 import '../data/profile_api_service.dart';
 import 'profile_config_state.dart';
@@ -14,27 +16,88 @@ import 'profile_config_state.dart';
 class ProfileConfigCubit extends Cubit<ProfileConfigState> {
   final ProfileApiService _apiService;
   final AuthCubit _authCubit;
+  final ResponseCache _cache;
 
-  ProfileConfigCubit(this._apiService, this._authCubit)
+  ProfileConfigCubit(this._apiService, this._authCubit, this._cache)
       : super(const ProfileConfigState.initial());
 
+  static const _coreInfoCacheKey = 'profile:coreInfo';
+  static const _textContentCacheKey = 'profile:textContent';
+
   /// Load core info and text content.
+  ///
+  /// Cache-first — if cached data exists, emits [ProfileConfigLoaded]
+  /// immediately without a loading flash, then silently refreshes.
   Future<void> loadProfile() async {
     emit(const ProfileConfigState.loading());
+
+    // 1. Check cache first
+    final cachedCoreInfo = await _cache.get<ProfileCoreInfoDto>(
+      _coreInfoCacheKey,
+      ProfileCoreInfoDto.fromJson,
+    );
+    final cachedTextContent = await _cache.get<ProfileTextContentDto>(
+      _textContentCacheKey,
+      ProfileTextContentDto.fromJson,
+    );
+
+    // Get current avatar URL from AuthCubit
+    final authState = _authCubit.state;
+    final avatarUrl = authState is AuthAuthenticated
+        ? authState.user.profilePhotoPath
+        : null;
+
+    if (cachedCoreInfo != null) {
+      // Show cached immediately
+      emit(ProfileConfigState.loaded(
+        coreInfo: cachedCoreInfo,
+        textContent: cachedTextContent,
+        avatarUrl: avatarUrl,
+      ));
+
+      // 2. Silent background refresh
+      try {
+        final coreInfo = await _apiService.getCoreInfo();
+        await _cache.set(_coreInfoCacheKey, coreInfo.toJson());
+
+        ProfileTextContentDto? textContent;
+        try {
+          textContent = await _apiService.getTextContent();
+          await _cache.set(_textContentCacheKey, textContent.toJson());
+        } catch (e) {
+          developer.log('Failed to refresh text content: $e', name: 'profile');
+        }
+
+        if (!isClosed) {
+          final freshAuthState = _authCubit.state;
+          final freshAvatarUrl = freshAuthState is AuthAuthenticated
+              ? freshAuthState.user.profilePhotoPath
+              : null;
+          emit(ProfileConfigState.loaded(
+            coreInfo: coreInfo,
+            textContent: textContent ?? cachedTextContent,
+            avatarUrl: freshAvatarUrl ?? avatarUrl,
+          ));
+        }
+      } catch (e) {
+        developer.log('Background refresh failed: $e', name: 'profile');
+        // Cached data is already showing, no error toast needed
+      }
+      return;
+    }
+
+    // 3. No cache — await network
     try {
       final coreInfo = await _apiService.getCoreInfo();
+      await _cache.set(_coreInfoCacheKey, coreInfo.toJson());
+
       ProfileTextContentDto? textContent;
       try {
         textContent = await _apiService.getTextContent();
+        await _cache.set(_textContentCacheKey, textContent.toJson());
       } catch (e) {
         developer.log('Failed to load text content: $e', name: 'profile');
       }
-
-      // Get current avatar URL from AuthCubit
-      final authState = _authCubit.state;
-      final avatarUrl = authState is AuthAuthenticated
-          ? authState.user.profilePhotoPath
-          : null;
 
       emit(ProfileConfigState.loaded(
         coreInfo: coreInfo,
@@ -68,6 +131,9 @@ class ProfileConfigCubit extends Cubit<ProfileConfigState> {
         'weightUnit': weightUnit,
       });
 
+      // Update cache with fresh data
+      await _cache.set(_coreInfoCacheKey, updated.toJson());
+
       emit(current.copyWith(
         coreInfo: updated,
         isSaving: false,
@@ -90,9 +156,13 @@ class ProfileConfigCubit extends Cubit<ProfileConfigState> {
     try {
       await _apiService.updateTextContent('aboutMe', aboutMe);
 
+      final updatedTextContent = current.textContent?.copyWith(aboutMe: aboutMe) ??
+          ProfileTextContentDto(aboutMe: aboutMe);
+      // Update cache with fresh data
+      await _cache.set(_textContentCacheKey, updatedTextContent.toJson());
+
       emit(current.copyWith(
-        textContent: current.textContent?.copyWith(aboutMe: aboutMe) ??
-            ProfileTextContentDto(aboutMe: aboutMe),
+        textContent: updatedTextContent,
         isSaving: false,
         hasUnsavedChanges: false,
       ));

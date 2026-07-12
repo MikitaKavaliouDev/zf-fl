@@ -7,7 +7,7 @@
 
 ## 1. Overview
 
-Port the iOS trainer role (`V:\Ziro-Fit`) to the existing Flutter client app (`V:\zf-fl`). The Flutter app already has full client mode — this plan adds the **trainer role** as a parallel mode sharing ~60% of infrastructure.
+Port the iOS trainer role (`../Ziro-Fit`) to the existing Flutter client app (`~/pr/zf-fl`). The Flutter app already has full client mode — this plan adds the **trainer role** as a parallel mode sharing ~60% of infrastructure.
 
 ### Architecture Decision: Single App, Dual Mode
 
@@ -107,7 +107,7 @@ void _routeByUserState(User user) {
 
 ```bash
 # 1. Start backend
-cd V:\zirofit-next && npm run dev
+cd ~/pr/zirofit-next && npm run dev
 
 # 2. Login as trainer via API
 curl -X POST http://localhost:3321/api/auth/login \
@@ -116,7 +116,7 @@ curl -X POST http://localhost:3321/api/auth/login \
 # → Confirm accessToken returned, role="trainer"
 
 # 3. Run Flutter
-cd V:\zf-fl && flutter run
+cd ~/pr/zf-fl && flutter run
 ```
 
 ### 3.4 Files Map
@@ -833,7 +833,7 @@ All services go in `lib/features/trainer/data/`. Use `@injectable` with Dio inje
 - Pull-to-refresh
 
 ### 6.2 iOS Reference
-- `V:\Ziro-Fit\Ziro Fit\Views\Trainer\DashboardView.swift` (433 lines)
+- `../Ziro-Fit/Ziro Fit\Views\Trainer\DashboardView.swift` (433 lines)
   - Quick stats cards row
   - Today's sessions section
   - Pending check-ins section
@@ -876,7 +876,7 @@ curl -X GET "http://localhost:3321/api/trainer/programs/active" \
 - `trainer_create_session_sheet.dart` — modal bottom sheet with client picker, template picker, date/time, repeat options
 
 ### 7.2 iOS Reference
-- `V:\Ziro-Fit\Ziro Fit\Views\Trainer\CalendarView.swift` (780 lines)
+- `../Ziro-Fit/Ziro Fit\Views\Trainer\CalendarView.swift` (780 lines)
   - Segmented control: Agenda / Day / Month
   - Agenda: grouped sessions list
   - Day: hour-based timeline
@@ -933,8 +933,8 @@ curl -X GET "http://localhost:3321/api/trainer/session-creation-data" \
 - `trainer_nutrition_plan_editor_sheet.dart` — full nutrition plan form
 
 ### 8.2 iOS Reference
-- `V:\Ziro-Fit\Ziro Fit\Views\Trainer\ClientsView.swift` (260 lines)
-- `V:\Ziro-Fit\Ziro Fit\Views\Trainer\ClientDetailView.swift`
+- `../Ziro-Fit/Ziro Fit\Views\Trainer\ClientsView.swift` (260 lines)
+- `../Ziro-Fit/Ziro Fit\Views\Trainer\ClientDetailView.swift`
   - Profile, Program, Analytics, Habits, Nutrition, Check-ins tabs
 
 ### 8.3 Verification
@@ -984,7 +984,7 @@ curl -X GET "http://localhost:3321/api/trainer/clients/{id}/analytics?days=30" \
 - Program creation on trainer side also uses `POST /api/trainer/programs` (supports `client` and `trainer` roles)
 
 ### 9.3 iOS Reference
-- `V:\Ziro-Fit\Ziro Fit\Views\Trainer\TrainerProgramsView.swift` (630 lines)
+- `../Ziro-Fit/Ziro Fit\Views\Trainer\TrainerProgramsView.swift` (630 lines)
 
 ### 9.4 Verification
 ```bash
@@ -1010,7 +1010,7 @@ curl -X GET "http://localhost:3321/api/trainer/programs" \
 - Sign out
 
 ### 10.2 iOS Reference
-- `V:\Ziro-Fit\Ziro Fit\Views\Common\MoreView.swift` (838 lines)
+- `../Ziro-Fit/Ziro Fit\Views\Common\MoreView.swift` (838 lines)
 
 ### 10.3 Verification
 ```bash
@@ -1078,7 +1078,7 @@ curl -X GET "http://localhost:3321/api/trainer/settings" \
 
 ### 12.1 Start Backend
 ```bash
-cd V:\zirofit-next
+cd ~/pr/zirofit-next
 npm run dev
 # → Listens on port 3321
 ```

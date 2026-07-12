@@ -14,7 +14,7 @@ import '../../data/models/trainer_client_session_dto.dart';
 
 /// Client workout history viewed from the trainer perspective.
 ///
-/// Mirrors iOS `ClientHistoryView` (V:\Ziro-Fit\Ziro Fit\Views\Trainer\ClientHistoryView.swift).
+/// Mirrors iOS `ClientHistoryView` (../Ziro-Fit/Ziro Fit\Views\Trainer\ClientHistoryView.swift).
 /// Displays a volume progression chart at top and a reverse-chronological
 /// list of completed workout sessions.
 class TrainerClientHistoryScreen extends StatefulWidget {

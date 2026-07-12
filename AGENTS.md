@@ -3,7 +3,7 @@
 ## Project
 
 **ZIRO.FIT** client mobile app — Flutter fitness training platform.
-Backend is a Next.js REST API at `V:\zirofit-next` (separate repo).
+Backend is a Next.js REST API at `~/pr/zirofit-next` (separate repo).
 
 ## State
 
@@ -230,20 +230,26 @@ This instruction file (`AGENTS.md`) is auto-loaded via `opencode.json` — agent
 
 ### Test Coverage
 
-| Test File | Tests | Lines | Coverage |
-|---|---|---|---|
-| `test/sync_converter_test.dart` | 29 cases | 194 | SyncConverter: date ms↔DateTime, snake_case↔camelCase, null handling, sync JSON fidelity |
-| `test/sync_repository_test.dart` | 31 cases | 822 | SyncRepository: pull/push round-trip, pending changes, push assembly, error handling, all 17 Drift tables |
-| `test/sync_cubit_test.dart` | 12 cases | 307 | SyncCubit: error states, connectivity changes, auto-sync guard, lastSyncAt preservation |
-| `test/program_cubit_test.dart` | 4 cases | 252 | Program cubit: load programs, templates, create, error states |
-| `test/local_template_repository_test.dart` | 11 cases | 239 | Local template CRUD with Drift in-memory DB |
-| `test/auth_cubit_test.dart` | 2 groups | — | Auth cubit: register, login, token refresh, auto-redirect |
-| `test/trainer_list_cubit_test.dart` | 2 groups | — | Trainer list cubit: load, pagination, error |
-| `test/trainer_detail_cubit_test.dart` | 2 groups | — | Trainer detail cubit: load, link/unlink |
-| `test/analytics_cubit_test.dart` | 2 groups | — | Analytics cubit: load, error |
-| `test/widget_test.dart` | 1 group | — | Smoke test (auth screens render) |
+| Test File | Cases | Type | Coverage |
+|---|---|---|---|---|
+| `test/sync_converter_test.dart` | 29 | unit | SyncConverter: date ms↔DateTime, snake_case↔camelCase, null handling, sync JSON fidelity |
+| `test/sync_repository_test.dart` | 31 | unit | SyncRepository: pull/push round-trip, pending changes, push assembly, error handling, all 17 Drift tables |
+| `test/sync_cubit_test.dart` | 12 | unit | SyncCubit: error states, connectivity changes, auto-sync guard, lastSyncAt preservation |
+| `test/program_cubit_test.dart` | 4 | unit | Program cubit: load programs, templates, create, error states |
+| `test/local_template_repository_test.dart` | 11 | unit | Local template CRUD with Drift in-memory DB |
+| `test/auth_cubit_test.dart` | 2 groups | unit | Auth cubit: register, login, token refresh, auto-redirect |
+| `test/trainer_list_cubit_test.dart` | 2 groups | unit | Trainer list cubit: load, pagination, error |
+| `test/trainer_detail_cubit_test.dart` | 2 groups | unit | Trainer detail cubit: load, link/unlink |
+| `test/analytics_cubit_test.dart` | 2 groups | unit | Analytics cubit: load, error |
+| `test/widget_test.dart` | 1 group | widget | Smoke test (auth screens render) |
+| `test/experimental_features_cubit_test.dart` | 7 | unit | ExperimentalFeaturesCubit: load, 4 toggles, flag isolation |
+| `test/experimental_features_service_test.dart` | 7 | unit | ExperimentalFeaturesService: defaults, roundtrip per flag, independence |
+| `test/profile_config_cubit_test.dart` | 5 | unit | ProfileConfigCubit: cache-first load, no-cache, error, save updates cache |
+| `test/more_cubit_test.dart` | 9 | unit | MoreCubit: cache-first load, force refresh, privacy load/save |
+| `test/permissions_settings_screen_test.dart` | 2 | widget | PermissionsSettingsScreen: title, permission rows, footer |
+| `test/settings_menu_row_test.dart` | 4 | widget | SettingsMenuRow: title, subtitle, onTap, custom trailing |
 
-**Total**: 92 unit/widget tests passing, 59 e2e tests (skipped in `flutter test`, run via Patrol).
+**Total**: 126 unit tests passing, 62 e2e tests (skipped in `flutter test`, run via Patrol).
 **Pre-existing failures**: `widget_test.dart` (looks for "ZIRO.FIT" text no longer rendered) and `analytics_cubit_test.dart` (mock API returns error) — unrelated to sync changes.
 
 ### How to Run Tests
@@ -267,7 +273,7 @@ flutter test --name "auto-sync"
 #### E2E Tests (require backend + device/emulator)
 ```sh
 # Start backend first
-cd V:\zirofit-next && npm run dev
+cd ~/pr/zirofit-next && npm run dev
 
 # Run a single e2e flow with Patrol
 patrol test --target test/e2e/flows/offline_sync_e2e_test.dart
@@ -332,11 +338,11 @@ dart analyze lib/
 
 - **Nutrition & Habits — dedicated screen** — The `_NutritionHabitsCard` on the home dashboard was incorrectly pointing to `/daily-targets`. Implemented a full `NutritionHabitsScreen` matching the iOS spec from `ios-nutrition-habits-handoff.md`: nutrition plan detail with macro progress bars (calories/protein/carbs/fats), section blocks for meal notes/foods to eat/foods to avoid/meal timing/hydration/supplements/habit notes, and today's habit checklist with circle checkboxes and frequency badges. Backed by `NutritionHabitsCubit` which loads plan + habits in parallel and supports optimistic habit toggle via `POST /api/client/habits/{habitId}/log`. See `docs/ios-nutrition-habits-handoff.md` for the iOS reference spec.
 
-- **Nutrition & Habits** (`V:\Ziro-Fit\ios-nutrition-habits-handoff.md`) — iOS spec for nutrition plan detail view (macro bars, meal notes, foods, hydration, supplements) and habit checklist with toggle. Flutter implementation matches the spec exactly. See `docs/ios-nutrition-habits-handoff.md`.
+- **Nutrition & Habits** (`../Ziro-Fit/ios-nutrition-habits-handoff.md`) — iOS spec for nutrition plan detail view (macro bars, meal notes, foods, hydration, supplements) and habit checklist with toggle. Flutter implementation matches the spec exactly. See `docs/ios-nutrition-habits-handoff.md`.
 
 ## iOS Reference App
 
-The iOS version of ZIRO.FIT is at **`V:\Ziro-Fit`** (Swift/SwiftUI).
+The iOS version of ZIRO.FIT is at **`../Ziro-Fit`** (Swift/SwiftUI).
 Before building any UI feature, check the iOS implementation first for layout patterns, component hierarchy, spacing, typography, and color usage.
 Key reference files:
 - Explore tab (trainer cards): `Ziro Fit/Views/ZiroMe/TrainerDiscoveryView.swift` — `TrainerDiscoveryCard`, `ExploreTrainerCard`
@@ -368,7 +374,7 @@ Rules:
 
 ## How to Verify Backend Contracts
 
-**Do not trust `docs/implementation.md` blindly.** The backend repo at `V:\zirofit-next` is the source of truth for API shapes. Before creating any Flutter model or service:
+**Do not trust `docs/implementation.md` blindly.** The backend repo at `~/pr/zirofit-next` is the source of truth for API shapes. Before creating any Flutter model or service:
 
 1. Read the Zod schema file alongside each backend route: `src/app/api/<path>/route.schema.ts` — this defines the exact request/response contract.
 2. Read the route handler `route.ts` to confirm the runtime response shape.
@@ -380,7 +386,7 @@ Rules:
 
 **Backend commands:**
 ```sh
-cd V:\zirofit-next
+cd ~/pr/zirofit-next
 npm run dev          # starts on port 3321
 npm run test         # Jest unit tests
 npm run lint         # ESLint
@@ -557,12 +563,70 @@ flutter pub run build_runner build --delete-conflicting-outputs
 - **`.gitignore`** — must exclude `.dart_tool/`, `build/`, `*.g.dart`, `*.freezed.dart`, `.pub-cache/`.
 - **`flutter_map`** (OSM) — the tile URL template must include `userAgentPackageName: 'fit.ziro.app'` to comply with OSM tile usage policy.
 
-## Testing Conventions (pending — to be defined when tests are written)
+## Testing Conventions
 
-- Place unit tests next to source files as `*.test.dart` (mirroring `src/lib/services/*.test.ts` in backend)
-- Integration tests in `tests/` at project root
-- No snapshot testing conventions yet
-- Backend integration tests require local `npm run dev` running (port 3321)
+### Unit Tests (Mandatory Per Feature)
+
+Every feature MUST have unit test coverage for its cubit and critical business logic:
+
+- **Cubit tests** with `bloc_test`: cover initial state, each event handler, loading/error/success transitions — same pattern as `test/sync_cubit_test.dart`.
+- **Service tests**: Any service that persists data (SharedPrefs, Drift, secure storage) must test roundtrip: set → verify → reload → verify.
+- **Widget smoke tests**: Non-trivial widgets (settings rows, permission screens, dialogs) must render without crash under `tester.pumpWidget()`.
+- **File location**: Place next to source under `test/` mirroring the source tree, with `_test.dart` suffix.
+- **Naming**: `test/<feature>_*_test.dart` — group by feature, use descriptive names.
+
+### E2E Tests (Mandatory Per Feature)
+
+Every feature MUST have at least one end-to-end test that covers its critical user flow(s). The e2e test must verify the complete flow from a real user's perspective — not a technical unit-test perspective.
+
+**Requirements:**
+1. **Every feature** (auth, check-in, daily targets, fitness goals, sharing, analytics, explore, trainers, home, notifications, profile, sync, nutrition, voice coach, workout) MUST have at least one e2e test file in `test/e2e/flows/`.
+2. **File naming**: `test/e2e/flows/<feature>_e2e_test.dart` (e.g., `offline_sync_e2e_test.dart`, `check_in_submission_e2e_test.dart`).
+3. **Coverage threshold**: Every API route consumed by the feature must be exercised by at least one e2e scenario.
+4. **Navigation realism**: Tests must simulate real user navigation (tab taps, bottom nav, push/pop) — not direct route pushes.
+5. **State validation**: After each action, assert something visible on screen (text, widget key, absence of error indicators).
+6. **Restore clean state**: If the test creates side effects (toggles, submissions), reverse them at the end.
+
+**How to write an e2e test:**
+```dart
+@Tags(['e2e'])
+library;
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:patrol/patrol.dart';
+import '../helpers/auth_helper.dart';
+
+void main() {
+  patrolTest(
+    'CX: Clear description of what the test verifies',
+    (PatrolIntegrationTester $) async {
+      await login($);                          // authenticate once per test
+      // ... real user flow: tap tab → tap row → verify screen → interct → verify result
+    },
+  );
+}
+```
+
+**Fixture credentials**: defined in `test/e2e/helpers/test_credentials.dart`:
+- `client.ada@ziro.fit` / `password123` (linked client — has trainer, active program, sessions)
+- `client.unlinked@ziro.fit` / `password123` (unlinked client — no trainer, for standalone flows)
+- `ada@ziro.fit` / `password123` (trainer — for trainer-side flows)
+
+**Runner** (backend must be running on port 3321):
+```sh
+patrol test --target test/e2e/flows/<file>.dart     # single file
+patrol test --target test/e2e/flows/                 # all e2e tests
+patrol test --target test/e2e/flows/ -- --name "Sync"  # filter by name
+```
+
+### Full Test Coverage Gate
+
+A feature is considered **done** only when:
+1. All cubit methods and state transitions are covered by unit tests (≥80% coverage of state transitions).
+2. Every API endpoint consumed by the feature is exercised by at least one e2e scenario.
+3. `flutter test --exclude-tags e2e` passes including the new tests.
+4. `dart analyze lib/` passes with zero errors on changed files.
+5. E2E test file exists at `test/e2e/flows/<feature>_e2e_test.dart` and has been verified to pass against the running backend.
 
 ## Delivery Standards — E2E Production Readiness
 
@@ -589,7 +653,7 @@ Every feature delivered to this codebase must be **end-to-end production-ready**
 #### Rule 3: Deep Analysis Before Feature Delivery
 Before implementing any feature:
 1. **Read the existing implementation** — check if similar functionality exists elsewhere in the codebase that can be reused or extended.
-2. **Read the iOS reference** (if applicable) — the iOS app at `V:\Ziro-Fit` is the design specification. Understand the full layout, component hierarchy, spacing, and interaction model before writing a single line of Flutter code.
+2. **Read the iOS reference** (if applicable) — the iOS app at `../Ziro-Fit` is the design specification. Understand the full layout, component hierarchy, spacing, and interaction model before writing a single line of Flutter code.
 3. **Verify backend contracts** — read the Zod schema (`route.schema.ts`), route handler (`route.ts`), and Prisma schema (`schema.prisma`) for every endpoint the feature touches.
 4. **Identify reuse opportunities** — does this feature share models, widgets, or cubits with existing features? Extract shared code rather than duplicating.
 5. **Document analysis** — if the feature is complex, write an analysis doc in `docs/` (see `docs/trainer-profile-analysis.md`, `docs/home-page-analysis.md` for examples).
@@ -615,7 +679,8 @@ Before marking any feature complete, verify:
 - [ ] All navigation flows work end-to-end
 - [ ] `dart analyze` passes with zero errors
 - [ ] `flutter test` passes (all tests, not just your new ones)
-- [ ] No dead code, no print() statements, no commented-out code
+- [ ] **E2E test exists** at `test/e2e/flows/<feature>_e2e_test.dart` covering all critical user flows
+- [ ] No dead code, no `print()` statements, no commented-out code
 
 #### Rule 7: Programmatic API Contract Verification (MANDATORY)
 **Verbal claims are not sufficient.** An LLM agent that says "the feature is implemented" or "the bug is fixed" MUST prove it by querying the live backend and comparing actual responses against Flutter DTOs.
@@ -628,7 +693,7 @@ Before marking any feature complete, verify:
 **Verification protocol:**
 ```
 Step 1: Ensure backend is running
-  → cd V:\zirofit-next && npm run dev
+  → cd ~/pr/zirofit-next && npm run dev
   → Confirm port 3321 is listening
 
 Step 2: Authenticate
@@ -806,7 +871,7 @@ After completing ANY feature that calls a backend API, run these three verificat
 
 ### Step 1: Verify Backend Contracts
 Reference the **Programmatic API Contract Verification** section above (Rule 7 under Delivery Standards). For every endpoint the feature touches:
-1. Start the backend: `cd V:\zirofit-next && npm run dev`
+1. Start the backend: `cd ~/pr/zirofit-next && npm run dev`
 2. Authenticate with test credentials (`client.ada@ziro.fit` / `password123`)
 3. Query each endpoint with `curl` or a Dart integration test
 4. Compare every JSON field against Flutter DTOs — check field names, types, nullability
@@ -821,10 +886,18 @@ flutter pub run build_runner build --delete-conflicting-outputs
 - No `as dynamic`, `@ts-ignore`, `@ts-expect-error`, `// ignore:` without documented reason
 - No commented-out code, `print()`, or debug statements
 
-### Step 3: Run Tests
+### Step 3: Run Unit Tests
 ```sh
-flutter test
+flutter test --exclude-tags e2e
 ```
 - All tests must pass (not just new ones)
 - If pre-existing failures exist, note them explicitly: "Done. Pre-existing test failures: [list]"
 - Do not delete or modify tests to make them pass
+
+### Step 4: Verify E2E Tests Exist
+- Confirm `test/e2e/flows/<feature>_e2e_test.dart` exists with coverage of every critical user flow
+- If the backend is running, run the e2e test to confirm it passes:
+  ```sh
+  patrol test --target test/e2e/flows/<feature>_e2e_test.dart
+  ```
+- E2E tests that cannot be run (back-end unavailable, no device) must at minimum compile without syntax errors

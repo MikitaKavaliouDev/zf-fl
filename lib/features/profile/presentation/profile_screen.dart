@@ -16,6 +16,8 @@ import '../../daily_targets/presentation/daily_targets_screen.dart';
 import '../../fitness_goals/presentation/fitness_goals_screen.dart';
 import '../../onboarding/presentation/educational_onboarding_screen.dart';
 import '../../sharing/presentation/sharing_screen.dart';
+import '../cubit/experimental_features_cubit.dart';
+import '../cubit/experimental_features_state.dart';
 import '../cubit/more_cubit.dart';
 import '../cubit/more_state.dart';
 import 'settings_screens/ai_coach_settings_screen.dart';
@@ -27,6 +29,7 @@ import 'settings_screens/data_privacy_screen.dart';
 import 'settings_screens/language_settings_screen.dart';
 import 'settings_screens/my_packages_screen.dart';
 import 'settings_screens/notification_settings_screen.dart';
+import 'settings_screens/permissions_settings_screen.dart';
 import 'settings_screens/purchase_history_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -334,10 +337,8 @@ class _MoreScreenBodyState extends State<_MoreScreenBody> {
       _MenuRow(
         icon: Icons.security_outlined,
         iconColor: AppColors.primary,
-        title: 'Privacy & Security',
-        onTap: () {
-          // Navigate to system privacy settings or in-app security screen
-        },
+        title: 'Permissions',
+        onTap: () => _push(context, const PermissionsSettingsScreen()),
       ),
       _MenuRow(
         icon: Icons.dashboard_outlined,
@@ -427,7 +428,10 @@ class _MoreScreenBodyState extends State<_MoreScreenBody> {
   // ── Experimental Features Section ──
 
   Widget _buildExperimentalFeaturesSection(BuildContext context) {
-    return _ExperimentalFeaturesSection();
+    return BlocProvider(
+      create: (_) => getIt<ExperimentalFeaturesCubit>()..load(),
+      child: const _ExperimentalFeaturesSection(),
+    );
   }
 
   // ── Legal Section ──
@@ -565,12 +569,12 @@ class _MoreScreenBodyState extends State<_MoreScreenBody> {
         backgroundColor: AppColors.card,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20)),
-        title: Row(
+        title: const Row(
           children: [
-            const Icon(Icons.swap_horiz_rounded,
+            Icon(Icons.swap_horiz_rounded,
                 size: 22, color: AppColors.primary),
-            const SizedBox(width: 8),
-            const Expanded(
+            SizedBox(width: 8),
+            Expanded(
               child: Text('Switch to Trainer',
                   style: TextStyle(
                       fontSize: 17,
@@ -611,14 +615,14 @@ class _MoreScreenBodyState extends State<_MoreScreenBody> {
         actions: [
           ValueListenableBuilder<bool>(
             valueListenable: isLoading,
-            builder: (_, loading, __) => TextButton(
+            builder: (_, loading, _) => TextButton(
               onPressed: loading ? null : () => Navigator.of(ctx).pop(),
               child: const Text('Cancel'),
             ),
           ),
           ValueListenableBuilder<bool>(
             valueListenable: isLoading,
-            builder: (_, loading, __) => FilledButton(
+            builder: (_, loading, _) => FilledButton(
               onPressed: loading
                   ? null
                   : () async {
@@ -832,66 +836,84 @@ class _MoreScreenBodyState extends State<_MoreScreenBody> {
 
 // ── Experimental Features Toggle Section ──
 
-class _ExperimentalFeaturesSection extends StatefulWidget {
-  @override
-  State<_ExperimentalFeaturesSection> createState() =>
-      _ExperimentalFeaturesSectionState();
-}
-
-class _ExperimentalFeaturesSectionState
-    extends State<_ExperimentalFeaturesSection> {
-  bool _dailyExerciseTargets = false;
-  bool _voiceFeedbackBeta = false;
-  bool _personalRoutines = false;
+class _ExperimentalFeaturesSection extends StatelessWidget {
+  const _ExperimentalFeaturesSection();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderMuted),
-      ),
-      child: Column(children: [
-        _buildToggleRow(
-          icon: Icons.checklist_rounded,
-          iconColor: Colors.green,
-          title: 'Daily Exercise Targets',
-          subtitle: 'Set daily exercise goals',
-          value: _dailyExerciseTargets,
-          onChanged: (v) => setState(() => _dailyExerciseTargets = v),
-        ),
-        _buildToggleRow(
-          icon: Icons.record_voice_over_rounded,
-          iconColor: AppColors.primary,
-          title: 'Voice Feedback (Beta)',
-          subtitle: 'Audio cues during workouts',
-          value: _voiceFeedbackBeta,
-          onChanged: (v) => setState(() => _voiceFeedbackBeta = v),
-        ),
-        _buildToggleRow(
-          icon: Icons.repeat_rounded,
-          iconColor: Colors.orange,
-          title: 'Personal Routines',
-          subtitle: 'Create and manage custom routines',
-          value: _personalRoutines,
-          onChanged: (v) => setState(() => _personalRoutines = v),
-          isLast: true,
-        ),
-      ]),
+    return BlocBuilder<ExperimentalFeaturesCubit, ExperimentalFeaturesState>(
+      builder: (context, state) {
+        final cubit = context.read<ExperimentalFeaturesCubit>();
+        return Container(
+          key: const ValueKey('experimentalFeaturesSection'),
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: AppColors.card,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.borderMuted),
+          ),
+          child: Column(children: [
+            _FeatureToggleRow(
+              icon: Icons.checklist_rounded,
+              iconColor: Colors.green,
+              title: 'Daily Exercise Targets',
+              subtitle: 'Set daily exercise goals',
+              value: state.dailyExerciseTargets,
+              onChanged: (v) => cubit.setDailyExerciseTargets(v),
+            ),
+            _FeatureToggleRow(
+              icon: Icons.record_voice_over_rounded,
+              iconColor: AppColors.primary,
+              title: 'Voice Feedback (Beta)',
+              subtitle: 'Audio cues during workouts',
+              value: state.voiceFeedbackBeta,
+              onChanged: (v) => cubit.setVoiceFeedbackBeta(v),
+            ),
+            _FeatureToggleRow(
+              icon: Icons.repeat_rounded,
+              iconColor: Colors.orange,
+              title: 'Personal Routines',
+              subtitle: 'Create and manage custom routines',
+              value: state.personalRoutines,
+              onChanged: (v) => cubit.setPersonalRoutines(v),
+            ),
+            _FeatureToggleRow(
+              icon: Icons.tune_rounded,
+              iconColor: Colors.indigo,
+              title: 'Custom App Mode',
+              subtitle: 'Enable custom routing and template features',
+              value: state.customAppMode,
+              onChanged: (v) => cubit.setCustomAppMode(v),
+              isLast: true,
+            ),
+          ]),
+        );
+      },
     );
   }
+}
 
-  Widget _buildToggleRow({
-    required IconData icon,
-    required Color iconColor,
-    required String title,
-    required String subtitle,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-    bool isLast = false,
-  }) {
+class _FeatureToggleRow extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+  final bool isLast;
+
+  const _FeatureToggleRow({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+    this.isLast = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       children: [
         Padding(

@@ -1,8 +1,8 @@
 # iOS ZIRO.FIT Codebase Analysis — Full Audit & Flutter Porting Strategy
 
 > **Generated**: 2026-07-01
-> **Source**: `V:\Ziro-Fit` (Swift/SwiftUI iOS app)
-> **Purpose**: Complete codebase analysis for porting to Flutter (`V:\zf-fl`)
+> **Source**: `../Ziro-Fit` (Swift/SwiftUI iOS app)
+> **Purpose**: Complete codebase analysis for porting to Flutter (`~/pr/zf-fl`)
 
 ---
 

@@ -205,27 +205,27 @@ class _TrainerMoreScreenState extends State<TrainerMoreScreen> {
                   label: 'Digital Business Card',
                   subtitle: 'Let clients scan to see your profile',
                   onTap: () =>
-                      _showComingSoon(context, 'Digital Business Card'),
+                      context.push('/trainer/more/digital-business-card'),
                 ),
                 _MenuRow(
                   icon: Icons.store_outlined,
                   color: const Color(0xFF34C759),
                   label: 'Storefront Settings',
                   onTap: () =>
-                      _showComingSoon(context, 'Storefront Settings'),
+                      context.push('/trainer/more/storefront-settings'),
                 ),
                 _MenuRow(
                   icon: Icons.credit_card_outlined,
                   color: AppColors.primary,
                   label: 'Subscription & Billing',
                   onTap: () =>
-                      _showComingSoon(context, 'Subscription & Billing'),
+                      context.push('/trainer/more/subscription'),
                 ),
                 _MenuRow(
                   icon: Icons.account_balance_wallet_outlined,
                   color: const Color(0xFF34C759),
                   label: 'Payouts',
-                  onTap: () => _showComingSoon(context, 'Payouts'),
+                  onTap: () => context.push('/trainer/more/payouts'),
                 ),
                 _MenuRow(
                   icon: Icons.fitness_center_outlined,
@@ -495,15 +495,8 @@ class _ProfileHeader extends StatelessWidget {
           ),
           // QR code button
           GestureDetector(
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content:
-                      Text('Digital Business Card — coming soon'),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
+            onTap: () =>
+                context.push('/trainer/more/digital-business-card'),
             child: Container(
               width: 40,
               height: 40,
